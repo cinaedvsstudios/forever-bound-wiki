@@ -22,6 +22,17 @@
       "name": "--- WELCOME ---",
       "placement": "side",
       "parentId": null
+    },
+    {
+      "id": 1778015178056,
+      "type": "folder",
+      "name": "Links",
+      "link": "",
+      "desc": "",
+      "color": "",
+      "placement": "top",
+      "parentId": null,
+      "open": true
     }
   ]
 }
