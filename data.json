@@ -13,24 +13,23 @@
       "#2c2c2c"
     ],
     "fontSize": 14,
-    "align": "center"
+    "align": "center",
+    "ui": {
+      "title": "Forever Bound",
+      "editIcon": "✏️",
+      "setIcon": "⚙️",
+      "applyTxt": "Apply",
+      "syncTxt": "Sync Cloud",
+      "cancelTxt": "Cancel",
+      "deleteTxt": "Delete",
+      "faveTxt": "⭐ Fave"
+    }
   },
   "items": [
     {
       "id": 1778015178056,
       "type": "folder",
       "name": "Links",
-      "link": "",
-      "desc": "",
-      "color": "",
-      "placement": "top",
-      "parentId": null,
-      "open": true
-    },
-    {
-      "id": 1778015301002,
-      "type": "button",
-      "name": "FB Website",
       "link": "",
       "desc": "",
       "color": "",
