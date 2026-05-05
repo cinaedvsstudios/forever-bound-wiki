@@ -16,13 +16,13 @@
     "align": "center",
     "ui": {
       "title": "Forever Bound",
-      "editIcon": "ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¯ÃÂÃÂÃÂÃÂ¸ÃÂÃÂÃÂÃÂ",
-      "setIcon": "ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¯ÃÂÃÂÃÂÃÂ¸ÃÂÃÂÃÂÃÂ",
+      "editIcon": "✏️",
+      "setIcon": "⚙️",
       "applyTxt": "Apply",
       "syncTxt": "Sync Cloud",
       "cancelTxt": "Cancel",
       "deleteTxt": "Delete",
-      "faveTxt": "ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ­ÃÂÃÂÃÂÃÂ Fave"
+      "faveTxt": "⭐ Fave"
     }
   },
   "items": [
@@ -40,7 +40,7 @@
     {
       "id": 1778018604379,
       "type": "divider",
-      "name": "xx",
+      "name": "",
       "link": "",
       "desc": "",
       "color": "",
