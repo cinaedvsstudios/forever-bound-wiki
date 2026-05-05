@@ -16,13 +16,13 @@
     "align": "center",
     "ui": {
       "title": "Forever Bound",
-      "editIcon": "âï¸",
-      "setIcon": "âï¸",
+      "editIcon": "Ã¢ÂÂÃ¯Â¸Â",
+      "setIcon": "Ã¢ÂÂÃ¯Â¸Â",
       "applyTxt": "Apply",
       "syncTxt": "Sync Cloud",
       "cancelTxt": "Cancel",
       "deleteTxt": "Delete",
-      "faveTxt": "â­ Fave"
+      "faveTxt": "Ã¢Â­Â Fave"
     }
   },
   "items": [
@@ -30,6 +30,17 @@
       "id": 1778018604379,
       "type": "divider",
       "name": "",
+      "link": "",
+      "desc": "",
+      "color": "",
+      "placement": "top",
+      "parentId": null,
+      "open": true
+    },
+    {
+      "id": 1778021796190,
+      "type": "folder",
+      "name": "xxxxxxxxxxx",
       "link": "",
       "desc": "",
       "color": "",
