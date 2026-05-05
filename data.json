@@ -16,27 +16,16 @@
     "align": "center",
     "ui": {
       "title": "Forever Bound",
-      "editIcon": "✏️",
-      "setIcon": "⚙️",
+      "editIcon": "âï¸",
+      "setIcon": "âï¸",
       "applyTxt": "Apply",
       "syncTxt": "Sync Cloud",
       "cancelTxt": "Cancel",
       "deleteTxt": "Delete",
-      "faveTxt": "⭐ Fave"
+      "faveTxt": "â­ Fave"
     }
   },
   "items": [
-    {
-      "id": 1778015178056,
-      "type": "folder",
-      "name": "Links",
-      "link": "",
-      "desc": "",
-      "color": "",
-      "placement": "top",
-      "parentId": null,
-      "open": true
-    },
     {
       "id": 1778018604379,
       "type": "divider",
@@ -46,72 +35,6 @@
       "color": "",
       "placement": "top",
       "parentId": null,
-      "open": true
-    },
-    {
-      "id": 1778019026792,
-      "type": "button",
-      "name": "xxxxx",
-      "link": "",
-      "desc": "",
-      "color": "",
-      "placement": "top",
-      "parentId": 1778015178056,
-      "open": true
-    },
-    {
-      "id": 1778019032862,
-      "type": "button",
-      "name": "xxxxxxxx",
-      "link": "",
-      "desc": "",
-      "color": "",
-      "placement": "top",
-      "parentId": 1778015178056,
-      "open": true
-    },
-    {
-      "id": 1778019056874,
-      "type": "button",
-      "name": "xxxxxxx",
-      "link": "",
-      "desc": "",
-      "color": "",
-      "placement": "top",
-      "parentId": 1778015178056,
-      "open": true
-    },
-    {
-      "id": 1778019140145,
-      "type": "button",
-      "name": "xxxxxxxx",
-      "link": "",
-      "desc": "",
-      "color": "",
-      "placement": "side",
-      "parentId": null,
-      "open": true
-    },
-    {
-      "id": 1778019143272,
-      "type": "folder",
-      "name": "xxxxxx",
-      "link": "",
-      "desc": "",
-      "color": "",
-      "placement": "side",
-      "parentId": null,
-      "open": true
-    },
-    {
-      "id": 1778019147717,
-      "type": "button",
-      "name": "xxxxxxx",
-      "link": "",
-      "desc": "",
-      "color": "",
-      "placement": "side",
-      "parentId": 1778019143272,
       "open": true
     }
   ]
