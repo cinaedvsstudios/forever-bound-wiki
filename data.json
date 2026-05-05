@@ -91,6 +91,17 @@
       "placement": "side",
       "parentId": null,
       "open": true
+    },
+    {
+      "id": 1778019143272,
+      "type": "folder",
+      "name": "xxxxxx",
+      "link": "",
+      "desc": "",
+      "color": "",
+      "placement": "side",
+      "parentId": null,
+      "open": true
     }
   ]
 }
