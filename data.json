@@ -91,6 +91,17 @@
       "placement": "top",
       "parentId": null,
       "open": true
+    },
+    {
+      "id": 1778014586722,
+      "type": "button",
+      "name": "xx",
+      "link": "",
+      "desc": "",
+      "color": "",
+      "placement": "top",
+      "parentId": null,
+      "open": true
     }
   ]
 }
