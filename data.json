@@ -16,13 +16,13 @@
     "align": "center",
     "ui": {
       "title": "Forever Bound",
-      "editIcon": "Ã¢ÂÂÃ¯Â¸Â",
-      "setIcon": "Ã¢ÂÂÃ¯Â¸Â",
+      "editIcon": "ÃÂ¢ÃÂÃÂÃÂ¯ÃÂ¸ÃÂ",
+      "setIcon": "ÃÂ¢ÃÂÃÂÃÂ¯ÃÂ¸ÃÂ",
       "applyTxt": "Apply",
       "syncTxt": "Sync Cloud",
       "cancelTxt": "Cancel",
       "deleteTxt": "Delete",
-      "faveTxt": "Ã¢Â­Â Fave"
+      "faveTxt": "ÃÂ¢ÃÂ­ÃÂ Fave"
     }
   },
   "items": [
@@ -45,17 +45,6 @@
       "desc": "",
       "color": "",
       "placement": "top",
-      "parentId": null,
-      "open": true
-    },
-    {
-      "id": 1778018612001,
-      "type": "button",
-      "name": "xxx",
-      "link": "",
-      "desc": "",
-      "color": "",
-      "placement": "side",
       "parentId": null,
       "open": true
     },
