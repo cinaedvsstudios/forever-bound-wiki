@@ -80,6 +80,17 @@
       "placement": "top",
       "parentId": 1778015178056,
       "open": true
+    },
+    {
+      "id": 1778019140145,
+      "type": "button",
+      "name": "xxxxxxxx",
+      "link": "",
+      "desc": "",
+      "color": "",
+      "placement": "side",
+      "parentId": null,
+      "open": true
     }
   ]
 }
