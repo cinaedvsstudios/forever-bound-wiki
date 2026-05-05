@@ -168,6 +168,17 @@
       "placement": "side",
       "parentId": 1778014057125,
       "open": true
+    },
+    {
+      "id": 1778014899015,
+      "type": "label",
+      "name": "xx",
+      "link": "",
+      "desc": "",
+      "color": "",
+      "placement": "side",
+      "parentId": 1778014057125,
+      "open": true
     }
   ]
 }
