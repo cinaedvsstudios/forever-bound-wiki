@@ -52,6 +52,15 @@
       "placement": "top",
       "parentId": null,
       "open": true
+    },
+    {
+      "id": 1778014197616,
+      "type": "label",
+      "name": "xxxx",
+      "link": "",
+      "placement": "side",
+      "parentId": 1778014057125,
+      "open": true
     }
   ]
 }
