@@ -102,6 +102,17 @@
       "placement": "side",
       "parentId": null,
       "open": true
+    },
+    {
+      "id": 1778019147717,
+      "type": "button",
+      "name": "xxxxxxx",
+      "link": "",
+      "desc": "",
+      "color": "",
+      "placement": "side",
+      "parentId": 1778019143272,
+      "open": true
     }
   ]
 }
