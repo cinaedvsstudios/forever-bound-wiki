@@ -17,13 +17,6 @@
   },
   "items": [
     {
-      "id": 1,
-      "type": "label",
-      "name": "--- WELCOME ---",
-      "placement": "side",
-      "parentId": null
-    },
-    {
       "id": 1778015178056,
       "type": "folder",
       "name": "Links",
