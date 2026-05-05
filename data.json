@@ -82,17 +82,6 @@
       "open": true
     },
     {
-      "id": 1778014499104,
-      "type": "button",
-      "name": "FB Website",
-      "link": "xxx",
-      "desc": "test",
-      "color": "",
-      "placement": "top",
-      "parentId": null,
-      "open": true
-    },
-    {
       "id": 1778014586722,
       "type": "button",
       "name": "xx",
