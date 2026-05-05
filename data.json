@@ -1,12 +1,39 @@
-[
-  {
-    "name": "Bible",
-    "link": "",
-    "category": "episode"
+{
+  "settings": {
+    "palette": [
+      "#2c2c2c",
+      "#2c2c2c",
+      "#2c2c2c",
+      "#2c2c2c",
+      "#2c2c2c",
+      "#2c2c2c",
+      "#2c2c2c",
+      "#2c2c2c",
+      "#2c2c2c",
+      "#2c2c2c"
+    ],
+    "fontSize": 14,
+    "align": "center"
   },
-  {
-    "name": "Episode 01",
-    "link": "",
-    "category": "character"
-  }
-]
+  "items": [
+    {
+      "name": "Bible",
+      "link": "",
+      "category": "episode"
+    },
+    {
+      "name": "Episode 01",
+      "link": "",
+      "category": "character"
+    },
+    {
+      "id": 1778014057125,
+      "type": "folder",
+      "name": "LInks",
+      "link": "",
+      "placement": "top",
+      "parentId": null,
+      "open": true
+    }
+  ]
+}
