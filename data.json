@@ -16,13 +16,13 @@
     "align": "center",
     "ui": {
       "title": "Forever Bound",
-      "editIcon": "ÃÂ¢ÃÂÃÂÃÂ¯ÃÂ¸ÃÂ",
-      "setIcon": "ÃÂ¢ÃÂÃÂÃÂ¯ÃÂ¸ÃÂ",
+      "editIcon": "ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¯ÃÂÃÂ¸ÃÂÃÂ",
+      "setIcon": "ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¯ÃÂÃÂ¸ÃÂÃÂ",
       "applyTxt": "Apply",
       "syncTxt": "Sync Cloud",
       "cancelTxt": "Cancel",
       "deleteTxt": "Delete",
-      "faveTxt": "ÃÂ¢ÃÂ­ÃÂ Fave"
+      "faveTxt": "ÃÂÃÂ¢ÃÂÃÂ­ÃÂÃÂ Fave"
     }
   },
   "items": [
@@ -57,6 +57,17 @@
       "color": "",
       "placement": "top",
       "parentId": 1778021796190,
+      "open": true
+    },
+    {
+      "id": 1778022375462,
+      "type": "folder",
+      "name": "xxxxxxxx",
+      "link": "",
+      "desc": "",
+      "color": "",
+      "placement": "top",
+      "parentId": null,
       "open": true
     }
   ]
