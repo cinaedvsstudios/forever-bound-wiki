@@ -58,6 +58,17 @@
       "placement": "side",
       "parentId": 1778015178056,
       "open": true
+    },
+    {
+      "id": 1778015504004,
+      "type": "button",
+      "name": "FB Website",
+      "link": "",
+      "desc": "",
+      "color": "",
+      "placement": "top",
+      "parentId": null,
+      "open": true
     }
   ]
 }
