@@ -91,6 +91,17 @@
       "placement": "side",
       "parentId": 1778022381164,
       "open": true
+    },
+    {
+      "id": 1778022390759,
+      "type": "button",
+      "name": "xxxxxxxxxxx",
+      "link": "",
+      "desc": "",
+      "color": "",
+      "placement": "side",
+      "parentId": 1778022381164,
+      "open": true
     }
   ]
 }
