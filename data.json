@@ -135,6 +135,17 @@
       "placement": "top",
       "parentId": null,
       "open": true
+    },
+    {
+      "id": 1778014888426,
+      "type": "label",
+      "name": "xxx",
+      "link": "",
+      "desc": "",
+      "color": "",
+      "placement": "top",
+      "parentId": null,
+      "open": true
     }
   ]
 }
