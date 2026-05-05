@@ -79,6 +79,15 @@
       "placement": "side",
       "parentId": 1778014057125,
       "open": true
+    },
+    {
+      "id": 1778014222535,
+      "type": "divider",
+      "name": "xxx",
+      "link": "",
+      "placement": "side",
+      "parentId": 1778014057125,
+      "open": true
     }
   ]
 }
