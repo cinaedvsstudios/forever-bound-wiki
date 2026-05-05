@@ -36,6 +36,17 @@
       "placement": "top",
       "parentId": null,
       "open": true
+    },
+    {
+      "id": 1778018604379,
+      "type": "divider",
+      "name": "xx",
+      "link": "",
+      "desc": "",
+      "color": "",
+      "placement": "top",
+      "parentId": null,
+      "open": true
     }
   ]
 }
