@@ -102,6 +102,17 @@
       "placement": "side",
       "parentId": 1778014057125,
       "open": true
+    },
+    {
+      "id": 1778014608954,
+      "type": "label",
+      "name": "xxdfr",
+      "link": "",
+      "desc": "",
+      "color": "",
+      "placement": "side",
+      "parentId": 1778014057125,
+      "open": true
     }
   ]
 }
