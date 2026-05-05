@@ -82,14 +82,14 @@
       "open": true
     },
     {
-      "id": 1778014586722,
+      "id": 1778014600948,
       "type": "button",
       "name": "xx",
       "link": "",
       "desc": "",
       "color": "",
-      "placement": "top",
-      "parentId": null,
+      "placement": "side",
+      "parentId": 1778014057125,
       "open": true
     }
   ]
