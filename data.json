@@ -69,6 +69,17 @@
       "placement": "top",
       "parentId": null,
       "open": true
+    },
+    {
+      "id": 1778022381164,
+      "type": "folder",
+      "name": "xxxxxxxxxxxxx",
+      "link": "",
+      "desc": "",
+      "color": "",
+      "placement": "side",
+      "parentId": null,
+      "open": true
     }
   ]
 }
