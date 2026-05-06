@@ -43,10 +43,13 @@
       "name": "0123456789012345",
       "link": "",
       "desc": "",
-      "color": "",
+      "color": "#000000",
       "placement": "side",
       "parentId": null,
-      "open": true
+      "open": true,
+      "bgColor": "#2ec4b6",
+      "align": "center",
+      "fontColor": "#000000"
     },
     {
       "id": 1778022386919,
