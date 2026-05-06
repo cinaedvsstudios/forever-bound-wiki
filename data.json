@@ -13,7 +13,12 @@
       "#bda170"
     ],
     "fontSize": 14,
-    "align": "center"
+    "align": "center",
+    "systemStyles": {
+      "sys-logo": {
+        "url": "https://drive.google.com/uc?export=view&id=1OONqqvuj5jtXN7-6h9nN1zJtgEzGIDk4"
+      }
+    }
   },
   "items": [
     {
