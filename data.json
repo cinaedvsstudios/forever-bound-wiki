@@ -44,6 +44,23 @@
         "bgColor": "#000000",
         "color": "#000000",
         "fontColor": "#ffffff"
+      },
+      "sys-divider-line": {
+        "name": "Popup Dividers (Lines)",
+        "bgColor": "#bda170",
+        "color": "#bda170",
+        "fontColor": "#bda170",
+        "text": "#bda170"
+      },
+      "sys-add-div": {
+        "name": "+ Add Divider",
+        "bgColor": "#bda170",
+        "color": "#bda170",
+        "fontColor": "#bda170"
+      },
+      "sys-designer": {
+        "name": "🎨 Designer Button",
+        "text": "🏰 Designer"
       }
     }
   },
