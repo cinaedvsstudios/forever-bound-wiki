@@ -133,6 +133,12 @@
       "placement": "side",
       "parentId": 1778034561522,
       "open": true
+    },
+    {
+      "id": 1778111987463,
+      "type": "divider",
+      "placement": "top",
+      "parentId": null
     }
   ]
 }
