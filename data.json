@@ -1,6 +1,7 @@
 {
   "settings": {
     "palette": [
+      "#bda170",
       "#2c2c2c",
       "#2c2c2c",
       "#2c2c2c",
@@ -9,8 +10,7 @@
       "#2c2c2c",
       "#2c2c2c",
       "#2c2c2c",
-      "#2c2c2c",
-      "#2c2c2c"
+      "#bda170"
     ],
     "fontSize": 14,
     "align": "center"
