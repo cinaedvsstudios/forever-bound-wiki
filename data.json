@@ -147,12 +147,12 @@
       "name": "xxxxxx",
       "link": "",
       "desc": "",
-      "color": "#bda170",
+      "color": "#d88a64",
       "placement": "top",
       "parentId": null,
       "open": true,
       "bgColor": "#191711",
-      "fontColor": "#bda170"
+      "fontColor": "#d88a64"
     },
     {
       "id": 1778034556758,
@@ -160,13 +160,13 @@
       "name": "xxxxxx",
       "link": "",
       "desc": "",
-      "color": "#bda170",
+      "color": "#d88a64",
       "placement": "side",
       "parentId": null,
       "open": true,
       "bgColor": "#191711",
       "align": "center",
-      "fontColor": "#bda170"
+      "fontColor": "#d88a64"
     }
   ]
 }
