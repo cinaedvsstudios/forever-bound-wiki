@@ -58,11 +58,12 @@
         "text": "#bda170"
       },
       "sys-add-div": {
-        "name": "+ Add Button",
+        "name": "🌐 Global Buttons",
         "bgColor": "#2c2c2c",
         "color": "#d88a64",
-        "fontColor": "#967f69",
-        "bgSize": "100%"
+        "fontColor": "#d88a64",
+        "bgSize": "100%",
+        "shadowColor": "#191711"
       },
       "sys-designer": {
         "name": "🎨 Designer Button",
@@ -173,29 +174,32 @@
       },
       "sys-popup-save": {
         "name": "Popup: Save & Sync",
-        "color": "#9b4f2a",
+        "color": "#d88a64",
         "bgSize": "100%"
       },
       "sys-add-btn": {
-        "name": "+ Add Button",
+        "name": "🌐 Global Buttons",
         "bgSize": "100%",
-        "fontColor": "#967f69",
+        "fontColor": "#d88a64",
         "color": "#d88a64",
-        "bgColor": "#2c2c2c"
+        "bgColor": "#2c2c2c",
+        "shadowColor": "#191711"
       },
       "sys-add-fld": {
-        "name": "+ Add Button",
+        "name": "🌐 Global Buttons",
         "bgSize": "100%",
-        "fontColor": "#967f69",
+        "fontColor": "#d88a64",
         "color": "#d88a64",
-        "bgColor": "#2c2c2c"
+        "bgColor": "#2c2c2c",
+        "shadowColor": "#191711"
       },
       "sys-add-lbl": {
-        "name": "+ Add Button",
+        "name": "🌐 Global Buttons",
         "bgSize": "100%",
-        "fontColor": "#967f69",
+        "fontColor": "#d88a64",
         "color": "#d88a64",
-        "bgColor": "#2c2c2c"
+        "bgColor": "#2c2c2c",
+        "shadowColor": "#191711"
       }
     }
   },
