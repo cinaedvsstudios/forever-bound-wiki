@@ -7,7 +7,7 @@
       "#d88a64",
       "#41096f",
       "#881353",
-      "#2c2c2c",
+      "#2e2721",
       "#2c2c2c",
       "#2c2c2c",
       "#2c2c2c"
@@ -22,17 +22,21 @@
         "name": "App Logo (Image)"
       },
       "sys-top-bar": {
-        "url": "https://raw.githubusercontent.com/cinaedvsstudios/forever-bound-wiki/refs/heads/main/wallpapersm.jpg",
+        "url": "https://raw.githubusercontent.com/cinaedvsstudios/forever-bound-wiki/refs/heads/main/bar.jpg",
         "bgColor": "#000000",
         "color": "#000000",
         "name": "Top Bar (BG/URL)",
-        "fontSize": "70"
+        "fontSize": "70",
+        "shadowColor": "#191711",
+        "bgSize": "100%"
       },
       "sys-sidebar": {
-        "url": "https://raw.githubusercontent.com/cinaedvsstudios/forever-bound-wiki/refs/heads/main/wallpapersm.jpg",
+        "url": "https://raw.githubusercontent.com/cinaedvsstudios/forever-bound-wiki/refs/heads/main/leather.jpg",
         "bgColor": "#000000",
         "color": "#000000",
-        "name": "Top Bar (BG/URL)"
+        "name": "Top Bar (BG/URL)",
+        "fontSize": "175",
+        "shadowColor": "#2e2721"
       },
       "sys-edit-emoji": {
         "text": "🪶",
@@ -70,7 +74,8 @@
         "name": "🌐 Global Buttons",
         "color": "#d88a64",
         "fontColor": "#d88a64",
-        "bgColor": "#191711"
+        "bgColor": "#191711",
+        "shadowColor": "#191711"
       },
       "sys-global-bg": {
         "name": "🌐 Global Buttons",
@@ -81,12 +86,12 @@
       "sys-modal-designer": {
         "name": "🎨 Designer Modal",
         "bgColor": "#191711",
-        "color": "#bda170"
+        "color": "#d88a64"
       },
       "sys-popup-editor": {
         "name": "✏️ Editor Popup",
         "bgColor": "#191711",
-        "color": "#bda170"
+        "color": "#d88a64"
       },
       "sys-save-text": {
         "name": "Save Status Indicator",
@@ -149,6 +154,19 @@
         "name": "Status: READY",
         "text": "READY",
         "fontColor": "#881353"
+      },
+      "sys-ui-toggle": {
+        "name": "UI Toggle Button",
+        "color": "#41096f",
+        "fontColor": "#111111",
+        "shadowColor": "#111111",
+        "bgColor": "#41096f"
+      },
+      "sys-reset": {
+        "name": "Reset Target Button",
+        "bgColor": "#41096f",
+        "color": "#41096f",
+        "fontColor": "#111111"
       }
     }
   },
