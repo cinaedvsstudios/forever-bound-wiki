@@ -221,6 +221,15 @@
       "link": "https://docs.google.com/document/d/11-k9RfOi2QzF8g9V590PwmKdp8cnR6Vi0i-qRy_AN6Q/edit?usp=sharing",
       "placement": "side",
       "parentId": 1778123260394
+    },
+    {
+      "id": 1778123378118,
+      "type": "button",
+      "name": "Episode 02",
+      "desc": "",
+      "link": "https://docs.google.com/document/d/1HaXHBSZVmoPAjpkZ4RlsCiTWm9sX8zPdC0RLUACKGig/edit?usp=sharing",
+      "placement": "side",
+      "parentId": 1778123260394
     }
   ]
 }
