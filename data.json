@@ -61,8 +61,8 @@
         "name": "+ Add Button",
         "bgColor": "#d88a64",
         "color": "#d88a64",
-        "fontColor": "#191711",
-        "url": "https://github.com/cinaedvsstudios/forever-bound-wiki/blob/main/but1.jpg?raw=true",
+        "fontColor": "#474233",
+        "url": "https://github.com/cinaedvsstudios/forever-bound-wiki/blob/main/but2.jpg?raw=true",
         "bgSize": "100%"
       },
       "sys-designer": {
@@ -75,9 +75,10 @@
       "sys-global-btn": {
         "name": "🌐 Global Buttons",
         "color": "#d88a64",
-        "fontColor": "#d88a64",
+        "fontColor": "#191711",
         "bgColor": "#191711",
-        "shadowColor": "#191711"
+        "shadowColor": "#191711",
+        "url": "https://github.com/cinaedvsstudios/forever-bound-wiki/blob/main/but3.jpg?raw=true"
       },
       "sys-global-bg": {
         "name": "🌐 Global Buttons",
@@ -173,29 +174,29 @@
       },
       "sys-popup-save": {
         "name": "Popup: Save & Sync",
-        "url": "https://github.com/cinaedvsstudios/forever-bound-wiki/blob/main/but6.jpg?raw=true",
+        "url": "https://github.com/cinaedvsstudios/forever-bound-wiki/blob/main/but3.jpg?raw=true",
         "color": "#9b4f2a",
         "bgSize": "100%"
       },
       "sys-add-btn": {
         "name": "+ Add Button",
-        "url": "https://github.com/cinaedvsstudios/forever-bound-wiki/blob/main/but1.jpg?raw=true",
+        "url": "https://github.com/cinaedvsstudios/forever-bound-wiki/blob/main/but2.jpg?raw=true",
         "bgSize": "100%",
-        "fontColor": "#191711",
+        "fontColor": "#474233",
         "color": "#d88a64"
       },
       "sys-add-fld": {
         "name": "+ Add Button",
-        "url": "https://github.com/cinaedvsstudios/forever-bound-wiki/blob/main/but1.jpg?raw=true",
+        "url": "https://github.com/cinaedvsstudios/forever-bound-wiki/blob/main/but2.jpg?raw=true",
         "bgSize": "100%",
-        "fontColor": "#191711",
+        "fontColor": "#474233",
         "color": "#d88a64"
       },
       "sys-add-lbl": {
         "name": "+ Add Button",
-        "url": "https://github.com/cinaedvsstudios/forever-bound-wiki/blob/main/but1.jpg?raw=true",
+        "url": "https://github.com/cinaedvsstudios/forever-bound-wiki/blob/main/but2.jpg?raw=true",
         "bgSize": "100%",
-        "fontColor": "#191711",
+        "fontColor": "#474233",
         "color": "#d88a64"
       }
     }
