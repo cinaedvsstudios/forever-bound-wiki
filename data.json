@@ -239,6 +239,15 @@
       "link": "https://docs.google.com/document/d/1bbVqiZ8RSx-C_RSMIBOrGugi5tzGfE0zaqeFgCheJO8/edit?usp=sharing",
       "placement": "side",
       "parentId": 1778123260394
+    },
+    {
+      "id": 1778123852437,
+      "type": "folder",
+      "name": "Season 2",
+      "desc": "Season 2 Episode Summaries",
+      "link": "https://docs.google.com/document/d/1AXn-FfNZopJXVMN2c5Zu_i65yVq57RhGT5GcTw0Yzjw/edit?tab=t.w8iqm0y5avze",
+      "placement": "top",
+      "parentId": null
     }
   ]
 }
