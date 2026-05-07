@@ -230,6 +230,15 @@
       "link": "https://docs.google.com/document/d/1HaXHBSZVmoPAjpkZ4RlsCiTWm9sX8zPdC0RLUACKGig/edit?usp=sharing",
       "placement": "side",
       "parentId": 1778123260394
+    },
+    {
+      "id": 1778123412135,
+      "type": "button",
+      "name": "Episode 03",
+      "desc": "",
+      "link": "https://docs.google.com/document/d/1bbVqiZ8RSx-C_RSMIBOrGugi5tzGfE0zaqeFgCheJO8/edit?usp=sharing",
+      "placement": "side",
+      "parentId": 1778123260394
     }
   ]
 }
