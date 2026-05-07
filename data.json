@@ -4,7 +4,7 @@
       "#bda170",
       "#191711",
       "#111111",
-      "#2c2c2c",
+      "#d88a64",
       "#41096f",
       "#881353",
       "#2c2c2c",
@@ -67,14 +67,15 @@
       },
       "sys-global-btn": {
         "name": "🌐 Global Buttons",
-        "color": "#bda170",
-        "fontColor": "#bda170",
+        "color": "#d88a64",
+        "fontColor": "#d88a64",
         "bgColor": "#191711"
       },
       "sys-global-bg": {
-        "name": "🌐 Global Panels",
+        "name": "🌐 Global Buttons",
         "bgColor": "#191711",
-        "color": "#bda170"
+        "color": "#d88a64",
+        "fontColor": "#d88a64"
       },
       "sys-modal-designer": {
         "name": "🎨 Designer Modal",
