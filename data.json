@@ -9,7 +9,7 @@
       "#881353",
       "#2e2721",
       "#2c2c2c",
-      "#2c2c2c",
+      "#ffffff",
       "#2c2c2c"
     ],
     "fontSize": 14,
@@ -106,14 +106,14 @@
       },
       "sys-mod-delete": {
         "name": "🗑️ Delete Mode",
-        "bgColor": "#bda170",
-        "fontColor": "#111111",
+        "bgColor": "#881353",
+        "fontColor": "#ffffff",
         "color": "#191711"
       },
       "sys-mod-folder": {
         "name": "🗑️ Delete Mode",
-        "bgColor": "#bda170",
-        "fontColor": "#111111",
+        "bgColor": "#2c2c2c",
+        "fontColor": "#ffffff",
         "color": "#191711"
       },
       "sys-save": {
@@ -123,26 +123,27 @@
         "bgColor": "#d88a64"
       },
       "sys-btn-delete": {
-        "name": "Designer: Delete",
-        "bgColor": "#881353",
+        "name": "Designer: Apply",
+        "bgColor": "#41096f",
         "color": "#111111",
-        "fontColor": "#111111"
+        "fontColor": "#ffffff"
       },
       "sys-btn-apply": {
         "name": "Designer: Apply",
         "bgColor": "#41096f",
-        "fontColor": "#111111",
+        "fontColor": "#ffffff",
         "color": "#111111"
       },
       "sys-btn-cancel": {
-        "name": "Designer: Cancel",
-        "bgColor": "#881353",
-        "fontColor": "#111111"
+        "name": "Designer: Apply",
+        "bgColor": "#41096f",
+        "fontColor": "#ffffff",
+        "color": "#111111"
       },
       "sys-btn-sync": {
         "name": "Designer: Apply",
         "bgColor": "#41096f",
-        "fontColor": "#111111",
+        "fontColor": "#ffffff",
         "color": "#111111"
       },
       "sys-edit-text": {
@@ -160,7 +161,7 @@
         "color": "#41096f",
         "fontColor": "#111111",
         "shadowColor": "#111111",
-        "bgColor": "#41096f"
+        "bgColor": "#881353"
       },
       "sys-reset": {
         "name": "Reset Target Button",
