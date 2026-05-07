@@ -58,10 +58,12 @@
         "text": "#bda170"
       },
       "sys-add-div": {
-        "name": "+ Add Divider",
+        "name": "+ Add Button",
         "bgColor": "#d88a64",
-        "color": "#bda170",
-        "fontColor": "#111111"
+        "color": "#d88a64",
+        "fontColor": "#191711",
+        "url": "https://github.com/cinaedvsstudios/forever-bound-wiki/blob/main/but1.jpg?raw=true",
+        "bgSize": "100%"
       },
       "sys-designer": {
         "name": "🎨 Designer Button",
@@ -171,9 +173,30 @@
       },
       "sys-popup-save": {
         "name": "Popup: Save & Sync",
-        "url": "https://github.com/cinaedvsstudios/forever-bound-wiki/blob/main/copper.jpg?raw=true",
+        "url": "https://github.com/cinaedvsstudios/forever-bound-wiki/blob/main/but6.jpg?raw=true",
         "color": "#9b4f2a",
         "bgSize": "100%"
+      },
+      "sys-add-btn": {
+        "name": "+ Add Button",
+        "url": "https://github.com/cinaedvsstudios/forever-bound-wiki/blob/main/but1.jpg?raw=true",
+        "bgSize": "100%",
+        "fontColor": "#191711",
+        "color": "#d88a64"
+      },
+      "sys-add-fld": {
+        "name": "+ Add Button",
+        "url": "https://github.com/cinaedvsstudios/forever-bound-wiki/blob/main/but1.jpg?raw=true",
+        "bgSize": "100%",
+        "fontColor": "#191711",
+        "color": "#d88a64"
+      },
+      "sys-add-lbl": {
+        "name": "+ Add Button",
+        "url": "https://github.com/cinaedvsstudios/forever-bound-wiki/blob/main/but1.jpg?raw=true",
+        "bgSize": "100%",
+        "fontColor": "#191711",
+        "color": "#d88a64"
       }
     }
   },
