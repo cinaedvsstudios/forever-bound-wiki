@@ -48,15 +48,15 @@
       "sys-divider-line": {
         "name": "Popup Dividers (Lines)",
         "bgColor": "#bda170",
-        "color": "#bda170",
+        "color": "#d88a64",
         "fontColor": "#111111",
         "text": "#bda170"
       },
       "sys-add-div": {
         "name": "+ Add Divider",
-        "bgColor": "#bda170",
+        "bgColor": "#d88a64",
         "color": "#bda170",
-        "fontColor": "#bda170"
+        "fontColor": "#111111"
       },
       "sys-designer": {
         "name": "🎨 Designer Button",
@@ -112,8 +112,9 @@
       },
       "sys-save": {
         "name": "Save Layout Button",
-        "fontColor": "#bda170",
-        "color": "#bda170"
+        "fontColor": "#111111",
+        "color": "#d88a64",
+        "bgColor": "#d88a64"
       },
       "sys-btn-delete": {
         "name": "Designer: Delete",
@@ -137,6 +138,16 @@
         "bgColor": "#41096f",
         "fontColor": "#111111",
         "color": "#111111"
+      },
+      "sys-edit-text": {
+        "name": "Status: EDIT",
+        "text": "EDIT",
+        "fontColor": "#d88a64"
+      },
+      "sys-ready-text": {
+        "name": "Status: READY",
+        "text": "READY",
+        "fontColor": "#881353"
       }
     }
   },
