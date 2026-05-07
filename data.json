@@ -73,8 +73,8 @@
       },
       "sys-global-btn": {
         "name": "🌐 Global Buttons",
-        "color": "#6e4a2b",
-        "fontColor": "#6d6864",
+        "color": "#d88a64",
+        "fontColor": "#d88a64",
         "bgColor": "#2c2c2c",
         "shadowColor": "#191711"
       },
