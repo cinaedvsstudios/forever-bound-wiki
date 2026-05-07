@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-05-07T00:00:00.000Z",
+  "documents": [
+    {
+      "id": "project-overview",
+      "title": "Project Overview",
+      "type": "lore-note",
+      "status": "canon",
+      "tags": ["overview", "worldbuilding", "editor"],
+      "template": "Lore Note",
+      "updatedAt": "2026-05-07T00:00:00.000Z",
+      "summary": "A home document for the custom Forever Bound lore editor.",
+      "content": "<h1>Forever Bound Lore Workspace</h1><p>This workspace is a lightweight browser-based editor for long-form worldbuilding, interconnected lore, and episode planning.</p><h2>Goals</h2><ul><li>Fast document switching without page reloads.</li><li>Autosaved rich-text editing.</li><li>Searchable structured lore metadata.</li><li>Portable HTML/JSON content that can live directly in the repository.</li></ul><p>Use <strong>internal references</strong> like <code>[[Episode 01]]</code> or <code>[[Ironvale]]</code> to mark future links between lore documents.</p>"
+    },
+    {
+      "id": "episode-01",
+      "title": "Episode 01",
+      "type": "episode",
+      "status": "draft",
+      "tags": ["season-1", "episode"],
+      "template": "Episode Outline",
+      "updatedAt": "2026-05-07T00:00:00.000Z",
+      "summary": "Starter episode outline migrated from the prior Season 1 navigation structure.",
+      "content": "<h1>Episode 01</h1><h2>Synopsis</h2><p>Write the episode summary here.</p><h2>Key Lore</h2><table><thead><tr><th>Element</th><th>Notes</th></tr></thead><tbody><tr><td>Characters</td><td>Add character beats.</td></tr><tr><td>Locations</td><td>Add location notes.</td></tr></tbody></table><h2>Canon Decisions</h2><p>Track important continuity decisions here.</p>"
+    },
+    {
+      "id": "ironvale",
+      "title": "Ironvale",
+      "type": "location",
+      "status": "stub",
+      "tags": ["location", "reference"],
+      "template": "Location Profile",
+      "updatedAt": "2026-05-07T00:00:00.000Z",
+      "summary": "Example location profile for testing search, metadata, and hover previews.",
+      "content": "<h1>Ironvale</h1><p><em>A sample location entry.</em></p><h2>Overview</h2><p>Describe the region, tone, conflicts, and recurring visual motifs.</p><h2>Connections</h2><ul><li>Referenced by [[Episode 01]].</li><li>Related characters can be added as backlinks later.</li></ul>"
+    }
+  ]
+}

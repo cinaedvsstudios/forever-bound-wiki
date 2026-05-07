@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Forever Bound Lore Editor</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="Document navigation">
+      <header class="brand">
+        <img src="lanternlogo small.png" alt="Forever Bound lantern logo">
+        <div>
+          <p class="eyebrow">Forever Bound</p>
+          <h1>Lore Editor</h1>
+        </div>
+      </header>
+
+      <section class="panel search-panel">
+        <label for="searchInput">Search lore</label>
+        <input id="searchInput" type="search" placeholder="Search titles, tags, content…" autocomplete="off">
+        <div id="searchResults" class="search-results" aria-live="polite"></div>
+      </section>
+
+      <section class="panel">
+        <div class="section-title">
+          <span>Documents</span>
+          <button id="newDocButton" type="button">+ New</button>
+        </div>
+        <nav id="documentList" class="document-list"></nav>
+      </section>
+
+      <section class="panel storage-panel">
+        <div class="section-title"><span>Repository Storage</span></div>
+        <p>Autosaves locally while you write. Export JSON when you are ready to commit content back to GitHub.</p>
+        <button id="exportButton" type="button">Export JSON</button>
+        <button id="copyHtmlButton" type="button">Copy HTML</button>
+        <details class="github-settings">
+          <summary>GitHub commit settings</summary>
+          <label>Owner <input id="githubOwnerInput" type="text" value="cinaedvsstudios"></label>
+          <label>Repo <input id="githubRepoInput" type="text" value="forever-bound-wiki"></label>
+          <label>Branch <input id="githubBranchInput" type="text" value="main"></label>
+          <label>Path <input id="githubPathInput" type="text" value="content/documents.json"></label>
+          <label>Token <input id="githubTokenInput" type="password" placeholder="Fine-grained token"></label>
+          <button id="commitButton" type="button">Commit batch to GitHub</button>
+        </details>
+      </section>
+    </aside>
+
+    <main class="workspace">
+      <header class="topbar">
+        <div class="doc-title-group">
+          <input id="titleInput" class="title-input" aria-label="Document title">
+          <div class="meta-row">
+            <span id="saveStatus" class="save-status">Loading…</span>
+            <span id="wordCount">0 words</span>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <button id="toggleMetaButton" type="button">Metadata</button>
+          <button id="toggleSectionsButton" type="button">Collapse Sections</button>
+        </div>
+      </header>
+
+      <section id="metadataPanel" class="metadata-panel" aria-label="Document metadata">
+        <label>Type <input id="typeInput" type="text" placeholder="episode, character, location…"></label>
+        <label>Status <input id="statusInput" type="text" placeholder="draft, canon, stub…"></label>
+        <label>Tags <input id="tagsInput" type="text" placeholder="comma, separated, tags"></label>
+        <label>Summary <textarea id="summaryInput" rows="2" placeholder="Contextual preview shown in search results"></textarea></label>
+      </section>
+
+      <section class="toolbar" aria-label="Formatting toolbar">
+        <button data-command="bold" type="button"><strong>B</strong></button>
+        <button data-command="italic" type="button"><em>I</em></button>
+        <button data-block="h1" type="button">H1</button>
+        <button data-block="h2" type="button">H2</button>
+        <button data-block="p" type="button">P</button>
+        <button data-command="insertUnorderedList" type="button">• List</button>
+        <button id="tableButton" type="button">Table</button>
+        <button id="imageButton" type="button">Image</button>
+        <button id="emojiButton" type="button">✨ Emoji</button>
+        <input id="imageInput" type="file" accept="image/*" hidden>
+      </section>
+
+      <article id="editor" class="editor" contenteditable="true" spellcheck="true" aria-label="Rich text lore editor"></article>
+    </main>
+  </div>
+
+  <template id="newDocTemplate">
+    <h1>Untitled Lore Note</h1>
+    <h2>Overview</h2>
+    <p>Start writing here.</p>
+    <h2>Connections</h2>
+    <ul><li>Use internal references like [[Related Document]].</li></ul>
+  </template>
+
+  <script src="app.js"></script>
+</body>
+</html>
