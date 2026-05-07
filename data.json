@@ -248,6 +248,15 @@
       "link": "https://docs.google.com/document/d/1AXn-FfNZopJXVMN2c5Zu_i65yVq57RhGT5GcTw0Yzjw/edit?tab=t.w8iqm0y5avze",
       "placement": "top",
       "parentId": null
+    },
+    {
+      "id": 1778123882143,
+      "type": "folder",
+      "name": "Season 2",
+      "desc": "Season 2 Episodes",
+      "link": "https://docs.google.com/document/d/1AXn-FfNZopJXVMN2c5Zu_i65yVq57RhGT5GcTw0Yzjw/edit?tab=t.w8iqm0y5avze",
+      "placement": "side",
+      "parentId": null
     }
   ]
 }
