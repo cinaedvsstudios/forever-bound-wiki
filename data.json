@@ -10,7 +10,7 @@
       "#2e2721",
       "#2c2c2c",
       "#ffffff",
-      "#2c2c2c"
+      "#6e4a2b"
     ],
     "fontSize": 14,
     "align": "center",
@@ -59,10 +59,9 @@
       },
       "sys-add-div": {
         "name": "+ Add Button",
-        "bgColor": "#d88a64",
+        "bgColor": "#2c2c2c",
         "color": "#d88a64",
-        "fontColor": "#474233",
-        "url": "https://github.com/cinaedvsstudios/forever-bound-wiki/blob/main/but2.jpg?raw=true",
+        "fontColor": "#967f69",
         "bgSize": "100%"
       },
       "sys-designer": {
@@ -74,11 +73,10 @@
       },
       "sys-global-btn": {
         "name": "🌐 Global Buttons",
-        "color": "#d88a64",
-        "fontColor": "#191711",
-        "bgColor": "#191711",
-        "shadowColor": "#191711",
-        "url": "https://github.com/cinaedvsstudios/forever-bound-wiki/blob/main/but3.jpg?raw=true"
+        "color": "#6e4a2b",
+        "fontColor": "#6d6864",
+        "bgColor": "#2c2c2c",
+        "shadowColor": "#191711"
       },
       "sys-global-bg": {
         "name": "🌐 Global Buttons",
@@ -89,12 +87,13 @@
       "sys-modal-designer": {
         "name": "🎨 Designer Modal",
         "bgColor": "#191711",
-        "color": "#d88a64"
+        "color": "#d88a64",
+        "shadowColor": "#111111"
       },
       "sys-popup-editor": {
         "name": "✏️ Editor Popup",
         "bgColor": "#191711",
-        "color": "#d88a64"
+        "color": "#6e4a2b"
       },
       "sys-save-text": {
         "name": "Save Status Indicator",
@@ -174,30 +173,29 @@
       },
       "sys-popup-save": {
         "name": "Popup: Save & Sync",
-        "url": "https://github.com/cinaedvsstudios/forever-bound-wiki/blob/main/but3.jpg?raw=true",
         "color": "#9b4f2a",
         "bgSize": "100%"
       },
       "sys-add-btn": {
         "name": "+ Add Button",
-        "url": "https://github.com/cinaedvsstudios/forever-bound-wiki/blob/main/but2.jpg?raw=true",
         "bgSize": "100%",
-        "fontColor": "#474233",
-        "color": "#d88a64"
+        "fontColor": "#967f69",
+        "color": "#d88a64",
+        "bgColor": "#2c2c2c"
       },
       "sys-add-fld": {
         "name": "+ Add Button",
-        "url": "https://github.com/cinaedvsstudios/forever-bound-wiki/blob/main/but2.jpg?raw=true",
         "bgSize": "100%",
-        "fontColor": "#474233",
-        "color": "#d88a64"
+        "fontColor": "#967f69",
+        "color": "#d88a64",
+        "bgColor": "#2c2c2c"
       },
       "sys-add-lbl": {
         "name": "+ Add Button",
-        "url": "https://github.com/cinaedvsstudios/forever-bound-wiki/blob/main/but2.jpg?raw=true",
         "bgSize": "100%",
-        "fontColor": "#474233",
-        "color": "#d88a64"
+        "fontColor": "#967f69",
+        "color": "#d88a64",
+        "bgColor": "#2c2c2c"
       }
     }
   },
