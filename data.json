@@ -5,12 +5,12 @@
       "#191711",
       "#111111",
       "#2c2c2c",
+      "#41096f",
+      "#881353",
       "#2c2c2c",
       "#2c2c2c",
       "#2c2c2c",
-      "#2c2c2c",
-      "#2c2c2c",
-      "#bda170"
+      "#2c2c2c"
     ],
     "fontSize": 14,
     "align": "center",
@@ -60,7 +60,10 @@
       },
       "sys-designer": {
         "name": "🎨 Designer Button",
-        "text": "🏰 Designer"
+        "text": "🏰 Designer",
+        "bgColor": "#191711",
+        "fontColor": "#bda170",
+        "color": "#bda170"
       },
       "sys-global-btn": {
         "name": "🌐 Global Buttons",
@@ -93,6 +96,46 @@
         "bgColor": "#111111",
         "color": "#bda170",
         "fontColor": "#bda170"
+      },
+      "sys-mod-delete": {
+        "name": "🗑️ Delete Mode",
+        "bgColor": "#bda170",
+        "fontColor": "#111111",
+        "color": "#191711"
+      },
+      "sys-mod-folder": {
+        "name": "🗑️ Delete Mode",
+        "bgColor": "#bda170",
+        "fontColor": "#111111",
+        "color": "#191711"
+      },
+      "sys-save": {
+        "name": "Save Layout Button",
+        "fontColor": "#bda170",
+        "color": "#bda170"
+      },
+      "sys-btn-delete": {
+        "name": "Designer: Delete",
+        "bgColor": "#881353",
+        "color": "#111111",
+        "fontColor": "#111111"
+      },
+      "sys-btn-apply": {
+        "name": "Designer: Apply",
+        "bgColor": "#41096f",
+        "fontColor": "#111111",
+        "color": "#111111"
+      },
+      "sys-btn-cancel": {
+        "name": "Designer: Cancel",
+        "bgColor": "#881353",
+        "fontColor": "#111111"
+      },
+      "sys-btn-sync": {
+        "name": "Designer: Apply",
+        "bgColor": "#41096f",
+        "fontColor": "#111111",
+        "color": "#111111"
       }
     }
   },
@@ -103,30 +146,26 @@
       "name": "xxxxxx",
       "link": "",
       "desc": "",
-      "color": "",
+      "color": "#bda170",
       "placement": "top",
       "parentId": null,
-      "open": true
+      "open": true,
+      "bgColor": "#191711",
+      "fontColor": "#bda170"
     },
     {
       "id": 1778034556758,
       "type": "button",
-      "name": "xxxxxxxxx",
+      "name": "xxxxxx",
       "link": "",
       "desc": "",
-      "color": "#000000",
+      "color": "#bda170",
       "placement": "side",
       "parentId": null,
       "open": true,
-      "bgColor": "#2ec4b6",
+      "bgColor": "#191711",
       "align": "center",
-      "fontColor": "#000000"
-    },
-    {
-      "id": 1778111991284,
-      "type": "divider",
-      "placement": "top",
-      "parentId": null
+      "fontColor": "#bda170"
     }
   ]
 }
