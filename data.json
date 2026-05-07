@@ -25,7 +25,8 @@
         "url": "https://raw.githubusercontent.com/cinaedvsstudios/forever-bound-wiki/refs/heads/main/wallpapersm.jpg",
         "bgColor": "#000000",
         "color": "#000000",
-        "name": "Top Bar (BG/URL)"
+        "name": "Top Bar (BG/URL)",
+        "fontSize": "70"
       },
       "sys-sidebar": {
         "url": "https://raw.githubusercontent.com/cinaedvsstudios/forever-bound-wiki/refs/heads/main/wallpapersm.jpg",
