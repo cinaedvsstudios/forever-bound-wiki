@@ -205,39 +205,12 @@
   },
   "items": [
     {
-      "id": 1778034551016,
-      "type": "button",
-      "name": "xxxxxx",
-      "link": "",
-      "desc": "",
-      "color": "#d88a64",
-      "placement": "top",
-      "parentId": null,
-      "open": true,
-      "bgColor": "#191711",
-      "fontColor": "#d88a64"
-    },
-    {
-      "id": 1778034556758,
-      "type": "button",
-      "name": "xxxxxx",
-      "link": "",
-      "desc": "",
-      "color": "#d88a64",
+      "id": 1778123260394,
+      "type": "folder",
+      "name": "Season 1",
+      "desc": "Season 1 Episode Summaries",
+      "link": "https://docs.google.com/document/d/1AXn-FfNZopJXVMN2c5Zu_i65yVq57RhGT5GcTw0Yzjw/edit?tab=t.mamruepyoc27",
       "placement": "side",
-      "parentId": null,
-      "open": true,
-      "bgColor": "#191711",
-      "align": "center",
-      "fontColor": "#d88a64"
-    },
-    {
-      "id": 1778121974204,
-      "type": "button",
-      "name": "xxx",
-      "desc": "xxx",
-      "link": "",
-      "placement": "top",
       "parentId": null
     }
   ]
