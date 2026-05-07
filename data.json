@@ -2,8 +2,8 @@
   "settings": {
     "palette": [
       "#bda170",
-      "#2c2c2c",
-      "#2c2c2c",
+      "#191711",
+      "#111111",
       "#2c2c2c",
       "#2c2c2c",
       "#2c2c2c",
@@ -49,7 +49,7 @@
         "name": "Popup Dividers (Lines)",
         "bgColor": "#bda170",
         "color": "#bda170",
-        "fontColor": "#bda170",
+        "fontColor": "#111111",
         "text": "#bda170"
       },
       "sys-add-div": {
@@ -61,6 +61,38 @@
       "sys-designer": {
         "name": "🎨 Designer Button",
         "text": "🏰 Designer"
+      },
+      "sys-global-btn": {
+        "name": "🌐 Global Buttons",
+        "color": "#bda170",
+        "fontColor": "#bda170",
+        "bgColor": "#191711"
+      },
+      "sys-global-bg": {
+        "name": "🌐 Global Panels",
+        "bgColor": "#191711",
+        "color": "#bda170"
+      },
+      "sys-modal-designer": {
+        "name": "🎨 Designer Modal",
+        "bgColor": "#191711",
+        "color": "#bda170"
+      },
+      "sys-popup-editor": {
+        "name": "✏️ Editor Popup",
+        "bgColor": "#191711",
+        "color": "#bda170"
+      },
+      "sys-save-text": {
+        "name": "Save Status Indicator",
+        "text": "SAVING...",
+        "fontColor": "#191711"
+      },
+      "sys-edit-box": {
+        "name": "Mode Status Box",
+        "bgColor": "#111111",
+        "color": "#bda170",
+        "fontColor": "#bda170"
       }
     }
   },
@@ -77,17 +109,6 @@
       "open": true
     },
     {
-      "id": 1778034554582,
-      "type": "button",
-      "name": "xxxx",
-      "link": "",
-      "desc": "",
-      "color": "",
-      "placement": "side",
-      "parentId": null,
-      "open": true
-    },
-    {
       "id": 1778034556758,
       "type": "button",
       "name": "xxxxxxxxx",
@@ -100,45 +121,6 @@
       "bgColor": "#2ec4b6",
       "align": "center",
       "fontColor": "#000000"
-    },
-    {
-      "id": 1778034561522,
-      "type": "folder",
-      "name": "xxxxx",
-      "link": "",
-      "desc": "",
-      "color": "",
-      "placement": "side",
-      "parentId": null,
-      "open": true
-    },
-    {
-      "id": 1778034568487,
-      "type": "button",
-      "name": "xxxxxx",
-      "link": "",
-      "desc": "",
-      "color": "",
-      "placement": "side",
-      "parentId": 1778034561522,
-      "open": true
-    },
-    {
-      "id": 1778034570751,
-      "type": "button",
-      "name": "xxxxxxxxx",
-      "link": "",
-      "desc": "",
-      "color": "",
-      "placement": "side",
-      "parentId": 1778034561522,
-      "open": true
-    },
-    {
-      "id": 1778111987463,
-      "type": "divider",
-      "placement": "top",
-      "parentId": null
     },
     {
       "id": 1778111991284,
