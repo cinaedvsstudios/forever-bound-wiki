@@ -67,8 +67,8 @@
         "name": "🎨 Designer Button",
         "text": "🏰 Designer",
         "bgColor": "#191711",
-        "fontColor": "#bda170",
-        "color": "#bda170"
+        "fontColor": "#881353",
+        "color": "#881353"
       },
       "sys-global-btn": {
         "name": "🌐 Global Buttons",
@@ -101,8 +101,8 @@
       "sys-edit-box": {
         "name": "Mode Status Box",
         "bgColor": "#111111",
-        "color": "#bda170",
-        "fontColor": "#bda170"
+        "color": "#d88a64",
+        "fontColor": "#d88a64"
       },
       "sys-mod-delete": {
         "name": "🗑️ Delete Mode",
@@ -167,6 +167,12 @@
         "bgColor": "#41096f",
         "color": "#41096f",
         "fontColor": "#111111"
+      },
+      "sys-popup-save": {
+        "name": "Popup: Save & Sync",
+        "url": "https://github.com/cinaedvsstudios/forever-bound-wiki/blob/main/copper.jpg?raw=true",
+        "color": "#9b4f2a",
+        "bgSize": "100%"
       }
     }
   },
