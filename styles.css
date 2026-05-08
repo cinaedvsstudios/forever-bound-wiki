@@ -284,3 +284,164 @@ button, summary { font-size: var(--button-font-size); font-weight: var(--button-
 }
 .caps-dialog footer { display:flex; justify-content:flex-end; }
 .caps-dialog button { color: var(--dialog-button-text); background: var(--dialog-button-bg); border-color: var(--dialog-button-border); box-shadow: 0 4px 12px var(--dialog-button-shadow); }
+
+.toolbar {
+  align-items: stretch;
+  gap: 0.75rem;
+}
+.tool-menu {
+  flex: 0 0 auto;
+  min-width: 9.2rem;
+}
+.tool-menu summary {
+  width: 100%;
+  gap: 0.45rem;
+  min-height: 2.45rem;
+  padding: 0.55rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--button);
+  color: var(--ink);
+  cursor: pointer;
+}
+.tool-menu summary::after {
+  content: "⌄";
+  opacity: 0.75;
+}
+.tool-menu-panel {
+  position: absolute;
+  top: calc(100% + 0.45rem);
+  left: 0;
+  z-index: 25;
+  display: grid;
+  gap: 0.35rem;
+  min-width: 13.5rem;
+  padding: 0.55rem;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(17,16,13,0.98);
+  box-shadow: 0 18px 48px rgba(0,0,0,0.42);
+}
+.tool-menu[open]:first-of-type .tool-menu-panel {
+  position: static;
+  display: flex;
+  min-width: 0;
+  padding: 0;
+  margin-top: 0.45rem;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.tool-menu-panel button {
+  justify-content: flex-start;
+  white-space: nowrap;
+}
+
+.settings-menu {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.45rem;
+  padding: 0.65rem 0 0.85rem;
+  background: rgba(17,16,13,0.98);
+}
+.settings-menu button[aria-pressed="true"] {
+  color: #111;
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.settings-card {
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.055), rgba(0,0,0,0.18));
+  box-shadow: 0 16px 42px rgba(0,0,0,0.2);
+}
+.document-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.9rem;
+}
+.document-card {
+  display: grid;
+  gap: 0.8rem;
+  min-height: 13rem;
+  padding: 0.9rem;
+  border: 1px solid rgba(216,138,100,0.42);
+  border-radius: 20px;
+  background: rgba(0,0,0,0.24);
+}
+.document-card.is-active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(216,138,100,0.18);
+}
+.document-card h4 {
+  margin: 0.2rem 0 0.4rem;
+  color: var(--ink);
+}
+.document-card p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.45;
+}
+.document-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  align-self: end;
+}
+.document-card-tags span {
+  padding: 0.16rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--ink);
+  background: var(--accent-soft);
+  font-size: 0.78rem;
+}
+.document-card footer {
+  display: grid;
+  gap: 0.55rem;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  padding-top: 0.65rem;
+}
+.document-card small { color: var(--muted); }
+.document-card-actions {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+.document-card-actions button { flex: 1 1 auto; padding: 0.42rem 0.55rem; }
+.selection-menu {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 240px;
+  list-style: none;
+}
+.selection-menu-heading {
+  padding: 0.15rem 0.35rem 0.35rem;
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.selection-menu li { margin: 0; }
+.selection-menu button {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 0.55rem;
+  row-gap: 0.1rem;
+  width: 100%;
+  text-align: left;
+}
+.selection-menu button span { grid-row: span 2; }
+.selection-menu button small { color: var(--muted); font-weight: 600; }
+
+@media (max-width: 760px) {
+  .tool-menu, .tool-menu[open]:first-of-type .tool-menu-panel { width: 100%; }
+  .tool-menu-panel, .tool-menu[open]:first-of-type .tool-menu-panel { position: static; display: grid; margin-top: 0.45rem; }
+  .settings-menu { grid-template-columns: repeat(2, 1fr); }
+}

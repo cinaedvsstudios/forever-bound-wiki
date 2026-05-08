@@ -68,6 +68,9 @@ const els = {
   dialogButtonBorder: document.querySelector("#dialogButtonBorder"),
   dialogButtonText: document.querySelector("#dialogButtonText"),
   dialogButtonShadow: document.querySelector("#dialogButtonShadow"),
+  settingsMenu: document.querySelector(".settings-menu"),
+  settingsSections: document.querySelectorAll("[data-settings-section]"),
+  documentCards: document.querySelector("#documentCards"),
   selectionMenu: document.querySelector("#selectionMenu"),
   dialogOverlay: document.querySelector("#dialogOverlay"),
   dialogBox: document.querySelector("#dialogBox"),
@@ -240,6 +243,8 @@ function bindEditorEvents() {
   els.emojiButton.addEventListener("click", () => insertHtml("✨"));
   els.settingsButton.addEventListener("click", () => toggleSettingsPanel(true));
   els.closeSettingsPanel.addEventListener("click", () => toggleSettingsPanel(false));
+  els.settingsMenu.addEventListener("click", handleSettingsMenuClick);
+  els.documentCards.addEventListener("click", handleDocumentCardClick);
   els.helpButton.addEventListener("click", () => toggleHelpPanel(true));
   els.closeHelpPanel.addEventListener("click", () => toggleHelpPanel(false));
   els.exportSourceType.addEventListener("change", renderExportSourceSelect);
@@ -356,6 +361,7 @@ function renderAll() {
   renderBlockList();
   renderExportSourceSelect();
   renderExportQueue();
+  renderDocumentCards();
 }
 
 function renderDocumentSelect() {
@@ -455,9 +461,17 @@ function openSelectionContextMenu(event) {
   if (!selection.rangeCount || selection.isCollapsed || !els.editor.contains(selection.getRangeAt(0).commonAncestorContainer)) return;
   event.preventDefault();
   saveSelectionRange();
-  els.selectionMenu.style.left = `${event.clientX}px`;
-  els.selectionMenu.style.top = `${event.clientY}px`;
+  showSelectionContextMenu(event.clientX, event.clientY);
+}
+
+function showSelectionContextMenu(clientX, clientY) {
   els.selectionMenu.hidden = false;
+  const margin = 12;
+  const rect = els.selectionMenu.getBoundingClientRect();
+  const left = Math.min(clientX, window.innerWidth - rect.width - margin);
+  const top = Math.min(clientY, window.innerHeight - rect.height - margin);
+  els.selectionMenu.style.left = `${Math.max(margin, left)}px`;
+  els.selectionMenu.style.top = `${Math.max(margin, top)}px`;
 }
 
 function hideSelectionContextMenu() {
@@ -699,9 +713,64 @@ function insertHtml(html) {
 function toggleSettingsPanel(show) {
   els.settingsPanel.hidden = !show;
   if (show) {
+    showSettingsSection("documents");
+    renderDocumentCards();
     renderExportSourceSelect();
     renderExportQueue();
     loadDesignForm();
+  }
+}
+
+function handleSettingsMenuClick(event) {
+  const button = event.target.closest("button[data-settings-tab]");
+  if (!button) return;
+  showSettingsSection(button.dataset.settingsTab);
+}
+
+function showSettingsSection(sectionName) {
+  els.settingsMenu.querySelectorAll("button[data-settings-tab]").forEach((button) => {
+    button.setAttribute("aria-pressed", String(button.dataset.settingsTab === sectionName));
+  });
+  els.settingsSections.forEach((section) => {
+    section.hidden = section.dataset.settingsSection !== sectionName;
+  });
+}
+
+function renderDocumentCards() {
+  if (!els.documentCards) return;
+  els.documentCards.innerHTML = state.documents.map((doc) => {
+    const tags = (doc.tags ?? []).slice(0, 4);
+    const updated = doc.updatedAt ? new Date(doc.updatedAt).toLocaleDateString() : "Not saved yet";
+    return `<article class="document-card ${doc.id === state.activeId ? "is-active" : ""}" data-doc-card="${escapeAttr(doc.id)}">
+      <div>
+        <p class="eyebrow">${doc.id === state.activeId ? "Current Card" : "Writing Card"}</p>
+        <h4>${escapeHtml(doc.title)}</h4>
+        <p>${escapeHtml(textFromHtml(renderTransclusions(doc.content)).slice(0, 140) || "Empty card")}</p>
+      </div>
+      <div class="document-card-tags">${tags.length ? tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join("") : "<span>No tags</span>"}</div>
+      <footer>
+        <small>Updated ${escapeHtml(updated)}</small>
+        <span class="document-card-actions">
+          <button type="button" data-card-action="open" data-doc-id="${escapeAttr(doc.id)}">Open</button>
+          <button type="button" data-card-action="copy" data-doc-id="${escapeAttr(doc.id)}">Copy URL</button>
+        </span>
+      </footer>
+    </article>`;
+  }).join("");
+}
+
+async function handleDocumentCardClick(event) {
+  const button = event.target.closest("button[data-card-action]");
+  if (!button) return;
+  const docId = button.dataset.docId;
+  if (button.dataset.cardAction === "open") {
+    openDocument(docId);
+    toggleSettingsPanel(false);
+    return;
+  }
+  if (button.dataset.cardAction === "copy") {
+    await copyText(new URL(documentUrl(docId), location.href).href);
+    setStatus("Copied document card link", "saved");
   }
 }
 
@@ -936,7 +1005,7 @@ function applyDesignSettings(settings) {
   root.style.setProperty("--ink", settings.textColor);
   root.style.setProperty("--button-font-size", `${settings.fontSize}px`);
   root.style.setProperty("--button-font-weight", settings.bold ? "800" : "500");
-  root.style.setProperty("--app-bg-image", settings.bgImage ? `url("${settings.bgImage}")` : "none");
+  root.style.setProperty("--app-bg-image", settings.bgImage ? `url("${escapeCssUrl(settings.bgImage)}")` : "none");
   root.style.setProperty("--dialog-bg", settings.dialogBg);
   root.style.setProperty("--dialog-border", settings.dialogBorder);
   root.style.setProperty("--dialog-shadow", settings.dialogShadow);
