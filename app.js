@@ -92,6 +92,8 @@ const state = {
   draggedEditorNode: null,
   activeTable: null,
   tableEditTimer: null,
+  activeTableCell: null,
+  cabinetScrollDrag: null,
   lastColorInput: null,
   favoriteColors: [...DEFAULT_FAVORITE_COLORS],
   contextStatusLocked: false,
@@ -199,6 +201,7 @@ const els = {
   titleInput: document.querySelector("#titleInput"),
   tagsInput: document.querySelector("#tagsInput"),
   editor: document.querySelector("#editor"),
+  documentEndBar: document.querySelector("#documentEndBar"),
   blockPanel: document.querySelector("#blockPanel"),
   closeBlockPanel: document.querySelector("#closeBlockPanel"),
   blockIdInput: document.querySelector("#blockIdInput"),
@@ -484,7 +487,7 @@ function bindEditorEvents() {
   els.imageInput.addEventListener("change", embedSelectedImage);
   els.emojiButton.addEventListener("click", showEmojiPicker);
   els.searchButton?.addEventListener("click", () => setContextStatus("Search will be built next", "saved"));
-  els.subnotoButton?.addEventListener("click", () => setContextStatus("Subnoto placeholder ready", "saved"));
+  els.subnotoButton?.addEventListener("click", () => openSubnotoWindow());
   els.emphasisButton.addEventListener("click", insertEmphasisBox);
   els.topHelpButton.addEventListener("click", () => toggleHelpPanel(true));
   els.settingsButton.addEventListener("click", () => toggleSettingsPanel(true));
@@ -504,6 +507,10 @@ function bindEditorEvents() {
   els.writingRoomCards.addEventListener("dragstart", handleFilingDragStart);
   els.writingRoomCards.addEventListener("dragover", handleFilingDragOver);
   els.writingRoomCards.addEventListener("drop", handleFilingDrop);
+  els.writingRoomCards.addEventListener("pointerdown", startCabinetScrollDrag);
+  window.addEventListener("pointermove", moveCabinetScrollDrag);
+  window.addEventListener("pointerup", stopCabinetScrollDrag);
+  els.documentEndBar?.addEventListener("click", handleDocumentEndBarClick);
   els.writingRoomPanelHeader.addEventListener("pointerdown", startWritingRoomDrag);
   window.addEventListener("pointermove", moveWritingRoomPanel);
   window.addEventListener("pointerup", stopWritingRoomDrag);
@@ -638,6 +645,42 @@ function renderAll() {
   renderExportSourceSelect();
   renderExportQueue();
   renderWritingRoomCards();
+  renderDocumentEndBar();
+}
+
+
+function renderDocumentEndBar() {
+  if (!els.documentEndBar) return;
+  const doc = activeDocument();
+  const fileType = documentFileType(doc);
+  els.documentEndBar.innerHTML = `
+    <button type="button" data-end-action="writing-room">Writing Room</button>
+    <span class="end-doc-title"><span class="card-icon">${docIcon(doc)}</span><strong>${escapeHtml(doc.title)}</strong></span>
+    <span class="end-doc-meta">${escapeHtml(fileType)} · ${escapeHtml(doc.id)} · ${escapeHtml((doc.tags || []).join(", ") || "No tags")}</span>
+    <span class="document-card-actions">
+      <button type="button" data-end-action="open">↗</button>
+      <button type="button" data-end-action="bulk-style">🎨</button>
+      <button type="button" data-end-action="duplicate">⧉</button>
+      <button type="button" data-end-action="deprecate">🕰</button>
+      <button type="button" data-end-action="delete">❌</button>
+      <button type="button" data-end-action="copy">🔗</button>
+    </span>`;
+}
+
+async function handleDocumentEndBarClick(event) {
+  const button = event.target.closest("button[data-end-action]");
+  if (!button) return;
+  const doc = activeDocument();
+  const action = button.dataset.endAction;
+  if (action === "writing-room" || action === "open") return toggleWritingRoomPanel(true);
+  if (action === "bulk-style") return bulkStyleDocument(doc.id);
+  if (action === "duplicate") return duplicateDocument(doc.id);
+  if (action === "deprecate") return deprecateDocument(doc.id);
+  if (action === "delete") return deleteDocumentSafely(doc.id);
+  if (action === "copy") {
+    await copyText(new URL(documentUrl(doc.id), location.href).href);
+    setStatus("Copied file link", "saved");
+  }
 }
 
 function renderDocumentSelect() {
@@ -944,6 +987,8 @@ function currentLink() {
 }
 
 function handleEditorClick(event) {
+  const cell = event.target.closest("th, td");
+  if (cell && els.editor.contains(cell)) state.activeTableCell = cell;
   const tcardButton = event.target.closest("[data-edit-tcard]");
   if (tcardButton) { toggleBlockPanel(true); selectBlock(tcardButton.dataset.editTcard); return; }
   const tableButton = event.target.closest(".table-edit-button");
@@ -1051,14 +1096,17 @@ function embedSelectedImage(event) {
 }
 
 
+const EMOJI_LIBRARY = [
+  ["😀","grin smile happy face"],["😃","smile happy face"],["😄","laugh happy face"],["😁","grin"],["😆","laugh"],["😅","sweat smile"],["😂","tears laugh"],["🤣","rolling laugh"],["😊","blush smile"],["🙂","slight smile"],["😉","wink"],["😍","heart eyes love"],["😘","kiss"],["😎","cool sunglasses"],["🤔","thinking"],["😐","neutral"],["😮","surprise"],["😢","cry"],["😭","sob"],["😡","angry"],["😈","devil"],["👻","ghost"],["💀","skull death"],["🤖","robot"],["👑","crown royal"],["🧑","person character"],["👤","profile person"],["🧙","wizard magic"],["🧝","elf fantasy"],["🧛","vampire"],["🐺","wolf"],["🐉","dragon"],["🦅","eagle"],["🕊️","dove peace"],["🔥","fire"],["💧","water"],["🌊","wave ocean"],["🌲","tree forest"],["🌙","moon"],["☀️","sun"],["⭐","star"],["✨","sparkle magic"],["⚡","lightning"],["❄️","snow ice"],["🌫️","fog mist"],["🌹","rose flower"],["🍃","leaf"],["🏰","castle"],["⛪","church"],["🏠","house home"],["🗺️","map"],["🧭","compass"],["🛤️","road track"],["⚔️","sword battle"],["🛡️","shield"],["🏹","bow arrow"],["🗡️","dagger"],["🔫","gun"],["💣","bomb"],["🪄","wand spell"],["🧪","potion science"],["💎","gem crystal"],["🗝️","key"],["🔒","lock"],["🔓","unlock"],["📜","scroll parchment"],["📖","book"],["📕","red book"],["📝","note writing"],["✏️","pencil edit"],["🖋️","pen"],["📁","folder"],["📂","open folder"],["📄","file document"],["🗃️","file cabinet"],["🗑️","trash"],["🎬","movie scene script"],["🎵","music song"],["🎤","voice mic"],["🎧","headphones"],["🎨","paint color"],["🖼️","image picture"],["🔗","link chain"],["⚓","anchor bookmark"],["💊","pill"],["🧩","puzzle subnoto"],["🔍","search"],["⚙️","settings"],["❓","question help"],["❗","warning"],["✅","check yes"],["❌","x delete no"],["➕","plus add"],["➖","minus remove"],["⬆️","up"],["⬇️","down"],["⬅️","left"],["➡️","right"],["↗️","open external"],["♻️","restore recycle"],["🕰️","old deprecated time"],["💗","heart love"],["❤️","heart red"],["🖤","black heart"],["💜","purple heart"]
+];
+
 function showEmojiPicker(event) {
   saveSelectionRange();
   document.querySelector(".emoji-picker")?.remove();
   const picker = document.createElement("div");
   picker.className = "emoji-picker";
   picker.setAttribute("role", "menu");
-  const emojis = ["✨","🔥","💗","📜","📁","🎬","🧑","👑","⚔️","🛡️","🧪","🪄","🗝️","🕯️","🌙","☀️","⭐","🌊","🌲","🏰","⛪","💎","🎵","📝","❗","❓","✅","❌"];
-  picker.innerHTML = emojis.map((emoji) => `<button type="button" data-emoji="${emoji}" title="${emoji}">${emoji}</button>`).join("");
+  picker.innerHTML = `<input class="emoji-search" type="search" placeholder="Right-click emoji, type word, Enter" aria-label="Search emoji">` + EMOJI_LIBRARY.map(([emoji, name]) => `<button type="button" data-emoji="${emoji}" data-emoji-name="${escapeAttr(name)}" title="${escapeAttr(name)}">${emoji}</button>`).join("");
   picker.addEventListener("click", (clickEvent) => {
     const button = clickEvent.target.closest("button[data-emoji]");
     if (!button) return;
@@ -1066,17 +1114,34 @@ function showEmojiPicker(event) {
     insertHtml(button.dataset.emoji);
     picker.remove();
   });
-  picker.addEventListener("contextmenu", async (menuEvent) => {
+  picker.addEventListener("contextmenu", (menuEvent) => {
     const button = menuEvent.target.closest("button[data-emoji]");
     if (!button) return;
     menuEvent.preventDefault();
-    await copyText(button.dataset.emoji);
-    setStatus("Emoji copied", "saved");
+    const search = picker.querySelector(".emoji-search");
+    search.hidden = false;
+    search.value = "";
+    search.focus();
+  });
+  picker.querySelector(".emoji-search").addEventListener("keydown", (keyEvent) => {
+    if (keyEvent.key !== "Enter") return;
+    keyEvent.preventDefault();
+    const term = keyEvent.currentTarget.value.trim().toLowerCase();
+    if (!term) return;
+    const match = [...picker.querySelectorAll("button[data-emoji]")].find((button) => button.dataset.emojiName.includes(term));
+    match?.scrollIntoView({ behavior: "smooth", block: "center" });
+    keyEvent.currentTarget.hidden = true;
   });
   document.body.append(picker);
   const rect = event.currentTarget.getBoundingClientRect();
-  picker.style.left = `${Math.min(rect.left, window.innerWidth - 280)}px`;
-  picker.style.top = `${rect.bottom + 8}px`;
+  picker.style.left = `${Math.max(8, Math.min(rect.left, window.innerWidth - 330))}px`;
+  picker.style.top = `${Math.min(rect.bottom + 8, window.innerHeight - 360)}px`;
+  setTimeout(() => document.addEventListener("pointerdown", closeEmojiPickerOnOutside, { once: true }), 0);
+}
+
+function closeEmojiPickerOnOutside(event) {
+  if (!event.target.closest?.(".emoji-picker") && event.target !== els.emojiButton) document.querySelector(".emoji-picker")?.remove();
+  else document.addEventListener("pointerdown", closeEmojiPickerOnOutside, { once: true });
 }
 
 function insertHtml(html) {
@@ -1743,6 +1808,35 @@ function movePanelDrag(event) {
 
 function stopPanelDrag() { state.panelDrag = null; }
 
+
+function openSubnotoWindow() {
+  setContextStatus("Subnoto window placeholder ready", "saved");
+  openCapsDialog("Subnoto", [
+    { name: "note", label: "Subnoto will be defined in the next phase.", value: "", readonly: true },
+  ]);
+}
+
+function startCabinetScrollDrag(event) {
+  if (event.target.closest("button, input, select, textarea, summary, [contenteditable='true']")) return;
+  state.cabinetScrollDrag = {
+    y: event.clientY,
+    scrollTop: els.writingRoomCards.scrollTop,
+  };
+  els.writingRoomCards.classList.add("is-drag-scrolling");
+}
+
+function moveCabinetScrollDrag(event) {
+  if (!state.cabinetScrollDrag) return;
+  event.preventDefault();
+  const delta = event.clientY - state.cabinetScrollDrag.y;
+  els.writingRoomCards.scrollTop = state.cabinetScrollDrag.scrollTop - delta;
+}
+
+function stopCabinetScrollDrag() {
+  state.cabinetScrollDrag = null;
+  els.writingRoomCards?.classList.remove("is-drag-scrolling");
+}
+
 function saveWritingRoomPanelLayout() {
   const rect = els.writingRoomPanel.getBoundingClientRect();
   const layout = {
@@ -1857,14 +1951,27 @@ function applyTableEdits(table, result) {
   if (result.action === "wider") table.querySelectorAll("tr > *").forEach((cell) => { cell.style.minWidth = `${(parseInt(cell.style.minWidth, 10) || 120) + 40}px`; });
   const action = String(result.action || "").trim().toLowerCase();
   const rows = [...table.rows];
+  const activeCell = state.activeTableCell && table.contains(state.activeTableCell) ? state.activeTableCell : rows[rows.length - 1]?.cells[0];
+  const activeRow = activeCell?.parentElement;
+  const activeRowIndex = activeRow ? rows.indexOf(activeRow) : rows.length - 1;
+  const activeCellIndex = activeCell ? activeCell.cellIndex : ((rows[0]?.cells.length || 1) - 1);
   const columnCount = rows[0]?.cells.length || 1;
   if (action === "add-row") {
-    const row = table.tBodies[0]?.insertRow(-1) || table.insertRow(-1);
+    const body = table.tBodies[0] || table.createTBody();
+    const bodyRows = [...body.rows];
+    const bodyIndex = activeRow && activeRow.parentElement === body ? bodyRows.indexOf(activeRow) + 1 : bodyRows.length;
+    const row = body.insertRow(Math.max(0, bodyIndex));
     for (let i = 0; i < columnCount; i += 1) row.insertCell(-1).textContent = "";
   }
-  if (action === "add-col") rows.forEach((row, index) => (index === 0 && table.tHead ? row.insertCell(-1).outerHTML = "<th></th>" : row.insertCell(-1).textContent = ""));
-  if (action === "delete-row" && rows.length > 1) table.deleteRow(-1);
-  if (action === "delete-col" && columnCount > 1) rows.forEach((row) => row.deleteCell(-1));
+  if (action === "add-col") {
+    rows.forEach((row, rowIndex) => {
+      const insertAt = Math.min(activeCellIndex + 1, row.cells.length);
+      const cell = row.insertCell(insertAt);
+      if (rowIndex === 0 && table.tHead) cell.outerHTML = "<th></th>";
+    });
+  }
+  if (action === "delete-row" && rows.length > 1) table.deleteRow(Math.max(0, activeRowIndex));
+  if (action === "delete-col" && columnCount > 1) rows.forEach((row) => row.deleteCell(Math.min(activeCellIndex, row.cells.length - 1)));
 }
 
 function handleEditorDragStart(event) {

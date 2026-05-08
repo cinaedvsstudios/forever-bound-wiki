@@ -42,7 +42,7 @@
           </div>
         </div>
         <div class="tool-menu">
-          <button class="tool-menu-trigger" type="button" aria-haspopup="true">Links</button>
+          <button class="tool-menu-trigger" type="button" aria-haspopup="false" data-tool-name="Subnoto">Subnoto</button>
           <div class="tool-menu-panel">
             <button id="subnotoButton" type="button" title="Subnoto" aria-label="Subnoto" data-tool-name="Subnoto">🧩 Subnoto</button>
             <button id="linkButton" type="button" title="Create Link" aria-label="Create Link" data-tool-name="Path Link" hidden>🔗 Path Link</button>
@@ -115,6 +115,8 @@
 
     <article id="editor" class="editor" contenteditable="true" spellcheck="true" aria-label="Writing area"></article>
 
+    <section id="documentEndBar" class="document-end-bar" aria-label="End of document controls"></section>
+
     <aside id="settingsPanel" class="settings-panel" aria-label="Capsanoto settings" hidden>
       <header>
         <div>
@@ -153,13 +155,16 @@
       <section class="settings-section settings-card design-section" data-settings-section="design">
         <h3>Element Designer</h3>
         <div class="design-controls">
+          <h4>System</h4>
+          <p class="design-section-note">Bars, borders, status box, Format/Subnoto/Insert command bar, icons, and global app text.</p>
           <label>Button Color <input id="designButtonBg" type="color" value="#2c2c2c"></label>
           <label>Border Color <input id="designBorderColor" type="color" value="#e88f69"></label>
           <label>Text Color <input id="designTextColor" type="color" value="#fbf4d6"></label>
           <label>Text Size <input id="designFontSize" type="number" min="10" max="32" value="14"></label>
           <button id="designBoldToggle" class="toggle-pill" type="button" aria-pressed="true">Bold</button><input id="designBold" type="checkbox" checked hidden>
           <label>Background Image URL <input id="designBgImage" type="text" placeholder="wallpapersm.jpg or https://..."></label>
-          <h4>Global Dialogue Style</h4>
+          <h4>Global Dialogue and Buttons</h4>
+          <p class="design-section-note">Dialog windows, dialog text, dialog buttons, shadows, and shared button treatment.</p>
           <label>Dialog BG <input id="dialogBgColor" type="color" value="#211812"></label>
           <label>Dialog Border <input id="dialogBorderColor" type="color" value="#e88f69"></label>
           <label>Dialog Shadow <input id="dialogShadowColor" type="color" value="#000000"></label>
@@ -170,17 +175,22 @@
           <label>Dialog Button Border <input id="dialogButtonBorder" type="color" value="#e88f69"></label>
           <label>Dialog Button Text <input id="dialogButtonText" type="color" value="#fbf4d6"></label>
           <label>Dialog Button Shadow <input id="dialogButtonShadow" type="color" value="#000000"></label>
-          <h4>Writing Room Elements</h4>
+          <h4>Writing Room Window</h4>
+          <p class="design-section-note">Filing Cabinet, document cards, metadata pills, status, emphasis boxes, and panel borders.</p>
           <label>Status BG <input id="statusBgColor" type="color" value="#000000"></label>
           <label>Status Border <input id="statusBorderColor" type="color" value="#a97b38"></label>
           <label>Status Text <input id="statusTextColor" type="color" value="#fbf4d6"></label>
           <label>Emphasis BG <input id="emphasisBgColor" type="color" value="#2f251c"></label>
           <label>Emphasis Border <input id="emphasisBorderColor" type="color" value="#563485"></label>
           <label>Emphasis Text <input id="emphasisTextColor" type="color" value="#fbf4d6"></label>
+          <h4>Settings Window</h4>
+          <p class="design-section-note">Settings panel background/border and shared settings card surfaces.</p>
           <label>Panel BG <input id="panelBgColor" type="color" value="#211812"></label>
           <label>Panel Border <input id="panelBorderColor" type="color" value="#724837"></label>
           <label>Label Text <input id="labelTextColor" type="color" value="#a97b38"></label>
           <label>Dynamic Text <input id="dynamicTextColor" type="color" value="#e88f69"></label>
+          <h4>Help Window</h4>
+          <p class="design-section-note">Help panel surface, scrollbars, guide text, and code text treatment.</p>
           <label>Scrollbar Track <input id="scrollbarTrackColor" type="color" value="#211812"></label>
           <label>Scrollbar Thumb <input id="scrollbarThumbColor" type="color" value="#e88f69"></label>
         </div>
