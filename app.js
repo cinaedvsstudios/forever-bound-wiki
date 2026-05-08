@@ -1,6 +1,6 @@
 const STORAGE_KEY = "forever-bound-writing-room-v2";
 const AUTH_KEY = "forever-bound-authenticated";
-const SHARED_PASSWORD = "foreverbound";
+const AUTH_CONFIG_PATH = "config/auth.json";
 const AUTOSAVE_DELAY = 600;
 
 const state = {
@@ -9,6 +9,7 @@ const state = {
   activeId: null,
   saveTimer: null,
   suppressInput: false,
+  sharedPassword: "",
 };
 
 const els = {
@@ -45,9 +46,14 @@ const els = {
   documentTemplate: document.querySelector("#documentTemplate"),
 };
 
-boot();
+boot().catch((error) => {
+  console.error(error);
+  showPasswordScreen();
+  els.passwordError.textContent = "Unable to load password settings. Check config/auth.json.";
+});
 
 async function boot() {
+  await loadAuthConfig();
   bindAuthEvents();
   if (!isAuthenticated()) {
     showPasswordScreen();
@@ -56,10 +62,17 @@ async function boot() {
   await startEditor();
 }
 
+async function loadAuthConfig() {
+  const response = await fetch(AUTH_CONFIG_PATH, { cache: "no-store" });
+  if (!response.ok) throw new Error(`Unable to load ${AUTH_CONFIG_PATH}`);
+  const config = await response.json();
+  state.sharedPassword = config.sharedPassword ?? "";
+}
+
 function bindAuthEvents() {
   els.passwordForm.addEventListener("submit", async (event) => {
     event.preventDefault();
-    if (els.passwordInput.value === SHARED_PASSWORD) {
+    if (els.passwordInput.value === state.sharedPassword) {
       localStorage.setItem(AUTH_KEY, "true");
       els.passwordInput.value = "";
       await startEditor();
