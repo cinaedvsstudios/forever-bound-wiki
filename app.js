@@ -5,6 +5,7 @@ const CONTENT_PATH = "content/documents.json";
 const EDITOR_ENTRY = "editor.html";
 const AUTOSAVE_DELAY = 600;
 const DESIGN_KEY = "capsanoto-design-settings-v1";
+const HELP_KEY = "capsanoto-help-html-v1";
 
 const CAPSANOTO_PALETTE = {
   black: "#000000",
@@ -80,6 +81,7 @@ const state = {
   writingRoomDrag: null,
   panelDrag: null,
   filingEditMode: false,
+  writingRoomName: "Writing Room",
   filingGroups: [],
   filingTabs: [],
   trash: [],
@@ -166,6 +168,7 @@ const els = {
   writingRoomButton: document.querySelector("#writingRoomButton"),
   writingRoomPanel: document.querySelector("#writingRoomPanel"),
   writingRoomPanelHeader: document.querySelector("#writingRoomPanelHeader"),
+  writingRoomTitle: document.querySelector("#writingRoomTitle"),
   closeWritingRoomPanel: document.querySelector("#closeWritingRoomPanel"),
   editWritingRoomButton: document.querySelector("#editWritingRoomButton"),
   writingRoomEditBar: document.querySelector("#writingRoomEditBar"),
@@ -182,6 +185,7 @@ const els = {
   applyDesignButton: document.querySelector("#applyDesignButton"),
   resetDesignButton: document.querySelector("#resetDesignButton"),
   helpPanel: document.querySelector("#helpPanel"),
+  helpEditButton: document.querySelector("#helpEditButton"),
   closeHelpPanel: document.querySelector("#closeHelpPanel"),
   bookmarkBar: document.querySelector("#bookmarkBar"),
   titleInput: document.querySelector("#titleInput"),
@@ -295,6 +299,7 @@ async function startEditor() {
   hydrateIconButtons();
   bindEditorEvents();
   applyRouteToState();
+  loadEditableHelp();
   renderAll();
   if (!new URLSearchParams(location.search).has("doc")) updateUrl();
   scrollToRouteBookmark();
@@ -349,6 +354,7 @@ async function loadWorkspace() {
       const payload = JSON.parse(saved);
       state.documents = Array.isArray(payload.documents) ? payload.documents : [];
       state.blocks = payload.blocks && typeof payload.blocks === "object" ? payload.blocks : {};
+      state.writingRoomName = payload.writingRoomName || state.writingRoomName;
       state.filingGroups = Array.isArray(payload.filingGroups) ? payload.filingGroups : [];
       state.filingTabs = Array.isArray(payload.filingTabs) ? payload.filingTabs : [];
       state.trash = Array.isArray(payload.trash) ? payload.trash : [];
@@ -365,6 +371,7 @@ async function loadWorkspace() {
     const payload = await loadStarterWorkspace();
     state.documents = Array.isArray(payload.documents) ? payload.documents : [];
     state.blocks = payload.blocks && typeof payload.blocks === "object" ? payload.blocks : {};
+    state.writingRoomName = payload.writingRoomName || state.writingRoomName;
     state.filingGroups = Array.isArray(payload.filingGroups) ? payload.filingGroups : [];
     state.filingTabs = Array.isArray(payload.filingTabs) ? payload.filingTabs : [];
     state.trash = Array.isArray(payload.trash) ? payload.trash : [];
@@ -476,6 +483,8 @@ function bindEditorEvents() {
   els.newTabButton.addEventListener("click", createFilingTab);
   els.trashCanButton.addEventListener("click", () => setContextStatus(`${state.trash.length} items in Trash · ${state.deprecated.length} deprecated`, false));
   els.writingRoomCards.addEventListener("click", handleWritingRoomCardClick);
+  els.writingRoomCards.addEventListener("focusout", handleFilingInlineEdit);
+  els.writingRoomCards.addEventListener("keydown", handleFilingInlineKeydown);
   els.writingRoomCards.addEventListener("dragstart", handleFilingDragStart);
   els.writingRoomCards.addEventListener("dragover", handleFilingDragOver);
   els.writingRoomCards.addEventListener("drop", handleFilingDrop);
@@ -491,6 +500,7 @@ function bindEditorEvents() {
   bindDesignToggle(els.designBoldToggle, els.designBold);
   bindDesignToggle(els.dialogBoldToggle, els.dialogBold);
   els.helpButton.addEventListener("click", () => { toggleSettingsPanel(false); toggleHelpPanel(true); });
+  els.helpEditButton?.addEventListener("click", toggleHelpEditMode);
   els.closeHelpPanel.addEventListener("click", () => toggleHelpPanel(false));
   els.logoutButton.addEventListener("click", resetLocalWorkspace);
   els.exportSourceType.addEventListener("change", renderExportSourceSelect);
@@ -1043,6 +1053,9 @@ function toggleFilingEditMode() {
   els.editWritingRoomButton.setAttribute("aria-pressed", String(state.filingEditMode));
   els.writingRoomEditBar.hidden = !state.filingEditMode;
   els.writingRoomPanel.classList.toggle("is-editing", state.filingEditMode);
+  els.writingRoomTitle.contentEditable = String(state.filingEditMode);
+  els.writingRoomTitle.classList.toggle("is-inline-editable", state.filingEditMode);
+  if (!state.filingEditMode) { state.writingRoomName = els.writingRoomTitle.textContent.trim() || "Writing Room"; markDirty("Writing Room renamed"); }
   renderWritingRoomCards();
   setContextStatus(state.filingEditMode ? "Filing Cabinet edit mode unlocked" : "Filing Cabinet locked");
 }
@@ -1127,23 +1140,29 @@ function activeFilingGroupId() {
 function renderWritingRoomCards() {
   if (!els.writingRoomCards) return;
   ensureFilingTabs();
+  els.writingRoomTitle.textContent = state.writingRoomName || "Writing Room";
   const groups = filingCabinetTree();
   const groupHtml = groups.map((group, groupIndex) => `
     <details class="writing-room-group" data-group-id="${escapeAttr(group.id)}" ${groupIndex === 0 ? "open" : ""}>
-      <summary><span class="card-arrow">›</span><strong>${escapeHtml(group.label)}</strong><small>${group.tabs.length} ${group.tabs.length === 1 ? "tab" : "tabs"}</small>${state.filingEditMode ? `<span class="filing-group-actions"><button type="button" data-group-action="settings" data-group-id="${escapeAttr(group.id)}">Settings</button><button type="button" data-group-action="delete" data-group-id="${escapeAttr(group.id)}">Delete</button></span>` : ""}</summary>
+      <summary><span class="card-arrow">›</span><span class="folder-icon">${groupIcon(group)}</span><strong ${inlineEditAttrs("group", group.id, "label")}>${escapeHtml(group.label)}</strong>${state.filingEditMode ? `<span class="filing-group-actions"><button type="button" title="Delete folder" aria-label="Delete folder" data-group-action="delete" data-group-id="${escapeAttr(group.id)}">❌</button></span>` : ""}</summary>
       <div class="writing-room-card-stack folder-tab-stack" data-drop-group="${escapeAttr(group.id)}">
         ${group.tabs.map((tab) => renderFilingTab(tab)).join("")}
         ${state.filingEditMode && !group.tabs.length ? '<p class="panel-help">Create a tab in this folder before adding documents.</p>' : ''}
       </div>
     </details>
   `).join("");
-  const trashHtml = state.filingEditMode ? renderTrashSection() : "";
-  els.writingRoomCards.innerHTML = groupHtml + trashHtml;
+  const rail = `<nav class="filing-jump-rail" aria-label="Filing Cabinet jumps">${groups.map((group) => `<button type="button" data-scroll-group="${escapeAttr(group.id)}" title="${escapeAttr(group.label)}"><span>${groupIcon(group)}</span></button>`).join("")}</nav>`;
+  const trashHtml = renderTrashSection();
+  els.writingRoomCards.innerHTML = rail + groupHtml + trashHtml;
+}
+
+function inlineEditAttrs(kind, id, field) {
+  return state.filingEditMode ? `contenteditable="true" spellcheck="false" data-inline-kind="${kind}" data-inline-id="${escapeAttr(id)}" data-inline-field="${field}" class="inline-editable"` : "";
 }
 
 function renderFilingTab(tab) {
   return `<details class="filing-tab" data-tab-id="${escapeAttr(tab.id)}" open>
-    <summary><span class="card-arrow">›</span><strong>▽ ${escapeHtml(tab.label)}</strong><small>${tab.documents.length} ${tab.documents.length === 1 ? "document" : "documents"}</small>${state.filingEditMode ? `<span class="filing-group-actions"><button type="button" data-tab-action="settings" data-tab-id="${escapeAttr(tab.id)}">Settings</button><button type="button" data-tab-action="delete" data-tab-id="${escapeAttr(tab.id)}">Delete</button></span>` : ""}</summary>
+    <summary><span class="card-arrow">›</span><strong ${inlineEditAttrs("tab", tab.id, "label")}>▽ ${escapeHtml(tab.label)}</strong>${state.filingEditMode ? `<span class="filing-group-actions"><button type="button" title="Delete tab" aria-label="Delete tab" data-tab-action="delete" data-tab-id="${escapeAttr(tab.id)}">❌</button></span>` : ""}</summary>
     <div class="writing-room-card-stack filing-tab-documents" data-drop-tab="${escapeAttr(tab.id)}">
       ${tab.documents.map((doc) => renderWritingRoomCard(doc, 0)).join("")}
       ${state.filingEditMode && !tab.documents.length ? '<p class="panel-help">Drop documents into this tab.</p>' : ''}
@@ -1152,40 +1171,39 @@ function renderFilingTab(tab) {
 }
 
 function renderWritingRoomCard(doc, depth = 0) {
-  const tags = (doc.tags ?? []).slice(0, 4);
+  const tags = (doc.tags ?? []).slice(0, 8);
   const updated = doc.updatedAt ? new Date(doc.updatedAt).toLocaleDateString() : "Not saved yet";
   const preview = textFromHtml(renderTransclusions(doc.content)).slice(0, 180) || "Empty Writing Room tab";
+  const fileType = documentFileType(doc);
   return `<details class="writing-room-card ${doc.id === state.activeId ? "is-active" : ""}" draggable="${state.filingEditMode}" style="--tab-depth:${depth}" data-doc-card="${escapeAttr(doc.id)}">
     <summary>
       <span class="card-arrow">›</span>
-      <span class="card-icon">${docIcon(doc)}</span>
-      <strong>${escapeHtml(doc.title)}</strong>
-      <small>Document</small>
+      <span class="card-icon" title="${escapeAttr(fileType)}">${docIcon(doc)}</span>
+      <strong ${inlineEditAttrs("doc", doc.id, "title")}>${escapeHtml(doc.title)}</strong>
     </summary>
     <div class="writing-room-card-body">
-      <p class="doc-id-line"><strong>Document ID:</strong> ${escapeHtml(doc.id)}</p>
+      <span class="document-card-actions">
+        <button type="button" title="Open" data-card-action="open" data-doc-id="${escapeAttr(doc.id)}">↗</button>
+        <button type="button" title="Duplicate" data-card-action="duplicate" data-doc-id="${escapeAttr(doc.id)}">⧉</button>
+        <button type="button" title="Deprecate old version" data-card-action="deprecate" data-doc-id="${escapeAttr(doc.id)}">🕰</button>
+        <button type="button" title="Delete" data-card-action="delete" data-doc-id="${escapeAttr(doc.id)}">❌</button>
+        <button type="button" title="Copy URL" data-card-action="copy" data-doc-id="${escapeAttr(doc.id)}">🔗</button>
+      </span>
+      <details class="metadata-pill"><summary>Meta data</summary><div class="metadata-pill-body">
+        <p>Type: <span ${inlineEditAttrs("doc", doc.id, "type")}>${escapeHtml(fileType)}</span></p>
+        <p>ID: <span ${inlineEditAttrs("doc", doc.id, "id")}>${escapeHtml(doc.id)}</span></p>
+        <p>Tags: <span ${inlineEditAttrs("doc", doc.id, "tags")}>${escapeHtml(tags.join(", ") || "No tags")}</span></p>
+        <p>Updated ${escapeHtml(updated)}</p>
+      </div></details>
       <p>${escapeHtml(preview)}</p>
-      <div class="document-card-tags">${tags.length ? tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join("") : "<span>No tags</span>"}</div>
-      <footer>
-        <small>Updated ${escapeHtml(updated)}</small>
-        <span class="document-card-actions">
-          <button type="button" data-card-action="open" data-doc-id="${escapeAttr(doc.id)}">Open</button>
-          <button type="button" data-card-action="settings" data-doc-id="${escapeAttr(doc.id)}">Settings</button>
-          <button type="button" data-card-action="duplicate" data-doc-id="${escapeAttr(doc.id)}">Duplicate</button>
-          <button type="button" data-card-action="deprecate" data-doc-id="${escapeAttr(doc.id)}">Deprecate</button>
-          <button type="button" data-card-action="delete" data-doc-id="${escapeAttr(doc.id)}">Delete</button>
-          <button type="button" data-card-action="copy" data-doc-id="${escapeAttr(doc.id)}">Copy URL</button>
-        </span>
-      </footer>
+      ${renderDeprecatedVersions(doc)}
     </div>
   </details>`;
 }
 
 function renderTrashSection() {
   const deleted = state.trash.map((doc) => archivedCard(doc, "trash")).join("") || '<p class="panel-help">Trash is empty.</p>';
-  const deprecated = state.deprecated.map((doc) => archivedCard(doc, "deprecated")).join("") || '<p class="panel-help">No deprecated files.</p>';
-  return `<details class="writing-room-group filing-archive" open><summary><span class="card-arrow">›</span><strong>Trashcan</strong><small>${state.trash.length} deleted</small></summary><div class="writing-room-card-stack">${deleted}</div></details>
-    <details class="writing-room-group filing-archive"><summary><span class="card-arrow">›</span><strong>Deprecated</strong><small>${state.deprecated.length} archived</small></summary><div class="writing-room-card-stack">${deprecated}</div></details>`;
+  return `<details class="writing-room-group filing-archive"><summary><span class="card-arrow">›</span><strong>Trashcan</strong></summary><div class="writing-room-card-stack">${deleted}</div></details>`;
 }
 
 function archivedCard(doc, source) {
@@ -1241,15 +1259,45 @@ function writingRoomGroupLabel(doc) {
   return "Writing Room Tabs";
 }
 
-function docIcon(doc) {
+function groupIcon(group) {
+  const label = String(group.label || "").toLowerCase();
+  if (label.includes("character")) return "🧑";
+  if (label.includes("episode")) return "🎬";
+  if (label.includes("core") || label.includes("world")) return "💗";
+  return group.icon || "📁";
+}
+
+function documentFileType(doc) {
   const tags = (doc.tags ?? []).map((tag) => tag.toLowerCase());
-  if (tags.includes("character")) return "🧑";
-  if (tags.includes("episode")) return "📄";
-  if (tags.includes("worldbuilding")) return "💗";
-  return "📝";
+  if (tags.includes("script") || tags.includes("episode")) return "Script";
+  if (tags.includes("character")) return "Character";
+  if (tags.includes("worldbuilding")) return "Lore";
+  if (tags.includes("outline")) return "Outline";
+  return "Doc";
+}
+
+function docIcon(doc) {
+  const type = documentFileType(doc);
+  if (type === "Script") return "🎬";
+  if (type === "Character") return "🧑";
+  if (type === "Lore") return "💗";
+  if (type === "Outline") return "▤";
+  return "📄";
+}
+
+function renderDeprecatedVersions(doc) {
+  const versions = state.deprecated.filter((entry) => entry.deprecatedOf === doc.id || (!entry.deprecatedOf && entry.title === doc.title));
+  if (!versions.length) return "";
+  return `<details class="deprecated-version-list"><summary>Deprecated versions</summary>${versions.map((entry) => archivedCard(entry, "deprecated")).join("")}</details>`;
 }
 
 async function handleWritingRoomCardClick(event) {
+  const railButton = event.target.closest("button[data-scroll-group]");
+  if (railButton) {
+    event.preventDefault();
+    els.writingRoomCards.querySelector(`[data-group-id="${CSS.escape(railButton.dataset.scrollGroup)}"]`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    return;
+  }
   const groupButton = event.target.closest("button[data-group-action]");
   if (groupButton) {
     event.preventDefault();
@@ -1265,7 +1313,6 @@ async function handleWritingRoomCardClick(event) {
   const docId = button.dataset.docId;
   const action = button.dataset.cardAction;
   if (action === "open") { openDocument(docId); renderWritingRoomCards(); return; }
-  if (action === "settings") { openDocument(docId); await openDocumentSettings(); renderWritingRoomCards(); return; }
   if (action === "duplicate") return duplicateDocument(docId);
   if (action === "deprecate") return deprecateDocument(docId);
   if (action === "delete") return deleteDocumentSafely(docId);
@@ -1311,7 +1358,7 @@ async function handleFilingGroupAction(action, groupId) {
   const groupDocs = state.documents.filter((doc) => doc.filingGroupId === groupId || groupTabs.some((tab) => tab.id === doc.filingTabId));
   if (action === "settings") {
     const result = await openCapsDialog("Folder Settings", [
-      { name: "label", label: "Folder / tab label", value: group.label },
+      { name: "label", label: "Folder label", value: group.label },
       { name: "type", label: "Type metadata", value: group.type || "folder", placeholder: "folder or tab" },
     ]);
     const label = result?.label?.trim();
@@ -1355,12 +1402,15 @@ function duplicateDocument(docId) {
 function deprecateDocument(docId) {
   const index = state.documents.findIndex((item) => item.id === docId);
   if (index < 0) return;
-  const [doc] = state.documents.splice(index, 1);
-  doc.deprecatedAt = new Date().toISOString();
-  state.deprecated.push(doc);
-  if (state.activeId === docId) state.activeId = state.documents[0]?.id || createDocument().id;
+  const oldDoc = JSON.parse(JSON.stringify(state.documents[index]));
+  oldDoc.id = uniqueDocumentId(`${oldDoc.id}-deprecated`);
+  oldDoc.deprecatedAt = new Date().toISOString();
+  oldDoc.deprecatedOf = state.documents[index].id;
+  oldDoc.title = `${oldDoc.title} (Old Version)`;
+  state.deprecated.push(oldDoc);
+  state.documents[index].updatedAt = new Date().toISOString();
   renderAll();
-  markDirty("Document deprecated");
+  markDirty("Old version deprecated");
 }
 
 function documentTextStats(html) {
@@ -1415,6 +1465,50 @@ function uniqueDocumentId(base) {
     index += 1;
   }
   return id;
+}
+
+function handleFilingInlineKeydown(event) {
+  if (!event.target.matches("[data-inline-kind]")) return;
+  if (event.key === "Enter") {
+    event.preventDefault();
+    event.target.blur();
+  }
+}
+
+function handleFilingInlineEdit(event) {
+  const target = event.target.closest("[data-inline-kind]");
+  if (!target || !state.filingEditMode) return;
+  const value = target.textContent.trim();
+  const { inlineKind: kind, inlineId: id, inlineField: field } = target.dataset;
+  if (kind === "group") {
+    const group = state.filingGroups.find((item) => item.id === id);
+    if (group && value) group[field] = cleanInlinePrefix(value);
+  } else if (kind === "tab") {
+    const tab = state.filingTabs.find((item) => item.id === id);
+    if (tab && value) tab[field] = cleanInlinePrefix(value);
+  } else if (kind === "doc") {
+    updateDocumentInlineField(id, field, value);
+  }
+  renderDocumentSelect();
+  markDirty("Filing Cabinet metadata updated");
+}
+
+function updateDocumentInlineField(docId, field, value) {
+  const doc = state.documents.find((item) => item.id === docId);
+  if (!doc) return;
+  if (field === "title" && value) doc.title = value;
+  if (field === "tags") doc.tags = value === "No tags" ? [] : value.split(",").map((tag) => tag.trim()).filter(Boolean);
+  if (field === "type" && value) {
+    const tags = new Set((doc.tags ?? []).filter((tag) => !["script", "doc", "lore", "outline", "character"].includes(tag.toLowerCase())));
+    tags.add(value.toLowerCase());
+    doc.tags = [...tags];
+  }
+  if (field === "id" && value && !state.documents.some((item) => item.id === value && item !== doc)) doc.id = slugify(value);
+  doc.updatedAt = new Date().toISOString();
+}
+
+function cleanInlinePrefix(value) {
+  return value.replace(/^▽\s*/, "").trim();
 }
 
 function handleFilingDragStart(event) {
@@ -1505,6 +1599,44 @@ function movePanelDrag(event) {
 
 function stopPanelDrag() { state.panelDrag = null; }
 
+
+function loadEditableHelp() {
+  const saved = localStorage.getItem(HELP_KEY);
+  if (saved) {
+    const header = els.helpPanel.querySelector("header");
+    const content = els.helpPanel.querySelector(".help-content");
+    if (content) content.innerHTML = saved;
+    else if (header) {
+      const wrapper = document.createElement("div");
+      wrapper.className = "help-content";
+      [...els.helpPanel.children].filter((child) => child !== header).forEach((child) => wrapper.append(child));
+      els.helpPanel.append(wrapper);
+      wrapper.innerHTML = saved;
+    }
+  } else wrapHelpContent();
+}
+
+function wrapHelpContent() {
+  if (els.helpPanel.querySelector(".help-content")) return;
+  const header = els.helpPanel.querySelector("header");
+  const wrapper = document.createElement("div");
+  wrapper.className = "help-content";
+  [...els.helpPanel.children].filter((child) => child !== header).forEach((child) => wrapper.append(child));
+  els.helpPanel.append(wrapper);
+}
+
+function toggleHelpEditMode() {
+  wrapHelpContent();
+  const content = els.helpPanel.querySelector(".help-content");
+  const editing = content.getAttribute("contenteditable") !== "true";
+  content.setAttribute("contenteditable", String(editing));
+  els.helpEditButton?.setAttribute("aria-pressed", String(editing));
+  if (editing) content.focus();
+  else {
+    localStorage.setItem(HELP_KEY, content.innerHTML);
+    setStatus("Help text saved", "saved");
+  }
+}
 
 function toggleHelpPanel(show) {
   els.helpPanel.hidden = !show;
@@ -1912,6 +2044,7 @@ function serializedWorkspace() {
   return JSON.stringify({
     schemaVersion: 2,
     updatedAt: new Date().toISOString(),
+    writingRoomName: state.writingRoomName,
     documents: state.documents,
     blocks: state.blocks,
     filingGroups: state.filingGroups,
@@ -2126,7 +2259,7 @@ function setContextStatus(message, lock = false, timeout = 0) {
 }
 
 function setStatus(message, className) {
-  els.saveStatus.textContent = message;
+  els.saveStatus.textContent = "";
   els.saveStatus.className = `save-status ${className}`;
   if (className === "dirty") setContextStatus(`${message} …`, true);
   else if (className === "saved") setContextStatus(message, true, 1400);

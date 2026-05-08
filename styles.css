@@ -880,3 +880,134 @@ input, textarea, select, .panel-help, .help-panel p, .help-panel dd, .document-c
 .folder-tab-stack {
   padding-top: 0.75rem;
 }
+.save-status { display: none; }
+.writing-room-panel .panel-header-actions {
+  align-items: center;
+  flex-wrap: wrap;
+}
+.writing-room-panel .panel-header-actions .icon-button {
+  min-width: 2.25rem;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+}
+.inline-editable,
+#writingRoomTitle.is-inline-editable {
+  outline: 1px dashed rgba(232,143,105,0.58);
+  border-radius: 8px;
+  padding: 0.05rem 0.25rem;
+  background: rgba(251,244,214,0.08);
+}
+.writing-room-cards {
+  scrollbar-width: none;
+  padding-right: 3rem;
+}
+.writing-room-cards::-webkit-scrollbar { display: none; }
+.filing-jump-rail {
+  position: sticky;
+  top: 0.8rem;
+  z-index: 4;
+  float: right;
+  display: grid;
+  gap: 0.45rem;
+  justify-items: center;
+  width: 2.2rem;
+  margin-right: -2.5rem;
+}
+.filing-jump-rail button {
+  display: inline-grid;
+  place-items: center;
+  width: 1.45rem;
+  height: 1.45rem;
+  min-height: 0;
+  padding: 0;
+  color: var(--ink);
+  background: #7a7a7a;
+  border: 1px solid #a0a0a0;
+  border-radius: 999px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.36);
+  font-size: 0.72rem;
+}
+.writing-room-group > summary small,
+.filing-tab > summary small { display: none; }
+.writing-room-card > summary {
+  grid-template-columns: auto auto minmax(0, 1fr);
+}
+.writing-room-card-body {
+  gap: 0.55rem;
+  padding: 0.55rem 0.75rem 0.8rem 2.6rem;
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+.document-card-actions {
+  position: static;
+  display: flex;
+  grid-template-columns: none;
+  min-width: 0;
+  z-index: auto;
+  justify-content: flex-start;
+  gap: 0.35rem;
+  order: -1;
+}
+.document-card-actions button {
+  flex: 0 0 auto;
+  min-width: 1.9rem;
+  min-height: 1.9rem;
+  padding: 0.22rem 0.4rem;
+  border-radius: 999px;
+}
+.metadata-pill {
+  display: inline-block;
+  max-width: 100%;
+}
+.metadata-pill > summary {
+  display: inline-flex;
+  min-height: 1.75rem;
+  padding: 0.22rem 0.65rem;
+  color: var(--ink);
+  background: rgba(86,52,133,0.4);
+  border: 1px solid var(--panel-border);
+  border-radius: 999px;
+  box-shadow: none;
+}
+.metadata-pill[open] > summary { border-radius: 999px 999px 0 0; }
+.metadata-pill-body {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 0.45rem 0.55rem;
+  border: 1px solid var(--panel-border);
+  border-radius: 0 14px 14px 14px;
+  background: rgba(0,0,0,0.24);
+  white-space: nowrap;
+}
+.metadata-pill-body p { margin: 0; }
+.deprecated-version-list {
+  border-top: 1px solid rgba(232,143,105,0.26);
+  padding-top: 0.35rem;
+}
+.deprecated-version-list > summary {
+  display: inline-flex;
+  min-height: 1.75rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(169,123,56,0.18);
+  box-shadow: none;
+}
+.filing-archive { margin-top: 1rem; }
+.settings-panel,
+.help-panel { font-size: 0.92rem; }
+.design-section { font-size: 0.88rem; }
+.design-preview-column {
+  grid-column: 2;
+  grid-row: 2;
+}
+.design-controls { grid-column: 1; }
+.help-content[contenteditable="true"] {
+  outline: 1px dashed var(--accent);
+  border-radius: 16px;
+  padding: 0.65rem;
+  background: rgba(251,244,214,0.06);
+}
