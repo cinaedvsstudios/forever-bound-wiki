@@ -13,6 +13,7 @@ const state = {
   pendingBookmarkId: "",
   suppressInput: false,
   sharedPassword: "",
+  authReady: false,
   exportItems: [],
   draggedExportIndex: null,
   savedRange: null,
@@ -24,6 +25,7 @@ const els = {
   passwordForm: document.querySelector("#passwordForm"),
   passwordInput: document.querySelector("#passwordInput"),
   passwordError: document.querySelector("#passwordError"),
+  passwordSubmit: document.querySelector("#passwordForm button[type='submit']"),
   editorApp: document.querySelector("#editorApp"),
   documentSelect: document.querySelector("#documentSelect"),
   newDocumentButton: document.querySelector("#newDocumentButton"),
@@ -97,19 +99,37 @@ const els = {
 
 boot().catch((error) => {
   console.error(error);
-  showPasswordScreen();
-  els.passwordError.textContent = "Unable to load password settings. Check config/auth.json.";
+  localStorage.removeItem(AUTH_KEY);
+  showPasswordScreen("Unable to start Capsanoto. Refresh and try again.");
 });
 
 async function boot() {
   markFrameMode();
-  await loadAuthConfig();
   bindAuthEvents();
+  setPasswordFormState(false, "Loading password settings…");
+  try {
+    await loadAuthConfig();
+    state.authReady = true;
+    setPasswordFormState(true);
+  } catch (error) {
+    console.error(error);
+    localStorage.removeItem(AUTH_KEY);
+    showPasswordScreen("Unable to load password settings. Check config/auth.json.");
+    return;
+  }
+
   if (!isAuthenticated()) {
     showPasswordScreen();
     return;
   }
-  await startEditor();
+
+  try {
+    await startEditor();
+  } catch (error) {
+    console.error(error);
+    localStorage.removeItem(AUTH_KEY);
+    showPasswordScreen("Password accepted, but the editor workspace could not load. Check content/documents.json or clear this site's local storage.");
+  }
 }
 
 async function loadAuthConfig() {
@@ -120,14 +140,31 @@ async function loadAuthConfig() {
 }
 
 function bindAuthEvents() {
+  if (els.passwordForm.dataset.bound === "true") return;
+  els.passwordForm.dataset.bound = "true";
+
   els.passwordForm.addEventListener("submit", async (event) => {
     event.preventDefault();
-    if (els.passwordInput.value === state.sharedPassword) {
-      localStorage.setItem(AUTH_KEY, "true");
-      els.passwordInput.value = "";
+    if (!state.authReady || !state.sharedPassword) {
+      showPasswordScreen("Password settings are still loading. Try again in a moment.");
+      return;
+    }
+    if (els.passwordInput.value !== state.sharedPassword) {
+      showPasswordScreen("That password did not match the shared project password.");
+      return;
+    }
+
+    localStorage.setItem(AUTH_KEY, "true");
+    els.passwordInput.value = "";
+    setPasswordFormState(false, "Unlocking workspace…");
+    try {
       await startEditor();
-    } else {
-      els.passwordError.textContent = "That password did not match the shared project password.";
+      setPasswordFormState(true);
+    } catch (error) {
+      console.error(error);
+      localStorage.removeItem(AUTH_KEY);
+      setPasswordFormState(true);
+      showPasswordScreen("Password accepted, but the editor workspace could not load. Check content/documents.json or clear this site's local storage.");
     }
   });
 
@@ -150,10 +187,16 @@ async function startEditor() {
   setStatus("Ready", "saved");
 }
 
-function showPasswordScreen() {
+function showPasswordScreen(message = "") {
   setAuthVisibility(false);
-  els.passwordError.textContent = "";
+  els.passwordError.textContent = message;
   requestAnimationFrame(() => els.passwordInput.focus());
+}
+
+function setPasswordFormState(enabled, message = "") {
+  els.passwordInput.disabled = !enabled;
+  els.passwordSubmit.disabled = !enabled;
+  els.passwordError.textContent = message;
 }
 
 function setAuthVisibility(isUnlocked) {
@@ -180,14 +223,24 @@ function isAuthenticated() {
 async function loadWorkspace() {
   const saved = localStorage.getItem(STORAGE_KEY);
   if (saved) {
-    const payload = JSON.parse(saved);
-    state.documents = payload.documents ?? [];
-    state.blocks = payload.blocks ?? {};
-  } else {
+    try {
+      const payload = JSON.parse(saved);
+      state.documents = Array.isArray(payload.documents) ? payload.documents : [];
+      state.blocks = payload.blocks && typeof payload.blocks === "object" ? payload.blocks : {};
+    } catch (error) {
+      console.warn("Ignoring unreadable local Capsanoto workspace", error);
+      localStorage.removeItem(STORAGE_KEY);
+      state.documents = [];
+      state.blocks = {};
+    }
+  }
+
+  if (!state.documents.length) {
     const response = await fetch("content/documents.json", { cache: "no-store" });
+    if (!response.ok) throw new Error("Unable to load content/documents.json");
     const payload = await response.json();
-    state.documents = payload.documents ?? [];
-    state.blocks = payload.blocks ?? {};
+    state.documents = Array.isArray(payload.documents) ? payload.documents : [];
+    state.blocks = payload.blocks && typeof payload.blocks === "object" ? payload.blocks : {};
     persistNow("Loaded starter workspace");
   }
 
@@ -973,7 +1026,13 @@ function loadDesignForm() {
 }
 
 function currentDesignSettings() {
-  return JSON.parse(localStorage.getItem(DESIGN_KEY) || "null") || defaultDesignSettings();
+  try {
+    return JSON.parse(localStorage.getItem(DESIGN_KEY) || "null") || defaultDesignSettings();
+  } catch (error) {
+    console.warn("Ignoring unreadable Capsanoto design settings", error);
+    localStorage.removeItem(DESIGN_KEY);
+    return defaultDesignSettings();
+  }
 }
 
 function defaultDesignSettings() {
