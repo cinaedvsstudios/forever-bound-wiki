@@ -203,29 +203,94 @@
       </header>
       <section>
         <h3>What Capsanoto is</h3>
-        <p>Capsanoto is a lightweight browser-based word app for large Writing Room lore, long-form worldbuilding, and linked narrative documents.</p>
+        <p>Capsanoto is the browser-based Writing Room for Forever Bound. It is a local-first word program for drafting lore, episodes, characters, locations, items, and worldbuilding notes in linked documents.</p>
+        <p>The app is written as a static frontend: HTML entry files, one plain JavaScript app file, JSON starter/config files, CSS styling, and browser <code>localStorage</code> for autosave. There is no backend database in this preview.</p>
       </section>
       <section>
-        <h3>Named functions</h3>
+        <h3>Launch links and files</h3>
         <dl>
-          <dt>Document Switcher</dt><dd>Moves between lore documents loaded from <code>?doc=Document-ID</code>.</dd>
-          <dt>Command Bar</dt><dd>The single-row toolbar. Related commands are grouped into dropdowns.</dd>
-          <dt>Anchor Rune</dt><dd>Creates a heading bookmark with a direct section URL.</dd>
-          <dt>Path Link</dt><dd>Creates a portable hyperlink to a document, bookmark, transclusion block, or external URL.</dd>
-          <dt>Link Smith</dt><dd>Edits the selected link target without recreating the link text.</dd>
-          <dt>Pill Gate</dt><dd>Turns selected text or an existing link into a rounded pill hyperlink.</dd>
-          <dt>Link Breaker</dt><dd>Removes the selected link while keeping its visible text.</dd>
-          <dt>Canon Block</dt><dd>Reusable transclusion content referenced with <code>{{Item-Runestones}}</code>.</dd>
-          <dt>Archive Export</dt><dd>Downloads the current Writing Room JSON for backup or later sync.</dd>
+          <dt>Launcher / default entry</dt><dd><code>index.html</code> opens the Writing Room from the repo root or deployed site root.</dd>
+          <dt>Direct editor</dt><dd><code>editor.html</code> opens the same word program directly.</dd>
+          <dt>Alternate direct entry</dt><dd><code>writing-room.html</code> is another direct entry for the same Writing Room UI.</dd>
+          <dt>Starter content</dt><dd><code>content/documents.json</code> seeds first-run documents and reusable blocks.</dd>
+          <dt>Preview config</dt><dd><code>config/auth.json</code> contains the shared password config, though the current preview opens without the password gate while auth is being reworked.</dd>
         </dl>
       </section>
       <section>
-        <h3>Icons and PNG buttons</h3>
-        <p>Most buttons use emojis first. Any toolbar button can also use a PNG by adding <code>data-icon-src="path/to/icon.png"</code>.</p>
+        <h3>Writing Room hierarchy</h3>
+        <p>The intended mental model is: <strong>Writing Room profile → folders → tabs → documents</strong>. For example, <em>Forever Bound Writing Room</em> can contain folders such as Characters, Locations, Items, Worldbuilding, and Episodes. Inside Characters you might have tabs such as Main Characters and Recurring Characters, and inside those tabs individual documents such as Mel, Luca, Greta, or Erik.</p>
+        <p>Current preview behavior: documents are stored as a flat list in the browser, then visually grouped into Writing Room card sections by tags such as <code>character</code>, <code>episode</code>, or <code>worldbuilding</code>. True drag-and-drop nested folders/tabs are not fully persisted yet; that is the next structure step.</p>
       </section>
       <section>
-        <h3>Release notes</h3>
-        <p><strong>Capsanoto preview build:</strong> local autosave, document routes, section links, bookmark copy buttons, pill links, and transclusion blocks.</p>
+        <h3>Top bar controls</h3>
+        <dl>
+          <dt>Writing Room button</dt><dd>Opens the floating filing-cabinet panel. Use it to browse grouped document cards, expand a card, open a document, or copy that document URL.</dd>
+          <dt>New Document</dt><dd>Creates a new document from the built-in template and adds it to the Writing Room.</dd>
+          <dt>Document Settings</dt><dd>Opens title and metadata/tag settings for the active document. Tags drive grouping in the Writing Room panel.</dd>
+          <dt>Status bar</dt><dd>Explains cursor location, selected text, hovered controls, links, bookmark headings, transclusion blocks, emphasis boxes, and save/autosave messages.</dd>
+          <dt>Format menu</dt><dd>Hover to reveal bold, italic, heading, paragraph, and list commands.</dd>
+          <dt>Links menu</dt><dd>Hover to create/edit/remove links, make pill links, or insert bookmark headings.</dd>
+          <dt>Insert menu</dt><dd>Hover to insert tables, images, emoji, reusable canon blocks, or emphasis boxes.</dd>
+          <dt>Help button</dt><dd>Opens this guide and release notes.</dd>
+          <dt>Settings button</dt><dd>Opens design, download, and support cards.</dd>
+        </dl>
+      </section>
+      <section>
+        <h3>Writing and document editing</h3>
+        <dl>
+          <dt>Document title</dt><dd>The large title field edits the current document title. Use Document Settings for metadata/tags instead of showing metadata in the document body.</dd>
+          <dt>Writing area</dt><dd>The main editable page supports rich text through browser editing commands, local autosave, and pasted/typed content.</dd>
+          <dt>Autosave</dt><dd>Changes save to browser <code>localStorage</code>. The status bar shows saving/autosaved messages.</dd>
+          <dt>Reset Local Save</dt><dd>In Settings → Help, this clears the browser autosave and reloads starter content.</dd>
+        </dl>
+      </section>
+      <section>
+        <h3>Links, bookmarks, and routes</h3>
+        <dl>
+          <dt>Document URLs</dt><dd>Documents can be opened by URLs like <code>editor.html?doc=episode-01</code>.</dd>
+          <dt>Bookmark headings</dt><dd>Heading IDs can create section routes like <code>editor.html?doc=Character-Mel-Ameldra#Runestones</code>.</dd>
+          <dt>Path Link</dt><dd>Creates a link to an external URL, another document, a bookmark, or a transclusion block.</dd>
+          <dt>Pill Gate</dt><dd>Converts selected text or an existing link into a rounded visual pill link.</dd>
+          <dt>Link Smith</dt><dd>Edits a selected link target without rebuilding the link text.</dd>
+          <dt>Link Breaker</dt><dd>Removes the selected link while preserving its visible text.</dd>
+        </dl>
+      </section>
+      <section>
+        <h3>Reusable blocks and emphasis boxes</h3>
+        <dl>
+          <dt>Canon Block / transclusion</dt><dd>A reusable block of canon text. Blocks use IDs such as <code>Character-Mel</code>, <code>Item-Runestones</code>, or <code>Location-Ironvale</code>.</dd>
+          <dt>Block references</dt><dd>Type or insert <code>{{Item-Runestones}}</code> to display that reusable block inside a document.</dd>
+          <dt>Transclusion panel</dt><dd>Use Canon Block to create, edit, select, and insert reusable block references.</dd>
+          <dt>Emphasis Box</dt><dd>Highlight text and click Emphasis Box to wrap it in a bordered note-style box. If no text is selected, it inserts a blank emphasis note.</dd>
+        </dl>
+      </section>
+      <section>
+        <h3>Download and backups</h3>
+        <dl>
+          <dt>Download builder</dt><dd>Choose documents and/or reusable blocks, reorder them, then download selected pieces.</dd>
+          <dt>Caps file</dt><dd>Downloads structured JSON for Capsanoto/Caps workflows.</dd>
+          <dt>TXT</dt><dd>Downloads plain text.</dd>
+          <dt>HTML</dt><dd>Downloads a browser-readable HTML file.</dd>
+          <dt>Word</dt><dd>Downloads a Word-compatible <code>.doc</code> HTML document.</dd>
+        </dl>
+      </section>
+      <section>
+        <h3>Design settings</h3>
+        <p>Settings → Design controls button colors, borders, text colors, text size, background image, dialog colors, status bar colors, emphasis box colors, panel colors, label text, dynamic text, and scrollbar colors. Settings are saved under <code>capsanoto-design-settings-v1</code> in browser storage.</p>
+      </section>
+      <section>
+        <h3>Technical notes</h3>
+        <dl>
+          <dt>Code type</dt><dd>Static HTML, CSS, and plain JavaScript. No framework build step is required.</dd>
+          <dt>Main app file</dt><dd><code>app.js</code> handles state, events, autosave, routing, transclusions, links, downloads, dialogs, and design settings.</dd>
+          <dt>Styles</dt><dd><code>styles.css</code> controls the Writing Room theme and CSS variables.</dd>
+          <dt>Local storage keys</dt><dd><code>forever-bound-writing-room-v2</code> stores documents/blocks, and <code>capsanoto-design-settings-v1</code> stores design settings.</dd>
+        </dl>
+      </section>
+      <section>
+        <h3>Release notes draft</h3>
+        <p><strong>Capsanoto Writing Room preview:</strong> password gate temporarily disabled, local autosave enabled, Writing Room document cards, fixed-width status bar, hover help, document settings, emphasis boxes, transclusion blocks, pill links, design settings, and download builder.</p>
+        <p><strong>Release note info still needed from you:</strong> public launcher URL, preferred version number/name, release date, whether password gating should return, final hierarchy names, and which features should be marked beta versus ready.</p>
       </section>
     </aside>
 
