@@ -1127,3 +1127,218 @@ input, textarea, select, .panel-help, .help-panel p, .help-panel dd, .document-c
   .design-section .design-controls,
   .design-section .design-preview-column { grid-column: 1 !important; grid-row: auto !important; position: static; }
 }
+
+/* Capsanoto requested refinements: toolbar, cabinet rail, table/TCard editing */
+.writer-header {
+  grid-template-columns: auto minmax(13rem, 20rem) minmax(24rem, 36rem) auto;
+}
+.writing-room-button {
+  min-height: 2.55rem;
+  height: 2.55rem;
+  display: inline-flex;
+  align-items: center;
+}
+.save-controls {
+  margin-left: auto;
+  justify-content: flex-end;
+  flex-wrap: nowrap;
+}
+.top-command-menus {
+  position: relative !important;
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  min-width: min(36rem, 42vw);
+  gap: 0 !important;
+  background: #28133f !important;
+  border: 1px solid rgba(232,143,105,0.62);
+  border-radius: 999px;
+  overflow: visible !important;
+}
+.top-command-menus .tool-menu { position: static !important; min-width: 0 !important; }
+.top-command-menus .tool-menu-trigger {
+  width: 100%;
+  min-height: 2.55rem;
+  color: #fbf4d6;
+  background: transparent !important;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.top-command-menus .tool-menu:first-child .tool-menu-trigger { border-radius: 999px 0 0 999px; }
+.top-command-menus .tool-menu:last-child .tool-menu-trigger { border-radius: 0 999px 999px 0; }
+.top-command-menus .tool-menu-panel {
+  display: none;
+  position: absolute !important;
+  left: 0 !important;
+  right: 0 !important;
+  top: calc(100% + 0.38rem) !important;
+  width: 100% !important;
+  min-width: 100% !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  grid-auto-rows: minmax(2.25rem, auto);
+  gap: 0.4rem;
+  padding: 0.55rem;
+  background: #28133f !important;
+  border: 1px solid rgba(232,143,105,0.62);
+  border-radius: 18px;
+  box-shadow: 0 18px 48px rgba(0,0,0,0.48);
+}
+.top-command-menus .tool-menu:hover .tool-menu-panel,
+.top-command-menus .tool-menu:focus-within .tool-menu-panel { display: grid !important; }
+.top-command-menus .tool-menu-panel button {
+  min-width: 0;
+  justify-content: center;
+  padding: 0.45rem 0.5rem;
+  white-space: normal;
+}
+.title-input {
+  font-size: clamp(2rem, 3.2vw, 2.65rem) !important;
+  letter-spacing: -0.035em;
+}
+.writing-room-panel {
+  overflow: hidden !important;
+  min-width: 460px;
+  min-height: 340px;
+}
+.writing-room-panel > header { padding-right: 1rem; }
+.writing-room-cards {
+  position: relative;
+  height: calc(100% - 5.5rem);
+  max-height: none !important;
+  overflow: auto;
+  padding-right: 4.75rem !important;
+}
+.filing-jump-rail {
+  position: absolute !important;
+  right: 0.9rem;
+  top: 6.2rem;
+  bottom: 1.25rem;
+  z-index: 8;
+  float: none !important;
+  width: 2.6rem;
+  height: auto !important;
+  margin: 0 !important;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  align-items: center;
+  pointer-events: auto;
+}
+.filing-jump-rail::before {
+  content: "";
+  position: absolute;
+  top: 0.4rem;
+  bottom: 0.4rem;
+  left: 50%;
+  width: 2px;
+  transform: translateX(-50%);
+  background: #69635f;
+  border-radius: 999px;
+}
+.filing-jump-rail button {
+  position: relative;
+  z-index: 1;
+  width: 1.8rem;
+  height: 1.8rem;
+  min-height: 0;
+  padding: 0;
+  display: inline-grid;
+  place-items: center;
+  background: #777 !important;
+  border: 1px solid #b0b0b0 !important;
+  color: #fbf4d6;
+  border-radius: 999px;
+  box-shadow: 0 2px 9px rgba(0,0,0,0.5);
+}
+.filing-archive > summary,
+.filing-archive[open] > summary {
+  background: #28133f !important;
+  border-color: rgba(232,143,105,0.72) !important;
+}
+.document-card-actions button { min-width: 2rem; padding: 0.34rem 0.48rem; }
+.editor table.editable-table,
+.editor table {
+  border-collapse: separate !important;
+  border-spacing: 0;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+  cursor: grab;
+}
+.editor table:active { cursor: grabbing; }
+.table-edit-button {
+  float: right;
+  margin: 0.4rem 0 0.15rem 0.4rem;
+  min-width: 1.9rem;
+  width: 1.9rem;
+  height: 1.9rem;
+  padding: 0;
+  border-radius: 999px;
+  background: #28133f;
+  color: #fbf4d6;
+}
+.transclusion-ref {
+  position: relative;
+  background: var(--tcard-bg, #28133f) !important;
+  border-color: var(--tcard-border, var(--line)) !important;
+  color: var(--tcard-text, var(--ink));
+  font-size: var(--tcard-size, 14px);
+  cursor: grab;
+}
+.transclusion-ref > span { color: var(--tcard-heading, var(--accent)) !important; }
+.transclusion-ref .tcard-edit-button {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 1.85rem;
+  height: 1.85rem;
+  min-height: 0;
+  padding: 0;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.transclusion-ref:hover .tcard-edit-button { opacity: 1; }
+.block-panel header { align-items: center; }
+.block-panel h2 { font-family: inherit; font-size: 1.45rem; line-height: 1.1; }
+.block-panel textarea,
+.block-panel input { background: #28133f !important; }
+.tcard-style-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+.tcard-style-grid label { margin-top: 0.35rem; }
+.design-section.settings-card {
+  display: grid !important;
+  grid-template-columns: minmax(16rem, 1fr) minmax(18rem, 0.85fr) !important;
+  gap: 1rem;
+}
+.design-section.settings-card > h3 { grid-column: 1 / -1 !important; }
+.design-section .design-controls {
+  grid-column: 1 !important;
+  grid-row: 2 !important;
+  max-height: min(56vh, 560px);
+  overflow: auto;
+}
+.design-section .design-preview-column {
+  grid-column: 2 !important;
+  grid-row: 2 !important;
+  position: sticky !important;
+  top: 0.75rem;
+  align-self: start;
+}
+@media (max-width: 980px) {
+  .writer-header { grid-template-columns: 1fr; }
+  .top-command-menus { min-width: 100%; }
+  .top-command-menus .tool-menu-panel { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  .save-controls { justify-content: flex-start; }
+}
+.writer-header {
+  display: grid !important;
+  grid-template-columns: auto minmax(13rem, 20rem) minmax(24rem, 36rem) auto;
+  align-items: center;
+}
+.document-controls { justify-self: start; }
+.context-status { justify-self: center; }
+.top-command-menus { justify-self: center; }
+.save-controls { justify-self: end; }

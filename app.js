@@ -6,6 +6,7 @@ const EDITOR_ENTRY = "editor.html";
 const AUTOSAVE_DELAY = 600;
 const DESIGN_KEY = "capsanoto-design-settings-v1";
 const HELP_KEY = "capsanoto-help-html-v1";
+const WRITING_ROOM_LAYOUT_KEY = "capsanoto-writing-room-layout-v1";
 
 const CAPSANOTO_PALETTE = {
   black: "#000000",
@@ -88,6 +89,9 @@ const state = {
   deprecated: [],
   draggedDocId: "",
   draggedTabId: "",
+  draggedEditorNode: null,
+  activeTable: null,
+  tableEditTimer: null,
   lastColorInput: null,
   favoriteColors: [...DEFAULT_FAVORITE_COLORS],
   contextStatusLocked: false,
@@ -172,6 +176,7 @@ const els = {
   writingRoomTitle: document.querySelector("#writingRoomTitle"),
   closeWritingRoomPanel: document.querySelector("#closeWritingRoomPanel"),
   editWritingRoomButton: document.querySelector("#editWritingRoomButton"),
+  saveWritingRoomLayoutButton: document.querySelector("#saveWritingRoomLayoutButton"),
   writingRoomEditBar: document.querySelector("#writingRoomEditBar"),
   newFolderButton: document.querySelector("#newFolderButton"),
   newTabButton: document.querySelector("#newTabButton"),
@@ -196,6 +201,11 @@ const els = {
   closeBlockPanel: document.querySelector("#closeBlockPanel"),
   blockIdInput: document.querySelector("#blockIdInput"),
   blockContentInput: document.querySelector("#blockContentInput"),
+  blockBgInput: document.querySelector("#blockBgInput"),
+  blockBorderInput: document.querySelector("#blockBorderInput"),
+  blockTextInput: document.querySelector("#blockTextInput"),
+  blockHeadingInput: document.querySelector("#blockHeadingInput"),
+  blockTextSizeInput: document.querySelector("#blockTextSizeInput"),
   saveBlockButton: document.querySelector("#saveBlockButton"),
   insertBlockRefButton: document.querySelector("#insertBlockRefButton"),
   blockList: document.querySelector("#blockList"),
@@ -480,6 +490,7 @@ function bindEditorEvents() {
   els.writingRoomButton.addEventListener("click", () => toggleWritingRoomPanel());
   els.closeWritingRoomPanel.addEventListener("click", () => toggleWritingRoomPanel(false));
   els.editWritingRoomButton.addEventListener("click", toggleFilingEditMode);
+  els.saveWritingRoomLayoutButton?.addEventListener("click", saveWritingRoomPanelLayout);
   els.newFolderButton.addEventListener("click", () => createFilingGroup("folder"));
   els.newTabButton.addEventListener("click", createFilingTab);
   els.trashCanButton?.addEventListener("click", () => setContextStatus(`${state.trash.length} items in Trash · ${state.deprecated.length} deprecated`, false));
@@ -530,7 +541,7 @@ function bindEditorEvents() {
     jumpToBookmark(link.dataset.bookmark);
   });
 
-  els.blockButton.addEventListener("click", () => toggleBlockPanel(true));
+  els.blockButton.addEventListener("click", () => { saveSelectionRange(); toggleBlockPanel(true); });
   els.closeBlockPanel.addEventListener("click", () => toggleBlockPanel(false));
   els.saveBlockButton.addEventListener("click", saveBlock);
   els.insertBlockRefButton.addEventListener("click", insertBlockReference);
@@ -541,7 +552,11 @@ function bindEditorEvents() {
   });
 
   els.editor.addEventListener("click", handleEditorClick);
-  els.editor.addEventListener("mouseover", handleEditorLinkPreview);
+  els.editor.addEventListener("mouseover", handleEditorHover);
+  els.editor.addEventListener("mouseout", handleEditorMouseOut);
+  els.editor.addEventListener("dragstart", handleEditorDragStart);
+  els.editor.addEventListener("dragover", handleEditorDragOver);
+  els.editor.addEventListener("drop", handleEditorDrop);
   els.editor.addEventListener("contextmenu", openSelectionContextMenu);
   els.selectionMenu.addEventListener("click", handleSelectionMenuClick);
   els.dialogBox.addEventListener("submit", submitDialog);
@@ -653,18 +668,21 @@ function ensureHeadingIds() {
     if (!heading.id) heading.id = uniqueBookmarkId(slugify(heading.textContent || "section"));
   });
   syncEditorToDocument(false);
+  prepareEditorInteractiveBlocks();
 }
 
 function renderTransclusions(html) {
   return String(html ?? "").replace(/\{\{([A-Za-z]+-[A-Za-z0-9-]+)\}\}/g, (_, id) => {
     const block = state.blocks[id];
     const content = block ? block.content : "Missing transclusion block";
-    return `<aside class="transclusion-ref" contenteditable="false" data-block-id="${escapeAttr(id)}"><span>${escapeHtml(id)}</span><div>${sanitizeBlockContent(content)}</div></aside>`;
+    const style = blockStyleAttr(block?.style);
+    return `<aside class="transclusion-ref" contenteditable="false" draggable="true" data-block-id="${escapeAttr(id)}"${style}><button type="button" class="floating-edit-button tcard-edit-button" data-edit-tcard="${escapeAttr(id)}" title="Edit TCard">✎</button><span>${escapeHtml(id)}</span><div>${sanitizeBlockContent(content)}</div></aside>`;
   });
 }
 
 function syncEditorToDocument(updateTimestamp = true) {
   const clone = els.editor.cloneNode(true);
+  clone.querySelectorAll(".floating-edit-button").forEach((node) => node.remove());
   clone.querySelectorAll(".transclusion-ref[data-block-id]").forEach((node) => {
     node.replaceWith(document.createTextNode(`{{${node.dataset.blockId}}}`));
   });
@@ -893,6 +911,10 @@ function currentLink() {
 }
 
 function handleEditorClick(event) {
+  const tcardButton = event.target.closest("[data-edit-tcard]");
+  if (tcardButton) { toggleBlockPanel(true); selectBlock(tcardButton.dataset.editTcard); return; }
+  const tableButton = event.target.closest(".table-edit-button");
+  if (tableButton) return;
   hideSelectionContextMenu();
   handleEditorLinkClick(event);
 }
@@ -966,11 +988,11 @@ async function openDocumentSettings() {
 function insertEmphasisBox() {
   const selection = window.getSelection();
   if (!selection?.rangeCount || !els.editor.contains(selection.getRangeAt(0).commonAncestorContainer)) {
-    insertHtml('<aside class="emphasis-box"><p>Emphasis note</p></aside>');
+    insertHtml('<aside class="emphasis-box" draggable="true"><p>Emphasis note</p></aside>');
     return;
   }
   const selectedHtml = selection.isCollapsed ? "Emphasis note" : selectionHtml(selection.getRangeAt(0));
-  insertHtml(`<aside class="emphasis-box">${selectedHtml}</aside><p></p>`);
+  insertHtml(`<aside class="emphasis-box" draggable="true">${selectedHtml}</aside><p></p>`);
 }
 
 function selectionHtml(range) {
@@ -981,7 +1003,7 @@ function selectionHtml(range) {
 }
 
 function insertTable() {
-  insertHtml(`<table><thead><tr><th>Field</th><th>Notes</th></tr></thead><tbody><tr><td>Canon</td><td></td></tr><tr><td>Reference</td><td></td></tr></tbody></table>`);
+  insertHtml(`<table class="editable-table" draggable="true"><thead><tr><th>Field</th><th>Notes</th></tr></thead><tbody><tr><td>Canon</td><td></td></tr><tr><td>Reference</td><td></td></tr></tbody></table><p></p>`);
 }
 
 function embedSelectedImage(event) {
@@ -1046,12 +1068,13 @@ function openFilingCabinetSettingsMode() {
 function toggleWritingRoomPanel(show = els.writingRoomPanel.hidden) {
   els.writingRoomPanel.hidden = !show;
   els.writingRoomButton.setAttribute("aria-expanded", String(show));
-  if (show) renderWritingRoomCards();
+  if (show) { applyWritingRoomPanelLayout(); renderWritingRoomCards(); }
 }
 
 function toggleFilingEditMode() {
   state.filingEditMode = !state.filingEditMode;
   els.editWritingRoomButton.setAttribute("aria-pressed", String(state.filingEditMode));
+  if (els.saveWritingRoomLayoutButton) els.saveWritingRoomLayoutButton.hidden = !state.filingEditMode;
   els.writingRoomEditBar.hidden = !state.filingEditMode;
   els.writingRoomPanel.classList.toggle("is-editing", state.filingEditMode);
   els.writingRoomTitle.contentEditable = String(state.filingEditMode);
@@ -1185,6 +1208,7 @@ function renderWritingRoomCard(doc, depth = 0) {
     <div class="writing-room-card-body">
       <span class="document-card-actions">
         <button type="button" title="Open" data-card-action="open" data-doc-id="${escapeAttr(doc.id)}">↗</button>
+        <button type="button" title="Edit all TCards, tables, or emphasis boxes" data-card-action="bulk-style" data-doc-id="${escapeAttr(doc.id)}">🎨</button>
         <button type="button" title="Duplicate" data-card-action="duplicate" data-doc-id="${escapeAttr(doc.id)}">⧉</button>
         <button type="button" title="Deprecate old version" data-card-action="deprecate" data-doc-id="${escapeAttr(doc.id)}">🕰</button>
         <button type="button" title="Delete" data-card-action="delete" data-doc-id="${escapeAttr(doc.id)}">❌</button>
@@ -1318,6 +1342,7 @@ async function handleWritingRoomCardClick(event) {
   if (action === "deprecate") return deprecateDocument(docId);
   if (action === "delete") return deleteDocumentSafely(docId);
   if (action === "restore") return restoreArchivedDocument(docId, button.dataset.archiveSource);
+  if (action === "bulk-style") return bulkStyleDocument(docId);
   if (action === "copy") {
     await copyText(new URL(documentUrl(docId), location.href).href);
     setStatus("Copied Writing Room tab link", "saved");
@@ -1633,6 +1658,164 @@ function movePanelDrag(event) {
 
 function stopPanelDrag() { state.panelDrag = null; }
 
+function saveWritingRoomPanelLayout() {
+  const rect = els.writingRoomPanel.getBoundingClientRect();
+  const layout = {
+    left: Math.round(rect.left),
+    top: Math.round(rect.top),
+    width: Math.round(rect.width),
+    height: Math.round(rect.height),
+  };
+  localStorage.setItem(WRITING_ROOM_LAYOUT_KEY, JSON.stringify(layout));
+  setStatus("Writing Room layout saved", "saved");
+}
+
+function applyWritingRoomPanelLayout() {
+  try {
+    const layout = JSON.parse(localStorage.getItem(WRITING_ROOM_LAYOUT_KEY) || "null");
+    if (!layout) return;
+    if (layout.width) els.writingRoomPanel.style.width = `${Math.max(360, Math.min(window.innerWidth - 24, layout.width))}px`;
+    if (layout.height) els.writingRoomPanel.style.height = `${Math.max(320, Math.min(window.innerHeight - 24, layout.height))}px`;
+    if (Number.isFinite(layout.left)) els.writingRoomPanel.style.left = `${Math.max(8, Math.min(window.innerWidth - 80, layout.left))}px`;
+    if (Number.isFinite(layout.top)) els.writingRoomPanel.style.top = `${Math.max(8, Math.min(window.innerHeight - 80, layout.top))}px`;
+    els.writingRoomPanel.style.right = "auto";
+  } catch (error) {
+    console.warn("Ignoring unreadable Writing Room panel layout", error);
+    localStorage.removeItem(WRITING_ROOM_LAYOUT_KEY);
+  }
+}
+
+function blockStyleAttr(style = {}) {
+  const css = [];
+  if (style.bg) css.push(`--tcard-bg:${cssString(style.bg)}`);
+  if (style.border) css.push(`--tcard-border:${cssString(style.border)}`);
+  if (style.text) css.push(`--tcard-text:${cssString(style.text)}`);
+  if (style.heading) css.push(`--tcard-heading:${cssString(style.heading)}`);
+  if (style.size) css.push(`--tcard-size:${parseInt(style.size, 10) || 14}px`);
+  return css.length ? ` style="${css.join(";")}"` : "";
+}
+
+function prepareEditorInteractiveBlocks() {
+  els.editor.querySelectorAll("table").forEach((table) => {
+    table.classList.add("editable-table");
+    table.setAttribute("draggable", "true");
+  });
+  els.editor.querySelectorAll(".emphasis-box, .transclusion-ref").forEach((node) => node.setAttribute("draggable", "true"));
+}
+
+function handleEditorHover(event) {
+  handleEditorLinkPreview(event);
+  const table = event.target.closest("table");
+  clearTimeout(state.tableEditTimer);
+  if (table && els.editor.contains(table)) {
+    state.tableEditTimer = setTimeout(() => showTableEditButton(table), 1000);
+  }
+}
+
+function handleEditorMouseOut(event) {
+  if (!event.relatedTarget?.closest?.(".table-edit-button") && !event.relatedTarget?.closest?.("table")) {
+    clearTimeout(state.tableEditTimer);
+  }
+}
+
+function showTableEditButton(table) {
+  removeFloatingEditorButtons(".table-edit-button");
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "floating-edit-button table-edit-button";
+  button.textContent = "✎";
+  button.title = "Edit table";
+  button.addEventListener("click", () => openTableEditor(table));
+  table.parentElement?.insertBefore(button, table);
+}
+
+function removeFloatingEditorButtons(selector) {
+  els.editor.querySelectorAll(selector).forEach((button) => button.remove());
+}
+
+async function openTableEditor(table) {
+  const result = await openCapsDialog("Edit Table", [
+    { name: "columnWidth", label: "Column width", value: "", placeholder: "120px, 30%, or blank" },
+    { name: "bg", label: "Background color", value: table.style.backgroundColor || "#28133f" },
+    { name: "border", label: "Border color", value: table.style.borderColor || "#e88f69" },
+    { name: "action", label: "Action", value: "add-row", placeholder: "add-row, add-col, delete-row, delete-col" },
+  ]);
+  if (!result) return;
+  applyTableEdits(table, result);
+  syncAndSave("Table updated");
+}
+
+function applyTableEdits(table, result) {
+  if (result.bg) table.style.backgroundColor = normalizeHexColor(result.bg) || result.bg;
+  if (result.border) {
+    table.style.borderColor = normalizeHexColor(result.border) || result.border;
+    table.querySelectorAll("th, td").forEach((cell) => { cell.style.borderColor = table.style.borderColor; });
+  }
+  if (result.columnWidth) table.querySelectorAll("tr > *").forEach((cell) => { cell.style.width = result.columnWidth; });
+  const action = String(result.action || "").trim().toLowerCase();
+  const rows = [...table.rows];
+  const columnCount = rows[0]?.cells.length || 1;
+  if (action === "add-row") {
+    const row = table.tBodies[0]?.insertRow(-1) || table.insertRow(-1);
+    for (let i = 0; i < columnCount; i += 1) row.insertCell(-1).textContent = "";
+  }
+  if (action === "add-col") rows.forEach((row, index) => (index === 0 && table.tHead ? row.insertCell(-1).outerHTML = "<th></th>" : row.insertCell(-1).textContent = ""));
+  if (action === "delete-row" && rows.length > 1) table.deleteRow(-1);
+  if (action === "delete-col" && columnCount > 1) rows.forEach((row) => row.deleteCell(-1));
+}
+
+function handleEditorDragStart(event) {
+  const node = event.target.closest("table, .transclusion-ref, .emphasis-box");
+  if (!node || !els.editor.contains(node)) return;
+  state.draggedEditorNode = node;
+  event.dataTransfer?.setData("text/plain", node.dataset.blockId || node.className || "editor-block");
+}
+
+function handleEditorDragOver(event) {
+  if (state.draggedEditorNode && els.editor.contains(event.target)) event.preventDefault();
+}
+
+function handleEditorDrop(event) {
+  if (!state.draggedEditorNode) return;
+  const target = event.target.closest("table, .transclusion-ref, .emphasis-box, p, h1, h2, h3, li") || event.target;
+  if (!els.editor.contains(target) || target === state.draggedEditorNode) return;
+  event.preventDefault();
+  target.after(state.draggedEditorNode);
+  state.draggedEditorNode = null;
+  syncAndSave("Writing block moved");
+}
+
+async function bulkStyleDocument(docId) {
+  const doc = state.documents.find((item) => item.id === docId);
+  if (!doc) return;
+  const result = await openCapsDialog("Edit All In File", [
+    { name: "target", label: "Target", value: "tcards", placeholder: "tcards, tables, emphasis" },
+    { name: "color", label: "Color", value: CAPSANOTO_PALETTE.peach, placeholder: "#e88f69" },
+  ]);
+  if (!result) return;
+  const color = normalizeHexColor(result.color) || result.color;
+  const target = String(result.target || "").toLowerCase();
+  if (target.startsWith("t")) {
+    [...doc.content.matchAll(/\{\{([A-Za-z]+-[A-Za-z0-9-]+)\}\}/g)].forEach((match) => {
+      const block = state.blocks[match[1]];
+      if (block) block.style = { ...(block.style || {}), bg: color, border: color, heading: color };
+    });
+  } else {
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = doc.content;
+    const selector = target.startsWith("e") ? ".emphasis-box" : "table";
+    wrapper.querySelectorAll(selector).forEach((node) => {
+      node.style.backgroundColor = color;
+      node.style.borderColor = color;
+      node.querySelectorAll?.("th, td").forEach((cell) => { cell.style.borderColor = color; });
+    });
+    doc.content = wrapper.innerHTML;
+  }
+  renderActiveDocument();
+  renderWritingRoomCards();
+  markDirty("Bulk style updated");
+}
+
 
 function loadEditableHelp() {
   const saved = localStorage.getItem(HELP_KEY);
@@ -1711,6 +1894,7 @@ function saveBlock() {
   state.blocks[id] = {
     id,
     content: els.blockContentInput.value,
+    style: { bg: els.blockBgInput.value, border: els.blockBorderInput.value, text: els.blockTextInput.value, heading: els.blockHeadingInput.value, size: els.blockTextSizeInput.value || "14" },
     updatedAt: new Date().toISOString(),
   };
   renderBlockList();
@@ -1722,6 +1906,7 @@ function saveBlock() {
 function insertBlockReference() {
   const id = els.blockIdInput.value.trim();
   if (!id) return;
+  restoreSelectionRange();
   insertHtml(`{{${escapeHtml(id)}}}`);
   renderActiveDocument();
   renderBookmarks();
@@ -1739,6 +1924,11 @@ function selectBlock(id) {
   if (!block) return;
   els.blockIdInput.value = block.id;
   els.blockContentInput.value = block.content;
+  els.blockBgInput.value = normalizeHexColor(block.style?.bg) || CAPSANOTO_PALETTE.deepPlum;
+  els.blockBorderInput.value = normalizeHexColor(block.style?.border) || CAPSANOTO_PALETTE.peach;
+  els.blockTextInput.value = normalizeHexColor(block.style?.text) || CAPSANOTO_PALETTE.parchment;
+  els.blockHeadingInput.value = normalizeHexColor(block.style?.heading) || CAPSANOTO_PALETTE.peach;
+  els.blockTextSizeInput.value = block.style?.size || "14";
 }
 
 function syncAndSave(message) {
