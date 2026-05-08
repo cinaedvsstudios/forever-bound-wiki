@@ -837,3 +837,46 @@ input, textarea, select, .panel-help, .help-panel p, .help-panel dd, .document-c
   max-height: min(76vh, 720px);
   border-radius: 24px;
 }
+.filing-tab {
+  margin: 0.35rem 0 0.4rem 1rem;
+  border: 1px solid rgba(86,52,133,0.72);
+  border-radius: 18px;
+  background: rgba(40,19,63,0.22);
+  box-shadow: inset 0 0 0 1px rgba(232,143,105,0.08);
+}
+.filing-tab > summary {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 2.4rem;
+  padding: 0.45rem 0.65rem;
+  color: #e7a2ff;
+  background: transparent;
+  border: 0;
+  border-radius: 14px;
+  box-shadow: none;
+  list-style: none;
+}
+.filing-tab > summary::-webkit-details-marker { display: none; }
+.filing-tab > summary strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.filing-tab > summary small { color: var(--muted); }
+.filing-tab[open] > summary .card-arrow { transform: rotate(90deg); }
+.filing-tab-documents {
+  margin: 0 0.75rem 0.75rem 1rem;
+  padding: 0.7rem;
+  border-left: 1px solid #563485;
+  border-bottom: 1px solid #563485;
+  border-radius: 0 0 18px 18px;
+  background: rgba(86,52,133,0.18);
+}
+.filing-tab-documents .writing-room-card {
+  margin-left: 0;
+}
+.folder-tab-stack {
+  padding-top: 0.75rem;
+}

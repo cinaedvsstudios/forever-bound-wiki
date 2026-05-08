@@ -81,6 +81,7 @@ const state = {
   panelDrag: null,
   filingEditMode: false,
   filingGroups: [],
+  filingTabs: [],
   trash: [],
   deprecated: [],
   draggedDocId: "",
@@ -349,6 +350,7 @@ async function loadWorkspace() {
       state.documents = Array.isArray(payload.documents) ? payload.documents : [];
       state.blocks = payload.blocks && typeof payload.blocks === "object" ? payload.blocks : {};
       state.filingGroups = Array.isArray(payload.filingGroups) ? payload.filingGroups : [];
+      state.filingTabs = Array.isArray(payload.filingTabs) ? payload.filingTabs : [];
       state.trash = Array.isArray(payload.trash) ? payload.trash : [];
       state.deprecated = Array.isArray(payload.deprecated) ? payload.deprecated : [];
     } catch (error) {
@@ -364,12 +366,14 @@ async function loadWorkspace() {
     state.documents = Array.isArray(payload.documents) ? payload.documents : [];
     state.blocks = payload.blocks && typeof payload.blocks === "object" ? payload.blocks : {};
     state.filingGroups = Array.isArray(payload.filingGroups) ? payload.filingGroups : [];
+    state.filingTabs = Array.isArray(payload.filingTabs) ? payload.filingTabs : [];
     state.trash = Array.isArray(payload.trash) ? payload.trash : [];
     state.deprecated = Array.isArray(payload.deprecated) ? payload.deprecated : [];
     persistNow("Loaded starter Writing Room");
   }
 
   if (!state.filingGroups.length) state.filingGroups = defaultFilingGroups();
+  ensureFilingTabs();
   if (!state.documents.length) createDocument();
   state.activeId = state.documents[0].id;
 }
@@ -1055,15 +1059,20 @@ async function createFilingGroup(type) {
 }
 
 async function createFilingTab() {
+  const groupId = activeFilingGroupId();
   const result = await openCapsDialog("New Tab", [
-    { name: "title", label: "Tab title", value: "Untitled Document" },
+    { name: "title", label: "Tab name", value: "New Tab" },
   ]);
-  const title = result?.title?.trim() || "Untitled Document";
-  const doc = createDocument(`doc-${Date.now()}`, title);
-  doc.filingGroupId = state.filingGroups[0]?.id || defaultFilingGroups()[0].id;
-  openDocument(doc.id);
-  toggleWritingRoomPanel(true);
-  markDirty("New Filing Cabinet tab created");
+  const title = result?.title?.trim() || "New Tab";
+  state.filingTabs.push({
+    id: `tab-${slugify(title)}-${Date.now()}`,
+    label: title,
+    groupId,
+    type: "tab",
+    createdAt: new Date().toISOString(),
+  });
+  renderWritingRoomCards();
+  markDirty("Filing Cabinet tab added");
 }
 
 function defaultFilingGroups() {
@@ -1075,20 +1084,71 @@ function defaultFilingGroups() {
   ];
 }
 
+function ensureFilingTabs() {
+  state.filingGroups.forEach((group) => {
+    if (!state.filingTabs.some((tab) => tab.groupId === group.id)) {
+      state.filingTabs.push(createDefaultTabForGroup(group));
+    }
+  });
+  state.documents.forEach((doc) => {
+    if (doc.filingTabId && state.filingTabs.some((tab) => tab.id === doc.filingTabId)) return;
+    const groupId = doc.filingGroupId || groupIdForDocument(doc);
+    let tab = state.filingTabs.find((item) => item.groupId === groupId);
+    if (!tab) {
+      const group = state.filingGroups.find((item) => item.id === groupId) || state.filingGroups[0];
+      tab = createDefaultTabForGroup(group);
+      state.filingTabs.push(tab);
+    }
+    doc.filingGroupId = tab.groupId;
+    doc.filingTabId = tab.id;
+  });
+}
+
+function createDefaultTabForGroup(group) {
+  return {
+    id: `tab-${group.id}-main`,
+    label: "Tab number 1",
+    groupId: group.id,
+    type: "tab",
+    createdAt: new Date().toISOString(),
+  };
+}
+
+function activeFilingGroupId() {
+  const active = activeDocument();
+  if (active?.filingGroupId && state.filingGroups.some((group) => group.id === active.filingGroupId)) return active.filingGroupId;
+  if (active?.filingTabId) {
+    const tab = state.filingTabs.find((item) => item.id === active.filingTabId);
+    if (tab?.groupId) return tab.groupId;
+  }
+  return state.filingGroups[0]?.id || defaultFilingGroups()[0].id;
+}
+
 function renderWritingRoomCards() {
   if (!els.writingRoomCards) return;
-  const groups = groupedDocuments();
+  ensureFilingTabs();
+  const groups = filingCabinetTree();
   const groupHtml = groups.map((group, groupIndex) => `
     <details class="writing-room-group" data-group-id="${escapeAttr(group.id)}" ${groupIndex === 0 ? "open" : ""}>
-      <summary><span class="card-arrow">›</span><strong>${escapeHtml(group.label)}</strong><small>${group.documents.length} ${group.documents.length === 1 ? "tab" : "tabs"}</small>${state.filingEditMode ? `<span class="filing-group-actions"><button type="button" data-group-action="settings" data-group-id="${escapeAttr(group.id)}">Settings</button><button type="button" data-group-action="delete" data-group-id="${escapeAttr(group.id)}">Delete</button></span>` : ""}</summary>
-      <div class="writing-room-card-stack" data-drop-group="${escapeAttr(group.id)}">
-        ${group.documents.map((doc) => renderWritingRoomCard(doc, group.depth)).join("")}
-        ${state.filingEditMode && !group.documents.length ? '<p class="panel-help">Drop files here or use metadata tags later.</p>' : ''}
+      <summary><span class="card-arrow">›</span><strong>${escapeHtml(group.label)}</strong><small>${group.tabs.length} ${group.tabs.length === 1 ? "tab" : "tabs"}</small>${state.filingEditMode ? `<span class="filing-group-actions"><button type="button" data-group-action="settings" data-group-id="${escapeAttr(group.id)}">Settings</button><button type="button" data-group-action="delete" data-group-id="${escapeAttr(group.id)}">Delete</button></span>` : ""}</summary>
+      <div class="writing-room-card-stack folder-tab-stack" data-drop-group="${escapeAttr(group.id)}">
+        ${group.tabs.map((tab) => renderFilingTab(tab)).join("")}
+        ${state.filingEditMode && !group.tabs.length ? '<p class="panel-help">Create a tab in this folder before adding documents.</p>' : ''}
       </div>
     </details>
   `).join("");
   const trashHtml = state.filingEditMode ? renderTrashSection() : "";
   els.writingRoomCards.innerHTML = groupHtml + trashHtml;
+}
+
+function renderFilingTab(tab) {
+  return `<details class="filing-tab" data-tab-id="${escapeAttr(tab.id)}" open>
+    <summary><span class="card-arrow">›</span><strong>▽ ${escapeHtml(tab.label)}</strong><small>${tab.documents.length} ${tab.documents.length === 1 ? "document" : "documents"}</small>${state.filingEditMode ? `<span class="filing-group-actions"><button type="button" data-tab-action="settings" data-tab-id="${escapeAttr(tab.id)}">Settings</button><button type="button" data-tab-action="delete" data-tab-id="${escapeAttr(tab.id)}">Delete</button></span>` : ""}</summary>
+    <div class="writing-room-card-stack filing-tab-documents" data-drop-tab="${escapeAttr(tab.id)}">
+      ${tab.documents.map((doc) => renderWritingRoomCard(doc, 0)).join("")}
+      ${state.filingEditMode && !tab.documents.length ? '<p class="panel-help">Drop documents into this tab.</p>' : ''}
+    </div>
+  </details>`;
 }
 
 function renderWritingRoomCard(doc, depth = 0) {
@@ -1132,25 +1192,45 @@ function archivedCard(doc, source) {
   return `<article class="writing-room-card archived-card"><div class="writing-room-card-body"><strong>${escapeHtml(doc.title)}</strong><p class="doc-id-line"><strong>Document ID:</strong> ${escapeHtml(doc.id)}</p><span class="document-card-actions"><button type="button" data-card-action="restore" data-archive-source="${source}" data-doc-id="${escapeAttr(doc.id)}">Restore</button></span></div></article>`;
 }
 
-function groupedDocuments() {
-  const baseGroups = state.filingGroups.length ? state.filingGroups : defaultFilingGroups();
-  const groupsById = new Map(baseGroups.map((group, index) => [group.id, { ...group, documents: [], depth: index ? 1 : 0 }]));
-  const groupsByLabel = new Map([...groupsById.values()].map((group) => [group.label, group]));
+function filingCabinetTree() {
+  const groups = state.filingGroups.length ? state.filingGroups : defaultFilingGroups();
+  const groupsById = new Map(groups.map((group) => [group.id, { ...group, tabs: [] }]));
+  state.filingTabs.forEach((tab) => {
+    const group = groupsById.get(tab.groupId) || groupsById.values().next().value;
+    if (!group) return;
+    if (!groupsById.has(tab.groupId)) tab.groupId = group.id;
+    group.tabs.push({ ...tab, documents: [] });
+  });
+  const tabsById = new Map([...groupsById.values()].flatMap((group) => group.tabs.map((tab) => [tab.id, tab])));
   state.documents.forEach((doc) => {
-    let group = doc.filingGroupId ? groupsById.get(doc.filingGroupId) : null;
-    if (!group) {
-      const label = writingRoomGroupLabel(doc);
-      group = groupsByLabel.get(label);
-      if (!group) {
-        group = { id: slugify(label), label, type: "folder", documents: [], depth: groupsById.size ? 1 : 0 };
-        groupsById.set(group.id, group);
-        groupsByLabel.set(group.label, group);
-      }
-      doc.filingGroupId = group.id;
-    }
-    group.documents.push(doc);
+    const tab = resolveDocumentTab(doc, groupsById, tabsById);
+    tab.documents.push(doc);
   });
   return [...groupsById.values()];
+}
+
+function resolveDocumentTab(doc, groupsById, tabsById) {
+  let tab = doc.filingTabId ? tabsById.get(doc.filingTabId) : null;
+  if (tab) {
+    doc.filingGroupId = tab.groupId;
+    return tab;
+  }
+  const groupId = doc.filingGroupId && groupsById.has(doc.filingGroupId) ? doc.filingGroupId : groupIdForDocument(doc);
+  const group = groupsById.get(groupId) || groupsById.values().next().value;
+  let fallbackTab = group.tabs[0];
+  if (!fallbackTab) {
+    fallbackTab = createDefaultTabForGroup(group);
+    group.tabs.push({ ...fallbackTab, documents: [] });
+    tabsById.set(fallbackTab.id, group.tabs[group.tabs.length - 1]);
+  }
+  doc.filingGroupId = group.id;
+  doc.filingTabId = fallbackTab.id;
+  return tabsById.get(fallbackTab.id) || group.tabs[group.tabs.length - 1];
+}
+
+function groupIdForDocument(doc) {
+  const label = writingRoomGroupLabel(doc);
+  return state.filingGroups.find((group) => group.label === label)?.id || state.filingGroups[0]?.id || defaultFilingGroups()[0].id;
 }
 
 function writingRoomGroupLabel(doc) {
@@ -1175,6 +1255,11 @@ async function handleWritingRoomCardClick(event) {
     event.preventDefault();
     return handleFilingGroupAction(groupButton.dataset.groupAction, groupButton.dataset.groupId);
   }
+  const tabButton = event.target.closest("button[data-tab-action]");
+  if (tabButton) {
+    event.preventDefault();
+    return handleFilingTabAction(tabButton.dataset.tabAction, tabButton.dataset.tabId);
+  }
   const button = event.target.closest("button[data-card-action]");
   if (!button) return;
   const docId = button.dataset.docId;
@@ -1191,10 +1276,39 @@ async function handleWritingRoomCardClick(event) {
   }
 }
 
+async function handleFilingTabAction(action, tabId) {
+  const tab = state.filingTabs.find((item) => item.id === tabId);
+  if (!tab) return;
+  const tabDocs = state.documents.filter((doc) => doc.filingTabId === tabId);
+  if (action === "settings") {
+    const result = await openCapsDialog("Tab Settings", [
+      { name: "label", label: "Tab label", value: tab.label },
+    ]);
+    const label = result?.label?.trim();
+    if (!label) return;
+    tab.label = label;
+    renderWritingRoomCards();
+    markDirty("Filing Cabinet tab settings updated");
+    return;
+  }
+  if (action === "delete") {
+    if (tabDocs.length) {
+      await openCapsDialog("Tab Not Empty", [
+        { name: "warning", label: `${tab.label} contains ${tabDocs.length} ${tabDocs.length === 1 ? "document" : "documents"}. Move, delete, deprecate, or restore those documents before deleting the tab.`, value: "", readonly: true },
+      ]);
+      return;
+    }
+    state.filingTabs = state.filingTabs.filter((item) => item.id !== tabId);
+    renderWritingRoomCards();
+    markDirty("Empty Filing Cabinet tab deleted");
+  }
+}
+
 async function handleFilingGroupAction(action, groupId) {
-  const group = state.filingGroups.find((item) => item.id === groupId) || groupedDocuments().find((item) => item.id === groupId);
+  const group = state.filingGroups.find((item) => item.id === groupId) || filingCabinetTree().find((item) => item.id === groupId);
   if (!group) return;
-  const groupDocs = state.documents.filter((doc) => doc.filingGroupId === groupId);
+  const groupTabs = state.filingTabs.filter((tab) => tab.groupId === groupId);
+  const groupDocs = state.documents.filter((doc) => doc.filingGroupId === groupId || groupTabs.some((tab) => tab.id === doc.filingTabId));
   if (action === "settings") {
     const result = await openCapsDialog("Folder Settings", [
       { name: "label", label: "Folder / tab label", value: group.label },
@@ -1214,9 +1328,9 @@ async function handleFilingGroupAction(action, groupId) {
     return;
   }
   if (action === "delete") {
-    if (groupDocs.length) {
+    if (groupTabs.length || groupDocs.length) {
       await openCapsDialog("Folder Not Empty", [
-        { name: "warning", label: `${group.label} contains ${groupDocs.length} ${groupDocs.length === 1 ? "tab" : "tabs"}. Move, delete, deprecate, or restore those tabs before deleting the folder.`, value: "", readonly: true },
+        { name: "warning", label: `${group.label} contains ${groupTabs.length} ${groupTabs.length === 1 ? "tab" : "tabs"} and ${groupDocs.length} ${groupDocs.length === 1 ? "document" : "documents"}. Move or delete those tabs before deleting the folder.`, value: "", readonly: true },
       ]);
       return;
     }
@@ -1312,23 +1426,36 @@ function handleFilingDragStart(event) {
 }
 
 function handleFilingDragOver(event) {
-  if (state.filingEditMode && event.target.closest("[data-doc-card], [data-drop-group]")) event.preventDefault();
+  if (state.filingEditMode && event.target.closest("[data-doc-card], [data-drop-group], [data-drop-tab]")) event.preventDefault();
 }
 
 function handleFilingDrop(event) {
   if (!state.filingEditMode || !state.draggedDocId) return;
   const targetCard = event.target.closest("[data-doc-card]");
   const targetGroup = event.target.closest("[data-drop-group]");
-  if (!targetCard && !targetGroup) return;
+  const targetTab = event.target.closest("[data-drop-tab]");
+  if (!targetCard && !targetGroup && !targetTab) return;
   if (targetCard?.dataset.docCard === state.draggedDocId) return;
   event.preventDefault();
   const from = state.documents.findIndex((doc) => doc.id === state.draggedDocId);
   if (from < 0) return;
   const [doc] = state.documents.splice(from, 1);
-  if (targetGroup) doc.filingGroupId = targetGroup.dataset.dropGroup;
+  if (targetGroup) {
+    doc.filingGroupId = targetGroup.dataset.dropGroup;
+    const groupTab = state.filingTabs.find((tab) => tab.groupId === doc.filingGroupId);
+    if (groupTab) doc.filingTabId = groupTab.id;
+  }
+  if (targetTab) {
+    const tab = state.filingTabs.find((item) => item.id === targetTab.dataset.dropTab);
+    if (tab) {
+      doc.filingTabId = tab.id;
+      doc.filingGroupId = tab.groupId;
+    }
+  }
   if (targetCard) {
     const targetDoc = state.documents.find((item) => item.id === targetCard.dataset.docCard);
     if (targetDoc?.filingGroupId) doc.filingGroupId = targetDoc.filingGroupId;
+    if (targetDoc?.filingTabId) doc.filingTabId = targetDoc.filingTabId;
     const to = state.documents.findIndex((item) => item.id === targetCard.dataset.docCard);
     state.documents.splice(Math.max(0, to), 0, doc);
   } else {
@@ -1788,6 +1915,7 @@ function serializedWorkspace() {
     documents: state.documents,
     blocks: state.blocks,
     filingGroups: state.filingGroups,
+    filingTabs: state.filingTabs,
     trash: state.trash,
     deprecated: state.deprecated,
   }, null, 2);
