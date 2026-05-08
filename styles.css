@@ -445,3 +445,177 @@ button, summary { font-size: var(--button-font-size); font-weight: var(--button-
   .tool-menu-panel, .tool-menu[open]:first-of-type .tool-menu-panel { position: static; display: grid; margin-top: 0.45rem; }
   .settings-menu { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* Writing Room layout refinements */
+.writer-header.toolbar {
+  top: 0;
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) auto minmax(150px, auto);
+  align-items: center;
+  gap: 0.75rem;
+  overflow: visible;
+  padding-block: 0.55rem;
+}
+.writing-room-button {
+  min-height: 2.55rem;
+  padding-inline: 1rem;
+  color: #111;
+  background: var(--accent);
+  border-color: var(--accent);
+  font-weight: 900;
+}
+.top-command-menus {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.top-command-menus .tool-menu {
+  position: relative;
+  min-width: 8rem;
+}
+.tool-menu-trigger {
+  width: 100%;
+  min-height: 2.4rem;
+}
+.top-command-menus .tool-menu-panel {
+  position: absolute;
+  top: calc(100% + 0.45rem);
+  left: 0;
+  display: none;
+  grid-template-columns: 1fr;
+  min-width: 14rem;
+  z-index: 50;
+}
+.top-command-menus .tool-menu:hover .tool-menu-panel,
+.top-command-menus .tool-menu:focus-within .tool-menu-panel {
+  display: grid;
+}
+.bookmark-bar { display: none !important; }
+.title-strip { top: 58px; }
+
+.writing-room-panel {
+  position: fixed;
+  top: 5.25rem;
+  left: max(1rem, calc((100vw - 980px) / 2));
+  z-index: 45;
+  width: min(980px, calc(100vw - 2rem));
+  max-height: min(76vh, 720px);
+  overflow: hidden;
+  color: var(--ink);
+  background: rgba(17,16,13,0.98);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  box-shadow: 0 24px 90px rgba(0,0,0,0.5);
+}
+.writing-room-panel > header {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 1rem;
+  padding: 1rem 1rem 0.8rem;
+  cursor: grab;
+  border-bottom: 1px solid rgba(216,138,100,0.3);
+  background: rgba(255,255,255,0.035);
+}
+.writing-room-panel > header:active { cursor: grabbing; }
+.writing-room-panel h2 { margin: 0.15rem 0 0; color: var(--accent); }
+.writing-room-cards {
+  display: grid;
+  gap: 0.75rem;
+  max-height: calc(min(76vh, 720px) - 5.2rem);
+  overflow: auto;
+  padding: 0.9rem 1rem 1rem;
+}
+.writing-room-group,
+.writing-room-card {
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 18px;
+  background: #1f1f1f;
+}
+.writing-room-group > summary,
+.writing-room-card > summary {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.65rem;
+  min-height: 3.4rem;
+  padding: 0.75rem 1rem;
+  color: var(--ink);
+  background: #202020;
+  border: 0;
+  border-radius: 18px;
+  box-shadow: none;
+  list-style: none;
+  cursor: pointer;
+}
+.writing-room-group > summary { grid-template-columns: auto minmax(0, 1fr) auto; }
+.writing-room-group > summary::-webkit-details-marker,
+.writing-room-card > summary::-webkit-details-marker { display: none; }
+.card-arrow {
+  display: inline-grid;
+  place-items: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  font-size: 1.4rem;
+  transform: rotate(0deg);
+  transition: transform 0.18s ease;
+}
+.writing-room-group[open] > summary .card-arrow,
+.writing-room-card[open] > summary .card-arrow { transform: rotate(90deg); }
+.card-icon { font-size: 1.15rem; }
+.writing-room-group summary strong,
+.writing-room-card summary strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.writing-room-group summary small,
+.writing-room-card summary small {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+.writing-room-card-stack {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0 0.75rem 0.75rem;
+}
+.writing-room-card {
+  margin-left: calc(var(--tab-depth, 0) * 1.35rem);
+}
+.writing-room-card.is-active > summary {
+  color: #111;
+  background: linear-gradient(180deg, #f0b17d, var(--accent));
+}
+.writing-room-card.is-active > summary small { color: rgba(17,17,17,0.72); }
+.writing-room-card-body {
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem 1rem 3.2rem;
+  color: var(--muted);
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+.writing-room-card-body p { margin: 0; line-height: 1.45; }
+.writing-room-card-body footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.settings-menu { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.design-section {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+}
+.design-section h3,
+.design-section h4,
+.design-section .design-preview,
+.design-section .export-actions { grid-column: 1 / -1; }
+.settings-links { grid-template-columns: 1fr; }
+
+@media (max-width: 900px) {
+  .writer-header.toolbar { grid-template-columns: 1fr; }
+  .top-command-menus { overflow-x: auto; }
+  .writing-room-panel { left: 0.75rem; width: calc(100vw - 1.5rem); }
+  .design-section { grid-template-columns: 1fr; }
+}

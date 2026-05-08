@@ -12,7 +12,7 @@
       <img src="lanternlogo small.png" alt="Forever Bound lantern logo">
       <p class="eyebrow">Forever Bound</p>
       <h1 id="passwordTitle">Enter Capsanoto</h1>
-      <p>Use the shared project password to unlock this browser session.</p>
+      <p>This preview opens directly into the Writing Room.</p>
       <label for="passwordInput">Password</label>
       <input id="passwordInput" type="password" autocomplete="current-password" required>
       <button type="submit">Unlock Editor</button>
@@ -21,52 +21,52 @@
   </main>
 
   <main id="editorApp" class="writer-shell" aria-label="Forever Bound writing editor">
-    <header class="writer-header">
+    <header class="writer-header toolbar" aria-label="Capsanoto command bar">
       <div class="document-controls">
         <strong class="app-name">Capsanoto</strong>
+        <button id="writingRoomButton" class="writing-room-button" type="button" aria-expanded="false" aria-controls="writingRoomPanel">Writing Room</button>
         <label for="documentSelect" class="sr-only">Current document</label>
         <select id="documentSelect" title="Document Switcher"></select>
         <button id="newDocumentButton" class="icon-button" type="button" title="New Document" aria-label="New Document" data-tool-name="Document Forge">📄</button>
       </div>
+      <nav class="top-command-menus" aria-label="Writing Room controls">
+        <div class="tool-menu">
+          <button class="tool-menu-trigger" type="button" aria-haspopup="true">Format⌄</button>
+          <div class="tool-menu-panel">
+            <button data-command="bold" type="button" title="Bold" aria-label="Bold" data-tool-name="Bold Mark"><strong>B</strong> Bold</button>
+            <button data-command="italic" type="button" title="Italic" aria-label="Italic" data-tool-name="Italic Mark"><em>I</em> Italic</button>
+            <button data-block="h1" type="button" title="Heading 1" aria-label="Heading 1" data-tool-name="Chapter Heading">H1 Chapter</button>
+            <button data-block="h2" type="button" title="Heading 2" aria-label="Heading 2" data-tool-name="Section Heading">H2 Section</button>
+            <button data-block="p" type="button" title="Paragraph" aria-label="Paragraph" data-tool-name="Body Text">¶ Body</button>
+            <button data-command="insertUnorderedList" type="button" title="Bullet List" aria-label="Bullet List" data-tool-name="Lore List">☰ List</button>
+          </div>
+        </div>
+        <div class="tool-menu">
+          <button class="tool-menu-trigger" type="button" aria-haspopup="true">Links⌄</button>
+          <div class="tool-menu-panel">
+            <button id="linkButton" type="button" title="Create Link" aria-label="Create Link" data-tool-name="Path Link">🔗 Path Link</button>
+            <button id="editLinkButton" type="button" title="Edit Link" aria-label="Edit Link" data-tool-name="Link Smith">🛠️ Link Smith</button>
+            <button id="pillLinkButton" type="button" title="Convert Selection to Pill" aria-label="Convert Selection to Pill" data-tool-name="Pill Gate">💊 Pill Gate</button>
+            <button id="removeLinkButton" type="button" title="Remove Link" aria-label="Remove Link" data-tool-name="Link Breaker">❌ Link Breaker</button>
+            <button id="bookmarkButton" type="button" title="Bookmark" aria-label="Bookmark" data-tool-name="Anchor Rune">⚓ Anchor Rune</button>
+          </div>
+        </div>
+        <div class="tool-menu">
+          <button class="tool-menu-trigger" type="button" aria-haspopup="true">Insert⌄</button>
+          <div class="tool-menu-panel">
+            <button id="tableButton" type="button" title="Table" aria-label="Table" data-tool-name="Lore Table">▦ Lore Table</button>
+            <button id="imageButton" type="button" title="Image" aria-label="Image" data-tool-name="Image Embed">🖼️ Image Embed</button>
+            <button id="emojiButton" type="button" title="Emoji" aria-label="Emoji" data-tool-name="Emoji Spark">✨ Emoji Spark</button>
+            <button id="blockButton" type="button" title="Transclusion Blocks" aria-label="Transclusion Blocks" data-tool-name="Canon Block" data-icon-src="lanternlogo small.png">▣ Canon Block</button>
+          </div>
+        </div>
+      </nav>
       <div class="save-controls">
         <span id="saveStatus" class="save-status">Loading…</span>
         <button id="settingsButton" class="icon-button" type="button" title="Settings" aria-label="Settings" data-tool-name="Capsanoto Settings">⚙️</button>
       </div>
-    </header>
-
-    <section class="toolbar" aria-label="Capsanoto command bar">
-      <details class="tool-menu" open>
-        <summary aria-label="Formatting menu">Format</summary>
-        <div class="tool-menu-panel">
-          <button data-command="bold" type="button" title="Bold" aria-label="Bold" data-tool-name="Bold Mark"><strong>B</strong> Bold</button>
-          <button data-command="italic" type="button" title="Italic" aria-label="Italic" data-tool-name="Italic Mark"><em>I</em> Italic</button>
-          <button data-block="h1" type="button" title="Heading 1" aria-label="Heading 1" data-tool-name="Chapter Heading">H1 Chapter</button>
-          <button data-block="h2" type="button" title="Heading 2" aria-label="Heading 2" data-tool-name="Section Heading">H2 Section</button>
-          <button data-block="p" type="button" title="Paragraph" aria-label="Paragraph" data-tool-name="Body Text">¶ Body</button>
-          <button data-command="insertUnorderedList" type="button" title="Bullet List" aria-label="Bullet List" data-tool-name="Lore List">☰ List</button>
-        </div>
-      </details>
-      <details class="tool-menu">
-        <summary aria-label="Links and bookmarks menu">Links</summary>
-        <div class="tool-menu-panel">
-          <button id="linkButton" type="button" title="Create Link" aria-label="Create Link" data-tool-name="Path Link">🔗 Path Link</button>
-          <button id="editLinkButton" type="button" title="Edit Link" aria-label="Edit Link" data-tool-name="Link Smith">🛠️ Link Smith</button>
-          <button id="pillLinkButton" type="button" title="Convert Selection to Pill" aria-label="Convert Selection to Pill" data-tool-name="Pill Gate">💊 Pill Gate</button>
-          <button id="removeLinkButton" type="button" title="Remove Link" aria-label="Remove Link" data-tool-name="Link Breaker">❌ Link Breaker</button>
-          <button id="bookmarkButton" type="button" title="Bookmark" aria-label="Bookmark" data-tool-name="Anchor Rune">⚓ Anchor Rune</button>
-        </div>
-      </details>
-      <details class="tool-menu">
-        <summary aria-label="Insert menu">Insert</summary>
-        <div class="tool-menu-panel">
-          <button id="tableButton" type="button" title="Table" aria-label="Table" data-tool-name="Lore Table">▦ Lore Table</button>
-          <button id="imageButton" type="button" title="Image" aria-label="Image" data-tool-name="Image Embed">🖼️ Image Embed</button>
-          <button id="emojiButton" type="button" title="Emoji" aria-label="Emoji" data-tool-name="Emoji Spark">✨ Emoji Spark</button>
-          <button id="blockButton" type="button" title="Transclusion Blocks" aria-label="Transclusion Blocks" data-tool-name="Canon Block" data-icon-src="lanternlogo small.png">▣ Canon Block</button>
-        </div>
-      </details>
       <input id="imageInput" type="file" accept="image/*" hidden>
-    </section>
+    </header>
 
     <menu id="selectionMenu" class="selection-menu" hidden>
       <li class="selection-menu-heading">Selection actions</li>
@@ -89,7 +89,18 @@
       </form>
     </div>
 
-    <nav id="bookmarkBar" class="bookmark-bar" aria-label="Document bookmarks"></nav>
+    <aside id="writingRoomPanel" class="writing-room-panel" aria-label="Writing Room document tabs" hidden>
+      <header id="writingRoomPanelHeader">
+        <div>
+          <p class="eyebrow">Writing Room</p>
+          <h2>Document tabs</h2>
+        </div>
+        <button id="closeWritingRoomPanel" class="icon-button" type="button" aria-label="Close Writing Room">×</button>
+      </header>
+      <div id="writingRoomCards" class="writing-room-cards"></div>
+    </aside>
+
+    <nav id="bookmarkBar" class="bookmark-bar" aria-label="Document bookmarks" hidden></nav>
 
     <section class="title-strip">
       <input id="titleInput" class="title-input" aria-label="Document title">
@@ -101,24 +112,17 @@
     <aside id="settingsPanel" class="settings-panel" aria-label="Capsanoto settings" hidden>
       <header>
         <div>
-          <p class="eyebrow">Capsanoto Control Room</p>
+          <p class="eyebrow">Writing Room</p>
           <h2>Settings</h2>
         </div>
         <button id="closeSettingsPanel" class="icon-button" type="button" aria-label="Close settings">×</button>
       </header>
 
       <nav class="settings-menu" aria-label="Settings sections">
-        <button type="button" data-settings-tab="documents" aria-pressed="true">Cards</button>
+        <button type="button" data-settings-tab="design" aria-pressed="true">Design</button>
         <button type="button" data-settings-tab="export" aria-pressed="false">Export</button>
-        <button type="button" data-settings-tab="design" aria-pressed="false">Design</button>
         <button type="button" data-settings-tab="support" aria-pressed="false">Help</button>
       </nav>
-
-      <section class="settings-section settings-card" data-settings-section="documents">
-        <h3>Document Cards</h3>
-        <p class="panel-help">Open, copy, and review every writing card in this local workspace.</p>
-        <div id="documentCards" class="document-card-grid" aria-label="Document cards"></div>
-      </section>
 
       <section class="settings-section settings-card" data-settings-section="export" hidden>
         <h3>Smart Export Builder</h3>
@@ -140,7 +144,7 @@
         </div>
       </section>
 
-      <section class="settings-section settings-card design-section" data-settings-section="design" hidden>
+      <section class="settings-section settings-card design-section" data-settings-section="design">
         <h3>Element Designer</h3>
         <label>Button Color <input id="designButtonBg" type="color" value="#2c2c2c"></label>
         <label>Border Color <input id="designBorderColor" type="color" value="#d88a64"></label>
@@ -182,7 +186,7 @@
       </header>
       <section>
         <h3>What Capsanoto is</h3>
-        <p>Capsanoto is a lightweight browser-based word app for large lore projects, long-form worldbuilding, and linked narrative documents.</p>
+        <p>Capsanoto is a lightweight browser-based word app for large Writing Room lore, long-form worldbuilding, and linked narrative documents.</p>
       </section>
       <section>
         <h3>Named functions</h3>
@@ -195,7 +199,7 @@
           <dt>Pill Gate</dt><dd>Turns selected text or an existing link into a rounded pill hyperlink.</dd>
           <dt>Link Breaker</dt><dd>Removes the selected link while keeping its visible text.</dd>
           <dt>Canon Block</dt><dd>Reusable transclusion content referenced with <code>{{Item-Runestones}}</code>.</dd>
-          <dt>Archive Export</dt><dd>Downloads the current local workspace JSON for backup or later sync.</dd>
+          <dt>Archive Export</dt><dd>Downloads the current Writing Room JSON for backup or later sync.</dd>
         </dl>
       </section>
       <section>

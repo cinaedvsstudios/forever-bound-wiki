@@ -11,8 +11,8 @@ const DEFAULT_WORKSPACE = {
   updatedAt: "2026-05-08T00:00:00.000Z",
   documents: [
     {
-      id: "project-overview",
-      title: "Project Overview",
+      id: "writing-room-overview",
+      title: "Writing Room Overview",
       tags: ["overview", "worldbuilding", "editor"],
       updatedAt: "2026-05-07T00:00:00.000Z",
       content: '<h1 id="writing-room">Forever Bound Writing Room</h1><p>This is a minimal browser-based writing space for long-form lore and interconnected worldbuilding. The interface stays out of the way until formatting, links, bookmarks, or reusable blocks are needed.</p><h2 id="bookmarks">Bookmarks</h2><p>Any heading with an ID becomes a bookmark pill under the toolbar. Use the Bookmark button to create a new jump target with a direct URL anchor.</p><h2 id="links-and-pills">Links and Pill Links</h2><p>Normal hyperlinks work inside the document, and selected text can also become a <a class="pill-link" href="editor.html?doc=episode-01">rounded pill-style document link</a>.</p><h2 id="transclusions">Transclusions</h2><p>Reusable content blocks appear wherever their token is used. Example:</p><p>{{Item-Runestones}}</p>',
@@ -59,6 +59,7 @@ const state = {
   draggedExportIndex: null,
   savedRange: null,
   dialogResolver: null,
+  writingRoomDrag: null,
 };
 
 const els = {
@@ -113,7 +114,11 @@ const els = {
   dialogButtonShadow: document.querySelector("#dialogButtonShadow"),
   settingsMenu: document.querySelector(".settings-menu"),
   settingsSections: document.querySelectorAll("[data-settings-section]"),
-  documentCards: document.querySelector("#documentCards"),
+  writingRoomButton: document.querySelector("#writingRoomButton"),
+  writingRoomPanel: document.querySelector("#writingRoomPanel"),
+  writingRoomPanelHeader: document.querySelector("#writingRoomPanelHeader"),
+  closeWritingRoomPanel: document.querySelector("#closeWritingRoomPanel"),
+  writingRoomCards: document.querySelector("#writingRoomCards"),
   selectionMenu: document.querySelector("#selectionMenu"),
   dialogOverlay: document.querySelector("#dialogOverlay"),
   dialogBox: document.querySelector("#dialogBox"),
@@ -205,13 +210,13 @@ function bindAuthEvents() {
       return;
     }
     if (els.passwordInput.value !== state.sharedPassword) {
-      showPasswordScreen("That password did not match the shared project password.");
+      showPasswordScreen("That password did not match the Writing Room password.");
       return;
     }
 
     localStorage.setItem(AUTH_KEY, "true");
     els.passwordInput.value = "";
-    setPasswordFormState(false, "Unlocking workspace…");
+    setPasswordFormState(false, "Opening Writing Room…");
     try {
       await startEditor();
       setPasswordFormState(true);
@@ -290,7 +295,7 @@ async function loadWorkspace() {
       state.documents = Array.isArray(payload.documents) ? payload.documents : [];
       state.blocks = payload.blocks && typeof payload.blocks === "object" ? payload.blocks : {};
     } catch (error) {
-      console.warn("Ignoring unreadable local Capsanoto workspace", error);
+      console.warn("Ignoring unreadable local Capsanoto Writing Room", error);
       localStorage.removeItem(STORAGE_KEY);
       state.documents = [];
       state.blocks = {};
@@ -301,7 +306,7 @@ async function loadWorkspace() {
     const payload = await loadStarterWorkspace();
     state.documents = Array.isArray(payload.documents) ? payload.documents : [];
     state.blocks = payload.blocks && typeof payload.blocks === "object" ? payload.blocks : {};
-    persistNow("Loaded starter workspace");
+    persistNow("Loaded starter Writing Room");
   }
 
   if (!state.documents.length) createDocument();
@@ -322,7 +327,7 @@ async function loadStarterWorkspace() {
     }
   }
 
-  console.warn(`Using embedded Capsanoto starter workspace after content load failed: ${errors.join(" | ")}`);
+  console.warn(`Using embedded Capsanoto starter Writing Room after content load failed: ${errors.join(" | ")}`);
   return cloneDefaultWorkspace();
 }
 
@@ -389,7 +394,12 @@ function bindEditorEvents() {
   els.settingsButton.addEventListener("click", () => toggleSettingsPanel(true));
   els.closeSettingsPanel.addEventListener("click", () => toggleSettingsPanel(false));
   els.settingsMenu.addEventListener("click", handleSettingsMenuClick);
-  els.documentCards.addEventListener("click", handleDocumentCardClick);
+  els.writingRoomButton.addEventListener("click", () => toggleWritingRoomPanel());
+  els.closeWritingRoomPanel.addEventListener("click", () => toggleWritingRoomPanel(false));
+  els.writingRoomCards.addEventListener("click", handleWritingRoomCardClick);
+  els.writingRoomPanelHeader.addEventListener("pointerdown", startWritingRoomDrag);
+  window.addEventListener("pointermove", moveWritingRoomPanel);
+  window.addEventListener("pointerup", stopWritingRoomDrag);
   els.helpButton.addEventListener("click", () => toggleHelpPanel(true));
   els.closeHelpPanel.addEventListener("click", () => toggleHelpPanel(false));
   els.logoutButton.addEventListener("click", resetLocalWorkspace);
@@ -507,7 +517,7 @@ function renderAll() {
   renderBlockList();
   renderExportSourceSelect();
   renderExportQueue();
-  renderDocumentCards();
+  renderWritingRoomCards();
 }
 
 function renderDocumentSelect() {
@@ -859,8 +869,7 @@ function insertHtml(html) {
 function toggleSettingsPanel(show) {
   els.settingsPanel.hidden = !show;
   if (show) {
-    showSettingsSection("documents");
-    renderDocumentCards();
+    showSettingsSection("design");
     renderExportSourceSelect();
     renderExportQueue();
     loadDesignForm();
@@ -882,17 +891,38 @@ function showSettingsSection(sectionName) {
   });
 }
 
-function renderDocumentCards() {
-  if (!els.documentCards) return;
-  els.documentCards.innerHTML = state.documents.map((doc) => {
-    const tags = (doc.tags ?? []).slice(0, 4);
-    const updated = doc.updatedAt ? new Date(doc.updatedAt).toLocaleDateString() : "Not saved yet";
-    return `<article class="document-card ${doc.id === state.activeId ? "is-active" : ""}" data-doc-card="${escapeAttr(doc.id)}">
-      <div>
-        <p class="eyebrow">${doc.id === state.activeId ? "Current Card" : "Writing Card"}</p>
-        <h4>${escapeHtml(doc.title)}</h4>
-        <p>${escapeHtml(textFromHtml(renderTransclusions(doc.content)).slice(0, 140) || "Empty card")}</p>
+function toggleWritingRoomPanel(show = els.writingRoomPanel.hidden) {
+  els.writingRoomPanel.hidden = !show;
+  els.writingRoomButton.setAttribute("aria-expanded", String(show));
+  if (show) renderWritingRoomCards();
+}
+
+function renderWritingRoomCards() {
+  if (!els.writingRoomCards) return;
+  const groups = groupedDocuments();
+  els.writingRoomCards.innerHTML = groups.map((group, groupIndex) => `
+    <details class="writing-room-group" ${groupIndex === 0 ? "open" : ""}>
+      <summary><span class="card-arrow">›</span><strong>${escapeHtml(group.label)}</strong><small>${group.documents.length} ${group.documents.length === 1 ? "tab" : "tabs"}</small></summary>
+      <div class="writing-room-card-stack">
+        ${group.documents.map((doc) => renderWritingRoomCard(doc, group.depth)).join("")}
       </div>
+    </details>
+  `).join("");
+}
+
+function renderWritingRoomCard(doc, depth = 0) {
+  const tags = (doc.tags ?? []).slice(0, 4);
+  const updated = doc.updatedAt ? new Date(doc.updatedAt).toLocaleDateString() : "Not saved yet";
+  const preview = textFromHtml(renderTransclusions(doc.content)).slice(0, 180) || "Empty Writing Room tab";
+  return `<details class="writing-room-card ${doc.id === state.activeId ? "is-active" : ""}" style="--tab-depth:${depth}" data-doc-card="${escapeAttr(doc.id)}">
+    <summary>
+      <span class="card-arrow">›</span>
+      <span class="card-icon">${docIcon(doc)}</span>
+      <strong>${escapeHtml(doc.title)}</strong>
+      <small>${escapeHtml(doc.id)}</small>
+    </summary>
+    <div class="writing-room-card-body">
+      <p>${escapeHtml(preview)}</p>
       <div class="document-card-tags">${tags.length ? tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join("") : "<span>No tags</span>"}</div>
       <footer>
         <small>Updated ${escapeHtml(updated)}</small>
@@ -901,23 +931,69 @@ function renderDocumentCards() {
           <button type="button" data-card-action="copy" data-doc-id="${escapeAttr(doc.id)}">Copy URL</button>
         </span>
       </footer>
-    </article>`;
-  }).join("");
+    </div>
+  </details>`;
 }
 
-async function handleDocumentCardClick(event) {
+function groupedDocuments() {
+  const groups = new Map();
+  state.documents.forEach((doc) => {
+    const label = writingRoomGroupLabel(doc);
+    if (!groups.has(label)) groups.set(label, []);
+    groups.get(label).push(doc);
+  });
+  return [...groups.entries()].map(([label, documents], index) => ({ label, documents, depth: index ? 1 : 0 }));
+}
+
+function writingRoomGroupLabel(doc) {
+  const tags = (doc.tags ?? []).map((tag) => tag.toLowerCase());
+  if (tags.includes("character")) return "Characters";
+  if (tags.includes("episode") || tags.includes("season-1")) return "Episodes";
+  if (tags.includes("worldbuilding")) return "Writing Room Core";
+  return "Writing Room Tabs";
+}
+
+function docIcon(doc) {
+  const tags = (doc.tags ?? []).map((tag) => tag.toLowerCase());
+  if (tags.includes("character")) return "🧑";
+  if (tags.includes("episode")) return "📄";
+  if (tags.includes("worldbuilding")) return "💗";
+  return "📝";
+}
+
+async function handleWritingRoomCardClick(event) {
   const button = event.target.closest("button[data-card-action]");
   if (!button) return;
   const docId = button.dataset.docId;
   if (button.dataset.cardAction === "open") {
     openDocument(docId);
-    toggleSettingsPanel(false);
+    renderWritingRoomCards();
     return;
   }
   if (button.dataset.cardAction === "copy") {
     await copyText(new URL(documentUrl(docId), location.href).href);
-    setStatus("Copied document card link", "saved");
+    setStatus("Copied Writing Room tab link", "saved");
   }
+}
+
+function startWritingRoomDrag(event) {
+  if (event.target.closest("button")) return;
+  const rect = els.writingRoomPanel.getBoundingClientRect();
+  state.writingRoomDrag = { offsetX: event.clientX - rect.left, offsetY: event.clientY - rect.top };
+  els.writingRoomPanelHeader.setPointerCapture?.(event.pointerId);
+}
+
+function moveWritingRoomPanel(event) {
+  if (!state.writingRoomDrag) return;
+  const left = Math.max(8, Math.min(window.innerWidth - els.writingRoomPanel.offsetWidth - 8, event.clientX - state.writingRoomDrag.offsetX));
+  const top = Math.max(8, Math.min(window.innerHeight - 80, event.clientY - state.writingRoomDrag.offsetY));
+  els.writingRoomPanel.style.left = `${left}px`;
+  els.writingRoomPanel.style.top = `${top}px`;
+  els.writingRoomPanel.style.right = "auto";
+}
+
+function stopWritingRoomDrag() {
+  state.writingRoomDrag = null;
 }
 
 function toggleHelpPanel(show) {
