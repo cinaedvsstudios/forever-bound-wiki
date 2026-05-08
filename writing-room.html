@@ -53,6 +53,26 @@
       <input id="imageInput" type="file" accept="image/*" hidden>
     </section>
 
+    <menu id="selectionMenu" class="selection-menu" hidden>
+      <button type="button" data-context-action="bookmark">⚓ Bookmark</button>
+      <button type="button" data-context-action="transclusion">▣ Transclusion</button>
+      <button type="button" data-context-action="link">🔗 Link</button>
+      <button type="button" data-context-action="pill">💊 Pill Link</button>
+    </menu>
+
+    <div id="dialogOverlay" class="dialog-overlay" hidden>
+      <form id="dialogBox" class="caps-dialog">
+        <header>
+          <h2 id="dialogTitle">Capsanoto Action</h2>
+          <button id="dialogCancelButton" class="icon-button" type="button" aria-label="Cancel dialog">×</button>
+        </header>
+        <div id="dialogFields" class="dialog-fields"></div>
+        <footer>
+          <button id="dialogConfirmButton" type="submit">Apply</button>
+        </footer>
+      </form>
+    </div>
+
     <nav id="bookmarkBar" class="bookmark-bar" aria-label="Document bookmarks"></nav>
 
     <section class="title-strip">
@@ -99,6 +119,17 @@
         <label>Text Size <input id="designFontSize" type="number" min="10" max="32" value="14"></label>
         <label>Bold <input id="designBold" type="checkbox" checked></label>
         <label>Background Image URL <input id="designBgImage" type="text" placeholder="wallpapersm.jpg or https://..."></label>
+        <h4>Global Dialogue Style</h4>
+        <label>Dialog BG <input id="dialogBgColor" type="color" value="#191711"></label>
+        <label>Dialog Border <input id="dialogBorderColor" type="color" value="#d88a64"></label>
+        <label>Dialog Shadow <input id="dialogShadowColor" type="color" value="#000000"></label>
+        <label>Dialog Text <input id="dialogTextColor" type="color" value="#f3ead7"></label>
+        <label>Dialog Text Size <input id="dialogFontSize" type="number" min="10" max="28" value="14"></label>
+        <label>Dialog Bold <input id="dialogBold" type="checkbox" checked></label>
+        <label>Dialog Button BG <input id="dialogButtonBg" type="color" value="#2c2c2c"></label>
+        <label>Dialog Button Border <input id="dialogButtonBorder" type="color" value="#d88a64"></label>
+        <label>Dialog Button Text <input id="dialogButtonText" type="color" value="#f3ead7"></label>
+        <label>Dialog Button Shadow <input id="dialogButtonShadow" type="color" value="#000000"></label>
         <div class="design-preview"><button type="button">Preview Button</button></div>
         <div class="export-actions">
           <button id="applyDesignButton" type="button">Apply</button>

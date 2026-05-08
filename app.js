@@ -15,6 +15,8 @@ const state = {
   sharedPassword: "",
   exportItems: [],
   draggedExportIndex: null,
+  savedRange: null,
+  dialogResolver: null,
 };
 
 const els = {
@@ -56,6 +58,22 @@ const els = {
   designFontSize: document.querySelector("#designFontSize"),
   designBold: document.querySelector("#designBold"),
   designBgImage: document.querySelector("#designBgImage"),
+  dialogBgColor: document.querySelector("#dialogBgColor"),
+  dialogBorderColor: document.querySelector("#dialogBorderColor"),
+  dialogShadowColor: document.querySelector("#dialogShadowColor"),
+  dialogTextColor: document.querySelector("#dialogTextColor"),
+  dialogFontSize: document.querySelector("#dialogFontSize"),
+  dialogBold: document.querySelector("#dialogBold"),
+  dialogButtonBg: document.querySelector("#dialogButtonBg"),
+  dialogButtonBorder: document.querySelector("#dialogButtonBorder"),
+  dialogButtonText: document.querySelector("#dialogButtonText"),
+  dialogButtonShadow: document.querySelector("#dialogButtonShadow"),
+  selectionMenu: document.querySelector("#selectionMenu"),
+  dialogOverlay: document.querySelector("#dialogOverlay"),
+  dialogBox: document.querySelector("#dialogBox"),
+  dialogTitle: document.querySelector("#dialogTitle"),
+  dialogFields: document.querySelector("#dialogFields"),
+  dialogCancelButton: document.querySelector("#dialogCancelButton"),
   applyDesignButton: document.querySelector("#applyDesignButton"),
   resetDesignButton: document.querySelector("#resetDesignButton"),
   helpPanel: document.querySelector("#helpPanel"),
@@ -260,8 +278,15 @@ function bindEditorEvents() {
     selectBlock(button.dataset.blockId);
   });
 
-  els.editor.addEventListener("click", handleEditorLinkClick);
+  els.editor.addEventListener("click", handleEditorClick);
   els.editor.addEventListener("mouseover", handleEditorLinkPreview);
+  els.editor.addEventListener("contextmenu", openSelectionContextMenu);
+  els.selectionMenu.addEventListener("click", handleSelectionMenuClick);
+  els.dialogBox.addEventListener("submit", submitDialog);
+  els.dialogCancelButton.addEventListener("click", cancelDialog);
+  document.addEventListener("click", (event) => {
+    if (!event.target.closest("#selectionMenu")) hideSelectionContextMenu();
+  });
 
   window.addEventListener("hashchange", openFromRoute);
   window.addEventListener("popstate", openFromRoute);
@@ -405,13 +430,114 @@ function formatBlock(tag) {
   syncAndSave("Heading updated");
 }
 
-function createHyperlink() {
-  const target = prompt("Link target: document id, #bookmark, block:Item-Name, {{Item-Name}}, or https:// URL");
-  if (!target) return;
-  runLinkCommand(target, { pill: false });
+
+function saveSelectionRange() {
+  const selection = window.getSelection();
+  if (selection.rangeCount && els.editor.contains(selection.getRangeAt(0).commonAncestorContainer)) {
+    state.savedRange = selection.getRangeAt(0).cloneRange();
+  }
 }
 
-function createPillLink() {
+function restoreSelectionRange() {
+  if (!state.savedRange) return;
+  const selection = window.getSelection();
+  selection.removeAllRanges();
+  selection.addRange(state.savedRange);
+}
+
+function selectedPlainText() {
+  const selection = window.getSelection();
+  return selection?.toString().trim() || "";
+}
+
+function openSelectionContextMenu(event) {
+  const selection = window.getSelection();
+  if (!selection.rangeCount || selection.isCollapsed || !els.editor.contains(selection.getRangeAt(0).commonAncestorContainer)) return;
+  event.preventDefault();
+  saveSelectionRange();
+  els.selectionMenu.style.left = `${event.clientX}px`;
+  els.selectionMenu.style.top = `${event.clientY}px`;
+  els.selectionMenu.hidden = false;
+}
+
+function hideSelectionContextMenu() {
+  els.selectionMenu.hidden = true;
+}
+
+async function handleSelectionMenuClick(event) {
+  const button = event.target.closest("button[data-context-action]");
+  if (!button) return;
+  hideSelectionContextMenu();
+  restoreSelectionRange();
+  const action = button.dataset.contextAction;
+  if (action === "bookmark") await insertBookmark();
+  if (action === "transclusion") await createTransclusionFromSelection();
+  if (action === "link") await createHyperlink();
+  if (action === "pill") await createPillLink();
+}
+
+async function createTransclusionFromSelection() {
+  saveSelectionRange();
+  const selectedText = selectedPlainText();
+  const result = await openCapsDialog("Create Transclusion", [
+    { name: "id", label: "Block ID", value: "", placeholder: "Character-Name / Item-Name / Location-Name" },
+    { name: "content", label: "Block Content", value: selectedText, multiline: true },
+  ]);
+  if (!result?.id) return;
+  const id = result.id.trim();
+  if (!/^[A-Za-z]+-[A-Za-z0-9-]+$/.test(id)) {
+    setStatus("Use block IDs like Item-Runestones", "dirty");
+    return;
+  }
+  state.blocks[id] = { id, content: result.content || selectedText, updatedAt: new Date().toISOString() };
+  restoreSelectionRange();
+  insertHtml(`{{${escapeHtml(id)}}}`);
+  renderBlockList();
+  renderExportSourceSelect();
+  setStatus("Transclusion created", "saved");
+}
+
+function openCapsDialog(title, fields) {
+  els.dialogTitle.textContent = title;
+  els.dialogFields.innerHTML = fields.map((field) => `
+    <label>${escapeHtml(field.label)}
+      ${field.multiline
+        ? `<textarea name="${escapeAttr(field.name)}" rows="5" placeholder="${escapeAttr(field.placeholder || "")}">${escapeHtml(field.value || "")}</textarea>`
+        : `<input name="${escapeAttr(field.name)}" value="${escapeAttr(field.value || "")}" placeholder="${escapeAttr(field.placeholder || "")}">`}
+    </label>
+  `).join("");
+  els.dialogOverlay.hidden = false;
+  els.dialogFields.querySelector("input, textarea")?.focus();
+  return new Promise((resolve) => { state.dialogResolver = resolve; });
+}
+
+function submitDialog(event) {
+  event.preventDefault();
+  const data = Object.fromEntries(new FormData(els.dialogBox).entries());
+  closeCapsDialog(data);
+}
+
+function cancelDialog() {
+  closeCapsDialog(null);
+}
+
+function closeCapsDialog(value) {
+  els.dialogOverlay.hidden = true;
+  const resolve = state.dialogResolver;
+  state.dialogResolver = null;
+  if (resolve) resolve(value);
+}
+
+async function createHyperlink() {
+  saveSelectionRange();
+  const result = await openCapsDialog("Create Link", [{ name: "target", label: "Target", value: "", placeholder: "document id, #bookmark, block:Item-Name, {{Item-Name}}, or https://" }]);
+  if (!result?.target) return;
+  restoreSelectionRange();
+  runLinkCommand(result.target, { pill: false });
+}
+
+async function createPillLink() {
+  saveSelectionRange();
   const existingLink = currentLink();
   if (existingLink) {
     existingLink.classList.add("pill-link");
@@ -420,21 +546,23 @@ function createPillLink() {
     return;
   }
 
-  const target = prompt("Pill target: document id, #bookmark, block:Item-Name, {{Item-Name}}, or https:// URL");
-  if (!target) return;
-  runLinkCommand(target, { pill: true });
+  const result = await openCapsDialog("Create Pill Link", [{ name: "target", label: "Target", value: "", placeholder: "document id, #bookmark, block:Item-Name, {{Item-Name}}, or https://" }]);
+  if (!result?.target) return;
+  restoreSelectionRange();
+  runLinkCommand(result.target, { pill: true });
 }
 
-function editSelectedLink() {
+async function editSelectedLink() {
+  saveSelectionRange();
   const link = currentLink();
   if (!link) {
     setStatus("Select a link to edit", "dirty");
     return;
   }
   const currentTarget = link.dataset.linkTarget || link.getAttribute("href") || "";
-  const target = prompt("Edit link target", currentTarget);
-  if (!target) return;
-  applyLinkTarget(link, target, link.classList.contains("pill-link"));
+  const result = await openCapsDialog("Edit Link", [{ name: "target", label: "Target", value: currentTarget }]);
+  if (!result?.target) return;
+  applyLinkTarget(link, result.target, link.classList.contains("pill-link"));
   syncAndSave("Link updated");
 }
 
@@ -491,6 +619,11 @@ function currentLink() {
   return document.activeElement?.closest?.("a") || null;
 }
 
+function handleEditorClick(event) {
+  hideSelectionContextMenu();
+  handleEditorLinkClick(event);
+}
+
 function handleEditorLinkClick(event) {
   const link = event.target.closest("a[data-link-type='block']");
   if (!link) return;
@@ -522,11 +655,14 @@ function getLinkPreviewData(link) {
   return null;
 }
 
-function insertBookmark() {
-  const label = prompt("Bookmark heading name");
-  if (!label) return;
-  const id = uniqueBookmarkId(slugify(label));
-  insertHtml(`<h2 id="${escapeAttr(id)}" data-bookmark="true">${escapeHtml(label)}</h2><p></p>`);
+async function insertBookmark() {
+  saveSelectionRange();
+  const selectedText = selectedPlainText();
+  const result = await openCapsDialog("Create Bookmark", [{ name: "label", label: "Heading / Bookmark name", value: selectedText }]);
+  if (!result?.label) return;
+  restoreSelectionRange();
+  const id = uniqueBookmarkId(slugify(result.label));
+  insertHtml(`<h2 id="${escapeAttr(id)}" data-bookmark="true">${escapeHtml(result.label)}</h2><p></p>`);
   updateUrl(id);
 }
 
@@ -755,6 +891,16 @@ function loadDesignForm() {
   els.designFontSize.value = settings.fontSize;
   els.designBold.checked = settings.bold;
   els.designBgImage.value = settings.bgImage;
+  els.dialogBgColor.value = settings.dialogBg;
+  els.dialogBorderColor.value = settings.dialogBorder;
+  els.dialogShadowColor.value = settings.dialogShadow;
+  els.dialogTextColor.value = settings.dialogText;
+  els.dialogFontSize.value = settings.dialogFontSize;
+  els.dialogBold.checked = settings.dialogBold;
+  els.dialogButtonBg.value = settings.dialogButtonBg;
+  els.dialogButtonBorder.value = settings.dialogButtonBorder;
+  els.dialogButtonText.value = settings.dialogButtonText;
+  els.dialogButtonShadow.value = settings.dialogButtonShadow;
 }
 
 function currentDesignSettings() {
@@ -762,11 +908,11 @@ function currentDesignSettings() {
 }
 
 function defaultDesignSettings() {
-  return { buttonBg: "#2c2c2c", borderColor: "#d88a64", textColor: "#f3ead7", fontSize: "14", bold: true, bgImage: "wallpapersm.jpg" };
+  return { buttonBg: "#2c2c2c", borderColor: "#d88a64", textColor: "#f3ead7", fontSize: "14", bold: true, bgImage: "wallpapersm.jpg", dialogBg: "#191711", dialogBorder: "#d88a64", dialogShadow: "#000000", dialogText: "#f3ead7", dialogFontSize: "14", dialogBold: true, dialogButtonBg: "#2c2c2c", dialogButtonBorder: "#d88a64", dialogButtonText: "#f3ead7", dialogButtonShadow: "#000000" };
 }
 
 function saveDesignSettings() {
-  const settings = { buttonBg: els.designButtonBg.value, borderColor: els.designBorderColor.value, textColor: els.designTextColor.value, fontSize: els.designFontSize.value || "14", bold: els.designBold.checked, bgImage: els.designBgImage.value.trim() };
+  const settings = { buttonBg: els.designButtonBg.value, borderColor: els.designBorderColor.value, textColor: els.designTextColor.value, fontSize: els.designFontSize.value || "14", bold: els.designBold.checked, bgImage: els.designBgImage.value.trim(), dialogBg: els.dialogBgColor.value, dialogBorder: els.dialogBorderColor.value, dialogShadow: els.dialogShadowColor.value, dialogText: els.dialogTextColor.value, dialogFontSize: els.dialogFontSize.value || "14", dialogBold: els.dialogBold.checked, dialogButtonBg: els.dialogButtonBg.value, dialogButtonBorder: els.dialogButtonBorder.value, dialogButtonText: els.dialogButtonText.value, dialogButtonShadow: els.dialogButtonShadow.value };
   localStorage.setItem(DESIGN_KEY, JSON.stringify(settings));
   applyDesignSettings(settings);
   setStatus("Design applied", "saved");
@@ -791,6 +937,16 @@ function applyDesignSettings(settings) {
   root.style.setProperty("--button-font-size", `${settings.fontSize}px`);
   root.style.setProperty("--button-font-weight", settings.bold ? "800" : "500");
   root.style.setProperty("--app-bg-image", settings.bgImage ? `url("${settings.bgImage}")` : "none");
+  root.style.setProperty("--dialog-bg", settings.dialogBg);
+  root.style.setProperty("--dialog-border", settings.dialogBorder);
+  root.style.setProperty("--dialog-shadow", settings.dialogShadow);
+  root.style.setProperty("--dialog-text", settings.dialogText);
+  root.style.setProperty("--dialog-font-size", `${settings.dialogFontSize}px`);
+  root.style.setProperty("--dialog-font-weight", settings.dialogBold ? "800" : "500");
+  root.style.setProperty("--dialog-button-bg", settings.dialogButtonBg);
+  root.style.setProperty("--dialog-button-border", settings.dialogButtonBorder);
+  root.style.setProperty("--dialog-button-text", settings.dialogButtonText);
+  root.style.setProperty("--dialog-button-shadow", settings.dialogButtonShadow);
 }
 
 function exportWorkspace() {

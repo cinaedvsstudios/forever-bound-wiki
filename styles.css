@@ -225,3 +225,62 @@ button, summary { font-size: var(--button-font-size); font-weight: var(--button-
 .design-preview { display:flex; justify-content:center; padding:1rem; border:1px solid var(--line); border-radius:14px; background:rgba(0,0,0,0.22); }
 .settings-links { display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; }
 .settings-links button { width:100%; }
+:root {
+  --dialog-bg: #191711;
+  --dialog-border: #d88a64;
+  --dialog-shadow: #000000;
+  --dialog-text: #f3ead7;
+  --dialog-font-size: 14px;
+  --dialog-font-weight: 800;
+  --dialog-button-bg: #2c2c2c;
+  --dialog-button-border: #d88a64;
+  --dialog-button-text: #f3ead7;
+  --dialog-button-shadow: #000000;
+}
+.selection-menu {
+  position: fixed;
+  z-index: 50;
+  display: flex;
+  gap: 0.35rem;
+  padding: 0.45rem;
+  margin: 0;
+  border: 1px solid var(--dialog-border);
+  border-radius: 16px;
+  background: var(--dialog-bg);
+  box-shadow: 0 12px 32px var(--dialog-shadow);
+}
+.selection-menu button { color: var(--dialog-button-text); background: var(--dialog-button-bg); border-color: var(--dialog-button-border); box-shadow: 0 4px 12px var(--dialog-button-shadow); }
+.dialog-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(0,0,0,0.55);
+}
+.caps-dialog {
+  width: min(100%, 460px);
+  color: var(--dialog-text);
+  background: var(--dialog-bg);
+  border: 2px solid var(--dialog-border);
+  border-radius: 20px;
+  box-shadow: 0 20px 60px var(--dialog-shadow);
+  padding: 1rem;
+  font-size: var(--dialog-font-size);
+  font-weight: var(--dialog-font-weight);
+}
+.caps-dialog header { display:flex; align-items:center; justify-content:space-between; gap:1rem; }
+.caps-dialog h2 { margin:0; color:var(--dialog-text); }
+.dialog-fields { display:grid; gap:0.8rem; margin:1rem 0; }
+.dialog-fields label { display:grid; gap:0.35rem; }
+.dialog-fields input, .dialog-fields textarea {
+  width: 100%;
+  color: var(--dialog-text);
+  background: rgba(0,0,0,0.28);
+  border: 1px solid var(--dialog-border);
+  border-radius: 12px;
+  padding: 0.7rem;
+}
+.caps-dialog footer { display:flex; justify-content:flex-end; }
+.caps-dialog button { color: var(--dialog-button-text); background: var(--dialog-button-bg); border-color: var(--dialog-button-border); box-shadow: 0 4px 12px var(--dialog-button-shadow); }
