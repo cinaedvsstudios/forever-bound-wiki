@@ -15,7 +15,7 @@ const DEFAULT_WORKSPACE = {
       title: "Episode 01",
       tags: ["season-1", "episode"],
       updatedAt: "2026-05-07T00:00:00.000Z",
-      content: '<h1 id="episode-01">Episode 01</h1><p>Draft the episode here in a clean writing environment.</p><h2 id="synopsis">Synopsis</h2><p>Write the episode summary.</p><h2 id="canon-notes">Canon Notes</h2><p>Use reusable blocks for shared lore, such as {{Location-Ironvale}}.</p><h2 id="structure">Structure</h2><table><thead><tr><th>Beat</th><th>Notes</th></tr></thead><tbody><tr><td>Opening</td><td></td></tr><tr><td>Turn</td><td></td></tr><tr><td>Ending</td><td></td></tr></tbody></table>',
+      content: '<h1 id="episode-01">Episode 01</h1><p>Draft the episode here in a clean writing environment.</p><h2 id="synopsis">Synopsis</h2><p>Write the episode summary.</p><h2 id="canon-notes">Canon Notes</h2><p>Use reusable TCards for shared lore, such as {{Location-Ironvale}}.</p><h2 id="structure">Structure</h2><table><thead><tr><th>Beat</th><th>Notes</th></tr></thead><tbody><tr><td>Opening</td><td></td></tr><tr><td>Turn</td><td></td></tr><tr><td>Ending</td><td></td></tr></tbody></table>',
     },
     {
       id: "Character-Mel-Ameldra",
@@ -665,14 +665,14 @@ async function handleSelectionMenuClick(event) {
 async function createTransclusionFromSelection() {
   saveSelectionRange();
   const selectedText = selectedPlainText();
-  const result = await openCapsDialog("Create Transclusion", [
-    { name: "id", label: "Block ID", value: "", placeholder: "Character-Name / Item-Name / Location-Name" },
-    { name: "content", label: "Block Content", value: selectedText, multiline: true },
+  const result = await openCapsDialog("Create TCard", [
+    { name: "id", label: "TCard ID", value: "", placeholder: "Character-Name / Item-Name / Location-Name" },
+    { name: "content", label: "TCard Content", value: selectedText, multiline: true },
   ]);
   if (!result?.id) return;
   const id = result.id.trim();
   if (!/^[A-Za-z]+-[A-Za-z0-9-]+$/.test(id)) {
-    setStatus("Use block IDs like Item-Runestones", "dirty");
+    setStatus("Use TCard IDs like Item-Runestones", "dirty");
     return;
   }
   state.blocks[id] = { id, content: result.content || selectedText, updatedAt: new Date().toISOString() };
@@ -1086,7 +1086,7 @@ function toggleBlockPanel(show) {
 function saveBlock() {
   const id = els.blockIdInput.value.trim();
   if (!/^[A-Za-z]+-[A-Za-z0-9-]+$/.test(id)) {
-    setStatus("Use block IDs like Item-Runestones", "dirty");
+    setStatus("Use TCard IDs like Item-Runestones", "dirty");
     return;
   }
   state.blocks[id] = {
@@ -1097,7 +1097,7 @@ function saveBlock() {
   renderBlockList();
   renderActiveDocument();
   renderBookmarks();
-  markDirty("Transclusion block updated everywhere");
+  markDirty("TCard updated everywhere");
 }
 
 function insertBlockReference() {
@@ -1112,7 +1112,7 @@ function renderBlockList() {
   const blocks = Object.values(state.blocks).sort((a, b) => a.id.localeCompare(b.id));
   els.blockList.innerHTML = blocks.length ? blocks.map((block) => (
     `<button type="button" data-block-id="${escapeAttr(block.id)}"><strong>${escapeHtml(block.id)}</strong><span>${escapeHtml(block.content).slice(0, 90)}</span></button>`
-  )).join("") : `<p class="panel-help">No reusable blocks yet.</p>`;
+  )).join("") : `<p class="panel-help">No reusable TCards yet.</p>`;
 }
 
 function selectBlock(id) {

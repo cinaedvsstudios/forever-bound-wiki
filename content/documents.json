@@ -10,7 +10,7 @@
         "episode"
       ],
       "updatedAt": "2026-05-07T00:00:00.000Z",
-      "content": "<h1 id=\"episode-01\">Episode 01</h1><p>Draft the episode here in a clean writing environment.</p><h2 id=\"synopsis\">Synopsis</h2><p>Write the episode summary.</p><h2 id=\"canon-notes\">Canon Notes</h2><p>Use reusable blocks for shared lore, such as {{Location-Ironvale}}.</p><h2 id=\"structure\">Structure</h2><table><thead><tr><th>Beat</th><th>Notes</th></tr></thead><tbody><tr><td>Opening</td><td></td></tr><tr><td>Turn</td><td></td></tr><tr><td>Ending</td><td></td></tr></tbody></table>"
+      "content": "<h1 id=\"episode-01\">Episode 01</h1><p>Draft the episode here in a clean writing environment.</p><h2 id=\"synopsis\">Synopsis</h2><p>Write the episode summary.</p><h2 id=\"canon-notes\">Canon Notes</h2><p>Use reusable TCards for shared lore, such as {{Location-Ironvale}}.</p><h2 id=\"structure\">Structure</h2><table><thead><tr><th>Beat</th><th>Notes</th></tr></thead><tbody><tr><td>Opening</td><td></td></tr><tr><td>Turn</td><td></td></tr><tr><td>Ending</td><td></td></tr></tbody></table>"
     },
     {
       "id": "Character-Mel-Ameldra",
