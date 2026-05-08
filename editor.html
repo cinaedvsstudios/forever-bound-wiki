@@ -26,7 +26,7 @@
         <strong class="app-name">Capsanoto</strong>
         <button id="writingRoomButton" class="writing-room-button" type="button" aria-expanded="false" aria-controls="writingRoomPanel">Forever Bound Writing Room</button>
         <label for="documentSelect" class="sr-only">Current document</label>
-        <select id="documentSelect" title="Document Switcher"></select>
+        <select id="documentSelect" title="Document Switcher" hidden></select>
         <button id="newDocumentButton" class="icon-button" type="button" title="New Document" aria-label="New Document" data-tool-name="Document Forge">📄</button>
         <button id="documentSettingsButton" class="icon-button" type="button" title="Document Settings" aria-label="Document Settings">⚙︎</button>
       </div>
@@ -97,7 +97,7 @@
       <header id="writingRoomPanelHeader">
         <div>
           <p class="eyebrow">Writing Room</p>
-          <h2>Document tabs</h2>
+          <h2>Forever Bound Writing Room</h2>
         </div>
         <button id="closeWritingRoomPanel" class="icon-button" type="button" aria-label="Close Writing Room">×</button>
       </header>
@@ -124,13 +124,13 @@
 
       <nav class="settings-menu" aria-label="Settings sections">
         <button type="button" data-settings-tab="design" aria-pressed="true">Design</button>
-        <button type="button" data-settings-tab="export" aria-pressed="false">Export</button>
+        <button type="button" data-settings-tab="export" aria-pressed="false">Download</button>
         <button type="button" data-settings-tab="support" aria-pressed="false">Help</button>
       </nav>
 
       <section class="settings-section settings-card" data-settings-section="export" hidden>
-        <h3>Smart Export Builder</h3>
-        <p class="panel-help">Choose documents and/or transclusion blocks, reorder them as vertical pills, then export a Caps file, text, HTML, or Word-compatible document.</p>
+        <h3>Smart Download Builder</h3>
+        <p class="panel-help">Choose documents and/or transclusion blocks, reorder them as vertical pills, then download a Caps file, text, HTML, or Word-compatible document.</p>
         <div class="export-picker">
           <select id="exportSourceType" aria-label="Export source type">
             <option value="document">Document</option>
@@ -141,10 +141,10 @@
         </div>
         <div id="exportQueue" class="export-queue" aria-label="Selected export order"></div>
         <div class="export-actions">
-          <button id="exportCapsButton" type="button">Caps</button>
-          <button id="exportTxtButton" type="button">TXT</button>
-          <button id="exportHtmlButton" type="button">HTML</button>
-          <button id="exportDocButton" type="button">Word</button>
+          <button id="exportCapsButton" type="button">Download Caps</button>
+          <button id="exportTxtButton" type="button">Download TXT</button>
+          <button id="exportHtmlButton" type="button">Download HTML</button>
+          <button id="exportDocButton" type="button">Download Word</button>
         </div>
       </section>
 
@@ -176,6 +176,10 @@
         <label>Emphasis Text <input id="emphasisTextColor" type="color" value="#f3ead7"></label>
         <label>Panel BG <input id="panelBgColor" type="color" value="#11100d"></label>
         <label>Panel Border <input id="panelBorderColor" type="color" value="#d88a64"></label>
+        <label>Label Text <input id="labelTextColor" type="color" value="#9a9a9a"></label>
+        <label>Dynamic Text <input id="dynamicTextColor" type="color" value="#bda170"></label>
+        <label>Scrollbar Track <input id="scrollbarTrackColor" type="color" value="#17130f"></label>
+        <label>Scrollbar Thumb <input id="scrollbarThumbColor" type="color" value="#d88a64"></label>
         <div class="design-preview"><button type="button">Preview Button</button></div>
         <div class="export-actions">
           <button id="applyDesignButton" type="button">Apply</button>

@@ -653,6 +653,10 @@ button, summary { font-size: var(--button-font-size); font-weight: var(--button-
 }
 
 :root {
+  --label-text: #9a9a9a;
+  --dynamic-text: #bda170;
+  --scrollbar-track: #17130f;
+  --scrollbar-thumb: #d88a64;
   --status-bg: #000000;
   --status-border: #d88a64;
   --status-text: #ffffff;
@@ -711,4 +715,56 @@ button, summary { font-size: var(--button-font-size); font-weight: var(--button-
 .title-strip input[hidden] { display: none !important; }
 @media (max-width: 900px) {
   .context-status { width: 100%; min-width: 0; max-width: none; }
+}
+
+
+/* Unified Writing Room polish */
+* {
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+  scrollbar-width: thin;
+}
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+*::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 999px; border: 2px solid var(--scrollbar-track); }
+label, .dialog-fields label, .design-section label, .block-panel label {
+  color: var(--label-text) !important;
+  font-weight: 800;
+}
+input, textarea, select, .panel-help, .help-panel p, .help-panel dd, .document-card-tags span, .writing-room-card-body, .save-status {
+  color: var(--dynamic-text);
+}
+.document-controls select[hidden] { display: none !important; }
+.settings-menu { display: none; }
+.settings-panel {
+  left: max(1rem, calc((100vw - 760px) / 2));
+  right: auto;
+  top: 5.25rem;
+  width: min(760px, calc(100vw - 2rem));
+  max-height: min(76vh, 720px);
+  border-radius: 24px;
+}
+.settings-panel .settings-section {
+  display: block !important;
+  margin-top: 0.75rem;
+}
+.settings-panel .settings-section[hidden] { display: block !important; }
+.settings-panel .settings-section h3::before {
+  content: "›";
+  display: inline-block;
+  margin-right: 0.55rem;
+  color: var(--accent);
+}
+.doc-id-line strong { color: var(--label-text); }
+.settings-panel .settings-section > h3 {
+  cursor: pointer;
+  user-select: none;
+}
+.settings-panel .settings-section.is-collapsed > :not(h3) {
+  display: none !important;
+}
+.settings-panel .settings-section.is-collapsed h3::before {
+  transform: rotate(0deg);
+}
+.settings-panel .settings-section h3::before {
+  transform: rotate(90deg);
 }

@@ -53,6 +53,8 @@ const state = {
   savedRange: null,
   dialogResolver: null,
   writingRoomDrag: null,
+  contextStatusLocked: false,
+  contextStatusTimer: null,
 };
 
 const els = {
@@ -109,6 +111,10 @@ const els = {
   dialogButtonBorder: document.querySelector("#dialogButtonBorder"),
   dialogButtonText: document.querySelector("#dialogButtonText"),
   dialogButtonShadow: document.querySelector("#dialogButtonShadow"),
+  labelTextColor: document.querySelector("#labelTextColor"),
+  dynamicTextColor: document.querySelector("#dynamicTextColor"),
+  scrollbarTrackColor: document.querySelector("#scrollbarTrackColor"),
+  scrollbarThumbColor: document.querySelector("#scrollbarThumbColor"),
   statusBgColor: document.querySelector("#statusBgColor"),
   statusBorderColor: document.querySelector("#statusBorderColor"),
   statusTextColor: document.querySelector("#statusTextColor"),
@@ -385,6 +391,8 @@ function bindEditorEvents() {
   els.editor.addEventListener("keyup", updateContextStatus);
   els.editor.addEventListener("mouseup", updateContextStatus);
   document.addEventListener("selectionchange", updateContextStatus);
+  document.addEventListener("mouseover", updateHoverStatus);
+  document.addEventListener("focusin", updateHoverStatus);
 
   els.toolbar.addEventListener("click", (event) => {
     const button = event.target.closest("button");
@@ -407,13 +415,14 @@ function bindEditorEvents() {
   els.settingsButton.addEventListener("click", () => toggleSettingsPanel(true));
   els.closeSettingsPanel.addEventListener("click", () => toggleSettingsPanel(false));
   els.settingsMenu.addEventListener("click", handleSettingsMenuClick);
+  els.settingsPanel.addEventListener("click", handleSettingsCardToggle);
   els.writingRoomButton.addEventListener("click", () => toggleWritingRoomPanel());
   els.closeWritingRoomPanel.addEventListener("click", () => toggleWritingRoomPanel(false));
   els.writingRoomCards.addEventListener("click", handleWritingRoomCardClick);
   els.writingRoomPanelHeader.addEventListener("pointerdown", startWritingRoomDrag);
   window.addEventListener("pointermove", moveWritingRoomPanel);
   window.addEventListener("pointerup", stopWritingRoomDrag);
-  els.helpButton.addEventListener("click", () => toggleHelpPanel(true));
+  els.helpButton.addEventListener("click", () => { toggleSettingsPanel(false); toggleHelpPanel(true); });
   els.closeHelpPanel.addEventListener("click", () => toggleHelpPanel(false));
   els.logoutButton.addEventListener("click", resetLocalWorkspace);
   els.exportSourceType.addEventListener("change", renderExportSourceSelect);
@@ -910,7 +919,7 @@ function insertHtml(html) {
 function toggleSettingsPanel(show) {
   els.settingsPanel.hidden = !show;
   if (show) {
-    showSettingsSection("design");
+    els.settingsSections.forEach((section) => { section.hidden = false; });
     renderExportSourceSelect();
     renderExportQueue();
     loadDesignForm();
@@ -921,6 +930,12 @@ function handleSettingsMenuClick(event) {
   const button = event.target.closest("button[data-settings-tab]");
   if (!button) return;
   showSettingsSection(button.dataset.settingsTab);
+}
+
+function handleSettingsCardToggle(event) {
+  const heading = event.target.closest(".settings-section > h3");
+  if (!heading) return;
+  heading.closest(".settings-section").classList.toggle("is-collapsed");
 }
 
 function showSettingsSection(sectionName) {
@@ -960,9 +975,10 @@ function renderWritingRoomCard(doc, depth = 0) {
       <span class="card-arrow">›</span>
       <span class="card-icon">${docIcon(doc)}</span>
       <strong>${escapeHtml(doc.title)}</strong>
-      <small>${escapeHtml(doc.id)}</small>
+      <small>Document</small>
     </summary>
     <div class="writing-room-card-body">
+      <p class="doc-id-line"><strong>Document ID:</strong> ${escapeHtml(doc.id)}</p>
       <p>${escapeHtml(preview)}</p>
       <div class="document-card-tags">${tags.length ? tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join("") : "<span>No tags</span>"}</div>
       <footer>
@@ -1039,6 +1055,7 @@ function stopWritingRoomDrag() {
 
 function toggleHelpPanel(show) {
   els.helpPanel.hidden = !show;
+  if (show) els.helpPanel.style.zIndex = "70";
 }
 
 function hydrateIconButtons() {
@@ -1233,6 +1250,10 @@ function loadDesignForm() {
   els.dialogButtonBorder.value = settings.dialogButtonBorder;
   els.dialogButtonText.value = settings.dialogButtonText;
   els.dialogButtonShadow.value = settings.dialogButtonShadow;
+  els.labelTextColor.value = settings.labelText;
+  els.dynamicTextColor.value = settings.dynamicText;
+  els.scrollbarTrackColor.value = settings.scrollbarTrack;
+  els.scrollbarThumbColor.value = settings.scrollbarThumb;
   els.statusBgColor.value = settings.statusBg;
   els.statusBorderColor.value = settings.statusBorder;
   els.statusTextColor.value = settings.statusText;
@@ -1254,11 +1275,11 @@ function currentDesignSettings() {
 }
 
 function defaultDesignSettings() {
-  return { buttonBg: "#2c2c2c", borderColor: "#d88a64", textColor: "#f3ead7", fontSize: "14", bold: true, bgImage: "wallpapersm.jpg", dialogBg: "#191711", dialogBorder: "#d88a64", dialogShadow: "#000000", dialogText: "#f3ead7", dialogFontSize: "14", dialogBold: true, dialogButtonBg: "#2c2c2c", dialogButtonBorder: "#d88a64", dialogButtonText: "#f3ead7", dialogButtonShadow: "#000000", statusBg: "#000000", statusBorder: "#d88a64", statusText: "#ffffff", emphasisBg: "#11100d", emphasisBorder: "#d88a64", emphasisText: "#f3ead7", panelBg: "#11100d", panelBorder: "#d88a64" };
+  return { buttonBg: "#2c2c2c", borderColor: "#d88a64", textColor: "#f3ead7", fontSize: "14", bold: true, bgImage: "wallpapersm.jpg", dialogBg: "#191711", dialogBorder: "#d88a64", dialogShadow: "#000000", dialogText: "#f3ead7", dialogFontSize: "14", dialogBold: true, dialogButtonBg: "#2c2c2c", dialogButtonBorder: "#d88a64", dialogButtonText: "#f3ead7", dialogButtonShadow: "#000000", labelText: "#9a9a9a", dynamicText: "#bda170", scrollbarTrack: "#17130f", scrollbarThumb: "#d88a64", statusBg: "#000000", statusBorder: "#d88a64", statusText: "#ffffff", emphasisBg: "#11100d", emphasisBorder: "#d88a64", emphasisText: "#f3ead7", panelBg: "#11100d", panelBorder: "#d88a64" };
 }
 
 function saveDesignSettings() {
-  const settings = { buttonBg: els.designButtonBg.value, borderColor: els.designBorderColor.value, textColor: els.designTextColor.value, fontSize: els.designFontSize.value || "14", bold: els.designBold.checked, bgImage: els.designBgImage.value.trim(), dialogBg: els.dialogBgColor.value, dialogBorder: els.dialogBorderColor.value, dialogShadow: els.dialogShadowColor.value, dialogText: els.dialogTextColor.value, dialogFontSize: els.dialogFontSize.value || "14", dialogBold: els.dialogBold.checked, dialogButtonBg: els.dialogButtonBg.value, dialogButtonBorder: els.dialogButtonBorder.value, dialogButtonText: els.dialogButtonText.value, dialogButtonShadow: els.dialogButtonShadow.value, statusBg: els.statusBgColor.value, statusBorder: els.statusBorderColor.value, statusText: els.statusTextColor.value, emphasisBg: els.emphasisBgColor.value, emphasisBorder: els.emphasisBorderColor.value, emphasisText: els.emphasisTextColor.value, panelBg: els.panelBgColor.value, panelBorder: els.panelBorderColor.value };
+  const settings = { buttonBg: els.designButtonBg.value, borderColor: els.designBorderColor.value, textColor: els.designTextColor.value, fontSize: els.designFontSize.value || "14", bold: els.designBold.checked, bgImage: els.designBgImage.value.trim(), dialogBg: els.dialogBgColor.value, dialogBorder: els.dialogBorderColor.value, dialogShadow: els.dialogShadowColor.value, dialogText: els.dialogTextColor.value, dialogFontSize: els.dialogFontSize.value || "14", dialogBold: els.dialogBold.checked, dialogButtonBg: els.dialogButtonBg.value, dialogButtonBorder: els.dialogButtonBorder.value, dialogButtonText: els.dialogButtonText.value, dialogButtonShadow: els.dialogButtonShadow.value, labelText: els.labelTextColor.value, dynamicText: els.dynamicTextColor.value, scrollbarTrack: els.scrollbarTrackColor.value, scrollbarThumb: els.scrollbarThumbColor.value, statusBg: els.statusBgColor.value, statusBorder: els.statusBorderColor.value, statusText: els.statusTextColor.value, emphasisBg: els.emphasisBgColor.value, emphasisBorder: els.emphasisBorderColor.value, emphasisText: els.emphasisTextColor.value, panelBg: els.panelBgColor.value, panelBorder: els.panelBorderColor.value };
   localStorage.setItem(DESIGN_KEY, JSON.stringify(settings));
   applyDesignSettings(settings);
   setStatus("Design applied", "saved");
@@ -1293,6 +1314,10 @@ function applyDesignSettings(settings) {
   root.style.setProperty("--dialog-button-border", settings.dialogButtonBorder);
   root.style.setProperty("--dialog-button-text", settings.dialogButtonText);
   root.style.setProperty("--dialog-button-shadow", settings.dialogButtonShadow);
+  root.style.setProperty("--label-text", settings.labelText);
+  root.style.setProperty("--dynamic-text", settings.dynamicText);
+  root.style.setProperty("--scrollbar-track", settings.scrollbarTrack);
+  root.style.setProperty("--scrollbar-thumb", settings.scrollbarThumb);
   root.style.setProperty("--status-bg", settings.statusBg);
   root.style.setProperty("--status-border", settings.statusBorder);
   root.style.setProperty("--status-text", settings.statusText);
@@ -1465,16 +1490,16 @@ function sanitizeBlockContent(value) {
 }
 
 function updateContextStatus() {
-  if (!els.contextStatus) return;
+  if (!els.contextStatus || state.contextStatusLocked) return;
   const selection = window.getSelection();
   if (!selection?.rangeCount) {
-    els.contextStatus.textContent = "Cursor: Writing Room ready";
+    setContextStatus("···");
     return;
   }
 
   const range = selection.getRangeAt(0);
   if (!els.editor.contains(range.commonAncestorContainer)) {
-    els.contextStatus.textContent = "Cursor: outside writing area";
+    setContextStatus("···");
     return;
   }
 
@@ -1499,12 +1524,45 @@ function updateContextStatus() {
   if (list) parts.push("list");
   if (!link && !block && !heading && !table && !list && !emphasis) parts.push("normal text");
 
-  els.contextStatus.textContent = parts.join(" · ");
+  setContextStatus(parts.join(" · "));
+}
+
+function updateHoverStatus(event) {
+  if (!els.contextStatus || state.contextStatusLocked) return;
+  const target = event.target;
+  const interactive = target.closest?.("button, select, input, textarea, summary, .tool-menu-trigger, #editor, .title-input");
+  if (!interactive) return;
+  if (interactive === els.titleInput) setContextStatus("Document title field");
+  else if (interactive === els.tagsInput) setContextStatus("Document metadata tags");
+  else if (interactive === els.documentSelect) setContextStatus("Current document selector");
+  else if (interactive === els.newDocumentButton) setContextStatus("Create a new Writing Room document");
+  else if (interactive === els.documentSettingsButton) setContextStatus("Open document settings: title and metadata");
+  else if (interactive === els.writingRoomButton) setContextStatus("Open Writing Room filing cabinet tabs");
+  else if (interactive === els.settingsButton) setContextStatus("Open Writing Room settings");
+  else if (interactive === els.topHelpButton || interactive === els.helpButton) setContextStatus("Open Help and release notes");
+  else if (interactive === els.emphasisButton) setContextStatus("Wrap highlighted text in an emphasis box");
+  else setContextStatus(interactive.dataset?.toolName || interactive.getAttribute?.("aria-label") || interactive.textContent.trim() || "Writing Room control");
+}
+
+function setContextStatus(message, lock = false, timeout = 0) {
+  if (!els.contextStatus) return;
+  clearTimeout(state.contextStatusTimer);
+  state.contextStatusLocked = lock;
+  els.contextStatus.textContent = message || "···";
+  if (timeout) {
+    state.contextStatusTimer = setTimeout(() => {
+      state.contextStatusLocked = false;
+      updateContextStatus();
+    }, timeout);
+  }
 }
 
 function setStatus(message, className) {
   els.saveStatus.textContent = message;
   els.saveStatus.className = `save-status ${className}`;
+  if (className === "dirty") setContextStatus(`${message} …`, true);
+  else if (className === "saved") setContextStatus(message, true, 1400);
+  else setContextStatus(message, false);
 }
 
 function escapeHtml(value) {
