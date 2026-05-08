@@ -140,38 +140,12 @@ const els = {
 
 boot().catch((error) => {
   console.error(error);
-  localStorage.removeItem(AUTH_KEY);
-  showPasswordScreen("Unable to start Capsanoto. Refresh and try again.");
+  showEditorStartupError(error);
 });
 
 async function boot() {
   markFrameMode();
-  bindAuthEvents();
-  setPasswordFormState(false, "Loading password settings…");
-  try {
-    await loadAuthConfig();
-    state.authReady = true;
-    setPasswordFormState(true);
-  } catch (error) {
-    console.error(error);
-    localStorage.removeItem(AUTH_KEY);
-    setPasswordFormState(true);
-    showPasswordScreen("Unable to load password settings. Check config/auth.json.");
-    return;
-  }
-
-  if (!isAuthenticated()) {
-    showPasswordScreen();
-    return;
-  }
-
-  try {
-    await startEditor();
-  } catch (error) {
-    console.error(error);
-    localStorage.removeItem(AUTH_KEY);
-    showPasswordScreen("Password accepted, but the editor could not initialize. Refresh the page and try again.");
-  }
+  await startEditor();
 }
 
 async function loadAuthConfig() {
@@ -278,6 +252,13 @@ function setPasswordFormState(enabled, message = "") {
   els.passwordInput.disabled = !enabled;
   els.passwordSubmit.disabled = !enabled;
   els.passwordError.textContent = message;
+}
+
+function showEditorStartupError(error) {
+  setAuthVisibility(true);
+  const message = error?.message || "Unknown startup error";
+  els.editor.innerHTML = `<h1>Capsanoto startup issue</h1><p>The editor is unlocked, but startup hit an error:</p><pre>${escapeHtml(message)}</pre><p>Try refreshing. If this keeps happening, use Reset Local Save in Settings.</p>`;
+  setStatus("Startup issue", "dirty");
 }
 
 function setAuthVisibility(isUnlocked) {
@@ -411,6 +392,7 @@ function bindEditorEvents() {
   els.documentCards.addEventListener("click", handleDocumentCardClick);
   els.helpButton.addEventListener("click", () => toggleHelpPanel(true));
   els.closeHelpPanel.addEventListener("click", () => toggleHelpPanel(false));
+  els.logoutButton.addEventListener("click", resetLocalWorkspace);
   els.exportSourceType.addEventListener("change", renderExportSourceSelect);
   els.addExportItemButton.addEventListener("click", addExportItem);
   els.exportCapsButton.addEventListener("click", () => exportSmartBundle("caps"));
@@ -1188,6 +1170,11 @@ function applyDesignSettings(settings) {
   root.style.setProperty("--dialog-button-shadow", settings.dialogButtonShadow);
 }
 
+function resetLocalWorkspace() {
+  localStorage.removeItem(STORAGE_KEY);
+  location.reload();
+}
+
 function exportWorkspace() {
   persistNow("Export prepared");
   const blob = new Blob([serializedWorkspace()], { type: "application/json" });
@@ -1316,6 +1303,10 @@ function findBookmarkId(value) {
 
 function cssString(value) {
   return String(value).replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+}
+
+function escapeCssUrl(value) {
+  return String(value ?? "").replace(/["\\\n\r\f]/g, "");
 }
 
 function uniqueBookmarkId(base) {

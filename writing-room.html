@@ -6,8 +6,8 @@
   <title>Capsanoto</title>
   <link rel="stylesheet" href="styles.css">
 </head>
-<body class="is-locked">
-  <main id="passwordScreen" class="password-screen" aria-labelledby="passwordTitle">
+<body class="is-unlocked">
+  <main id="passwordScreen" class="password-screen" aria-labelledby="passwordTitle" hidden>
     <form id="passwordForm" class="password-card" data-shared-password="Omega593!">
       <img src="lanternlogo small.png" alt="Forever Bound lantern logo">
       <p class="eyebrow">Forever Bound</p>
@@ -20,7 +20,7 @@
     </form>
   </main>
 
-  <main id="editorApp" class="writer-shell" aria-label="Forever Bound writing editor" hidden>
+  <main id="editorApp" class="writer-shell" aria-label="Forever Bound writing editor">
     <header class="writer-header">
       <div class="document-controls">
         <strong class="app-name">Capsanoto</strong>
@@ -168,7 +168,7 @@
 
       <section class="settings-section settings-card settings-links" data-settings-section="support" hidden>
         <button id="helpButton" type="button">❔ Help / Release Notes</button>
-        <button id="logoutButton" type="button">🔒 Logout</button>
+        <button id="logoutButton" type="button">🧹 Reset Local Save</button>
       </section>
     </aside>
 
@@ -204,7 +204,7 @@
       </section>
       <section>
         <h3>Release notes</h3>
-        <p><strong>Capsanoto preview build:</strong> local autosave, password unlock, document routes, section links, bookmark copy buttons, pill links, and transclusion blocks.</p>
+        <p><strong>Capsanoto preview build:</strong> local autosave, document routes, section links, bookmark copy buttons, pill links, and transclusion blocks.</p>
       </section>
     </aside>
 
