@@ -11,13 +11,6 @@ const DEFAULT_WORKSPACE = {
   updatedAt: "2026-05-08T00:00:00.000Z",
   documents: [
     {
-      id: "writing-room-overview",
-      title: "Writing Room Overview",
-      tags: ["overview", "worldbuilding", "editor"],
-      updatedAt: "2026-05-07T00:00:00.000Z",
-      content: '<h1 id="writing-room">Forever Bound Writing Room</h1><p>This is a minimal browser-based writing space for long-form lore and interconnected worldbuilding. The interface stays out of the way until formatting, links, bookmarks, or reusable blocks are needed.</p><h2 id="bookmarks">Bookmarks</h2><p>Any heading with an ID becomes a bookmark pill under the toolbar. Use the Bookmark button to create a new jump target with a direct URL anchor.</p><h2 id="links-and-pills">Links and Pill Links</h2><p>Normal hyperlinks work inside the document, and selected text can also become a <a class="pill-link" href="editor.html?doc=episode-01">rounded pill-style document link</a>.</p><h2 id="transclusions">Transclusions</h2><p>Reusable content blocks appear wherever their token is used. Example:</p><p>{{Item-Runestones}}</p>',
-    },
-    {
       id: "episode-01",
       title: "Episode 01",
       tags: ["season-1", "episode"],
@@ -71,6 +64,7 @@ const els = {
   editorApp: document.querySelector("#editorApp"),
   documentSelect: document.querySelector("#documentSelect"),
   newDocumentButton: document.querySelector("#newDocumentButton"),
+  documentSettingsButton: document.querySelector("#documentSettingsButton"),
   contextStatus: document.querySelector("#contextStatus"),
   saveStatus: document.querySelector("#saveStatus"),
   settingsButton: document.querySelector("#settingsButton"),
@@ -88,6 +82,8 @@ const els = {
   imageInput: document.querySelector("#imageInput"),
   emojiButton: document.querySelector("#emojiButton"),
   blockButton: document.querySelector("#blockButton"),
+  emphasisButton: document.querySelector("#emphasisButton"),
+  topHelpButton: document.querySelector("#topHelpButton"),
   helpButton: document.querySelector("#helpButton"),
   exportSourceType: document.querySelector("#exportSourceType"),
   exportSourceSelect: document.querySelector("#exportSourceSelect"),
@@ -113,6 +109,14 @@ const els = {
   dialogButtonBorder: document.querySelector("#dialogButtonBorder"),
   dialogButtonText: document.querySelector("#dialogButtonText"),
   dialogButtonShadow: document.querySelector("#dialogButtonShadow"),
+  statusBgColor: document.querySelector("#statusBgColor"),
+  statusBorderColor: document.querySelector("#statusBorderColor"),
+  statusTextColor: document.querySelector("#statusTextColor"),
+  emphasisBgColor: document.querySelector("#emphasisBgColor"),
+  emphasisBorderColor: document.querySelector("#emphasisBorderColor"),
+  emphasisTextColor: document.querySelector("#emphasisTextColor"),
+  panelBgColor: document.querySelector("#panelBgColor"),
+  panelBorderColor: document.querySelector("#panelBorderColor"),
   settingsMenu: document.querySelector(".settings-menu"),
   settingsSections: document.querySelectorAll("[data-settings-section]"),
   writingRoomButton: document.querySelector("#writingRoomButton"),
@@ -357,6 +361,7 @@ function bindEditorEvents() {
     openDocument(doc.id);
     markDirty("New document created");
   });
+  els.documentSettingsButton.addEventListener("click", openDocumentSettings);
 
   els.titleInput.addEventListener("input", () => {
     activeDocument().title = els.titleInput.value || "Untitled Document";
@@ -397,6 +402,8 @@ function bindEditorEvents() {
   els.imageButton.addEventListener("click", () => els.imageInput.click());
   els.imageInput.addEventListener("change", embedSelectedImage);
   els.emojiButton.addEventListener("click", () => insertHtml("✨"));
+  els.emphasisButton.addEventListener("click", insertEmphasisBox);
+  els.topHelpButton.addEventListener("click", () => toggleHelpPanel(true));
   els.settingsButton.addEventListener("click", () => toggleSettingsPanel(true));
   els.closeSettingsPanel.addEventListener("click", () => toggleSettingsPanel(false));
   els.settingsMenu.addEventListener("click", handleSettingsMenuClick);
@@ -843,6 +850,40 @@ function jumpToBookmark(id, updateHash = true) {
   if (updateHash) updateUrl(id);
 }
 
+async function openDocumentSettings() {
+  const doc = activeDocument();
+  const result = await openCapsDialog("Document Settings", [
+    { name: "title", label: "Document title", value: doc.title },
+    { name: "tags", label: "Tags", value: (doc.tags ?? []).join(", "), placeholder: "character, episode, lore" },
+  ]);
+  if (!result) return;
+  doc.title = result.title?.trim() || "Untitled Document";
+  doc.tags = String(result.tags || "").split(",").map((tag) => tag.trim()).filter(Boolean);
+  els.titleInput.value = doc.title;
+  els.tagsInput.value = doc.tags.join(", ");
+  renderDocumentSelect();
+  renderWritingRoomCards();
+  updateUrl();
+  markDirty("Document settings updated");
+}
+
+function insertEmphasisBox() {
+  const selection = window.getSelection();
+  if (!selection?.rangeCount || !els.editor.contains(selection.getRangeAt(0).commonAncestorContainer)) {
+    insertHtml('<aside class="emphasis-box"><p>Emphasis note</p></aside>');
+    return;
+  }
+  const selectedHtml = selection.isCollapsed ? "Emphasis note" : selectionHtml(selection.getRangeAt(0));
+  insertHtml(`<aside class="emphasis-box">${selectedHtml}</aside><p></p>`);
+}
+
+function selectionHtml(range) {
+  const fragment = range.cloneContents();
+  const wrapper = document.createElement("div");
+  wrapper.append(fragment);
+  return wrapper.innerHTML || escapeHtml(range.toString());
+}
+
 function insertTable() {
   insertHtml(`<table><thead><tr><th>Field</th><th>Notes</th></tr></thead><tbody><tr><td>Canon</td><td></td></tr><tr><td>Reference</td><td></td></tr></tbody></table>`);
 }
@@ -1192,11 +1233,19 @@ function loadDesignForm() {
   els.dialogButtonBorder.value = settings.dialogButtonBorder;
   els.dialogButtonText.value = settings.dialogButtonText;
   els.dialogButtonShadow.value = settings.dialogButtonShadow;
+  els.statusBgColor.value = settings.statusBg;
+  els.statusBorderColor.value = settings.statusBorder;
+  els.statusTextColor.value = settings.statusText;
+  els.emphasisBgColor.value = settings.emphasisBg;
+  els.emphasisBorderColor.value = settings.emphasisBorder;
+  els.emphasisTextColor.value = settings.emphasisText;
+  els.panelBgColor.value = settings.panelBg;
+  els.panelBorderColor.value = settings.panelBorder;
 }
 
 function currentDesignSettings() {
   try {
-    return JSON.parse(localStorage.getItem(DESIGN_KEY) || "null") || defaultDesignSettings();
+    return { ...defaultDesignSettings(), ...(JSON.parse(localStorage.getItem(DESIGN_KEY) || "null") || {}) };
   } catch (error) {
     console.warn("Ignoring unreadable Capsanoto design settings", error);
     localStorage.removeItem(DESIGN_KEY);
@@ -1205,11 +1254,11 @@ function currentDesignSettings() {
 }
 
 function defaultDesignSettings() {
-  return { buttonBg: "#2c2c2c", borderColor: "#d88a64", textColor: "#f3ead7", fontSize: "14", bold: true, bgImage: "wallpapersm.jpg", dialogBg: "#191711", dialogBorder: "#d88a64", dialogShadow: "#000000", dialogText: "#f3ead7", dialogFontSize: "14", dialogBold: true, dialogButtonBg: "#2c2c2c", dialogButtonBorder: "#d88a64", dialogButtonText: "#f3ead7", dialogButtonShadow: "#000000" };
+  return { buttonBg: "#2c2c2c", borderColor: "#d88a64", textColor: "#f3ead7", fontSize: "14", bold: true, bgImage: "wallpapersm.jpg", dialogBg: "#191711", dialogBorder: "#d88a64", dialogShadow: "#000000", dialogText: "#f3ead7", dialogFontSize: "14", dialogBold: true, dialogButtonBg: "#2c2c2c", dialogButtonBorder: "#d88a64", dialogButtonText: "#f3ead7", dialogButtonShadow: "#000000", statusBg: "#000000", statusBorder: "#d88a64", statusText: "#ffffff", emphasisBg: "#11100d", emphasisBorder: "#d88a64", emphasisText: "#f3ead7", panelBg: "#11100d", panelBorder: "#d88a64" };
 }
 
 function saveDesignSettings() {
-  const settings = { buttonBg: els.designButtonBg.value, borderColor: els.designBorderColor.value, textColor: els.designTextColor.value, fontSize: els.designFontSize.value || "14", bold: els.designBold.checked, bgImage: els.designBgImage.value.trim(), dialogBg: els.dialogBgColor.value, dialogBorder: els.dialogBorderColor.value, dialogShadow: els.dialogShadowColor.value, dialogText: els.dialogTextColor.value, dialogFontSize: els.dialogFontSize.value || "14", dialogBold: els.dialogBold.checked, dialogButtonBg: els.dialogButtonBg.value, dialogButtonBorder: els.dialogButtonBorder.value, dialogButtonText: els.dialogButtonText.value, dialogButtonShadow: els.dialogButtonShadow.value };
+  const settings = { buttonBg: els.designButtonBg.value, borderColor: els.designBorderColor.value, textColor: els.designTextColor.value, fontSize: els.designFontSize.value || "14", bold: els.designBold.checked, bgImage: els.designBgImage.value.trim(), dialogBg: els.dialogBgColor.value, dialogBorder: els.dialogBorderColor.value, dialogShadow: els.dialogShadowColor.value, dialogText: els.dialogTextColor.value, dialogFontSize: els.dialogFontSize.value || "14", dialogBold: els.dialogBold.checked, dialogButtonBg: els.dialogButtonBg.value, dialogButtonBorder: els.dialogButtonBorder.value, dialogButtonText: els.dialogButtonText.value, dialogButtonShadow: els.dialogButtonShadow.value, statusBg: els.statusBgColor.value, statusBorder: els.statusBorderColor.value, statusText: els.statusTextColor.value, emphasisBg: els.emphasisBgColor.value, emphasisBorder: els.emphasisBorderColor.value, emphasisText: els.emphasisTextColor.value, panelBg: els.panelBgColor.value, panelBorder: els.panelBorderColor.value };
   localStorage.setItem(DESIGN_KEY, JSON.stringify(settings));
   applyDesignSettings(settings);
   setStatus("Design applied", "saved");
@@ -1244,6 +1293,14 @@ function applyDesignSettings(settings) {
   root.style.setProperty("--dialog-button-border", settings.dialogButtonBorder);
   root.style.setProperty("--dialog-button-text", settings.dialogButtonText);
   root.style.setProperty("--dialog-button-shadow", settings.dialogButtonShadow);
+  root.style.setProperty("--status-bg", settings.statusBg);
+  root.style.setProperty("--status-border", settings.statusBorder);
+  root.style.setProperty("--status-text", settings.statusText);
+  root.style.setProperty("--emphasis-bg", settings.emphasisBg);
+  root.style.setProperty("--emphasis-border", settings.emphasisBorder);
+  root.style.setProperty("--emphasis-text", settings.emphasisText);
+  root.style.setProperty("--panel-bg", settings.panelBg);
+  root.style.setProperty("--panel-border", settings.panelBorder);
 }
 
 function resetLocalWorkspace() {
@@ -1432,13 +1489,15 @@ function updateContextStatus() {
   const heading = node?.closest?.("h1[id], h2[id], h3[id], [data-bookmark='true'][id]");
   const table = node?.closest?.("table");
   const list = node?.closest?.("ul, ol");
+  const emphasis = node?.closest?.(".emphasis-box");
 
+  if (emphasis) parts.push("emphasis box");
   if (block) parts.push(`inside transclusion block ${block.dataset.blockId || ""}`.trim());
   if (link) parts.push(link.classList.contains("pill-link") ? "pill link" : "link");
   if (heading) parts.push(`bookmark heading #${heading.id}`);
   if (table) parts.push("table");
   if (list) parts.push("list");
-  if (!link && !block && !heading && !table && !list) parts.push("normal text");
+  if (!link && !block && !heading && !table && !list && !emphasis) parts.push("normal text");
 
   els.contextStatus.textContent = parts.join(" · ");
 }

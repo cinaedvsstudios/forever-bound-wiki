@@ -3,17 +3,6 @@
   "updatedAt": "2026-05-08T00:00:00.000Z",
   "documents": [
     {
-      "id": "writing-room-overview",
-      "title": "Writing Room Overview",
-      "tags": [
-        "overview",
-        "worldbuilding",
-        "editor"
-      ],
-      "updatedAt": "2026-05-07T00:00:00.000Z",
-      "content": "<h1 id=\"writing-room\">Forever Bound Writing Room</h1><p>This is a minimal browser-based writing space for long-form lore and interconnected worldbuilding. The interface stays out of the way until formatting, links, bookmarks, or reusable blocks are needed.</p><h2 id=\"bookmarks\">Bookmarks</h2><p>Any heading with an ID becomes a bookmark pill under the toolbar. Use the Bookmark button to create a new jump target with a direct URL anchor.</p><h2 id=\"links-and-pills\">Links and Pill Links</h2><p>Normal hyperlinks work inside the document, and selected text can also become a <a class=\"pill-link\" href=\"editor.html?doc=episode-01\">rounded pill-style document link</a>.</p><h2 id=\"transclusions\">Transclusions</h2><p>Reusable content blocks appear wherever their token is used. Example:</p><p>{{Item-Runestones}}</p>"
-    },
-    {
       "id": "episode-01",
       "title": "Episode 01",
       "tags": [
