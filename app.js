@@ -53,6 +53,7 @@ boot().catch((error) => {
 });
 
 async function boot() {
+  markFrameMode();
   await loadAuthConfig();
   bindAuthEvents();
   if (!isAuthenticated()) {
@@ -88,7 +89,7 @@ function bindAuthEvents() {
 }
 
 async function startEditor() {
-  document.body.classList.remove("is-locked");
+  setAuthVisibility(true);
   await loadWorkspace();
   bindEditorEvents();
   openFromHash();
@@ -97,9 +98,26 @@ async function startEditor() {
 }
 
 function showPasswordScreen() {
-  document.body.classList.add("is-locked");
+  setAuthVisibility(false);
   els.passwordError.textContent = "";
-  els.passwordInput.focus();
+  requestAnimationFrame(() => els.passwordInput.focus());
+}
+
+function setAuthVisibility(isUnlocked) {
+  document.body.classList.toggle("is-locked", !isUnlocked);
+  document.body.classList.toggle("is-unlocked", isUnlocked);
+  els.passwordScreen.hidden = isUnlocked;
+  els.editorApp.hidden = !isUnlocked;
+  els.passwordScreen.setAttribute("aria-hidden", String(isUnlocked));
+  els.editorApp.setAttribute("aria-hidden", String(!isUnlocked));
+}
+
+function markFrameMode() {
+  try {
+    if (window.self !== window.top) document.body.classList.add("is-framed");
+  } catch {
+    document.body.classList.add("is-framed");
+  }
 }
 
 function isAuthenticated() {
