@@ -87,6 +87,7 @@ const state = {
   trash: [],
   deprecated: [],
   draggedDocId: "",
+  draggedTabId: "",
   lastColorInput: null,
   favoriteColors: [...DEFAULT_FAVORITE_COLORS],
   contextStatusLocked: false,
@@ -427,7 +428,7 @@ function bindEditorEvents() {
     openDocument(doc.id);
     markDirty("New document created");
   });
-  els.documentSettingsButton.addEventListener("click", openFilingCabinetSettingsMode);
+  els.documentSettingsButton?.addEventListener("click", openFilingCabinetSettingsMode);
 
   els.titleInput.addEventListener("input", () => {
     activeDocument().title = els.titleInput.value || "Untitled Document";
@@ -481,7 +482,7 @@ function bindEditorEvents() {
   els.editWritingRoomButton.addEventListener("click", toggleFilingEditMode);
   els.newFolderButton.addEventListener("click", () => createFilingGroup("folder"));
   els.newTabButton.addEventListener("click", createFilingTab);
-  els.trashCanButton.addEventListener("click", () => setContextStatus(`${state.trash.length} items in Trash · ${state.deprecated.length} deprecated`, false));
+  els.trashCanButton?.addEventListener("click", () => setContextStatus(`${state.trash.length} items in Trash · ${state.deprecated.length} deprecated`, false));
   els.writingRoomCards.addEventListener("click", handleWritingRoomCardClick);
   els.writingRoomCards.addEventListener("focusout", handleFilingInlineEdit);
   els.writingRoomCards.addEventListener("keydown", handleFilingInlineKeydown);
@@ -1161,8 +1162,8 @@ function inlineEditAttrs(kind, id, field) {
 }
 
 function renderFilingTab(tab) {
-  return `<details class="filing-tab" data-tab-id="${escapeAttr(tab.id)}" open>
-    <summary><span class="card-arrow">›</span><strong ${inlineEditAttrs("tab", tab.id, "label")}>▽ ${escapeHtml(tab.label)}</strong>${state.filingEditMode ? `<span class="filing-group-actions"><button type="button" title="Delete tab" aria-label="Delete tab" data-tab-action="delete" data-tab-id="${escapeAttr(tab.id)}">❌</button></span>` : ""}</summary>
+  return `<details class="filing-tab" data-tab-id="${escapeAttr(tab.id)}" draggable="${state.filingEditMode}" open>
+    <summary><span class="card-arrow">›</span><span class="tab-icon">▱</span><strong ${inlineEditAttrs("tab", tab.id, "label")}>▽ ${escapeHtml(tab.label)}</strong>${state.filingEditMode ? `<span class="filing-group-actions"><button type="button" title="Delete tab" aria-label="Delete tab" data-tab-action="delete" data-tab-id="${escapeAttr(tab.id)}">❌</button></span>` : ""}</summary>
     <div class="writing-room-card-stack filing-tab-documents" data-drop-tab="${escapeAttr(tab.id)}">
       ${tab.documents.map((doc) => renderWritingRoomCard(doc, 0)).join("")}
       ${state.filingEditMode && !tab.documents.length ? '<p class="panel-help">Drop documents into this tab.</p>' : ''}
@@ -1514,17 +1515,26 @@ function cleanInlinePrefix(value) {
 function handleFilingDragStart(event) {
   if (!state.filingEditMode) return;
   const card = event.target.closest("[data-doc-card]");
-  if (!card) return;
-  state.draggedDocId = card.dataset.docCard;
-  event.dataTransfer?.setData("text/plain", state.draggedDocId);
+  if (card) {
+    state.draggedDocId = card.dataset.docCard;
+    state.draggedTabId = "";
+    event.dataTransfer?.setData("text/plain", state.draggedDocId);
+    return;
+  }
+  const tab = event.target.closest("[data-tab-id]");
+  if (!tab) return;
+  state.draggedTabId = tab.dataset.tabId;
+  state.draggedDocId = "";
+  event.dataTransfer?.setData("text/plain", state.draggedTabId);
 }
 
 function handleFilingDragOver(event) {
-  if (state.filingEditMode && event.target.closest("[data-doc-card], [data-drop-group], [data-drop-tab]")) event.preventDefault();
+  if (state.filingEditMode && event.target.closest("[data-doc-card], [data-drop-group], [data-drop-tab], [data-tab-id]")) event.preventDefault();
 }
 
 function handleFilingDrop(event) {
-  if (!state.filingEditMode || !state.draggedDocId) return;
+  if (!state.filingEditMode || (!state.draggedDocId && !state.draggedTabId)) return;
+  if (state.draggedTabId) return handleFilingTabDrop(event);
   const targetCard = event.target.closest("[data-doc-card]");
   const targetGroup = event.target.closest("[data-drop-group]");
   const targetTab = event.target.closest("[data-drop-tab]");
@@ -1558,6 +1568,30 @@ function handleFilingDrop(event) {
   state.draggedDocId = "";
   renderWritingRoomCards();
   markDirty("Filing Cabinet order updated");
+}
+
+function handleFilingTabDrop(event) {
+  const targetGroup = event.target.closest("[data-drop-group]");
+  const targetTab = event.target.closest("[data-tab-id]");
+  if (!targetGroup && !targetTab) return;
+  if (targetTab?.dataset.tabId === state.draggedTabId) return;
+  event.preventDefault();
+  const from = state.filingTabs.findIndex((tab) => tab.id === state.draggedTabId);
+  if (from < 0) return;
+  const [tab] = state.filingTabs.splice(from, 1);
+  if (targetTab) {
+    const target = state.filingTabs.find((item) => item.id === targetTab.dataset.tabId);
+    if (target?.groupId) tab.groupId = target.groupId;
+    const to = state.filingTabs.findIndex((item) => item.id === targetTab.dataset.tabId);
+    state.filingTabs.splice(Math.max(0, to), 0, tab);
+  } else if (targetGroup) {
+    tab.groupId = targetGroup.dataset.dropGroup;
+    state.filingTabs.push(tab);
+  }
+  state.documents.forEach((doc) => { if (doc.filingTabId === tab.id) doc.filingGroupId = tab.groupId; });
+  state.draggedTabId = "";
+  renderWritingRoomCards();
+  markDirty("Filing Cabinet tab moved");
 }
 
 function startWritingRoomDrag(event) {
@@ -2237,7 +2271,7 @@ function updateHoverStatus(event) {
   else if (interactive === els.tagsInput) setContextStatus("Document metadata tags");
   else if (interactive === els.documentSelect) setContextStatus("Current document selector");
   else if (interactive === els.newDocumentButton) setContextStatus("Create a new Writing Room document");
-  else if (interactive === els.documentSettingsButton) setContextStatus("Open Filing Cabinet settings for folders, tabs, and documents");
+  else if (els.documentSettingsButton && interactive === els.documentSettingsButton) setContextStatus("Open Filing Cabinet settings for folders, tabs, and documents");
   else if (interactive === els.writingRoomButton) setContextStatus("Open Writing Room filing cabinet tabs");
   else if (interactive === els.settingsButton) setContextStatus("Open Writing Room settings");
   else if (interactive === els.topHelpButton || interactive === els.helpButton) setContextStatus("Open Help and release notes");

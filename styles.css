@@ -1011,3 +1011,119 @@ input, textarea, select, .panel-help, .help-panel p, .help-panel dd, .document-c
   padding: 0.65rem;
   background: rgba(251,244,214,0.06);
 }
+/* Requested Filing Cabinet/menu refinements */
+.top-command-menus {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  min-width: min(34rem, 42vw);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(33,24,18,0.88);
+  overflow: visible;
+}
+.top-command-menus .tool-menu {
+  position: static;
+  min-width: 0;
+}
+.top-command-menus .tool-menu-trigger {
+  width: 100%;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.top-command-menus .tool-menu:first-child .tool-menu-trigger { border-radius: 999px 0 0 999px; }
+.top-command-menus .tool-menu:last-child .tool-menu-trigger { border-radius: 0 999px 999px 0; }
+.top-command-menus .tool-menu-trigger::after { content: none; }
+.top-command-menus .tool-menu-panel {
+  left: 0;
+  right: 0;
+  top: calc(100% + 0.35rem);
+  width: 100%;
+  min-width: 100%;
+  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+  border-radius: 18px;
+}
+.writing-room-group > summary {
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
+  gap: 0.45rem;
+  min-height: 2.75rem;
+  padding: 0.48rem 0.62rem;
+}
+.writing-room-card-stack { padding-left: 0.55rem; padding-right: 0.55rem; }
+.filing-tab > summary {
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
+}
+.tab-icon,
+.folder-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 1.35rem;
+  height: 1.35rem;
+}
+.writing-room-cards {
+  position: relative;
+  padding-right: 4.25rem;
+}
+.filing-jump-rail {
+  position: sticky;
+  top: 0.75rem;
+  z-index: 6;
+  float: right;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  align-items: center;
+  width: 2.5rem;
+  height: min(48vh, 430px);
+  margin: 0 -3.55rem 0 0.7rem;
+}
+.filing-jump-rail::before {
+  content: "";
+  position: absolute;
+  top: 0.65rem;
+  bottom: 0.65rem;
+  left: 50%;
+  width: 2px;
+  transform: translateX(-50%);
+  background: linear-gradient(#6f6f6f, #a0a0a0, #6f6f6f);
+  border-radius: 999px;
+  opacity: 0.72;
+}
+.filing-jump-rail button {
+  position: relative;
+  z-index: 1;
+  width: 1.7rem;
+  height: 1.7rem;
+  background: #777;
+  border-color: #b0b0b0;
+}
+.design-section.settings-card {
+  display: grid !important;
+  grid-template-columns: minmax(17rem, 1fr) minmax(18rem, 0.95fr) !important;
+  grid-auto-flow: row;
+  align-items: start;
+}
+.design-section.settings-card > h3 {
+  grid-column: 1 / -1;
+}
+.design-section .design-controls {
+  grid-column: 1;
+  grid-row: 2;
+  max-height: min(60vh, 580px);
+  overflow: auto;
+}
+.design-section .design-preview-column {
+  grid-column: 2 !important;
+  grid-row: 2 !important;
+  position: sticky;
+  top: 0.75rem;
+  align-self: start;
+}
+@media (max-width: 900px) {
+  .top-command-menus { min-width: 100%; }
+  .design-section.settings-card { grid-template-columns: 1fr !important; }
+  .design-section .design-controls,
+  .design-section .design-preview-column { grid-column: 1 !important; grid-row: auto !important; position: static; }
+}
