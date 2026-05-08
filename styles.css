@@ -179,3 +179,49 @@ select:focus, input:focus, textarea:focus, .editor:focus { border-color:var(--ac
 .editor .pill-link[data-link-type="bookmark"]::before { content: "⚓"; }
 .editor .pill-link[data-link-type="document"]::before { content: "📄"; }
 .editor a[data-preview-type] { cursor: pointer; }
+:root {
+  --button-font-size: 14px;
+  --button-font-weight: 800;
+  --app-bg-image: url("wallpapersm.jpg");
+}
+body { background-image: var(--app-bg-image); }
+button, summary { font-size: var(--button-font-size); font-weight: var(--button-font-weight); }
+.writer-shell { background-image: linear-gradient(rgba(17,16,13,0.86), rgba(17,16,13,0.95)), var(--app-bg-image); }
+.toolbar > button { flex: 0 0 auto; min-width: 2.35rem; min-height: 2.35rem; padding: 0.45rem 0.65rem; border-radius: 12px; }
+.settings-panel {
+  position: fixed;
+  inset: 0 0 0 auto;
+  z-index: 35;
+  width: min(100%, 520px);
+  padding: 1rem;
+  overflow-y: auto;
+  color: var(--ink);
+  background: rgba(17,16,13,0.98);
+  border-left: 1px solid var(--line);
+  box-shadow: -24px 0 80px rgba(0,0,0,0.38);
+}
+.settings-panel header { display:flex; justify-content:space-between; gap:1rem; align-items:start; }
+.settings-panel h2 { margin:0.15rem 0 0; color:var(--accent); }
+.settings-section { border-top:1px solid var(--line); margin-top:1rem; padding-top:1rem; }
+.export-picker, .export-actions { display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center; }
+.export-picker select { flex:1 1 150px; }
+.export-queue { display:grid; gap:0.45rem; margin:0.75rem 0; min-height:3rem; }
+.export-pill {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:0.75rem;
+  padding:0.55rem 0.7rem;
+  border:1px solid var(--line);
+  border-radius:999px;
+  background:var(--accent-soft);
+  cursor:grab;
+}
+.export-pill:active { cursor:grabbing; }
+.export-pill button { width:1.8rem; height:1.8rem; padding:0; }
+.design-section { display:grid; gap:0.7rem; }
+.design-section label { display:grid; gap:0.35rem; color:var(--muted); font-weight:800; }
+.design-section input[type="text"], .design-section input[type="number"] { width:100%; border:1px solid var(--line); border-radius:12px; padding:0.55rem; color:var(--ink); background:rgba(0,0,0,0.28); }
+.design-preview { display:flex; justify-content:center; padding:1rem; border:1px solid var(--line); border-radius:14px; background:rgba(0,0,0,0.22); }
+.settings-links { display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; }
+.settings-links button { width:100%; }

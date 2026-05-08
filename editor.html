@@ -30,40 +30,26 @@
       </div>
       <div class="save-controls">
         <span id="saveStatus" class="save-status">Loading…</span>
-        <button id="exportButton" class="icon-button" type="button" title="Export JSON" aria-label="Export JSON" data-tool-name="Archive Export">📥</button>
-        <button id="logoutButton" class="icon-button" type="button" title="Logout" aria-label="Logout" data-tool-name="Session Lock">🔒</button>
+        <button id="settingsButton" class="icon-button" type="button" title="Settings" aria-label="Settings" data-tool-name="Capsanoto Settings">⚙️</button>
       </div>
     </header>
 
     <section class="toolbar" aria-label="Capsanoto command bar">
-      <details class="tool-menu">
-        <summary title="Writing Tools" aria-label="Writing Tools">✍️</summary>
-        <button data-command="bold" type="button" title="Bold" aria-label="Bold" data-tool-name="Bold Mark"><strong>B</strong></button>
-        <button data-command="italic" type="button" title="Italic" aria-label="Italic" data-tool-name="Italic Mark"><em>I</em></button>
-        <button data-block="h1" type="button" title="Heading 1" aria-label="Heading 1" data-tool-name="Chapter Heading">H1</button>
-        <button data-block="h2" type="button" title="Heading 2" aria-label="Heading 2" data-tool-name="Section Heading">H2</button>
-        <button data-block="p" type="button" title="Paragraph" aria-label="Paragraph" data-tool-name="Body Text">¶</button>
-        <button data-command="insertUnorderedList" type="button" title="Bullet List" aria-label="Bullet List" data-tool-name="Lore List">☰</button>
-      </details>
-
-      <details class="tool-menu">
-        <summary title="Linking Tools" aria-label="Linking Tools">🔗</summary>
-        <button id="linkButton" type="button" title="Create Link" aria-label="Create Link" data-tool-name="Path Link">🔗</button>
-        <button id="editLinkButton" type="button" title="Edit Link" aria-label="Edit Link" data-tool-name="Link Smith">🛠️</button>
-        <button id="pillLinkButton" type="button" title="Convert Selection to Pill" aria-label="Convert Selection to Pill" data-tool-name="Pill Gate">💊</button>
-        <button id="removeLinkButton" type="button" title="Remove Link" aria-label="Remove Link" data-tool-name="Link Breaker">❌</button>
-        <button id="bookmarkButton" type="button" title="Bookmark" aria-label="Bookmark" data-tool-name="Anchor Rune">⚓</button>
-      </details>
-
-      <details class="tool-menu">
-        <summary title="Insert Tools" aria-label="Insert Tools">🧰</summary>
-        <button id="tableButton" type="button" title="Table" aria-label="Table" data-tool-name="Lore Table">▦</button>
-        <button id="imageButton" type="button" title="Image" aria-label="Image" data-tool-name="Image Embed">🖼️</button>
-        <button id="emojiButton" type="button" title="Emoji" aria-label="Emoji" data-tool-name="Emoji Spark">✨</button>
-        <button id="blockButton" type="button" title="Transclusion Blocks" aria-label="Transclusion Blocks" data-tool-name="Canon Block" data-icon-src="lanternlogo small.png">▣</button>
-      </details>
-
-      <button id="helpButton" class="icon-button" type="button" title="Capsanoto Help" aria-label="Capsanoto Help" data-tool-name="Guidebook">❔</button>
+      <button data-command="bold" type="button" title="Bold" aria-label="Bold" data-tool-name="Bold Mark"><strong>B</strong></button>
+      <button data-command="italic" type="button" title="Italic" aria-label="Italic" data-tool-name="Italic Mark"><em>I</em></button>
+      <button data-block="h1" type="button" title="Heading 1" aria-label="Heading 1" data-tool-name="Chapter Heading">H1</button>
+      <button data-block="h2" type="button" title="Heading 2" aria-label="Heading 2" data-tool-name="Section Heading">H2</button>
+      <button data-block="p" type="button" title="Paragraph" aria-label="Paragraph" data-tool-name="Body Text">¶</button>
+      <button data-command="insertUnorderedList" type="button" title="Bullet List" aria-label="Bullet List" data-tool-name="Lore List">☰</button>
+      <button id="linkButton" type="button" title="Create Link" aria-label="Create Link" data-tool-name="Path Link">🔗</button>
+      <button id="editLinkButton" type="button" title="Edit Link" aria-label="Edit Link" data-tool-name="Link Smith">🛠️</button>
+      <button id="pillLinkButton" type="button" title="Convert Selection to Pill" aria-label="Convert Selection to Pill" data-tool-name="Pill Gate">💊</button>
+      <button id="removeLinkButton" type="button" title="Remove Link" aria-label="Remove Link" data-tool-name="Link Breaker">❌</button>
+      <button id="bookmarkButton" type="button" title="Bookmark" aria-label="Bookmark" data-tool-name="Anchor Rune">⚓</button>
+      <button id="tableButton" type="button" title="Table" aria-label="Table" data-tool-name="Lore Table">▦</button>
+      <button id="imageButton" type="button" title="Image" aria-label="Image" data-tool-name="Image Embed">🖼️</button>
+      <button id="emojiButton" type="button" title="Emoji" aria-label="Emoji" data-tool-name="Emoji Spark">✨</button>
+      <button id="blockButton" type="button" title="Transclusion Blocks" aria-label="Transclusion Blocks" data-tool-name="Canon Block" data-icon-src="lanternlogo small.png">▣</button>
       <input id="imageInput" type="file" accept="image/*" hidden>
     </section>
 
@@ -76,6 +62,55 @@
 
     <article id="editor" class="editor" contenteditable="true" spellcheck="true" aria-label="Writing area"></article>
 
+    <aside id="settingsPanel" class="settings-panel" aria-label="Capsanoto settings" hidden>
+      <header>
+        <div>
+          <p class="eyebrow">Capsanoto Control Room</p>
+          <h2>Settings</h2>
+        </div>
+        <button id="closeSettingsPanel" class="icon-button" type="button" aria-label="Close settings">×</button>
+      </header>
+
+      <section class="settings-section">
+        <h3>Smart Export Builder</h3>
+        <p class="panel-help">Choose documents and/or transclusion blocks, reorder them as vertical pills, then export a Caps file, text, HTML, or Word-compatible document.</p>
+        <div class="export-picker">
+          <select id="exportSourceType" aria-label="Export source type">
+            <option value="document">Document</option>
+            <option value="block">Transclusion</option>
+          </select>
+          <select id="exportSourceSelect" aria-label="Export source"></select>
+          <button id="addExportItemButton" type="button">Add</button>
+        </div>
+        <div id="exportQueue" class="export-queue" aria-label="Selected export order"></div>
+        <div class="export-actions">
+          <button id="exportCapsButton" type="button">Caps</button>
+          <button id="exportTxtButton" type="button">TXT</button>
+          <button id="exportHtmlButton" type="button">HTML</button>
+          <button id="exportDocButton" type="button">Word</button>
+        </div>
+      </section>
+
+      <section class="settings-section design-section">
+        <h3>Element Designer</h3>
+        <label>Button Color <input id="designButtonBg" type="color" value="#2c2c2c"></label>
+        <label>Border Color <input id="designBorderColor" type="color" value="#d88a64"></label>
+        <label>Text Color <input id="designTextColor" type="color" value="#f3ead7"></label>
+        <label>Text Size <input id="designFontSize" type="number" min="10" max="32" value="14"></label>
+        <label>Bold <input id="designBold" type="checkbox" checked></label>
+        <label>Background Image URL <input id="designBgImage" type="text" placeholder="wallpapersm.jpg or https://..."></label>
+        <div class="design-preview"><button type="button">Preview Button</button></div>
+        <div class="export-actions">
+          <button id="applyDesignButton" type="button">Apply</button>
+          <button id="resetDesignButton" type="button">Reset</button>
+        </div>
+      </section>
+
+      <section class="settings-section settings-links">
+        <button id="helpButton" type="button">❔ Help / Release Notes</button>
+        <button id="logoutButton" type="button">🔒 Logout</button>
+      </section>
+    </aside>
 
     <aside id="helpPanel" class="help-panel" aria-label="Capsanoto guidebook" hidden>
       <header>

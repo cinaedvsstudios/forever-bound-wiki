@@ -3,6 +3,7 @@ const AUTH_KEY = "forever-bound-authenticated";
 const AUTH_CONFIG_PATH = "config/auth.json";
 const EDITOR_ENTRY = "editor.html";
 const AUTOSAVE_DELAY = 600;
+const DESIGN_KEY = "capsanoto-design-settings-v1";
 
 const state = {
   documents: [],
@@ -12,6 +13,8 @@ const state = {
   pendingBookmarkId: "",
   suppressInput: false,
   sharedPassword: "",
+  exportItems: [],
+  draggedExportIndex: null,
 };
 
 const els = {
@@ -23,7 +26,9 @@ const els = {
   documentSelect: document.querySelector("#documentSelect"),
   newDocumentButton: document.querySelector("#newDocumentButton"),
   saveStatus: document.querySelector("#saveStatus"),
-  exportButton: document.querySelector("#exportButton"),
+  settingsButton: document.querySelector("#settingsButton"),
+  settingsPanel: document.querySelector("#settingsPanel"),
+  closeSettingsPanel: document.querySelector("#closeSettingsPanel"),
   logoutButton: document.querySelector("#logoutButton"),
   toolbar: document.querySelector(".toolbar"),
   linkButton: document.querySelector("#linkButton"),
@@ -37,6 +42,22 @@ const els = {
   emojiButton: document.querySelector("#emojiButton"),
   blockButton: document.querySelector("#blockButton"),
   helpButton: document.querySelector("#helpButton"),
+  exportSourceType: document.querySelector("#exportSourceType"),
+  exportSourceSelect: document.querySelector("#exportSourceSelect"),
+  addExportItemButton: document.querySelector("#addExportItemButton"),
+  exportQueue: document.querySelector("#exportQueue"),
+  exportCapsButton: document.querySelector("#exportCapsButton"),
+  exportTxtButton: document.querySelector("#exportTxtButton"),
+  exportHtmlButton: document.querySelector("#exportHtmlButton"),
+  exportDocButton: document.querySelector("#exportDocButton"),
+  designButtonBg: document.querySelector("#designButtonBg"),
+  designBorderColor: document.querySelector("#designBorderColor"),
+  designTextColor: document.querySelector("#designTextColor"),
+  designFontSize: document.querySelector("#designFontSize"),
+  designBold: document.querySelector("#designBold"),
+  designBgImage: document.querySelector("#designBgImage"),
+  applyDesignButton: document.querySelector("#applyDesignButton"),
+  resetDesignButton: document.querySelector("#resetDesignButton"),
   helpPanel: document.querySelector("#helpPanel"),
   closeHelpPanel: document.querySelector("#closeHelpPanel"),
   bookmarkBar: document.querySelector("#bookmarkBar"),
@@ -98,6 +119,7 @@ function bindAuthEvents() {
 async function startEditor() {
   setAuthVisibility(true);
   await loadWorkspace();
+  applySavedDesignSettings();
   hydrateIconButtons();
   bindEditorEvents();
   applyRouteToState();
@@ -198,9 +220,22 @@ function bindEditorEvents() {
   els.imageButton.addEventListener("click", () => els.imageInput.click());
   els.imageInput.addEventListener("change", embedSelectedImage);
   els.emojiButton.addEventListener("click", () => insertHtml("✨"));
-  els.exportButton.addEventListener("click", exportWorkspace);
+  els.settingsButton.addEventListener("click", () => toggleSettingsPanel(true));
+  els.closeSettingsPanel.addEventListener("click", () => toggleSettingsPanel(false));
   els.helpButton.addEventListener("click", () => toggleHelpPanel(true));
   els.closeHelpPanel.addEventListener("click", () => toggleHelpPanel(false));
+  els.exportSourceType.addEventListener("change", renderExportSourceSelect);
+  els.addExportItemButton.addEventListener("click", addExportItem);
+  els.exportCapsButton.addEventListener("click", () => exportSmartBundle("caps"));
+  els.exportTxtButton.addEventListener("click", () => exportSmartBundle("txt"));
+  els.exportHtmlButton.addEventListener("click", () => exportSmartBundle("html"));
+  els.exportDocButton.addEventListener("click", () => exportSmartBundle("doc"));
+  els.exportQueue.addEventListener("dragstart", handleExportDragStart);
+  els.exportQueue.addEventListener("dragover", handleExportDragOver);
+  els.exportQueue.addEventListener("drop", handleExportDrop);
+  els.exportQueue.addEventListener("click", handleExportQueueClick);
+  els.applyDesignButton.addEventListener("click", saveDesignSettings);
+  els.resetDesignButton.addEventListener("click", resetDesignSettings);
 
   els.bookmarkBar.addEventListener("click", (event) => {
     const copyButton = event.target.closest("button[data-copy-bookmark]");
@@ -294,6 +329,8 @@ function renderAll() {
   renderActiveDocument();
   renderBookmarks();
   renderBlockList();
+  renderExportSourceSelect();
+  renderExportQueue();
 }
 
 function renderDocumentSelect() {
@@ -523,6 +560,15 @@ function insertHtml(html) {
   syncAndSave("Content inserted");
 }
 
+function toggleSettingsPanel(show) {
+  els.settingsPanel.hidden = !show;
+  if (show) {
+    renderExportSourceSelect();
+    renderExportQueue();
+    loadDesignForm();
+  }
+}
+
 function toggleHelpPanel(show) {
   els.helpPanel.hidden = !show;
 }
@@ -605,6 +651,146 @@ function markDirty(message) {
 function persistNow(message) {
   localStorage.setItem(STORAGE_KEY, serializedWorkspace());
   setStatus(message, "saved");
+}
+
+
+function renderExportSourceSelect() {
+  if (!els.exportSourceSelect) return;
+  const type = els.exportSourceType.value;
+  const sources = type === "block"
+    ? Object.values(state.blocks).map((block) => ({ id: block.id, label: block.id }))
+    : state.documents.map((doc) => ({ id: doc.id, label: doc.title }));
+  els.exportSourceSelect.innerHTML = sources.map((source) => `<option value="${escapeAttr(source.id)}">${escapeHtml(source.label)}</option>`).join("");
+}
+
+function addExportItem() {
+  const type = els.exportSourceType.value;
+  const id = els.exportSourceSelect.value;
+  if (!id) return;
+  state.exportItems.push({ type, id });
+  renderExportQueue();
+}
+
+function renderExportQueue() {
+  if (!els.exportQueue) return;
+  els.exportQueue.innerHTML = state.exportItems.length ? state.exportItems.map((item, index) => {
+    const label = item.type === "block" ? item.id : (state.documents.find((doc) => doc.id === item.id)?.title || item.id);
+    return `<div class="export-pill" draggable="true" data-export-index="${index}"><span>${escapeHtml(item.type === "block" ? "▣" : "📄")} ${escapeHtml(label)}</span><button type="button" data-remove-export="${index}" aria-label="Remove ${escapeAttr(label)}">×</button></div>`;
+  }).join("") : `<p class="panel-help">No export pieces selected yet.</p>`;
+}
+
+function handleExportDragStart(event) {
+  const pill = event.target.closest(".export-pill");
+  if (!pill) return;
+  state.draggedExportIndex = Number(pill.dataset.exportIndex);
+}
+
+function handleExportDragOver(event) {
+  if (event.target.closest(".export-pill")) event.preventDefault();
+}
+
+function handleExportDrop(event) {
+  const pill = event.target.closest(".export-pill");
+  if (!pill || state.draggedExportIndex === null) return;
+  event.preventDefault();
+  const targetIndex = Number(pill.dataset.exportIndex);
+  const [item] = state.exportItems.splice(state.draggedExportIndex, 1);
+  state.exportItems.splice(targetIndex, 0, item);
+  state.draggedExportIndex = null;
+  renderExportQueue();
+}
+
+function handleExportQueueClick(event) {
+  const button = event.target.closest("button[data-remove-export]");
+  if (!button) return;
+  state.exportItems.splice(Number(button.dataset.removeExport), 1);
+  renderExportQueue();
+}
+
+function exportSmartBundle(format) {
+  const items = state.exportItems.length ? state.exportItems : [{ type: "document", id: activeDocument().id }];
+  const pieces = items.map(resolveExportPiece).filter(Boolean);
+  const baseName = `capsanoto-${new Date().toISOString().slice(0, 10)}`;
+  if (format === "caps") {
+    downloadFile(`${baseName}.caps.json`, JSON.stringify({ schemaVersion: 1, type: "caps-file", createdAt: new Date().toISOString(), pieces }, null, 2), "application/json");
+  } else if (format === "txt") {
+    downloadFile(`${baseName}.txt`, pieces.map((piece) => `${piece.title}\n${textFromHtml(piece.html)}`).join("\n\n---\n\n"), "text/plain");
+  } else {
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>${escapeHtml(baseName)}</title></head><body>${pieces.map((piece) => `<section data-caps-type="${piece.type}" data-caps-id="${escapeAttr(piece.id)}"><h1>${escapeHtml(piece.title)}</h1>${piece.html}</section>`).join("\n")}</body></html>`;
+    downloadFile(`${baseName}.${format === "doc" ? "doc" : "html"}`, html, format === "doc" ? "application/msword" : "text/html");
+  }
+  setStatus(`Exported ${format.toUpperCase()}`, "saved");
+}
+
+function resolveExportPiece(item) {
+  if (item.type === "block") {
+    const block = state.blocks[item.id];
+    return block ? { type: "block", id: block.id, title: block.id, html: `<p>${sanitizeBlockContent(block.content)}</p>` } : null;
+  }
+  const doc = state.documents.find((entry) => entry.id === item.id);
+  return doc ? { type: "document", id: doc.id, title: doc.title, html: renderTransclusions(doc.content) } : null;
+}
+
+function downloadFile(filename, content, type) {
+  const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+function textFromHtml(html) {
+  const div = document.createElement("div");
+  div.innerHTML = html;
+  return div.textContent || "";
+}
+
+function loadDesignForm() {
+  const settings = currentDesignSettings();
+  els.designButtonBg.value = settings.buttonBg;
+  els.designBorderColor.value = settings.borderColor;
+  els.designTextColor.value = settings.textColor;
+  els.designFontSize.value = settings.fontSize;
+  els.designBold.checked = settings.bold;
+  els.designBgImage.value = settings.bgImage;
+}
+
+function currentDesignSettings() {
+  return JSON.parse(localStorage.getItem(DESIGN_KEY) || "null") || defaultDesignSettings();
+}
+
+function defaultDesignSettings() {
+  return { buttonBg: "#2c2c2c", borderColor: "#d88a64", textColor: "#f3ead7", fontSize: "14", bold: true, bgImage: "wallpapersm.jpg" };
+}
+
+function saveDesignSettings() {
+  const settings = { buttonBg: els.designButtonBg.value, borderColor: els.designBorderColor.value, textColor: els.designTextColor.value, fontSize: els.designFontSize.value || "14", bold: els.designBold.checked, bgImage: els.designBgImage.value.trim() };
+  localStorage.setItem(DESIGN_KEY, JSON.stringify(settings));
+  applyDesignSettings(settings);
+  setStatus("Design applied", "saved");
+}
+
+function resetDesignSettings() {
+  localStorage.removeItem(DESIGN_KEY);
+  applyDesignSettings(defaultDesignSettings());
+  loadDesignForm();
+  setStatus("Design reset", "saved");
+}
+
+function applySavedDesignSettings() {
+  applyDesignSettings(currentDesignSettings());
+}
+
+function applyDesignSettings(settings) {
+  const root = document.documentElement;
+  root.style.setProperty("--button", settings.buttonBg);
+  root.style.setProperty("--line", settings.borderColor);
+  root.style.setProperty("--ink", settings.textColor);
+  root.style.setProperty("--button-font-size", `${settings.fontSize}px`);
+  root.style.setProperty("--button-font-weight", settings.bold ? "800" : "500");
+  root.style.setProperty("--app-bg-image", settings.bgImage ? `url("${settings.bgImage}")` : "none");
 }
 
 function exportWorkspace() {
