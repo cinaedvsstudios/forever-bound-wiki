@@ -114,6 +114,7 @@ async function boot() {
   } catch (error) {
     console.error(error);
     localStorage.removeItem(AUTH_KEY);
+    setPasswordFormState(true);
     showPasswordScreen("Unable to load password settings. Check config/auth.json.");
     return;
   }
@@ -133,10 +134,49 @@ async function boot() {
 }
 
 async function loadAuthConfig() {
-  const response = await fetch(AUTH_CONFIG_PATH, { cache: "no-store" });
-  if (!response.ok) throw new Error(`Unable to load ${AUTH_CONFIG_PATH}`);
-  const config = await response.json();
-  state.sharedPassword = config.sharedPassword ?? "";
+  const errors = [];
+  for (const url of authConfigUrls()) {
+    try {
+      const response = await fetch(url, { cache: "no-store" });
+      if (!response.ok) throw new Error(`${response.status} ${response.statusText}`.trim());
+      const config = await response.json();
+      if (config.sharedPassword) {
+        state.sharedPassword = config.sharedPassword;
+        return;
+      }
+      throw new Error("Missing sharedPassword");
+    } catch (error) {
+      errors.push(`${url}: ${error.message}`);
+    }
+  }
+
+  const fallbackPassword = els.passwordForm.dataset.sharedPassword;
+  if (fallbackPassword) {
+    console.warn(`Using embedded Capsanoto password fallback after config load failed: ${errors.join(" | ")}`);
+    state.sharedPassword = fallbackPassword;
+    return;
+  }
+
+  throw new Error(`Unable to load ${AUTH_CONFIG_PATH}. Tried ${errors.join(" | ")}`);
+}
+
+function authConfigUrls() {
+  const urls = [];
+  addAuthConfigUrl(urls, AUTH_CONFIG_PATH, document.baseURI);
+  addAuthConfigUrl(urls, AUTH_CONFIG_PATH, location.href);
+  const scriptSrc = document.currentScript?.src || document.querySelector('script[src$="app.js"]')?.src;
+  if (scriptSrc) addAuthConfigUrl(urls, AUTH_CONFIG_PATH, scriptSrc);
+  if (location.origin && location.origin !== "null") addAuthConfigUrl(urls, `/${AUTH_CONFIG_PATH}`, location.origin);
+  return urls;
+}
+
+function addAuthConfigUrl(urls, path, base) {
+  try {
+    const url = new URL(path, base).href;
+    if (!urls.includes(url)) urls.push(url);
+  } catch (error) {
+    console.warn("Skipping invalid auth config URL", path, base, error);
+  }
 }
 
 function bindAuthEvents() {
