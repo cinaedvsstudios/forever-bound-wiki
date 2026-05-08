@@ -1,39 +1,32 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "updatedAt": "2026-05-07T00:00:00.000Z",
   "documents": [
     {
       "id": "project-overview",
       "title": "Project Overview",
-      "type": "lore-note",
-      "status": "canon",
       "tags": ["overview", "worldbuilding", "editor"],
-      "template": "Lore Note",
       "updatedAt": "2026-05-07T00:00:00.000Z",
-      "summary": "A home document for the custom Forever Bound lore editor.",
-      "content": "<h1>Forever Bound Lore Workspace</h1><p>This workspace is a lightweight browser-based editor for long-form worldbuilding, interconnected lore, and episode planning.</p><h2>Goals</h2><ul><li>Fast document switching without page reloads.</li><li>Autosaved rich-text editing.</li><li>Searchable structured lore metadata.</li><li>Portable HTML/JSON content that can live directly in the repository.</li></ul><p>Use <strong>internal references</strong> like <code>[[Episode 01]]</code> or <code>[[Ironvale]]</code> to mark future links between lore documents.</p>"
+      "content": "<h1 id=\"writing-room\">Forever Bound Writing Room</h1><p>This is a minimal browser-based writing space for long-form lore and interconnected worldbuilding. The interface stays out of the way until formatting, links, bookmarks, or reusable blocks are needed.</p><h2 id=\"bookmarks\">Bookmarks</h2><p>Any heading with an ID becomes a bookmark pill under the toolbar. Use the Bookmark button to create a new jump target with a direct URL anchor.</p><h2 id=\"links-and-pills\">Links and Pill Links</h2><p>Normal hyperlinks work inside the document, and selected text can also become a <a class=\"pill-link\" href=\"#episode-01\">rounded pill-style document link</a>.</p><h2 id=\"transclusions\">Transclusions</h2><p>Reusable content blocks appear wherever their token is used. Example:</p><p>{{Item-Runestones}}</p>"
     },
     {
       "id": "episode-01",
       "title": "Episode 01",
-      "type": "episode",
-      "status": "draft",
       "tags": ["season-1", "episode"],
-      "template": "Episode Outline",
       "updatedAt": "2026-05-07T00:00:00.000Z",
-      "summary": "Starter episode outline migrated from the prior Season 1 navigation structure.",
-      "content": "<h1>Episode 01</h1><h2>Synopsis</h2><p>Write the episode summary here.</p><h2>Key Lore</h2><table><thead><tr><th>Element</th><th>Notes</th></tr></thead><tbody><tr><td>Characters</td><td>Add character beats.</td></tr><tr><td>Locations</td><td>Add location notes.</td></tr></tbody></table><h2>Canon Decisions</h2><p>Track important continuity decisions here.</p>"
-    },
-    {
-      "id": "ironvale",
-      "title": "Ironvale",
-      "type": "location",
-      "status": "stub",
-      "tags": ["location", "reference"],
-      "template": "Location Profile",
-      "updatedAt": "2026-05-07T00:00:00.000Z",
-      "summary": "Example location profile for testing search, metadata, and hover previews.",
-      "content": "<h1>Ironvale</h1><p><em>A sample location entry.</em></p><h2>Overview</h2><p>Describe the region, tone, conflicts, and recurring visual motifs.</p><h2>Connections</h2><ul><li>Referenced by [[Episode 01]].</li><li>Related characters can be added as backlinks later.</li></ul>"
+      "content": "<h1 id=\"episode-01\">Episode 01</h1><p>Draft the episode here in a clean writing environment.</p><h2 id=\"synopsis\">Synopsis</h2><p>Write the episode summary.</p><h2 id=\"canon-notes\">Canon Notes</h2><p>Use reusable blocks for shared lore, such as {{Location-Ironvale}}.</p><h2 id=\"structure\">Structure</h2><table><thead><tr><th>Beat</th><th>Notes</th></tr></thead><tbody><tr><td>Opening</td><td></td></tr><tr><td>Turn</td><td></td></tr><tr><td>Ending</td><td></td></tr></tbody></table>"
     }
-  ]
+  ],
+  "blocks": {
+    "Item-Runestones": {
+      "id": "Item-Runestones",
+      "content": "Runestones are reusable canon items that can be referenced across lore documents without duplicating text.",
+      "updatedAt": "2026-05-07T00:00:00.000Z"
+    },
+    "Location-Ironvale": {
+      "id": "Location-Ironvale",
+      "content": "Ironvale is a sample location block used to demonstrate how edits update every {{Location-Ironvale}} reference.",
+      "updatedAt": "2026-05-07T00:00:00.000Z"
+    }
+  }
 }
