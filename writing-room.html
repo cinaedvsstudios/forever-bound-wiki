@@ -48,8 +48,10 @@
 
       <details class="tool-menu">
         <summary title="Linking Tools" aria-label="Linking Tools">🔗</summary>
-        <button id="linkButton" type="button" title="Hyperlink" aria-label="Hyperlink" data-tool-name="Path Link">🔗</button>
-        <button id="pillLinkButton" type="button" title="Pill Link" aria-label="Pill Link" data-tool-name="Pill Gate">💊</button>
+        <button id="linkButton" type="button" title="Create Link" aria-label="Create Link" data-tool-name="Path Link">🔗</button>
+        <button id="editLinkButton" type="button" title="Edit Link" aria-label="Edit Link" data-tool-name="Link Smith">🛠️</button>
+        <button id="pillLinkButton" type="button" title="Convert Selection to Pill" aria-label="Convert Selection to Pill" data-tool-name="Pill Gate">💊</button>
+        <button id="removeLinkButton" type="button" title="Remove Link" aria-label="Remove Link" data-tool-name="Link Breaker">❌</button>
         <button id="bookmarkButton" type="button" title="Bookmark" aria-label="Bookmark" data-tool-name="Anchor Rune">⚓</button>
       </details>
 
@@ -93,7 +95,10 @@
           <dt>Document Switcher</dt><dd>Moves between lore documents loaded from <code>?doc=Document-ID</code>.</dd>
           <dt>Command Bar</dt><dd>The single-row toolbar. Related commands are grouped into dropdowns.</dd>
           <dt>Anchor Rune</dt><dd>Creates a heading bookmark with a direct section URL.</dd>
-          <dt>Pill Gate</dt><dd>Turns selected text into a rounded hyperlink to a document, bookmark, or external URL.</dd>
+          <dt>Path Link</dt><dd>Creates a portable hyperlink to a document, bookmark, transclusion block, or external URL.</dd>
+          <dt>Link Smith</dt><dd>Edits the selected link target without recreating the link text.</dd>
+          <dt>Pill Gate</dt><dd>Turns selected text or an existing link into a rounded pill hyperlink.</dd>
+          <dt>Link Breaker</dt><dd>Removes the selected link while keeping its visible text.</dd>
           <dt>Canon Block</dt><dd>Reusable transclusion content referenced with <code>{{Item-Runestones}}</code>.</dd>
           <dt>Archive Export</dt><dd>Downloads the current local workspace JSON for backup or later sync.</dd>
         </dl>

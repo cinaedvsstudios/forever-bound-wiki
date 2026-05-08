@@ -27,7 +27,9 @@ const els = {
   logoutButton: document.querySelector("#logoutButton"),
   toolbar: document.querySelector(".toolbar"),
   linkButton: document.querySelector("#linkButton"),
+  editLinkButton: document.querySelector("#editLinkButton"),
   pillLinkButton: document.querySelector("#pillLinkButton"),
+  removeLinkButton: document.querySelector("#removeLinkButton"),
   bookmarkButton: document.querySelector("#bookmarkButton"),
   tableButton: document.querySelector("#tableButton"),
   imageButton: document.querySelector("#imageButton"),
@@ -188,7 +190,9 @@ function bindEditorEvents() {
   });
 
   els.linkButton.addEventListener("click", createHyperlink);
+  els.editLinkButton.addEventListener("click", editSelectedLink);
   els.pillLinkButton.addEventListener("click", createPillLink);
+  els.removeLinkButton.addEventListener("click", removeSelectedLink);
   els.bookmarkButton.addEventListener("click", insertBookmark);
   els.tableButton.addEventListener("click", insertTable);
   els.imageButton.addEventListener("click", () => els.imageInput.click());
@@ -220,6 +224,9 @@ function bindEditorEvents() {
     if (!button) return;
     selectBlock(button.dataset.blockId);
   });
+
+  els.editor.addEventListener("click", handleEditorLinkClick);
+  els.editor.addEventListener("mouseover", handleEditorLinkPreview);
 
   window.addEventListener("hashchange", openFromRoute);
   window.addEventListener("popstate", openFromRoute);
@@ -362,34 +369,120 @@ function formatBlock(tag) {
 }
 
 function createHyperlink() {
-  const url = prompt("Link URL, bookmark anchor, or document URL");
-  if (!url) return;
-  runLinkCommand(url, "");
+  const target = prompt("Link target: document id, #bookmark, block:Item-Name, {{Item-Name}}, or https:// URL");
+  if (!target) return;
+  runLinkCommand(target, { pill: false });
 }
 
 function createPillLink() {
-  const url = prompt("Pill destination: document id, #bookmark, or https:// URL");
-  if (!url) return;
-  runLinkCommand(normalizeLinkTarget(url), "pill-link");
+  const existingLink = currentLink();
+  if (existingLink) {
+    existingLink.classList.add("pill-link");
+    existingLink.dataset.linkStyle = "pill";
+    syncAndSave("Converted link to pill");
+    return;
+  }
+
+  const target = prompt("Pill target: document id, #bookmark, block:Item-Name, {{Item-Name}}, or https:// URL");
+  if (!target) return;
+  runLinkCommand(target, { pill: true });
 }
 
-function runLinkCommand(url, className) {
-  els.editor.focus();
-  document.execCommand("createLink", false, url);
+function editSelectedLink() {
   const link = currentLink();
-  if (link && className) link.classList.add(className);
-  syncAndSave(className ? "Pill link created" : "Link created");
+  if (!link) {
+    setStatus("Select a link to edit", "dirty");
+    return;
+  }
+  const currentTarget = link.dataset.linkTarget || link.getAttribute("href") || "";
+  const target = prompt("Edit link target", currentTarget);
+  if (!target) return;
+  applyLinkTarget(link, target, link.classList.contains("pill-link"));
+  syncAndSave("Link updated");
+}
+
+function removeSelectedLink() {
+  const link = currentLink();
+  if (!link) {
+    setStatus("Select a link to remove", "dirty");
+    return;
+  }
+  link.replaceWith(document.createTextNode(link.textContent));
+  syncAndSave("Link removed");
+}
+
+function runLinkCommand(target, options = {}) {
+  const normalized = normalizeLinkTarget(target);
+  els.editor.focus();
+  document.execCommand("createLink", false, normalized.href);
+  const matchingLinks = [...els.editor.querySelectorAll(`a[href="${cssString(normalized.href)}"]`)];
+  const link = currentLink() || matchingLinks[matchingLinks.length - 1];
+  if (link) applyLinkMetadata(link, normalized, options.pill);
+  syncAndSave(options.pill ? "Pill link created" : "Link created");
+}
+
+function applyLinkTarget(link, target, keepPill = false) {
+  applyLinkMetadata(link, normalizeLinkTarget(target), keepPill);
+}
+
+function applyLinkMetadata(link, normalized, pill = false) {
+  link.href = normalized.href;
+  link.dataset.linkType = normalized.type;
+  link.dataset.linkTarget = normalized.target;
+  link.dataset.previewType = normalized.type;
+  link.dataset.previewTarget = normalized.target;
+  link.title = normalized.label;
+  link.classList.toggle("pill-link", Boolean(pill));
+  if (pill) link.dataset.linkStyle = "pill";
+  else delete link.dataset.linkStyle;
 }
 
 function currentLink() {
   const selection = window.getSelection();
-  if (!selection.rangeCount) return null;
-  let node = selection.anchorNode;
-  while (node && node !== els.editor) {
-    if (node.nodeType === Node.ELEMENT_NODE && node.matches("a")) return node;
-    node = node.parentNode;
+  if (selection.rangeCount) {
+    let node = selection.anchorNode;
+    while (node && node !== els.editor) {
+      if (node.nodeType === Node.ELEMENT_NODE && node.matches("a")) return node;
+      node = node.parentNode;
+    }
+    const selectedElement = selection.getRangeAt(0).commonAncestorContainer;
+    if (selectedElement.nodeType === Node.ELEMENT_NODE) {
+      const nestedLink = selectedElement.closest?.("a") || selectedElement.querySelector?.("a");
+      if (nestedLink) return nestedLink;
+    }
   }
-  return els.editor.querySelector("a[href]:focus");
+  return document.activeElement?.closest?.("a") || null;
+}
+
+function handleEditorLinkClick(event) {
+  const link = event.target.closest("a[data-link-type='block']");
+  if (!link) return;
+  event.preventDefault();
+  toggleBlockPanel(true);
+  selectBlock(link.dataset.linkTarget);
+  setStatus(`Opened block ${link.dataset.linkTarget}`, "saved");
+}
+
+function handleEditorLinkPreview(event) {
+  const link = event.target.closest("a[data-preview-type]");
+  if (!link) return;
+  const preview = getLinkPreviewData(link);
+  if (preview) link.title = preview.summary;
+}
+
+function getLinkPreviewData(link) {
+  const type = link.dataset.previewType;
+  const target = link.dataset.previewTarget;
+  if (type === "document") {
+    const doc = findDocumentByRouteId(target);
+    return doc ? { type, title: doc.title, summary: `Document: ${doc.title}` } : null;
+  }
+  if (type === "bookmark") return { type, title: target, summary: `Bookmark: ${target}` };
+  if (type === "block") {
+    const block = state.blocks[target];
+    return block ? { type, title: block.id, summary: `Block: ${block.id} — ${block.content.slice(0, 120)}` } : null;
+  }
+  return null;
 }
 
 function insertBookmark() {
@@ -602,10 +695,46 @@ async function copyText(value) {
 }
 
 function normalizeLinkTarget(value) {
-  if (/^(https?:|mailto:)/i.test(value)) return value;
-  if (value.startsWith("#")) return documentUrl(activeDocument().id, value.slice(1));
-  const doc = findDocumentByRouteId(value);
-  return doc ? documentUrl(doc.id) : value;
+  const raw = String(value || "").trim();
+  if (/^(https?:|mailto:)/i.test(raw)) {
+    return { type: "external", target: raw, href: raw, label: raw };
+  }
+
+  const blockToken = raw.match(/^\{\{([A-Za-z]+-[A-Za-z0-9-]+)\}\}$/);
+  const blockTarget = raw.startsWith("block:") ? raw.slice(6) : blockToken?.[1];
+  if (blockTarget) {
+    return { type: "block", target: blockTarget, href: `#block-${encodeURIComponent(blockTarget)}`, label: `Block: ${blockTarget}` };
+  }
+
+  if (raw.startsWith("#")) {
+    const bookmark = raw.slice(1);
+    return { type: "bookmark", target: bookmark, href: documentUrl(activeDocument().id, bookmark), label: `Bookmark: ${bookmark}` };
+  }
+
+  const localBookmark = findBookmarkId(raw);
+  if (localBookmark) {
+    return { type: "bookmark", target: localBookmark, href: documentUrl(activeDocument().id, localBookmark), label: `Bookmark: ${localBookmark}` };
+  }
+
+  const [docPart, bookmarkPart] = raw.split("#");
+  const doc = findDocumentByRouteId(docPart);
+  if (doc) {
+    return bookmarkPart
+      ? { type: "bookmark", target: bookmarkPart, href: documentUrl(doc.id, bookmarkPart), label: `${doc.title}#${bookmarkPart}` }
+      : { type: "document", target: doc.id, href: documentUrl(doc.id), label: `Document: ${doc.title}` };
+  }
+
+  return { type: "external", target: raw, href: raw, label: raw };
+}
+
+function findBookmarkId(value) {
+  const requested = slugify(value);
+  const bookmark = getBookmarks().find((item) => item.id === value || slugify(item.id) === requested || slugify(item.label) === requested);
+  return bookmark?.id || "";
+}
+
+function cssString(value) {
+  return String(value).replace(/\\/g, "\\\\").replace(/"/g, '\\"');
 }
 
 function uniqueBookmarkId(base) {

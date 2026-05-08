@@ -159,3 +159,23 @@ select:focus, input:focus, textarea:focus, .editor:focus { border-color:var(--ac
   .document-controls select { width:100%; }
   .editor { margin-bottom:4rem; }
 }
+.editor .pill-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.16rem 0.68rem;
+  margin: 0 0.08rem;
+  border-radius: 999px;
+  color: #111;
+  background: linear-gradient(180deg, #f0b17d, var(--accent));
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.35);
+  font-weight: 800;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.editor .pill-link::before { content: "↗"; font-size: 0.78em; opacity: 0.72; }
+.editor .pill-link[data-link-type="block"]::before { content: "▣"; }
+.editor .pill-link[data-link-type="bookmark"]::before { content: "⚓"; }
+.editor .pill-link[data-link-type="document"]::before { content: "📄"; }
+.editor a[data-preview-type] { cursor: pointer; }
