@@ -24,7 +24,7 @@
     <header class="writer-header toolbar" aria-label="Capsanoto command bar">
       <div class="document-controls">
         <strong class="app-name">Capsanoto</strong>
-        <button id="writingRoomButton" class="writing-room-button" type="button" aria-expanded="false" aria-controls="writingRoomPanel">Forever Bound Writing Room</button>
+        <button id="writingRoomButton" class="writing-room-button" type="button" aria-expanded="false" aria-controls="writingRoomPanel">Writing Room</button>
         <label for="documentSelect" class="sr-only">Current document</label>
         <select id="documentSelect" title="Document Switcher" hidden></select>
         <button id="newDocumentButton" class="icon-button" type="button" title="New Document" aria-label="New Document" data-tool-name="Document Forge">📄</button>
@@ -99,9 +99,9 @@
           <p class="eyebrow">Writing Room</p>
           <h2>Forever Bound Writing Room</h2>
         </div>
-        <button id="closeWritingRoomPanel" class="icon-button" type="button" aria-label="Close Writing Room">×</button>
+        <div class="panel-header-actions"><button id="editWritingRoomButton" class="icon-button" type="button" aria-pressed="false" aria-label="Edit filing cabinet">✎</button><button id="closeWritingRoomPanel" class="icon-button" type="button" aria-label="Close Writing Room">×</button></div>
       </header>
-      <div id="writingRoomCards" class="writing-room-cards"></div>
+      <div id="writingRoomEditBar" class="writing-room-editbar" hidden><button id="newFolderButton" type="button">+ Folder</button><button id="newTabButton" type="button">+ Tab</button><button id="trashCanButton" type="button">🗑 Trash</button></div><div id="writingRoomCards" class="writing-room-cards"></div>
     </aside>
 
     <nav id="bookmarkBar" class="bookmark-bar" aria-label="Document bookmarks" hidden></nav>
@@ -151,36 +151,36 @@
       <section class="settings-section settings-card design-section" data-settings-section="design">
         <h3>Element Designer</h3>
         <label>Button Color <input id="designButtonBg" type="color" value="#2c2c2c"></label>
-        <label>Border Color <input id="designBorderColor" type="color" value="#d88a64"></label>
-        <label>Text Color <input id="designTextColor" type="color" value="#f3ead7"></label>
+        <label>Border Color <input id="designBorderColor" type="color" value="#e88f69"></label>
+        <label>Text Color <input id="designTextColor" type="color" value="#fbf4d6"></label>
         <label>Text Size <input id="designFontSize" type="number" min="10" max="32" value="14"></label>
-        <label>Bold <input id="designBold" type="checkbox" checked></label>
+        <button id="designBoldToggle" class="toggle-pill" type="button" aria-pressed="true">Bold</button><input id="designBold" type="checkbox" checked hidden>
         <label>Background Image URL <input id="designBgImage" type="text" placeholder="wallpapersm.jpg or https://..."></label>
         <h4>Global Dialogue Style</h4>
-        <label>Dialog BG <input id="dialogBgColor" type="color" value="#191711"></label>
-        <label>Dialog Border <input id="dialogBorderColor" type="color" value="#d88a64"></label>
+        <label>Dialog BG <input id="dialogBgColor" type="color" value="#211812"></label>
+        <label>Dialog Border <input id="dialogBorderColor" type="color" value="#e88f69"></label>
         <label>Dialog Shadow <input id="dialogShadowColor" type="color" value="#000000"></label>
-        <label>Dialog Text <input id="dialogTextColor" type="color" value="#f3ead7"></label>
+        <label>Dialog Text <input id="dialogTextColor" type="color" value="#fbf4d6"></label>
         <label>Dialog Text Size <input id="dialogFontSize" type="number" min="10" max="28" value="14"></label>
-        <label>Dialog Bold <input id="dialogBold" type="checkbox" checked></label>
+        <button id="dialogBoldToggle" class="toggle-pill" type="button" aria-pressed="true">Dialog Bold</button><input id="dialogBold" type="checkbox" checked hidden>
         <label>Dialog Button BG <input id="dialogButtonBg" type="color" value="#2c2c2c"></label>
-        <label>Dialog Button Border <input id="dialogButtonBorder" type="color" value="#d88a64"></label>
-        <label>Dialog Button Text <input id="dialogButtonText" type="color" value="#f3ead7"></label>
+        <label>Dialog Button Border <input id="dialogButtonBorder" type="color" value="#e88f69"></label>
+        <label>Dialog Button Text <input id="dialogButtonText" type="color" value="#fbf4d6"></label>
         <label>Dialog Button Shadow <input id="dialogButtonShadow" type="color" value="#000000"></label>
         <h4>Writing Room Elements</h4>
         <label>Status BG <input id="statusBgColor" type="color" value="#000000"></label>
-        <label>Status Border <input id="statusBorderColor" type="color" value="#d88a64"></label>
-        <label>Status Text <input id="statusTextColor" type="color" value="#ffffff"></label>
-        <label>Emphasis BG <input id="emphasisBgColor" type="color" value="#11100d"></label>
-        <label>Emphasis Border <input id="emphasisBorderColor" type="color" value="#d88a64"></label>
-        <label>Emphasis Text <input id="emphasisTextColor" type="color" value="#f3ead7"></label>
-        <label>Panel BG <input id="panelBgColor" type="color" value="#11100d"></label>
-        <label>Panel Border <input id="panelBorderColor" type="color" value="#d88a64"></label>
-        <label>Label Text <input id="labelTextColor" type="color" value="#9a9a9a"></label>
-        <label>Dynamic Text <input id="dynamicTextColor" type="color" value="#bda170"></label>
-        <label>Scrollbar Track <input id="scrollbarTrackColor" type="color" value="#17130f"></label>
-        <label>Scrollbar Thumb <input id="scrollbarThumbColor" type="color" value="#d88a64"></label>
-        <div class="design-preview"><button type="button">Preview Button</button></div>
+        <label>Status Border <input id="statusBorderColor" type="color" value="#a97b38"></label>
+        <label>Status Text <input id="statusTextColor" type="color" value="#fbf4d6"></label>
+        <label>Emphasis BG <input id="emphasisBgColor" type="color" value="#2f251c"></label>
+        <label>Emphasis Border <input id="emphasisBorderColor" type="color" value="#563485"></label>
+        <label>Emphasis Text <input id="emphasisTextColor" type="color" value="#fbf4d6"></label>
+        <label>Panel BG <input id="panelBgColor" type="color" value="#211812"></label>
+        <label>Panel Border <input id="panelBorderColor" type="color" value="#724837"></label>
+        <label>Label Text <input id="labelTextColor" type="color" value="#a97b38"></label>
+        <label>Dynamic Text <input id="dynamicTextColor" type="color" value="#e88f69"></label>
+        <label>Scrollbar Track <input id="scrollbarTrackColor" type="color" value="#211812"></label>
+        <label>Scrollbar Thumb <input id="scrollbarThumbColor" type="color" value="#e88f69"></label>
+        <div class="design-preview"><article><h4>Preview Title</h4><p>This preview shows sample dynamic text, a bordered panel, and a button.</p><button type="button">Preview Button</button></article></div><label class="hex-control">Hex Code <input id="activeColorHex" type="text" value="#e88f69" maxlength="7" placeholder="#e88f69"></label><div id="favoriteColors" class="favorite-colors" aria-label="Favorite colors"><button type="button" data-favorite-color="#000000"></button><button type="button" data-favorite-color="#28133f"></button><button type="button" data-favorite-color="#211812"></button><button type="button" data-favorite-color="#563485"></button><button type="button" data-favorite-color="#724837"></button><button type="button" data-favorite-color="#a97b38"></button><button type="button" data-favorite-color="#c55222"></button><button type="button" data-favorite-color="#e88f69"></button><button type="button" data-favorite-color="#2f251c"></button><button type="button" data-favorite-color="#2c2c2c"></button><button type="button" data-favorite-color="#fbf4d6"></button></div>
         <div class="export-actions">
           <button id="applyDesignButton" type="button">Apply</button>
           <button id="resetDesignButton" type="button">Reset</button>

@@ -6,6 +6,22 @@ const EDITOR_ENTRY = "editor.html";
 const AUTOSAVE_DELAY = 600;
 const DESIGN_KEY = "capsanoto-design-settings-v1";
 
+const CAPSANOTO_PALETTE = {
+  black: "#000000",
+  deepPlum: "#28133f",
+  espresso: "#211812",
+  amethyst: "#563485",
+  clay: "#724837",
+  ochre: "#a97b38",
+  ember: "#c55222",
+  peach: "#e88f69",
+  umber: "#2f251c",
+  charcoal: "#2c2c2c",
+  parchment: "#fbf4d6",
+};
+
+const DEFAULT_FAVORITE_COLORS = Object.values(CAPSANOTO_PALETTE);
+
 const DEFAULT_WORKSPACE = {
   schemaVersion: 2,
   updatedAt: "2026-05-08T00:00:00.000Z",
@@ -53,6 +69,13 @@ const state = {
   savedRange: null,
   dialogResolver: null,
   writingRoomDrag: null,
+  panelDrag: null,
+  filingEditMode: false,
+  filingGroups: [],
+  trash: [],
+  deprecated: [],
+  draggedDocId: "",
+  lastColorInput: null,
   contextStatusLocked: false,
   contextStatusTimer: null,
 };
@@ -123,12 +146,21 @@ const els = {
   emphasisTextColor: document.querySelector("#emphasisTextColor"),
   panelBgColor: document.querySelector("#panelBgColor"),
   panelBorderColor: document.querySelector("#panelBorderColor"),
+  designBoldToggle: document.querySelector("#designBoldToggle"),
+  dialogBoldToggle: document.querySelector("#dialogBoldToggle"),
+  activeColorHex: document.querySelector("#activeColorHex"),
+  favoriteColors: document.querySelector("#favoriteColors"),
   settingsMenu: document.querySelector(".settings-menu"),
   settingsSections: document.querySelectorAll("[data-settings-section]"),
   writingRoomButton: document.querySelector("#writingRoomButton"),
   writingRoomPanel: document.querySelector("#writingRoomPanel"),
   writingRoomPanelHeader: document.querySelector("#writingRoomPanelHeader"),
   closeWritingRoomPanel: document.querySelector("#closeWritingRoomPanel"),
+  editWritingRoomButton: document.querySelector("#editWritingRoomButton"),
+  writingRoomEditBar: document.querySelector("#writingRoomEditBar"),
+  newFolderButton: document.querySelector("#newFolderButton"),
+  newTabButton: document.querySelector("#newTabButton"),
+  trashCanButton: document.querySelector("#trashCanButton"),
   writingRoomCards: document.querySelector("#writingRoomCards"),
   selectionMenu: document.querySelector("#selectionMenu"),
   dialogOverlay: document.querySelector("#dialogOverlay"),
@@ -306,6 +338,9 @@ async function loadWorkspace() {
       const payload = JSON.parse(saved);
       state.documents = Array.isArray(payload.documents) ? payload.documents : [];
       state.blocks = payload.blocks && typeof payload.blocks === "object" ? payload.blocks : {};
+      state.filingGroups = Array.isArray(payload.filingGroups) ? payload.filingGroups : [];
+      state.trash = Array.isArray(payload.trash) ? payload.trash : [];
+      state.deprecated = Array.isArray(payload.deprecated) ? payload.deprecated : [];
     } catch (error) {
       console.warn("Ignoring unreadable local Capsanoto Writing Room", error);
       localStorage.removeItem(STORAGE_KEY);
@@ -318,9 +353,13 @@ async function loadWorkspace() {
     const payload = await loadStarterWorkspace();
     state.documents = Array.isArray(payload.documents) ? payload.documents : [];
     state.blocks = payload.blocks && typeof payload.blocks === "object" ? payload.blocks : {};
+    state.filingGroups = Array.isArray(payload.filingGroups) ? payload.filingGroups : [];
+    state.trash = Array.isArray(payload.trash) ? payload.trash : [];
+    state.deprecated = Array.isArray(payload.deprecated) ? payload.deprecated : [];
     persistNow("Loaded starter Writing Room");
   }
 
+  if (!state.filingGroups.length) state.filingGroups = defaultFilingGroups();
   if (!state.documents.length) createDocument();
   state.activeId = state.documents[0].id;
 }
@@ -418,10 +457,23 @@ function bindEditorEvents() {
   els.settingsPanel.addEventListener("click", handleSettingsCardToggle);
   els.writingRoomButton.addEventListener("click", () => toggleWritingRoomPanel());
   els.closeWritingRoomPanel.addEventListener("click", () => toggleWritingRoomPanel(false));
+  els.editWritingRoomButton.addEventListener("click", toggleFilingEditMode);
+  els.newFolderButton.addEventListener("click", () => createFilingGroup("folder"));
+  els.newTabButton.addEventListener("click", () => createFilingGroup("tab"));
+  els.trashCanButton.addEventListener("click", () => setContextStatus(`${state.trash.length} items in Trash · ${state.deprecated.length} deprecated`, false));
   els.writingRoomCards.addEventListener("click", handleWritingRoomCardClick);
+  els.writingRoomCards.addEventListener("dragstart", handleFilingDragStart);
+  els.writingRoomCards.addEventListener("dragover", handleFilingDragOver);
+  els.writingRoomCards.addEventListener("drop", handleFilingDrop);
   els.writingRoomPanelHeader.addEventListener("pointerdown", startWritingRoomDrag);
   window.addEventListener("pointermove", moveWritingRoomPanel);
   window.addEventListener("pointerup", stopWritingRoomDrag);
+  els.settingsPanel.querySelector("header")?.addEventListener("pointerdown", (event) => startPanelDrag(event, els.settingsPanel));
+  els.helpPanel.querySelector("header")?.addEventListener("pointerdown", (event) => startPanelDrag(event, els.helpPanel));
+  window.addEventListener("pointermove", movePanelDrag);
+  window.addEventListener("pointerup", stopPanelDrag);
+  document.addEventListener("keydown", (event) => { if (event.key === "Escape") { toggleHelpPanel(false); toggleSettingsPanel(false); toggleWritingRoomPanel(false); } });
+  bindDesignColorTools();
   els.helpButton.addEventListener("click", () => { toggleSettingsPanel(false); toggleHelpPanel(true); });
   els.closeHelpPanel.addEventListener("click", () => toggleHelpPanel(false));
   els.logoutButton.addEventListener("click", resetLocalWorkspace);
@@ -953,24 +1005,56 @@ function toggleWritingRoomPanel(show = els.writingRoomPanel.hidden) {
   if (show) renderWritingRoomCards();
 }
 
+function toggleFilingEditMode() {
+  state.filingEditMode = !state.filingEditMode;
+  els.editWritingRoomButton.setAttribute("aria-pressed", String(state.filingEditMode));
+  els.writingRoomEditBar.hidden = !state.filingEditMode;
+  els.writingRoomPanel.classList.toggle("is-editing", state.filingEditMode);
+  renderWritingRoomCards();
+  setContextStatus(state.filingEditMode ? "Filing Cabinet edit mode unlocked" : "Filing Cabinet locked");
+}
+
+async function createFilingGroup(type) {
+  const result = await openCapsDialog(type === "folder" ? "New Folder" : "New Tab", [
+    { name: "name", label: `${type === "folder" ? "Folder" : "Tab"} name`, value: "" },
+  ]);
+  const name = result?.name?.trim();
+  if (!name) return;
+  state.filingGroups.push({ id: `${type}-${slugify(name)}-${Date.now()}`, label: name, type, createdAt: new Date().toISOString() });
+  renderWritingRoomCards();
+  markDirty(`${type === "folder" ? "Folder" : "Tab"} added`);
+}
+
+function defaultFilingGroups() {
+  return [
+    { id: "writing-room-tabs", label: "Writing Room Tabs", type: "folder" },
+    { id: "writing-room-core", label: "Writing Room Core", type: "folder" },
+    { id: "episodes", label: "Episodes", type: "folder" },
+    { id: "characters", label: "Characters", type: "folder" },
+  ];
+}
+
 function renderWritingRoomCards() {
   if (!els.writingRoomCards) return;
   const groups = groupedDocuments();
-  els.writingRoomCards.innerHTML = groups.map((group, groupIndex) => `
-    <details class="writing-room-group" ${groupIndex === 0 ? "open" : ""}>
+  const groupHtml = groups.map((group, groupIndex) => `
+    <details class="writing-room-group" data-group-id="${escapeAttr(group.id)}" ${groupIndex === 0 ? "open" : ""}>
       <summary><span class="card-arrow">›</span><strong>${escapeHtml(group.label)}</strong><small>${group.documents.length} ${group.documents.length === 1 ? "tab" : "tabs"}</small></summary>
-      <div class="writing-room-card-stack">
+      <div class="writing-room-card-stack" data-drop-group="${escapeAttr(group.id)}">
         ${group.documents.map((doc) => renderWritingRoomCard(doc, group.depth)).join("")}
+        ${state.filingEditMode && !group.documents.length ? '<p class="panel-help">Drop files here or use metadata tags later.</p>' : ''}
       </div>
     </details>
   `).join("");
+  const trashHtml = state.filingEditMode ? renderTrashSection() : "";
+  els.writingRoomCards.innerHTML = groupHtml + trashHtml;
 }
 
 function renderWritingRoomCard(doc, depth = 0) {
   const tags = (doc.tags ?? []).slice(0, 4);
   const updated = doc.updatedAt ? new Date(doc.updatedAt).toLocaleDateString() : "Not saved yet";
   const preview = textFromHtml(renderTransclusions(doc.content)).slice(0, 180) || "Empty Writing Room tab";
-  return `<details class="writing-room-card ${doc.id === state.activeId ? "is-active" : ""}" style="--tab-depth:${depth}" data-doc-card="${escapeAttr(doc.id)}">
+  return `<details class="writing-room-card ${doc.id === state.activeId ? "is-active" : ""}" draggable="${state.filingEditMode}" style="--tab-depth:${depth}" data-doc-card="${escapeAttr(doc.id)}">
     <summary>
       <span class="card-arrow">›</span>
       <span class="card-icon">${docIcon(doc)}</span>
@@ -985,6 +1069,10 @@ function renderWritingRoomCard(doc, depth = 0) {
         <small>Updated ${escapeHtml(updated)}</small>
         <span class="document-card-actions">
           <button type="button" data-card-action="open" data-doc-id="${escapeAttr(doc.id)}">Open</button>
+          <button type="button" data-card-action="settings" data-doc-id="${escapeAttr(doc.id)}">Settings</button>
+          <button type="button" data-card-action="duplicate" data-doc-id="${escapeAttr(doc.id)}">Duplicate</button>
+          <button type="button" data-card-action="deprecate" data-doc-id="${escapeAttr(doc.id)}">Deprecate</button>
+          <button type="button" data-card-action="delete" data-doc-id="${escapeAttr(doc.id)}">Delete</button>
           <button type="button" data-card-action="copy" data-doc-id="${escapeAttr(doc.id)}">Copy URL</button>
         </span>
       </footer>
@@ -992,14 +1080,26 @@ function renderWritingRoomCard(doc, depth = 0) {
   </details>`;
 }
 
+function renderTrashSection() {
+  const deleted = state.trash.map((doc) => archivedCard(doc, "trash")).join("") || '<p class="panel-help">Trash is empty.</p>';
+  const deprecated = state.deprecated.map((doc) => archivedCard(doc, "deprecated")).join("") || '<p class="panel-help">No deprecated files.</p>';
+  return `<details class="writing-room-group filing-archive" open><summary><span class="card-arrow">›</span><strong>Trashcan</strong><small>${state.trash.length} deleted</small></summary><div class="writing-room-card-stack">${deleted}</div></details>
+    <details class="writing-room-group filing-archive"><summary><span class="card-arrow">›</span><strong>Deprecated</strong><small>${state.deprecated.length} archived</small></summary><div class="writing-room-card-stack">${deprecated}</div></details>`;
+}
+
+function archivedCard(doc, source) {
+  return `<article class="writing-room-card archived-card"><div class="writing-room-card-body"><strong>${escapeHtml(doc.title)}</strong><p class="doc-id-line"><strong>Document ID:</strong> ${escapeHtml(doc.id)}</p><span class="document-card-actions"><button type="button" data-card-action="restore" data-archive-source="${source}" data-doc-id="${escapeAttr(doc.id)}">Restore</button></span></div></article>`;
+}
+
 function groupedDocuments() {
-  const groups = new Map();
+  const baseGroups = state.filingGroups.length ? state.filingGroups : defaultFilingGroups();
+  const groups = new Map(baseGroups.map((group, index) => [group.label, { ...group, documents: [], depth: index ? 1 : 0 }]));
   state.documents.forEach((doc) => {
     const label = writingRoomGroupLabel(doc);
-    if (!groups.has(label)) groups.set(label, []);
-    groups.get(label).push(doc);
+    if (!groups.has(label)) groups.set(label, { id: slugify(label), label, type: "folder", documents: [], depth: groups.size ? 1 : 0 });
+    groups.get(label).documents.push(doc);
   });
-  return [...groups.entries()].map(([label, documents], index) => ({ label, documents, depth: index ? 1 : 0 }));
+  return [...groups.values()];
 }
 
 function writingRoomGroupLabel(doc) {
@@ -1022,36 +1122,129 @@ async function handleWritingRoomCardClick(event) {
   const button = event.target.closest("button[data-card-action]");
   if (!button) return;
   const docId = button.dataset.docId;
-  if (button.dataset.cardAction === "open") {
-    openDocument(docId);
-    renderWritingRoomCards();
-    return;
-  }
-  if (button.dataset.cardAction === "copy") {
+  const action = button.dataset.cardAction;
+  if (action === "open") { openDocument(docId); renderWritingRoomCards(); return; }
+  if (action === "settings") { openDocument(docId); await openDocumentSettings(); renderWritingRoomCards(); return; }
+  if (action === "duplicate") return duplicateDocument(docId);
+  if (action === "deprecate") return deprecateDocument(docId);
+  if (action === "delete") return deleteDocumentSafely(docId);
+  if (action === "restore") return restoreArchivedDocument(docId, button.dataset.archiveSource);
+  if (action === "copy") {
     await copyText(new URL(documentUrl(docId), location.href).href);
     setStatus("Copied Writing Room tab link", "saved");
   }
 }
 
-function startWritingRoomDrag(event) {
-  if (event.target.closest("button")) return;
-  const rect = els.writingRoomPanel.getBoundingClientRect();
-  state.writingRoomDrag = { offsetX: event.clientX - rect.left, offsetY: event.clientY - rect.top };
-  els.writingRoomPanelHeader.setPointerCapture?.(event.pointerId);
+function duplicateDocument(docId) {
+  const doc = state.documents.find((item) => item.id === docId);
+  if (!doc) return;
+  const copy = JSON.parse(JSON.stringify(doc));
+  copy.id = uniqueDocumentId(`${doc.id}-copy`);
+  copy.title = `${doc.title} Copy`;
+  copy.updatedAt = new Date().toISOString();
+  state.documents.splice(state.documents.indexOf(doc) + 1, 0, copy);
+  renderAll();
+  markDirty("Document duplicated");
 }
 
-function moveWritingRoomPanel(event) {
-  if (!state.writingRoomDrag) return;
-  const left = Math.max(8, Math.min(window.innerWidth - els.writingRoomPanel.offsetWidth - 8, event.clientX - state.writingRoomDrag.offsetX));
-  const top = Math.max(8, Math.min(window.innerHeight - 80, event.clientY - state.writingRoomDrag.offsetY));
-  els.writingRoomPanel.style.left = `${left}px`;
-  els.writingRoomPanel.style.top = `${top}px`;
-  els.writingRoomPanel.style.right = "auto";
+function deprecateDocument(docId) {
+  const index = state.documents.findIndex((item) => item.id === docId);
+  if (index < 0) return;
+  const [doc] = state.documents.splice(index, 1);
+  doc.deprecatedAt = new Date().toISOString();
+  state.deprecated.push(doc);
+  if (state.activeId === docId) state.activeId = state.documents[0]?.id || createDocument().id;
+  renderAll();
+  markDirty("Document deprecated");
 }
 
-function stopWritingRoomDrag() {
-  state.writingRoomDrag = null;
+async function deleteDocumentSafely(docId) {
+  const index = state.documents.findIndex((item) => item.id === docId);
+  if (index < 0) return;
+  const doc = state.documents[index];
+  const text = textFromHtml(doc.content || "");
+  const lines = text.split(/\n|\r/).filter((line) => line.trim()).length || (text.trim() ? 1 : 0);
+  if (text.trim()) {
+    const result = await openCapsDialog("Confirm Delete", [
+      { name: "warning", label: `You are deleting ${lines} lines and ${text.length} characters from ${doc.title}.`, value: "", readonly: true },
+      { name: "confirm", label: "Yes, move this file to Trash", checkbox: true },
+    ]);
+    if (result?.confirm !== "on") return;
+  }
+  const [deleted] = state.documents.splice(index, 1);
+  deleted.deletedAt = new Date().toISOString();
+  state.trash.push(deleted);
+  if (state.activeId === docId) state.activeId = state.documents[0]?.id || createDocument().id;
+  renderAll();
+  markDirty("Document moved to Trash");
 }
+
+function restoreArchivedDocument(docId, source) {
+  const collection = source === "deprecated" ? state.deprecated : state.trash;
+  const index = collection.findIndex((item) => item.id === docId);
+  if (index < 0) return;
+  const [doc] = collection.splice(index, 1);
+  delete doc.deletedAt;
+  delete doc.deprecatedAt;
+  doc.id = uniqueDocumentId(doc.id);
+  state.documents.push(doc);
+  renderAll();
+  markDirty("Document restored");
+}
+
+function uniqueDocumentId(base) {
+  let id = slugify(base);
+  let index = 2;
+  while (state.documents.some((doc) => doc.id === id) || state.trash.some((doc) => doc.id === id) || state.deprecated.some((doc) => doc.id === id)) {
+    id = `${slugify(base)}-${index}`;
+    index += 1;
+  }
+  return id;
+}
+
+function handleFilingDragStart(event) {
+  if (!state.filingEditMode) return;
+  const card = event.target.closest("[data-doc-card]");
+  if (!card) return;
+  state.draggedDocId = card.dataset.docCard;
+  event.dataTransfer?.setData("text/plain", state.draggedDocId);
+}
+
+function handleFilingDragOver(event) {
+  if (state.filingEditMode && event.target.closest("[data-doc-card], [data-drop-group]")) event.preventDefault();
+}
+
+function handleFilingDrop(event) {
+  if (!state.filingEditMode || !state.draggedDocId) return;
+  const targetCard = event.target.closest("[data-doc-card]");
+  if (!targetCard || targetCard.dataset.docCard === state.draggedDocId) return;
+  event.preventDefault();
+  const from = state.documents.findIndex((doc) => doc.id === state.draggedDocId);
+  const to = state.documents.findIndex((doc) => doc.id === targetCard.dataset.docCard);
+  if (from < 0 || to < 0) return;
+  const [doc] = state.documents.splice(from, 1);
+  state.documents.splice(to, 0, doc);
+  state.draggedDocId = "";
+  renderWritingRoomCards();
+  markDirty("Filing Cabinet order updated");
+}
+
+function startPanelDrag(event, panel) {
+  if (event.target.closest("button, input, select, textarea")) return;
+  const rect = panel.getBoundingClientRect();
+  state.panelDrag = { panel, offsetX: event.clientX - rect.left, offsetY: event.clientY - rect.top };
+}
+
+function movePanelDrag(event) {
+  if (!state.panelDrag) return;
+  const { panel, offsetX, offsetY } = state.panelDrag;
+  panel.style.left = `${Math.max(8, Math.min(window.innerWidth - panel.offsetWidth - 8, event.clientX - offsetX))}px`;
+  panel.style.top = `${Math.max(8, Math.min(window.innerHeight - 80, event.clientY - offsetY))}px`;
+  panel.style.right = "auto";
+}
+
+function stopPanelDrag() { state.panelDrag = null; }
+
 
 function toggleHelpPanel(show) {
   els.helpPanel.hidden = !show;
@@ -1232,6 +1425,51 @@ function textFromHtml(html) {
   return div.textContent || "";
 }
 
+function bindDesignColorTools() {
+  renderFavoriteColors();
+  const colorInputs = document.querySelectorAll(".design-section input[type='color']");
+  colorInputs.forEach((input) => {
+    input.addEventListener("focus", () => syncActiveColorInput(input));
+    input.addEventListener("input", () => syncActiveColorInput(input));
+    if (!state.lastColorInput) state.lastColorInput = input;
+  });
+  els.activeColorHex?.addEventListener("input", () => applyHexToActiveColor(els.activeColorHex.value));
+  els.favoriteColors?.addEventListener("click", (event) => {
+    const button = event.target.closest("button[data-favorite-color]");
+    if (!button) return;
+    applyHexToActiveColor(button.dataset.favoriteColor);
+  });
+}
+
+function renderFavoriteColors() {
+  if (!els.favoriteColors) return;
+  els.favoriteColors.innerHTML = DEFAULT_FAVORITE_COLORS.map((color) => (
+    `<button type="button" data-favorite-color="${escapeAttr(color)}" aria-label="Use ${escapeAttr(color)}" style="--favorite-color:${escapeAttr(color)}"></button>`
+  )).join("");
+}
+
+function syncActiveColorInput(input) {
+  if (!input) return;
+  state.lastColorInput = input;
+  if (els.activeColorHex) els.activeColorHex.value = input.value;
+}
+
+function applyHexToActiveColor(value) {
+  const color = normalizeHexColor(value);
+  if (!color || !state.lastColorInput) return;
+  state.lastColorInput.value = color;
+  syncActiveColorInput(state.lastColorInput);
+}
+
+function normalizeHexColor(value) {
+  const raw = String(value || "").trim();
+  if (/^#[0-9a-f]{6}$/i.test(raw)) return raw.toLowerCase();
+  if (/^#[0-9a-f]{3}$/i.test(raw)) {
+    return `#${raw.slice(1).split("").map((char) => char + char).join("")}`.toLowerCase();
+  }
+  return "";
+}
+
 function loadDesignForm() {
   const settings = currentDesignSettings();
   els.designButtonBg.value = settings.buttonBg;
@@ -1262,6 +1500,9 @@ function loadDesignForm() {
   els.emphasisTextColor.value = settings.emphasisText;
   els.panelBgColor.value = settings.panelBg;
   els.panelBorderColor.value = settings.panelBorder;
+  els.designBoldToggle?.setAttribute("aria-pressed", String(settings.bold));
+  els.dialogBoldToggle?.setAttribute("aria-pressed", String(settings.dialogBold));
+  syncActiveColorInput(els.designBorderColor);
 }
 
 function currentDesignSettings() {
@@ -1275,7 +1516,37 @@ function currentDesignSettings() {
 }
 
 function defaultDesignSettings() {
-  return { buttonBg: "#2c2c2c", borderColor: "#d88a64", textColor: "#f3ead7", fontSize: "14", bold: true, bgImage: "wallpapersm.jpg", dialogBg: "#191711", dialogBorder: "#d88a64", dialogShadow: "#000000", dialogText: "#f3ead7", dialogFontSize: "14", dialogBold: true, dialogButtonBg: "#2c2c2c", dialogButtonBorder: "#d88a64", dialogButtonText: "#f3ead7", dialogButtonShadow: "#000000", labelText: "#9a9a9a", dynamicText: "#bda170", scrollbarTrack: "#17130f", scrollbarThumb: "#d88a64", statusBg: "#000000", statusBorder: "#d88a64", statusText: "#ffffff", emphasisBg: "#11100d", emphasisBorder: "#d88a64", emphasisText: "#f3ead7", panelBg: "#11100d", panelBorder: "#d88a64" };
+  const palette = CAPSANOTO_PALETTE;
+  return {
+    buttonBg: palette.charcoal,
+    borderColor: palette.peach,
+    textColor: palette.parchment,
+    fontSize: "14",
+    bold: true,
+    bgImage: "wallpapersm.jpg",
+    dialogBg: palette.espresso,
+    dialogBorder: palette.peach,
+    dialogShadow: palette.black,
+    dialogText: palette.parchment,
+    dialogFontSize: "14",
+    dialogBold: true,
+    dialogButtonBg: palette.charcoal,
+    dialogButtonBorder: palette.peach,
+    dialogButtonText: palette.parchment,
+    dialogButtonShadow: palette.black,
+    labelText: palette.ochre,
+    dynamicText: palette.peach,
+    scrollbarTrack: palette.espresso,
+    scrollbarThumb: palette.peach,
+    statusBg: palette.black,
+    statusBorder: palette.ochre,
+    statusText: palette.parchment,
+    emphasisBg: palette.umber,
+    emphasisBorder: palette.amethyst,
+    emphasisText: palette.parchment,
+    panelBg: palette.espresso,
+    panelBorder: palette.clay,
+  };
 }
 
 function saveDesignSettings() {
@@ -1350,6 +1621,9 @@ function serializedWorkspace() {
     updatedAt: new Date().toISOString(),
     documents: state.documents,
     blocks: state.blocks,
+    filingGroups: state.filingGroups,
+    trash: state.trash,
+    deprecated: state.deprecated,
   }, null, 2);
 }
 
