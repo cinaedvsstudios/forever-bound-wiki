@@ -71,6 +71,7 @@ const els = {
   editorApp: document.querySelector("#editorApp"),
   documentSelect: document.querySelector("#documentSelect"),
   newDocumentButton: document.querySelector("#newDocumentButton"),
+  contextStatus: document.querySelector("#contextStatus"),
   saveStatus: document.querySelector("#saveStatus"),
   settingsButton: document.querySelector("#settingsButton"),
   settingsPanel: document.querySelector("#settingsPanel"),
@@ -245,6 +246,7 @@ async function startEditor() {
   if (!new URLSearchParams(location.search).has("doc")) updateUrl();
   scrollToRouteBookmark();
   setStatus("Ready", "saved");
+  updateContextStatus();
 }
 
 function showPasswordScreen(message = "") {
@@ -372,8 +374,12 @@ function bindEditorEvents() {
     if (state.suppressInput) return;
     syncEditorToDocument();
     renderBookmarks();
+    updateContextStatus();
     markDirty("Autosaving locally…");
   });
+  els.editor.addEventListener("keyup", updateContextStatus);
+  els.editor.addEventListener("mouseup", updateContextStatus);
+  document.addEventListener("selectionchange", updateContextStatus);
 
   els.toolbar.addEventListener("click", (event) => {
     const button = event.target.closest("button");
@@ -537,13 +543,7 @@ function renderActiveDocument() {
 }
 
 function renderBookmarks() {
-  const scrollY = window.scrollY;
-  const bookmarks = getBookmarks();
-  els.bookmarkBar.innerHTML = bookmarks.length ? bookmarks.map((bookmark) => {
-    const href = sectionUrl(activeDocument().id, bookmark.id);
-    return `<span class="bookmark-group"><a class="bookmark-pill" href="${escapeAttr(href)}" data-bookmark="${escapeAttr(bookmark.id)}">${escapeHtml(bookmark.label)}</a><button class="copy-bookmark" type="button" data-copy-bookmark="${escapeAttr(bookmark.id)}" title="Copy section link" aria-label="Copy link to ${escapeAttr(bookmark.label)}">🔗</button></span>`;
-  }).join("") : `<span class="empty-bookmarks">Add headings or bookmarks to jump through this document.</span>`;
-  window.scrollTo({ top: scrollY, left: window.scrollX, behavior: "auto" });
+  if (els.bookmarkBar) els.bookmarkBar.innerHTML = "";
 }
 
 function getBookmarks() {
@@ -1405,6 +1405,42 @@ function slugify(value) {
 
 function sanitizeBlockContent(value) {
   return escapeHtml(value).replace(/\n/g, "<br>");
+}
+
+function updateContextStatus() {
+  if (!els.contextStatus) return;
+  const selection = window.getSelection();
+  if (!selection?.rangeCount) {
+    els.contextStatus.textContent = "Cursor: Writing Room ready";
+    return;
+  }
+
+  const range = selection.getRangeAt(0);
+  if (!els.editor.contains(range.commonAncestorContainer)) {
+    els.contextStatus.textContent = "Cursor: outside writing area";
+    return;
+  }
+
+  const node = range.commonAncestorContainer.nodeType === Node.ELEMENT_NODE
+    ? range.commonAncestorContainer
+    : range.commonAncestorContainer.parentElement;
+  const parts = [];
+  parts.push(selection.isCollapsed ? "Cursor" : `Selection: ${selection.toString().trim().length} chars`);
+
+  const link = node?.closest?.("a");
+  const block = node?.closest?.(".transclusion-ref");
+  const heading = node?.closest?.("h1[id], h2[id], h3[id], [data-bookmark='true'][id]");
+  const table = node?.closest?.("table");
+  const list = node?.closest?.("ul, ol");
+
+  if (block) parts.push(`inside transclusion block ${block.dataset.blockId || ""}`.trim());
+  if (link) parts.push(link.classList.contains("pill-link") ? "pill link" : "link");
+  if (heading) parts.push(`bookmark heading #${heading.id}`);
+  if (table) parts.push("table");
+  if (list) parts.push("list");
+  if (!link && !block && !heading && !table && !list) parts.push("normal text");
+
+  els.contextStatus.textContent = parts.join(" · ");
 }
 
 function setStatus(message, className) {

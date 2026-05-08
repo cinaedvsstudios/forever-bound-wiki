@@ -450,7 +450,7 @@ button, summary { font-size: var(--button-font-size); font-weight: var(--button-
 .writer-header.toolbar {
   top: 0;
   display: grid;
-  grid-template-columns: minmax(280px, 1fr) auto minmax(150px, auto);
+  grid-template-columns: minmax(260px, 1fr) minmax(220px, 0.8fr) auto minmax(150px, auto);
   align-items: center;
   gap: 0.75rem;
   overflow: visible;
@@ -618,4 +618,36 @@ button, summary { font-size: var(--button-font-size); font-weight: var(--button-
   .top-command-menus { overflow-x: auto; }
   .writing-room-panel { left: 0.75rem; width: calc(100vw - 1.5rem); }
   .design-section { grid-template-columns: 1fr; }
+}
+.context-status {
+  justify-self: center;
+  max-width: min(34rem, 28vw);
+  min-height: 2.35rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.45rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  background: rgba(0,0,0,0.34);
+  font-size: 0.86rem;
+  font-weight: 800;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: inset 0 0 18px rgba(0,0,0,0.24);
+}
+.top-command-menus .tool-menu-trigger {
+  transform: none;
+}
+.top-command-menus .tool-menu:hover .tool-menu-trigger,
+.top-command-menus .tool-menu:focus-within .tool-menu-trigger {
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: none;
+}
+@media (max-width: 900px) {
+  .context-status { justify-self: stretch; max-width: none; }
 }
