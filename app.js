@@ -1339,6 +1339,29 @@ function handleFilingDrop(event) {
   markDirty("Filing Cabinet order updated");
 }
 
+function startWritingRoomDrag(event) {
+  if (event.target.closest("button, input, select, textarea")) return;
+  const rect = els.writingRoomPanel.getBoundingClientRect();
+  state.writingRoomDrag = {
+    offsetX: event.clientX - rect.left,
+    offsetY: event.clientY - rect.top,
+  };
+  els.writingRoomPanelHeader.setPointerCapture?.(event.pointerId);
+}
+
+function moveWritingRoomPanel(event) {
+  if (!state.writingRoomDrag) return;
+  const { offsetX, offsetY } = state.writingRoomDrag;
+  els.writingRoomPanel.style.left = `${Math.max(8, Math.min(window.innerWidth - els.writingRoomPanel.offsetWidth - 8, event.clientX - offsetX))}px`;
+  els.writingRoomPanel.style.top = `${Math.max(8, Math.min(window.innerHeight - 80, event.clientY - offsetY))}px`;
+  els.writingRoomPanel.style.right = "auto";
+}
+
+function stopWritingRoomDrag(event) {
+  if (state.writingRoomDrag) els.writingRoomPanelHeader.releasePointerCapture?.(event.pointerId);
+  state.writingRoomDrag = null;
+}
+
 function startPanelDrag(event, panel) {
   if (event.target.closest("button, input, select, textarea")) return;
   const rect = panel.getBoundingClientRect();
