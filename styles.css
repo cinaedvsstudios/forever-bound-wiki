@@ -1,15 +1,15 @@
 :root {
-  --page: #f7f0df;
-  --paper: #fffaf0;
-  --ink: #24180f;
-  --muted: #80694c;
-  --line: #e3d0aa;
-  --accent: #9d4f32;
-  --accent-soft: #f0d4bf;
-  --dark: #17130f;
-  --dark-2: #241d16;
-  --success: #277c46;
-  --warning: #a45b1c;
+  --page: #121212;
+  --paper: #1e1e1e;
+  --ink: #e0e0e0;
+  --muted: #b7a7c9;
+  --line: #444;
+  --accent: #bb86fc;
+  --accent-soft: rgba(187, 134, 252, 0.18);
+  --dark: #121212;
+  --dark-2: #1e1e1e;
+  --success: #03dac6;
+  --warning: #ffd166;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
@@ -22,7 +22,7 @@ body {
   min-height: 100vh;
   min-height: 100dvh;
   color: var(--ink);
-  background: var(--page);
+  background: var(--page) url("wallpapersm.jpg") center/cover fixed;
 }
 
 [hidden] { display: none !important; }
@@ -34,10 +34,10 @@ button {
   border-radius: 999px;
   padding: 0.5rem 0.8rem;
   color: var(--ink);
-  background: #fff7e8;
+  background: #2c2c2c;
   line-height: 1.2;
 }
-button:hover { border-color: var(--accent); color: var(--accent); }
+button:hover { border-color: var(--accent); color: var(--accent); transform: scale(1.02); }
 
 .sr-only {
   position: absolute;
@@ -66,23 +66,23 @@ button:hover { border-color: var(--accent); color: var(--accent); }
 .password-card {
   width: min(100%, 460px);
   padding: clamp(1.35rem, 4vw, 2rem);
-  color: #f7ead4;
-  background: rgba(23, 19, 15, 0.94);
-  border: 1px solid rgba(240, 212, 191, 0.35);
+  color: var(--ink);
+  background: rgba(18, 18, 18, 0.94);
+  border: 1px solid rgba(187, 134, 252, 0.35);
   border-radius: 24px;
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
 }
 .password-card img { width: 64px; height: 64px; object-fit: contain; }
 .password-card h1 { margin: 0.25rem 0 0.5rem; }
-.password-card p { color: #cdbb9e; line-height: 1.5; }
-.password-card label { display: grid; gap: 0.45rem; margin: 1rem 0 0.65rem; color: #e6d5b8; font-weight: 700; }
+.password-card p { color: var(--muted); line-height: 1.5; }
+.password-card label { display: grid; gap: 0.45rem; margin: 1rem 0 0.65rem; color: var(--ink); font-weight: 700; }
 .password-card input {
   display: block;
   width: 100%;
   min-height: 3.1rem;
   color: #fff;
   background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(240, 212, 191, 0.35);
+  border: 1px solid rgba(187, 134, 252, 0.35);
   border-radius: 16px;
   padding: 0.8rem 1rem;
 }
@@ -95,14 +95,14 @@ button:hover { border-color: var(--accent); color: var(--accent); }
   background: var(--accent);
   border-color: var(--accent);
 }
-.password-card button:hover { color: white; background: #b75f3f; }
-.error { min-height: 1.5rem; color: #ffb7a8 !important; }
+.password-card button:hover { color: white; background: #ff7597; }
+.error { min-height: 1.5rem; color: #ff7597 !important; }
 .eyebrow { margin: 0; color: var(--accent); font-size: 0.72rem; font-weight: 900; letter-spacing: 0.16em; text-transform: uppercase; }
 
 .writer-shell {
   min-height: 100vh;
   min-height: 100dvh;
-  background: linear-gradient(180deg, #fffaf0 0, var(--page) 380px);
+  background: linear-gradient(rgba(18, 18, 18, 0.88), rgba(18, 18, 18, 0.94)), url("wallpapersm.jpg") center/cover fixed;
 }
 body.is-framed { min-height: 100%; overflow-x: hidden; }
 body.is-framed .password-screen,
@@ -116,7 +116,7 @@ body.is-framed .writer-shell { min-height: 100vh; min-height: 100dvh; }
   gap: 1rem;
   align-items: center;
   padding: 0.75rem clamp(1rem, 3vw, 2rem);
-  background: rgba(255, 250, 240, 0.94);
+  background: rgba(30, 30, 30, 0.94);
   border-bottom: 1px solid var(--line);
   backdrop-filter: blur(12px);
 }
@@ -126,10 +126,10 @@ select, .title-strip input, .block-panel input, .block-panel textarea {
   border-radius: 14px;
   padding: 0.65rem 0.8rem;
   color: var(--ink);
-  background: white;
+  background: #2c2c2c;
   outline: none;
 }
-select:focus, input:focus, textarea:focus, .editor:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(157, 79, 50, 0.12); }
+select:focus, input:focus, textarea:focus, .editor:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(187, 134, 252, 0.22); }
 .save-status { color: var(--muted); font-size: 0.88rem; }
 .save-status.saved { color: var(--success); }
 .save-status.dirty { color: var(--warning); }
@@ -140,11 +140,11 @@ select:focus, input:focus, textarea:focus, .editor:focus { border-color: var(--a
   z-index: 9;
   justify-content: center;
   padding: 0.7rem 1rem;
-  background: rgba(255, 250, 240, 0.92);
-  border-bottom: 1px solid rgba(227, 208, 170, 0.72);
+  background: rgba(30, 30, 30, 0.94);
+  border-bottom: 1px solid rgba(187, 134, 252, 0.28);
   backdrop-filter: blur(12px);
 }
-.toolbar button { border-radius: 12px; background: white; }
+.toolbar button { border-radius: 12px; background: #2c2c2c; }
 
 .bookmark-bar {
   position: sticky;
@@ -155,8 +155,8 @@ select:focus, input:focus, textarea:focus, .editor:focus { border-color: var(--a
   align-items: center;
   overflow-x: auto;
   padding: 0.65rem clamp(1rem, 3vw, 2rem);
-  background: rgba(247, 240, 223, 0.94);
-  border-bottom: 1px solid rgba(227, 208, 170, 0.65);
+  background: rgba(18, 18, 18, 0.9);
+  border-bottom: 1px solid rgba(187, 134, 252, 0.25);
 }
 .bookmark-pill, .pill-link {
   display: inline-flex;
@@ -164,13 +164,13 @@ select:focus, input:focus, textarea:focus, .editor:focus { border-color: var(--a
   max-width: 260px;
   border-radius: 999px;
   padding: 0.28rem 0.72rem;
-  color: #6c2f1f;
+  color: var(--ink);
   background: var(--accent-soft);
-  border: 1px solid rgba(157, 79, 50, 0.25);
+  border: 1px solid rgba(187, 134, 252, 0.35);
   text-decoration: none;
   white-space: nowrap;
 }
-.bookmark-pill:hover, .pill-link:hover { color: white; background: var(--accent); }
+.bookmark-pill:hover, .pill-link:hover { color: #000; background: var(--accent); }
 .empty-bookmarks { color: var(--muted); font-size: 0.9rem; }
 
 .title-strip {
@@ -192,7 +192,7 @@ select:focus, input:focus, textarea:focus, .editor:focus { border-color: var(--a
 .tags-input {
   width: 100%;
   margin-top: 0.75rem;
-  background: rgba(255, 255, 255, 0.58) !important;
+  background: rgba(44, 44, 44, 0.78) !important;
 }
 
 .editor {
@@ -201,8 +201,8 @@ select:focus, input:focus, textarea:focus, .editor:focus { border-color: var(--a
   margin: 1rem auto 8rem;
   padding: 1rem;
   color: var(--ink);
-  background: transparent;
-  border: 1px solid transparent;
+  background: rgba(18, 18, 18, 0.45);
+  border: 1px solid rgba(187, 134, 252, 0.14);
   border-radius: 20px;
   line-height: 1.75;
   font-size: 1.08rem;
@@ -213,21 +213,21 @@ select:focus, input:focus, textarea:focus, .editor:focus { border-color: var(--a
 .editor h1 { font-size: 2.2rem; }
 .editor h2 { margin-top: 2.25rem; font-size: 1.55rem; }
 .editor h3 { margin-top: 1.75rem; font-size: 1.25rem; }
-.editor a { color: #7c3fbd; text-decoration-thickness: 0.08em; text-underline-offset: 0.18em; }
-.editor table { width: 100%; border-collapse: collapse; margin: 1.25rem 0; background: rgba(255, 255, 255, 0.45); }
+.editor a { color: #c77dff; text-decoration-thickness: 0.08em; text-underline-offset: 0.18em; }
+.editor table { width: 100%; border-collapse: collapse; margin: 1.25rem 0; background: rgba(30, 30, 30, 0.82); }
 .editor th, .editor td { border: 1px solid var(--line); padding: 0.55rem; vertical-align: top; }
-.editor th { background: #f2dfbd; }
+.editor th { background: #2c2c2c; }
 .editor img { max-width: 100%; height: auto; border-radius: 16px; }
 .editor figure { margin: 1.5rem 0; }
 .editor figcaption { color: var(--muted); font-size: 0.9rem; }
-.editor code { background: #f0dfbf; border-radius: 6px; padding: 0.1rem 0.32rem; }
+.editor code { background: #2c2c2c; border-radius: 6px; padding: 0.1rem 0.32rem; }
 
 .transclusion-ref {
   display: block;
   margin: 1.25rem 0;
   padding: 1rem;
-  background: #fff3d8;
-  border: 1px solid #e0bd7d;
+  background: rgba(187, 134, 252, 0.14);
+  border: 1px solid rgba(187, 134, 252, 0.38);
   border-left: 5px solid var(--accent);
   border-radius: 16px;
 }
@@ -248,20 +248,20 @@ select:focus, input:focus, textarea:focus, .editor:focus { border-color: var(--a
   width: min(100%, 420px);
   padding: 1rem;
   overflow-y: auto;
-  color: #f8ead2;
+  color: var(--ink);
   background: var(--dark);
-  border-left: 1px solid rgba(240, 212, 191, 0.28);
+  border-left: 1px solid rgba(187, 134, 252, 0.28);
   box-shadow: -24px 0 80px rgba(0, 0, 0, 0.36);
 }
 .block-panel header { display: flex; justify-content: space-between; gap: 1rem; align-items: start; }
 .block-panel h2 { margin: 0.15rem 0 0; }
-.block-panel code { color: #ffe1b5; }
-.block-panel label { display: grid; gap: 0.45rem; margin-top: 1rem; color: #ead7b8; font-weight: 800; }
-.block-panel input, .block-panel textarea { color: white; background: var(--dark-2); border-color: rgba(240, 212, 191, 0.28); }
-.panel-help { color: #c9b698; line-height: 1.55; }
+.block-panel code { color: var(--accent); }
+.block-panel label { display: grid; gap: 0.45rem; margin-top: 1rem; color: var(--ink); font-weight: 800; }
+.block-panel input, .block-panel textarea { color: white; background: var(--dark-2); border-color: rgba(187, 134, 252, 0.28); }
+.panel-help { color: var(--muted); line-height: 1.55; }
 .block-list { display: grid; gap: 0.5rem; margin-top: 1rem; }
-.block-list button { display: grid; gap: 0.25rem; width: 100%; text-align: left; border-radius: 14px; color: #f8ead2; background: var(--dark-2); }
-.block-list span { color: #c9b698; font-size: 0.84rem; }
+.block-list button { display: grid; gap: 0.25rem; width: 100%; text-align: left; border-radius: 14px; color: var(--ink); background: var(--dark-2); }
+.block-list span { color: var(--muted); font-size: 0.84rem; }
 
 @media (max-width: 760px) {
   .writer-header { position: static; align-items: stretch; flex-direction: column; }
@@ -270,3 +270,17 @@ select:focus, input:focus, textarea:focus, .editor:focus { border-color: var(--a
   .document-controls select { width: 100%; }
   .editor { margin-bottom: 4rem; }
 }
+
+.bookmark-group { display: inline-flex; align-items: center; gap: 0.25rem; flex: 0 0 auto; }
+.copy-bookmark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border-radius: 999px;
+  background: #2c2c2c;
+  color: var(--accent);
+}
+.copy-bookmark:hover { color: #000; background: var(--accent); }

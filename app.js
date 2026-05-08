@@ -1,6 +1,7 @@
 const STORAGE_KEY = "forever-bound-writing-room-v2";
 const AUTH_KEY = "forever-bound-authenticated";
 const AUTH_CONFIG_PATH = "config/auth.json";
+const EDITOR_ENTRY = "editor.html";
 const AUTOSAVE_DELAY = 600;
 
 const state = {
@@ -8,6 +9,7 @@ const state = {
   blocks: {},
   activeId: null,
   saveTimer: null,
+  pendingBookmarkId: "",
   suppressInput: false,
   sharedPassword: "",
 };
@@ -92,8 +94,10 @@ async function startEditor() {
   setAuthVisibility(true);
   await loadWorkspace();
   bindEditorEvents();
-  openFromHash();
+  applyRouteToState();
   renderAll();
+  if (!new URLSearchParams(location.search).has("doc")) updateUrl();
+  scrollToRouteBookmark();
   setStatus("Ready", "saved");
 }
 
@@ -189,6 +193,12 @@ function bindEditorEvents() {
   els.exportButton.addEventListener("click", exportWorkspace);
 
   els.bookmarkBar.addEventListener("click", (event) => {
+    const copyButton = event.target.closest("button[data-copy-bookmark]");
+    if (copyButton) {
+      copyBookmarkLink(copyButton.dataset.copyBookmark);
+      return;
+    }
+
     const link = event.target.closest("a[data-bookmark]");
     if (!link) return;
     event.preventDefault();
@@ -205,7 +215,8 @@ function bindEditorEvents() {
     selectBlock(button.dataset.blockId);
   });
 
-  window.addEventListener("hashchange", openFromHash);
+  window.addEventListener("hashchange", openFromRoute);
+  window.addEventListener("popstate", openFromRoute);
   document.addEventListener("keydown", (event) => {
     const isModifier = event.metaKey || event.ctrlKey;
     if (isModifier && event.key.toLowerCase() === "s") {
@@ -215,10 +226,10 @@ function bindEditorEvents() {
   });
 }
 
-function createDocument() {
+function createDocument(id = `doc-${Date.now()}`, title = "Untitled Document") {
   const doc = {
-    id: `doc-${Date.now()}`,
-    title: "Untitled Document",
+    id,
+    title,
     tags: [],
     updatedAt: new Date().toISOString(),
     content: els.documentTemplate.innerHTML.trim(),
@@ -227,20 +238,38 @@ function createDocument() {
   return doc;
 }
 
-function openDocument(id) {
+function openDocument(id, bookmarkId = "") {
   state.activeId = id;
+  state.pendingBookmarkId = bookmarkId;
   renderAll();
-  updateUrl();
+  updateUrl(bookmarkId);
+  if (bookmarkId) scrollToRouteBookmark();
   setStatus("Ready", "saved");
 }
 
-function openFromHash() {
-  const { documentId, bookmarkId } = parseHash();
-  if (documentId && state.documents.some((doc) => doc.id === documentId)) {
-    state.activeId = documentId;
-    renderAll();
+function openFromRoute() {
+  const previousId = state.activeId;
+  applyRouteToState();
+  if (state.activeId !== previousId) renderAll();
+  scrollToRouteBookmark();
+}
+
+function applyRouteToState() {
+  const route = parseRoute();
+  const routeDocument = route.documentId ? findDocumentByRouteId(route.documentId) : null;
+  if (routeDocument) {
+    state.activeId = routeDocument.id;
+  } else if (route.documentId) {
+    const doc = createDocument(route.documentId, humanizeDocumentId(route.documentId));
+    state.activeId = doc.id;
+    markDirty("Created document from URL");
   }
-  if (bookmarkId) requestAnimationFrame(() => jumpToBookmark(bookmarkId, false));
+  state.pendingBookmarkId = route.bookmarkId;
+}
+
+function scrollToRouteBookmark() {
+  if (!state.pendingBookmarkId) return;
+  requestAnimationFrame(() => jumpToBookmark(state.pendingBookmarkId, false));
 }
 
 function activeDocument() {
@@ -271,10 +300,13 @@ function renderActiveDocument() {
 }
 
 function renderBookmarks() {
+  const scrollY = window.scrollY;
   const bookmarks = getBookmarks();
-  els.bookmarkBar.innerHTML = bookmarks.length ? bookmarks.map((bookmark) => (
-    `<a class="bookmark-pill" href="#${encodeURIComponent(activeDocument().id)}/${encodeURIComponent(bookmark.id)}" data-bookmark="${escapeAttr(bookmark.id)}">${escapeHtml(bookmark.label)}</a>`
-  )).join("") : `<span class="empty-bookmarks">Add headings or bookmarks to jump through this document.</span>`;
+  els.bookmarkBar.innerHTML = bookmarks.length ? bookmarks.map((bookmark) => {
+    const href = sectionUrl(activeDocument().id, bookmark.id);
+    return `<span class="bookmark-group"><a class="bookmark-pill" href="${escapeAttr(href)}" data-bookmark="${escapeAttr(bookmark.id)}">${escapeHtml(bookmark.label)}</a><button class="copy-bookmark" type="button" data-copy-bookmark="${escapeAttr(bookmark.id)}" title="Copy section link" aria-label="Copy link to ${escapeAttr(bookmark.label)}">🔗</button></span>`;
+  }).join("") : `<span class="empty-bookmarks">Add headings or bookmarks to jump through this document.</span>`;
+  window.scrollTo({ top: scrollY, left: window.scrollX, behavior: "auto" });
 }
 
 function getBookmarks() {
@@ -473,19 +505,77 @@ function serializedWorkspace() {
 }
 
 function updateUrl(bookmarkId = "") {
-  const hash = bookmarkId ? `${activeDocument().id}/${bookmarkId}` : activeDocument().id;
-  history.replaceState(null, "", `#${hash}`);
+  history.replaceState(null, "", documentUrl(activeDocument().id, bookmarkId));
 }
 
-function parseHash() {
-  const [documentId, bookmarkId] = decodeURIComponent(location.hash.replace(/^#/, "")).split("/");
-  return { documentId, bookmarkId };
+function parseRoute() {
+  const params = new URLSearchParams(location.search);
+  return {
+    documentId: params.get("doc") || "",
+    bookmarkId: decodeURIComponent(location.hash.replace(/^#/, "")),
+  };
+}
+
+function documentUrl(documentId, bookmarkId = "") {
+  const url = new URL(location.href);
+  url.pathname = editorPathname();
+  url.search = "";
+  url.searchParams.set("doc", documentId);
+  url.hash = bookmarkId ? encodeURIComponent(bookmarkId) : "";
+  return `${url.pathname}${url.search}${url.hash}`;
+}
+
+function editorPathname() {
+  const segments = location.pathname.split("/");
+  if (!segments[segments.length - 1] || segments[segments.length - 1].endsWith(".html")) {
+    segments[segments.length - 1] = EDITOR_ENTRY;
+  } else {
+    segments.push(EDITOR_ENTRY);
+  }
+  return segments.join("/");
+}
+
+function sectionUrl(documentId, bookmarkId) {
+  return documentUrl(documentId, bookmarkId);
+}
+
+function absoluteSectionUrl(documentId, bookmarkId) {
+  return new URL(sectionUrl(documentId, bookmarkId), location.href).href;
+}
+
+function findDocumentByRouteId(value) {
+  const decoded = decodeURIComponent(value);
+  return state.documents.find((item) => item.id === decoded)
+    ?? state.documents.find((item) => slugify(item.title) === slugify(decoded));
+}
+
+async function copyBookmarkLink(bookmarkId) {
+  const url = absoluteSectionUrl(activeDocument().id, bookmarkId);
+  await copyText(url);
+  setStatus("Copied section link", "saved");
+}
+
+async function copyText(value) {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(value);
+    return;
+  }
+  const input = document.createElement("textarea");
+  input.value = value;
+  input.setAttribute("readonly", "");
+  input.style.position = "fixed";
+  input.style.opacity = "0";
+  document.body.appendChild(input);
+  input.select();
+  document.execCommand("copy");
+  input.remove();
 }
 
 function normalizeLinkTarget(value) {
-  if (/^(https?:|mailto:|#)/i.test(value)) return value;
-  const doc = state.documents.find((item) => item.id === value || item.title.toLowerCase() === value.toLowerCase());
-  return doc ? `#${doc.id}` : value;
+  if (/^(https?:|mailto:)/i.test(value)) return value;
+  if (value.startsWith("#")) return documentUrl(activeDocument().id, value.slice(1));
+  const doc = findDocumentByRouteId(value);
+  return doc ? documentUrl(doc.id) : value;
 }
 
 function uniqueBookmarkId(base) {
@@ -496,6 +586,10 @@ function uniqueBookmarkId(base) {
     index += 1;
   }
   return id;
+}
+
+function humanizeDocumentId(value) {
+  return decodeURIComponent(value).replace(/[-_]+/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
 function slugify(value) {
