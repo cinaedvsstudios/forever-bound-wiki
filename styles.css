@@ -1342,3 +1342,170 @@ input, textarea, select, .panel-help, .help-panel p, .help-panel dd, .document-c
 .context-status { justify-self: center; }
 .top-command-menus { justify-self: center; }
 .save-controls { justify-self: end; }
+
+/* Feedback pass: typography, icon title, compact designer, table/emoji/pill polish */
+:root {
+  font-family: Arial, Helvetica, sans-serif !important;
+}
+body, button, input, select, textarea, summary, .editor, .help-panel, .settings-panel, .block-panel {
+  font-family: Arial, Helvetica, sans-serif !important;
+}
+code, pre, .editor code {
+  font-family: "Courier New", Courier, monospace !important;
+}
+.app-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+.app-name img {
+  width: 1.65rem;
+  height: 1.65rem;
+  object-fit: contain;
+  border-radius: 6px;
+}
+.writing-room-button,
+.context-status,
+.top-command-menus .tool-menu-trigger,
+.save-controls .icon-button {
+  min-height: 2.55rem !important;
+  height: 2.55rem !important;
+}
+.design-section .design-controls {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem !important;
+}
+.design-section .design-controls h4,
+.design-section .design-controls label:has(#designBgImage) {
+  grid-column: 1 / -1;
+}
+.design-section label,
+.block-panel label {
+  gap: 0.25rem !important;
+  font-size: 0.78rem !important;
+}
+.design-section input,
+.block-panel input,
+.block-panel textarea,
+.favorite-colors button,
+.color-slot,
+.dynamic-input {
+  border-width: 1px !important;
+}
+.favorite-colors button,
+.color-slot {
+  border-radius: 999px !important;
+  border-color: #777 !important;
+}
+.block-panel {
+  font-size: 0.84rem !important;
+}
+.block-panel h2 {
+  font-size: 1.35rem !important;
+}
+.block-panel .panel-help {
+  font-size: 0.8rem !important;
+  line-height: 1.45 !important;
+}
+.block-panel input,
+.block-panel textarea {
+  padding: 0.45rem 0.55rem !important;
+  border-width: 1px !important;
+}
+.tcard-style-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 0.35rem !important;
+}
+.editor .pill-link::before,
+.editor .pill-link[data-link-type="block"]::before,
+.editor .pill-link[data-link-type="bookmark"]::before,
+.editor .pill-link[data-link-type="document"]::before {
+  content: none !important;
+}
+.emoji-picker {
+  position: fixed;
+  z-index: 90;
+  display: grid;
+  grid-template-columns: repeat(7, 2rem);
+  gap: 0.35rem;
+  padding: 0.65rem;
+  background: #28133f;
+  border: 1px solid rgba(232,143,105,0.72);
+  border-radius: 16px;
+  box-shadow: 0 18px 48px rgba(0,0,0,0.55);
+}
+.emoji-picker button {
+  width: 2rem;
+  height: 2rem;
+  min-height: 0;
+  padding: 0;
+  border-radius: 10px;
+  background: rgba(0,0,0,0.24);
+}
+.table-edit-toolbar {
+  float: right;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin: 0.4rem 0 0.15rem 0.4rem;
+  padding: 0.18rem;
+  background: #28133f;
+  border: 1px solid rgba(232,143,105,0.72);
+  border-radius: 999px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.45);
+}
+.table-edit-toolbar .table-edit-button,
+.table-edit-toolbar button {
+  width: auto;
+  min-width: 1.8rem;
+  height: 1.8rem;
+  min-height: 0;
+  padding: 0 0.38rem;
+  border-radius: 999px;
+  background: rgba(0,0,0,0.22);
+  color: #fbf4d6;
+}
+.table-tool-row {
+  display: none;
+  gap: 0.25rem;
+  align-items: center;
+}
+.table-edit-toolbar.is-open .table-tool-row { display: inline-flex; }
+.table-tool-row input[type="color"] {
+  width: 1.8rem;
+  height: 1.8rem;
+  padding: 0;
+  border: 1px solid #777;
+  border-radius: 999px;
+  overflow: hidden;
+}
+.writing-room-cards {
+  padding-right: 3.5rem !important;
+}
+.filing-jump-rail {
+  right: 0.35rem !important;
+  width: 2.1rem !important;
+}
+.filing-tab {
+  margin-left: 0 !important;
+}
+.filing-tab-documents {
+  margin-left: 0.35rem !important;
+  padding-left: 0.45rem !important;
+}
+.lock-button {
+  min-width: 1.75rem !important;
+  width: 1.75rem;
+  height: 1.75rem !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  border-radius: 999px;
+  background: rgba(0,0,0,0.18) !important;
+  box-shadow: none !important;
+  font-size: 0.78rem !important;
+}
+.selection-menu button[data-context-action="edit-link"],
+.selection-menu button[data-context-action="pill-color"] {
+  display: flex;
+}

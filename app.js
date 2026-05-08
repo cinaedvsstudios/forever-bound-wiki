@@ -124,6 +124,8 @@ const els = {
   imageButton: document.querySelector("#imageButton"),
   imageInput: document.querySelector("#imageInput"),
   emojiButton: document.querySelector("#emojiButton"),
+  searchButton: document.querySelector("#searchButton"),
+  subnotoButton: document.querySelector("#subnotoButton"),
   blockButton: document.querySelector("#blockButton"),
   emphasisButton: document.querySelector("#emphasisButton"),
   topHelpButton: document.querySelector("#topHelpButton"),
@@ -480,7 +482,9 @@ function bindEditorEvents() {
   els.tableButton.addEventListener("click", insertTable);
   els.imageButton.addEventListener("click", () => els.imageInput.click());
   els.imageInput.addEventListener("change", embedSelectedImage);
-  els.emojiButton.addEventListener("click", () => insertHtml("✨"));
+  els.emojiButton.addEventListener("click", showEmojiPicker);
+  els.searchButton?.addEventListener("click", () => setContextStatus("Search will be built next", "saved"));
+  els.subnotoButton?.addEventListener("click", () => setContextStatus("Subnoto placeholder ready", "saved"));
   els.emphasisButton.addEventListener("click", insertEmphasisBox);
   els.topHelpButton.addEventListener("click", () => toggleHelpPanel(true));
   els.settingsButton.addEventListener("click", () => toggleSettingsPanel(true));
@@ -726,7 +730,18 @@ function selectedPlainText() {
 }
 
 function openSelectionContextMenu(event) {
+  const pill = event.target.closest("a.pill-link");
   const selection = window.getSelection();
+  if (pill) {
+    event.preventDefault();
+    const range = document.createRange();
+    range.selectNodeContents(pill);
+    selection.removeAllRanges();
+    selection.addRange(range);
+    saveSelectionRange();
+    showSelectionContextMenu(event.clientX, event.clientY);
+    return;
+  }
   if (!selection.rangeCount || selection.isCollapsed || !els.editor.contains(selection.getRangeAt(0).commonAncestorContainer)) return;
   event.preventDefault();
   saveSelectionRange();
@@ -757,6 +772,8 @@ async function handleSelectionMenuClick(event) {
   if (action === "transclusion") await createTransclusionFromSelection();
   if (action === "link") await createHyperlink();
   if (action === "pill") await createPillLink();
+  if (action === "edit-link") await editSelectedLink();
+  if (action === "pill-color") await changeSelectedPillColor();
 }
 
 async function createTransclusionFromSelection() {
@@ -841,6 +858,22 @@ async function createPillLink() {
   if (!result?.target) return;
   restoreSelectionRange();
   runLinkCommand(result.target, { pill: true });
+}
+
+async function changeSelectedPillColor() {
+  const link = currentLink();
+  if (!link?.classList.contains("pill-link")) {
+    setStatus("Right-click a Link Pill to recolor it", "dirty");
+    return;
+  }
+  const result = await openCapsDialog("Link Pill Color", [
+    { name: "bg", label: "Pill background", value: link.style.backgroundColor || CAPSANOTO_PALETTE.deepPlum, placeholder: "#28133f" },
+    { name: "text", label: "Pill text", value: link.style.color || CAPSANOTO_PALETTE.parchment, placeholder: "#fbf4d6" },
+  ]);
+  if (!result) return;
+  if (result.bg) link.style.backgroundColor = normalizeHexColor(result.bg) || result.bg;
+  if (result.text) link.style.color = normalizeHexColor(result.text) || result.text;
+  syncAndSave("Link Pill color updated");
 }
 
 async function editSelectedLink() {
@@ -1017,6 +1050,35 @@ function embedSelectedImage(event) {
   reader.readAsDataURL(file);
 }
 
+
+function showEmojiPicker(event) {
+  saveSelectionRange();
+  document.querySelector(".emoji-picker")?.remove();
+  const picker = document.createElement("div");
+  picker.className = "emoji-picker";
+  picker.setAttribute("role", "menu");
+  const emojis = ["✨","🔥","💗","📜","📁","🎬","🧑","👑","⚔️","🛡️","🧪","🪄","🗝️","🕯️","🌙","☀️","⭐","🌊","🌲","🏰","⛪","💎","🎵","📝","❗","❓","✅","❌"];
+  picker.innerHTML = emojis.map((emoji) => `<button type="button" data-emoji="${emoji}" title="${emoji}">${emoji}</button>`).join("");
+  picker.addEventListener("click", (clickEvent) => {
+    const button = clickEvent.target.closest("button[data-emoji]");
+    if (!button) return;
+    restoreSelectionRange();
+    insertHtml(button.dataset.emoji);
+    picker.remove();
+  });
+  picker.addEventListener("contextmenu", async (menuEvent) => {
+    const button = menuEvent.target.closest("button[data-emoji]");
+    if (!button) return;
+    menuEvent.preventDefault();
+    await copyText(button.dataset.emoji);
+    setStatus("Emoji copied", "saved");
+  });
+  document.body.append(picker);
+  const rect = event.currentTarget.getBoundingClientRect();
+  picker.style.left = `${Math.min(rect.left, window.innerWidth - 280)}px`;
+  picker.style.top = `${rect.bottom + 8}px`;
+}
+
 function insertHtml(html) {
   els.editor.focus();
   document.execCommand("insertHTML", false, html);
@@ -1167,15 +1229,15 @@ function renderWritingRoomCards() {
   els.writingRoomTitle.textContent = state.writingRoomName || "Writing Room";
   const groups = filingCabinetTree();
   const groupHtml = groups.map((group, groupIndex) => `
-    <details class="writing-room-group" data-group-id="${escapeAttr(group.id)}" ${groupIndex === 0 ? "open" : ""}>
-      <summary><span class="card-arrow">›</span><span class="folder-icon">${groupIcon(group)}</span><strong ${inlineEditAttrs("group", group.id, "label")}>${escapeHtml(group.label)}</strong>${state.filingEditMode ? `<span class="filing-group-actions"><button type="button" title="Delete folder" aria-label="Delete folder" data-group-action="delete" data-group-id="${escapeAttr(group.id)}">❌</button></span>` : ""}</summary>
+    <details class="writing-room-group" data-group-id="${escapeAttr(group.id)}" ${groupIndex === 0 || group.locked ? "open" : ""}>
+      <summary><span class="card-arrow">›</span><span class="folder-icon">${groupIcon(group)}</span><strong ${inlineEditAttrs("group", group.id, "label")}>${escapeHtml(group.label)}</strong><button type="button" class="lock-button" title="Keep folder expanded" data-group-action="lock" data-group-id="${escapeAttr(group.id)}">${group.locked ? "🔒" : "🔓"}</button>${state.filingEditMode ? `<span class="filing-group-actions"><button type="button" title="Delete folder" aria-label="Delete folder" data-group-action="delete" data-group-id="${escapeAttr(group.id)}">❌</button></span>` : ""}</summary>
       <div class="writing-room-card-stack folder-tab-stack" data-drop-group="${escapeAttr(group.id)}">
         ${group.tabs.map((tab) => renderFilingTab(tab)).join("")}
         ${state.filingEditMode && !group.tabs.length ? '<p class="panel-help">Create a tab in this folder before adding documents.</p>' : ''}
       </div>
     </details>
   `).join("");
-  const rail = `<nav class="filing-jump-rail" aria-label="Filing Cabinet jumps">${groups.map((group) => `<button type="button" data-scroll-group="${escapeAttr(group.id)}" title="${escapeAttr(group.label)}"><span>${groupIcon(group)}</span></button>`).join("")}</nav>`;
+  const rail = `<nav class="filing-jump-rail" aria-label="Filing Cabinet jumps"><button type="button" data-filing-action="collapse-all" title="Collapse all">−</button>${groups.map((group) => `<button type="button" data-scroll-group="${escapeAttr(group.id)}" title="${escapeAttr(group.label)}"><span>${groupIcon(group)}</span></button>`).join("")}<button type="button" data-filing-action="expand-all" title="Expand all">＋</button></nav>`;
   const trashHtml = renderTrashSection();
   els.writingRoomCards.innerHTML = rail + groupHtml + trashHtml;
 }
@@ -1185,8 +1247,8 @@ function inlineEditAttrs(kind, id, field) {
 }
 
 function renderFilingTab(tab) {
-  return `<details class="filing-tab" data-tab-id="${escapeAttr(tab.id)}" draggable="${state.filingEditMode}" open>
-    <summary><span class="card-arrow">›</span><span class="tab-icon">▱</span><strong ${inlineEditAttrs("tab", tab.id, "label")}>▽ ${escapeHtml(tab.label)}</strong>${state.filingEditMode ? `<span class="filing-group-actions"><button type="button" title="Delete tab" aria-label="Delete tab" data-tab-action="delete" data-tab-id="${escapeAttr(tab.id)}">❌</button></span>` : ""}</summary>
+  return `<details class="filing-tab" data-tab-id="${escapeAttr(tab.id)}" draggable="${state.filingEditMode}" ${tab.locked ? "open" : ""}>
+    <summary><span class="card-arrow">›</span><span class="tab-icon">▱</span><strong ${inlineEditAttrs("tab", tab.id, "label")}>${escapeHtml(tab.label)}</strong><button type="button" class="lock-button" title="Keep tab expanded" data-tab-action="lock" data-tab-id="${escapeAttr(tab.id)}">${tab.locked ? "🔒" : "🔓"}</button>${state.filingEditMode ? `<span class="filing-group-actions"><button type="button" title="Delete tab" aria-label="Delete tab" data-tab-action="delete" data-tab-id="${escapeAttr(tab.id)}">❌</button></span>` : ""}</summary>
     <div class="writing-room-card-stack filing-tab-documents" data-drop-tab="${escapeAttr(tab.id)}">
       ${tab.documents.map((doc) => renderWritingRoomCard(doc, 0)).join("")}
       ${state.filingEditMode && !tab.documents.length ? '<p class="panel-help">Drop documents into this tab.</p>' : ''}
@@ -1317,10 +1379,19 @@ function renderDeprecatedVersions(doc) {
 }
 
 async function handleWritingRoomCardClick(event) {
+  const filingAction = event.target.closest("button[data-filing-action]");
+  if (filingAction) {
+    event.preventDefault();
+    const open = filingAction.dataset.filingAction === "expand-all";
+    els.writingRoomCards.querySelectorAll(".writing-room-group, .filing-tab").forEach((item) => { item.open = open; });
+    return;
+  }
   const railButton = event.target.closest("button[data-scroll-group]");
   if (railButton) {
     event.preventDefault();
-    els.writingRoomCards.querySelector(`[data-group-id="${CSS.escape(railButton.dataset.scrollGroup)}"]`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    const group = els.writingRoomCards.querySelector(`[data-group-id="${CSS.escape(railButton.dataset.scrollGroup)}"]`);
+    if (group) group.open = true;
+    group?.scrollIntoView({ behavior: "smooth", block: "start" });
     return;
   }
   const groupButton = event.target.closest("button[data-group-action]");
@@ -1353,6 +1424,12 @@ async function handleFilingTabAction(action, tabId) {
   const tab = state.filingTabs.find((item) => item.id === tabId);
   if (!tab) return;
   const tabDocs = state.documents.filter((doc) => doc.filingTabId === tabId);
+  if (action === "lock") {
+    tab.locked = !tab.locked;
+    renderWritingRoomCards();
+    markDirty("Tab lock updated");
+    return;
+  }
   if (action === "settings") {
     const result = await openCapsDialog("Tab Settings", [
       { name: "label", label: "Tab label", value: tab.label },
@@ -1382,6 +1459,14 @@ async function handleFilingGroupAction(action, groupId) {
   if (!group) return;
   const groupTabs = state.filingTabs.filter((tab) => tab.groupId === groupId);
   const groupDocs = state.documents.filter((doc) => doc.filingGroupId === groupId || groupTabs.some((tab) => tab.id === doc.filingTabId));
+  if (action === "lock") {
+    const storedGroup = state.filingGroups.find((item) => item.id === groupId);
+    if (storedGroup) storedGroup.locked = !storedGroup.locked;
+    else state.filingGroups.push({ id: group.id, label: group.label, type: group.type || "folder", locked: true });
+    renderWritingRoomCards();
+    markDirty("Folder lock updated");
+    return;
+  }
   if (action === "settings") {
     const result = await openCapsDialog("Folder Settings", [
       { name: "label", label: "Folder label", value: group.label },
@@ -1713,20 +1798,37 @@ function handleEditorHover(event) {
 }
 
 function handleEditorMouseOut(event) {
-  if (!event.relatedTarget?.closest?.(".table-edit-button") && !event.relatedTarget?.closest?.("table")) {
+  if (!event.relatedTarget?.closest?.(".table-edit-toolbar") && !event.relatedTarget?.closest?.("table")) {
     clearTimeout(state.tableEditTimer);
+    const toolbar = els.editor.querySelector(".table-edit-toolbar:not(.is-open)");
+    toolbar?.remove();
   }
 }
 
 function showTableEditButton(table) {
-  removeFloatingEditorButtons(".table-edit-button");
-  const button = document.createElement("button");
-  button.type = "button";
-  button.className = "floating-edit-button table-edit-button";
-  button.textContent = "✎";
-  button.title = "Edit table";
-  button.addEventListener("click", () => openTableEditor(table));
-  table.parentElement?.insertBefore(button, table);
+  const existing = table.previousElementSibling;
+  if (existing?.classList.contains("table-edit-toolbar")) return;
+  removeFloatingEditorButtons(".table-edit-toolbar");
+  const toolbar = document.createElement("span");
+  toolbar.className = "floating-edit-button table-edit-toolbar";
+  toolbar.innerHTML = `<button type="button" class="table-edit-button" data-table-tool="toggle" title="Edit table">✎</button><span class="table-tool-row"><button type="button" data-table-tool="add-row" title="Add row">＋R</button><button type="button" data-table-tool="add-col" title="Add column">＋C</button><button type="button" data-table-tool="delete-row" title="Delete row">−R</button><button type="button" data-table-tool="delete-col" title="Delete column">−C</button><button type="button" data-table-tool="wider" title="Wider columns">⇔</button><input type="color" data-table-tool="bg" title="Background" value="#28133f"><input type="color" data-table-tool="border" title="Border" value="#e88f69"></span>`;
+  toolbar.addEventListener("click", (event) => handleTableToolAction(event, table, toolbar));
+  toolbar.addEventListener("input", (event) => handleTableToolAction(event, table, toolbar));
+  table.parentElement?.insertBefore(toolbar, table);
+}
+
+function handleTableToolAction(event, table, toolbar) {
+  const control = event.target.closest?.("[data-table-tool]");
+  if (!control) return;
+  const action = control.dataset.tableTool;
+  if (action === "toggle") { toolbar.classList.toggle("is-open"); return; }
+  if (action === "bg") table.style.backgroundColor = control.value;
+  if (action === "border") {
+    table.style.borderColor = control.value;
+    table.querySelectorAll("th, td").forEach((cell) => { cell.style.borderColor = control.value; });
+  }
+  if (["add-row", "add-col", "delete-row", "delete-col", "wider"].includes(action)) applyTableEdits(table, { action });
+  syncAndSave("Table updated");
 }
 
 function removeFloatingEditorButtons(selector) {
@@ -1752,6 +1854,7 @@ function applyTableEdits(table, result) {
     table.querySelectorAll("th, td").forEach((cell) => { cell.style.borderColor = table.style.borderColor; });
   }
   if (result.columnWidth) table.querySelectorAll("tr > *").forEach((cell) => { cell.style.width = result.columnWidth; });
+  if (result.action === "wider") table.querySelectorAll("tr > *").forEach((cell) => { cell.style.minWidth = `${(parseInt(cell.style.minWidth, 10) || 120) + 40}px`; });
   const action = String(result.action || "").trim().toLowerCase();
   const rows = [...table.rows];
   const columnCount = rows[0]?.cells.length || 1;

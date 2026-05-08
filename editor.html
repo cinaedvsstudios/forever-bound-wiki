@@ -23,7 +23,7 @@
   <main id="editorApp" class="writer-shell" aria-label="Forever Bound writing editor">
     <header class="writer-header toolbar" aria-label="Capsanoto command bar">
       <div class="document-controls">
-        <strong class="app-name">Capsanoto</strong>
+        <strong class="app-name"><img src="https://raw.githubusercontent.com/cinaedvsstudios/forever-bound-wiki/refs/heads/main/iconcapsanoto.png" alt="Capsanoto icon">Capsanoto</strong>
         <button id="writingRoomButton" class="writing-room-button" type="button" aria-expanded="false" aria-controls="writingRoomPanel">Writing Room</button>
         <label for="documentSelect" class="sr-only">Current document</label>
         <select id="documentSelect" title="Document Switcher" hidden></select>
@@ -37,24 +37,26 @@
             <button data-command="italic" type="button" title="Italic" aria-label="Italic" data-tool-name="Italic Mark"><em>I</em> Italic</button>
             <button data-block="h1" type="button" title="Heading 1" aria-label="Heading 1" data-tool-name="Chapter Heading">H1 Chapter</button>
             <button data-block="h2" type="button" title="Heading 2" aria-label="Heading 2" data-tool-name="Section Heading">H2 Section</button>
-            <button data-block="p" type="button" title="Paragraph" aria-label="Paragraph" data-tool-name="Body Text">¶ Body</button>
+            <button data-block="p" type="button" title="Paragraph" aria-label="Paragraph" data-tool-name="Body Text">¶ Normal Text</button>
             <button data-command="insertUnorderedList" type="button" title="Bullet List" aria-label="Bullet List" data-tool-name="Lore List">☰ List</button>
           </div>
         </div>
         <div class="tool-menu">
           <button class="tool-menu-trigger" type="button" aria-haspopup="true">Links</button>
           <div class="tool-menu-panel">
-            <button id="linkButton" type="button" title="Create Link" aria-label="Create Link" data-tool-name="Path Link">🔗 Path Link</button>
-            <button id="editLinkButton" type="button" title="Edit Link" aria-label="Edit Link" data-tool-name="Link Editor">🛠️ Link Editor</button>
-            <button id="pillLinkButton" type="button" title="Convert Selection to Pill" aria-label="Convert Selection to Pill" data-tool-name="Link Pill">💊 Link Pill</button>
-            <button id="removeLinkButton" type="button" title="Remove Link" aria-label="Remove Link" data-tool-name="Link Breaker">❌ Link Breaker</button>
-            <button id="bookmarkButton" type="button" title="Bookmark" aria-label="Bookmark" data-tool-name="Link Anchor">⚓ Link Anchor</button>
+            <button id="subnotoButton" type="button" title="Subnoto" aria-label="Subnoto" data-tool-name="Subnoto">🧩 Subnoto</button>
+            <button id="linkButton" type="button" title="Create Link" aria-label="Create Link" data-tool-name="Path Link" hidden>🔗 Path Link</button>
+            <button id="editLinkButton" type="button" title="Edit Link" aria-label="Edit Link" data-tool-name="Link Editor" hidden>🛠️ Link Editor</button>
+            <button id="pillLinkButton" type="button" title="Convert Selection to Pill" aria-label="Convert Selection to Pill" data-tool-name="Link Pill" hidden>💊 Link Pill</button>
+            <button id="removeLinkButton" type="button" title="Remove Link" aria-label="Remove Link" data-tool-name="Link Breaker" hidden>❌ Link Breaker</button>
+            <button id="bookmarkButton" type="button" title="Bookmark" aria-label="Bookmark" data-tool-name="Link Anchor" hidden>⚓ Link Anchor</button>
           </div>
         </div>
         <div class="tool-menu">
           <button class="tool-menu-trigger" type="button" aria-haspopup="true">Insert</button>
           <div class="tool-menu-panel">
             <button id="tableButton" type="button" title="Table" aria-label="Table" data-tool-name="Lore Table">▦ Lore Table</button>
+            <button data-command="insertHorizontalRule" type="button" title="Horizontal Rule" aria-label="Horizontal Rule" data-tool-name="Divider Rule">— Rule</button>
             <button id="imageButton" type="button" title="Image" aria-label="Image" data-tool-name="Image Embed">🖼️ Image Embed</button>
             <button id="emojiButton" type="button" title="Emoji" aria-label="Emoji" data-tool-name="Emoji Spark">✨ Emoji Spark</button>
             <button id="blockButton" type="button" title="Transclusion Cards" aria-label="Transclusion Cards" data-tool-name="TCard">𝞃 TCard</button>
@@ -64,7 +66,7 @@
       </nav>
       <div class="save-controls">
         <span id="saveStatus" class="save-status"></span>
-        <button id="topHelpButton" class="icon-button" type="button" title="Help" aria-label="Help">?</button>
+        <button id="searchButton" class="icon-button" type="button" title="Search" aria-label="Search" data-tool-name="Search preview">🔍</button><button id="topHelpButton" class="icon-button" type="button" title="Help" aria-label="Help">?</button>
         <button id="settingsButton" class="icon-button" type="button" title="Settings" aria-label="Settings" data-tool-name="Capsanoto Settings">⚙️</button>
       </div>
       <input id="imageInput" type="file" accept="image/*" hidden>
@@ -76,6 +78,8 @@
       <li><button type="button" data-context-action="transclusion"><span>▣</span><strong>Transclusion</strong><small>Save selection as a reusable block.</small></button></li>
       <li><button type="button" data-context-action="link"><span>🔗</span><strong>Link</strong><small>Point selection at a path.</small></button></li>
       <li><button type="button" data-context-action="pill"><span>💊</span><strong>Pill Link</strong><small>Make a rounded reference card.</small></button></li>
+      <li><button type="button" data-context-action="edit-link"><span>🛠️</span><strong>Edit Link</strong><small>Edit an existing link or pill.</small></button></li>
+      <li><button type="button" data-context-action="pill-color"><span>🎨</span><strong>Pill Color</strong><small>Change selected pill color.</small></button></li>
     </menu>
 
     <div id="dialogOverlay" class="dialog-overlay" hidden>
