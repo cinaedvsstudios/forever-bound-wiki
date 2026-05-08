@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Forever Bound Writing Room</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="is-locked">
+  <main id="passwordScreen" class="password-screen" aria-labelledby="passwordTitle">
+    <form id="passwordForm" class="password-card">
+      <img src="lanternlogo small.png" alt="Forever Bound lantern logo">
+      <p class="eyebrow">Forever Bound</p>
+      <h1 id="passwordTitle">Enter the writing room</h1>
+      <p>Use the shared project password to unlock this browser session.</p>
+      <label for="passwordInput">Password</label>
+      <input id="passwordInput" type="password" autocomplete="current-password" required>
+      <button type="submit">Unlock Editor</button>
+      <p id="passwordError" class="error" role="alert"></p>
+    </form>
+  </main>
+
+  <main id="editorApp" class="writer-shell" aria-label="Forever Bound writing editor" hidden>
+    <header class="writer-header">
+      <div class="document-controls">
+        <label for="documentSelect" class="sr-only">Current document</label>
+        <select id="documentSelect"></select>
+        <button id="newDocumentButton" type="button">New Document</button>
+      </div>
+      <div class="save-controls">
+        <span id="saveStatus" class="save-status">Loading…</span>
+        <button id="exportButton" type="button">Export JSON</button>
+        <button id="logoutButton" type="button">Logout</button>
+      </div>
+    </header>
+
+    <section class="toolbar" aria-label="Formatting toolbar">
+      <button data-command="bold" type="button"><strong>B</strong></button>
+      <button data-command="italic" type="button"><em>I</em></button>
+      <button data-block="h1" type="button">H1</button>
+      <button data-block="h2" type="button">H2</button>
+      <button data-block="p" type="button">Text</button>
+      <button data-command="insertUnorderedList" type="button">List</button>
+      <button id="linkButton" type="button">Link</button>
+      <button id="pillLinkButton" type="button">Pill Link</button>
+      <button id="bookmarkButton" type="button">Bookmark</button>
+      <button id="tableButton" type="button">Table</button>
+      <button id="imageButton" type="button">Image</button>
+      <button id="emojiButton" type="button">Emoji</button>
+      <button id="blockButton" type="button">Block</button>
+      <input id="imageInput" type="file" accept="image/*" hidden>
+    </section>
+
+    <nav id="bookmarkBar" class="bookmark-bar" aria-label="Document bookmarks"></nav>
+
+    <section class="title-strip">
+      <input id="titleInput" class="title-input" aria-label="Document title">
+      <input id="tagsInput" class="tags-input" aria-label="Document tags" placeholder="tags: character, location, episode">
+    </section>
+
+    <article id="editor" class="editor" contenteditable="true" spellcheck="true" aria-label="Writing area"></article>
+
+    <aside id="blockPanel" class="block-panel" aria-label="Transclusion blocks" hidden>
+      <header>
+        <div>
+          <p class="eyebrow">Reusable Content</p>
+          <h2>Transclusion Blocks</h2>
+        </div>
+        <button id="closeBlockPanel" type="button" aria-label="Close transclusion blocks">×</button>
+      </header>
+      <p class="panel-help">Create reusable blocks with IDs like <code>Character-Name</code>, <code>Item-Name</code>, <code>Location-Name</code>, or <code>Mechanic-Name</code>. Reference them in documents with <code>{{Item-Runestones}}</code>.</p>
+      <label>Block ID <input id="blockIdInput" type="text" placeholder="Item-Runestones"></label>
+      <label>Block Content <textarea id="blockContentInput" rows="8" placeholder="Reusable canon text"></textarea></label>
+      <div class="block-actions">
+        <button id="saveBlockButton" type="button">Save Block</button>
+        <button id="insertBlockRefButton" type="button">Insert Reference</button>
+      </div>
+      <div id="blockList" class="block-list"></div>
+    </aside>
+  </main>
+
+  <template id="documentTemplate">
+    <h1 id="overview">New Lore Document</h1>
+    <p>Start writing here.</p>
+    <h2 id="notes">Notes</h2>
+    <p>Add internal references, links, and reusable transclusion blocks.</p>
+  </template>
+
+  <script src="app.js"></script>
+</body>
+</html>
