@@ -203,122 +203,133 @@
 
     <aside id="helpPanel" class="help-panel" aria-label="Capsanoto guidebook" hidden>
       <header>
-        <div>
-          <p class="eyebrow">CINAEDVS Studios · 2026</p>
-          <h2>Capsanoto Guidebook</h2>
+        <div class="help-title-lockup">
+          <img class="help-logo" src="https://raw.githubusercontent.com/cinaedvsstudios/forever-bound-wiki/refs/heads/main/iconcapsanoto.png" alt="Capsanoto icon">
+          <div>
+            <p class="eyebrow">CINAEDVS Studios · 2026</p>
+            <h2>Capsanoto Guidebook</h2>
+          </div>
         </div>
         <div class="panel-header-actions"><button id="helpEditButton" class="icon-button" type="button" aria-pressed="false" aria-label="Edit help">✎</button><button id="closeHelpPanel" class="icon-button" type="button" aria-label="Close help">×</button></div>
       </header>
       <section>
         <h3>What Capsanoto is</h3>
-        <p>Capsanoto is a structured writing environment for Forever Bound. It is not intended to become a database-heavy wiki app. Its job is to make human writing faster, clearer, more portable, and safer to keep offline.</p>
-        <p>The app is written as a static frontend: HTML entry files, one plain JavaScript app file, JSON starter/config files, CSS styling, and browser <code>localStorage</code> for autosave. There is no backend database in this preview.</p>
+        <p>Capsanoto is a lightweight structured writing environment for large lore projects and long-form worldbuilding. It is designed for human writing first: fast editing, readable files, local-first autosave, simple JSON/HTML portability, and low complexity.</p>
+        <p>Capsanoto is not meant to become a heavy database/wiki application. Its systems should stay as UI-layer writing tools unless a feature truly needs more structure.</p>
+      </section>
+      <section>
+        <h3>Application structure</h3>
+        <p>The intended hierarchy from biggest to smallest is:</p>
+        <p><strong>Application → Writing Room → Folder → Tab → File → Transclusion Card (TCard)</strong></p>
+        <dl>
+          <dt>Application</dt><dd>Capsanoto itself: the static browser writing app.</dd>
+          <dt>Writing Room</dt><dd>A project/profile container for one story world or writing space, such as <em>Forever Bound Writing Room</em>.</dd>
+          <dt>Folder</dt><dd>A filing-cabinet category inside a Writing Room, such as Characters, Locations, Items, Worldbuilding, or Episodes.</dd>
+          <dt>Tab</dt><dd>A grouping inside a folder, such as Main Characters, Recurring Characters, Season 1, Songs, or Lore Checks.</dd>
+          <dt>File</dt><dd>An actual writing document, such as Mel, Luca, Ironvale, Runestones, or Episode 01.</dd>
+          <dt>TCard</dt><dd>A reusable Transclusion Card embedded in files or referenced in multiple places.</dd>
+        </dl>
       </section>
       <section>
         <h3>Launch links and files</h3>
         <dl>
-          <dt>Launcher / default entry</dt><dd><code>index.html</code> opens the Writing Room from the repo root or deployed site root.</dd>
-          <dt>Direct word program</dt><dd><code>editor.html</code> opens the same Capsanoto word program directly.</dd>
-          <dt>Alternate direct entry</dt><dd><code>writing-room.html</code> is another direct entry for the same Writing Room UI.</dd>
+          <dt>Launcher/default entry</dt><dd><code>index.html</code> opens Capsanoto from the repository root or deployed site root.</dd>
+          <dt>Direct editor entry</dt><dd><code>editor.html</code> opens the word program directly and supports deep links such as <code>editor.html?doc=episode-01</code>.</dd>
+          <dt>Alternate direct entry</dt><dd><code>writing-room.html</code> opens the same UI under a Writing Room filename.</dd>
           <dt>Starter content</dt><dd><code>content/documents.json</code> seeds first-run files and TCards.</dd>
-          <dt>Preview config</dt><dd><code>config/auth.json</code> contains the shared password config. The current preview opens without the password gate while auth is being reworked.</dd>
+          <dt>Preview config</dt><dd><code>config/auth.json</code> exists for future auth/password work. The current preview opens without the password gate.</dd>
         </dl>
       </section>
       <section>
-        <h3>Core architecture</h3>
-        <p>The intended structure from biggest to smallest is: <strong>Application → Writing Room → Folder → Tab → File → Transclusion Card (TCard)</strong>.</p>
+        <h3>Writing Room / Filing Cabinet</h3>
+        <p>The <strong>Writing Room</strong> button opens the floating Filing Cabinet. This is where folders, tabs, files, metadata, trash, and deprecated versions are managed.</p>
         <dl>
-          <dt>Application</dt><dd>Capsanoto itself: the static browser word program.</dd>
-          <dt>Writing Room</dt><dd>A profile/container for a story world or major writing space, such as <em>Forever Bound Writing Room</em>.</dd>
-          <dt>Folder</dt><dd>A large filing-cabinet category inside a Writing Room, such as Characters, Locations, Items, Worldbuilding, or Episodes.</dd>
-          <dt>Tab</dt><dd>A nested grouping inside a folder, such as Main Characters, Recurring Characters, Season 1, Songs, or Lore Checks.</dd>
-          <dt>File / Document</dt><dd>An actual writing document, such as Mel, Luca, Ironvale, Runestones, or Episode 01.</dd>
-          <dt>Transclusion Card / TCard</dt><dd>A reusable structured writing card embedded inside files or reused in other places.</dd>
-        </dl>
-        <p>Current preview behavior: files are stored as a flat local document list and visually grouped by tags. Persistent nested folders/tabs are planned but should remain lightweight UI-layer structure rather than a heavy backend database.</p>
-      </section>
-      <section>
-        <h3>Example hierarchy</h3>
-        <p><strong>Application:</strong> Capsanoto</p>
-        <p><strong>Writing Room:</strong> Forever Bound Writing Room</p>
-        <p><strong>Folders:</strong> Characters, Locations, Items, Worldbuilding, Episodes</p>
-        <p><strong>Tabs:</strong> Main Characters, Recurring Characters, Season 1, Core Themes, Songs</p>
-        <p><strong>Files:</strong> Mel, Luca, Greta, Erik, Ironvale, Episode 01</p>
-        <p><strong>TCards inside files:</strong> Timeline &amp; Setting, A Plot, B Plot, Notes, Songs, Lore Check</p>
-      </section>
-      <section>
-        <h3>Transclusion Cards / TCards</h3>
-        <p><strong>TCards</strong> means <strong>Transclusion Cards</strong>. TCards are the primary modular content container system in Capsanoto.</p>
-        <p>TCards replace the old split between sections, cards, canon blocks, and transclusion blocks. There is no separate “section vs card” distinction anymore: TCards are the section system.</p>
-        <dl>
-          <dt>What TCards can do</dt><dd>TCards can be collapsible, movable, reusable, embedded/transcluded in other files, and used to hold structured writing sections.</dd>
-          <dt>Examples</dt><dd>Timeline &amp; Setting, A Plot, B Plot, Notes, Songs, TBA, IDEA, REWORK, LORE CHECK, SONG TODO, VOICE TODO.</dd>
-          <dt>Transclusion</dt><dd>Transclusion simply means embedding or referencing a TCard elsewhere. The same stored text displays identically anywhere the TCard is used, so shared information only needs to be updated once.</dd>
-          <dt>Terminology</dt><dd>“Transclusion Card” and “TCard” are interchangeable.</dd>
+          <dt>Edit mode</dt><dd>Click the pencil to unlock inline editing. In edit mode you can type over the Writing Room title, folder names, tab names, file names, and metadata pill values.</dd>
+          <dt>Save layout</dt><dd>When edit mode is on, the save-layout icon stores the current Filing Cabinet position and size so it reopens in the same place.</dd>
+          <dt>Folders and tabs</dt><dd>Use the folder and tab buttons to create containers. Tabs sit between folders and files.</dd>
+          <dt>Lock symbols</dt><dd>The lock button on a folder or tab marks it as kept open/expanded.</dd>
+          <dt>Jump rail</dt><dd>The gray circle rail on the right acts like a custom scrollbar. Clicking a folder icon expands that folder and scrolls to it. The top rail button collapses all; the bottom rail button expands all.</dd>
+          <dt>Trash</dt><dd>Deleted files move to Trash instead of disappearing immediately. Trash is visually separated with a dark-purple header.</dd>
+          <dt>Deprecated versions</dt><dd>Deprecate stores an older version of a file under that file, so you can create a newer version without losing the old one.</dd>
+          <dt>Duplicate</dt><dd>Duplicate creates a copy of a file for variants, rewrites, or version experiments.</dd>
         </dl>
       </section>
       <section>
         <h3>Top bar controls</h3>
         <dl>
-          <dt>Writing Room button</dt><dd>Opens the floating filing-cabinet panel. Use it to browse grouped file cards, expand a card, open a file, or copy that file URL.</dd>
-          <dt>New Document</dt><dd>Creates a new file from the built-in template and adds it to the Writing Room.</dd>
-          <dt>Inline metadata</dt><dd>The Filing Cabinet edit pencil unlocks inline editing for the Writing Room title, folder names, tab names, document names, metadata pills, and tags.</dd>
-          <dt>Status bar</dt><dd>Explains cursor location, selected text, hovered controls, links, Link Anchors, TCards, emphasis boxes, and save/autosave messages.</dd>
-          <dt>Format menu</dt><dd>Hover to reveal bold, italic, heading, paragraph, and list commands.</dd>
-          <dt>Links menu</dt><dd>Hover to create/edit/remove links, make Link Pills, or insert Link Anchors.</dd>
-          <dt>Insert menu</dt><dd>Hover to insert tables, images, emoji, TCards, or emphasis boxes.</dd>
-          <dt>Help button</dt><dd>Opens this guide and release notes.</dd>
-          <dt>Settings button</dt><dd>Opens design, download, and support cards.</dd>
+          <dt>Capsanoto title and icon</dt><dd>The top-left title shows the Capsanoto icon and app name.</dd>
+          <dt>Status box</dt><dd>The center status box explains hovered controls, cursor/selection context, and save/autosave messages.</dd>
+          <dt>Format</dt><dd>Hover to reveal Bold, Italic, H1, H2, Normal Text, and List controls.</dd>
+          <dt>Links / Subnoto</dt><dd>The Links slot currently contains a Subnoto placeholder. Link creation/editing has moved mostly to the right-click context menu.</dd>
+          <dt>Insert</dt><dd>Insert includes Lore Table, Horizontal Rule, Image Embed, Emoji Spark, TCard, and Emphasis.</dd>
+          <dt>Search</dt><dd>The search button is a placeholder for the upcoming proper search system.</dd>
+          <dt>Help</dt><dd>Opens this guide. The help window can be dragged/resized and edited with the pencil.</dd>
+          <dt>Settings</dt><dd>Opens design, download, and support/reset tools.</dd>
         </dl>
       </section>
       <section>
-        <h3>Renamed terms</h3>
+        <h3>Right-click context menu</h3>
+        <p>Select text in the editor or right-click an existing Link Pill to open the contextual menu.</p>
         <dl>
-          <dt>Link Editor</dt><dd>New name for Link Smith. It edits existing hyperlink targets without recreating link text.</dd>
-          <dt>Link Pill</dt><dd>New name for Pill Gate. It is a hyperlink displayed as a rounded pill UI element, such as [Character], [Location], or [Timeline].</dd>
-          <dt>Link Anchor</dt><dd>New name for Anchor Rune. It is a standard document heading/bookmark anchor and URL target for direct section linking.</dd>
-          <dt>TCard</dt><dd>Replaces TCard as the reusable content system.</dd>
-          <dt>Download</dt><dd>New name for Archive Export. “Archive” is reserved for future lifecycle/version features such as deprecated rooms, locked versions, snapshots, or archived projects.</dd>
-        </dl>
-      </section>
-      <section>
-        <h3>Writing and editing</h3>
-        <dl>
-          <dt>Document title</dt><dd>The large title field edits the current file title. Use the Filing Cabinet metadata pill for type, ID, and tags instead of showing metadata in the document body.</dd>
-          <dt>Writing area</dt><dd>The main editable page supports rich text through browser editing commands, local autosave, pasted/typed content, TCards, links, and emphasis boxes.</dd>
-          <dt>Autosave</dt><dd>Changes save to browser <code>localStorage</code>. The status bar shows saving/autosaved messages.</dd>
-          <dt>Reset Local Save</dt><dd>In Settings → Help, this clears the browser autosave and reloads starter content.</dd>
+          <dt>Bookmark / Link Anchor</dt><dd>Turns selected text into a bookmark heading/anchor for direct section links.</dd>
+          <dt>Transclusion</dt><dd>Creates a TCard from selected text. If no text is selected, TCard insertion/management happens from the Transclusion Cards panel.</dd>
+          <dt>Link</dt><dd>Creates a normal hyperlink to a file, anchor, TCard, or external URL.</dd>
+          <dt>Pill Link</dt><dd>Creates a rounded visual hyperlink pill.</dd>
+          <dt>Edit Link</dt><dd>Right-click an existing link or pill to update its target.</dd>
+          <dt>Pill Color</dt><dd>Right-click a Link Pill to change its background/text colors.</dd>
         </dl>
       </section>
       <section>
         <h3>Links, Link Pills, and Link Anchors</h3>
         <dl>
-          <dt>Document URLs</dt><dd>Files can be opened by URLs like <code>editor.html?doc=episode-01</code>.</dd>
+          <dt>Document URLs</dt><dd>Files can be opened by URLs like <code>editor.html?doc=Character-Mel-Ameldra</code>.</dd>
           <dt>Link Anchors</dt><dd>Heading IDs create section routes like <code>editor.html?doc=Character-Mel-Ameldra#Runestones</code>.</dd>
-          <dt>Path Link</dt><dd>Creates a link to an external URL, another file, a Link Anchor, or a TCard reference.</dd>
-          <dt>Link Pill</dt><dd>Converts selected text or an existing link into a rounded visual pill link.</dd>
-          <dt>Link Editor</dt><dd>Edits a selected link target without rebuilding the link text.</dd>
-          <dt>Link Breaker</dt><dd>Removes the selected link while preserving its visible text.</dd>
+          <dt>External links</dt><dd>Normal URLs such as <code>https://example.com</code> are supported.</dd>
+          <dt>TCard links</dt><dd>TCard targets can use <code>block:Item-Runestones</code> or <code>{{Item-Runestones}}</code>.</dd>
+          <dt>Link Pills</dt><dd>Link Pills are rounded hyperlinks. They no longer show an automatic arrow prefix.</dd>
         </dl>
       </section>
       <section>
-        <h3>Slash commands</h3>
-        <p>Slash commands are planned as a major workflow system for instantly creating formatted structured blocks while writing. They should reduce friction and avoid excessive menus/modals.</p>
-        <p>Planned examples include <code>/dialogue</code>, <code>/scene</code>, <code>/song</code>, <code>/spell</code>, <code>/tba</code>, <code>/pill</code>, and <code>/tcard</code>.</p>
+        <h3>Transclusion Cards / TCards</h3>
+        <p><strong>TCards</strong> means <strong>Transclusion Cards</strong>. TCards are the primary modular content container system in Capsanoto.</p>
+        <dl>
+          <dt>Purpose</dt><dd>A TCard stores reusable text once and displays that same text wherever the TCard is referenced.</dd>
+          <dt>Syntax</dt><dd>Use <code>{{Item-Runestones}}</code> to reference a TCard inside a file.</dd>
+          <dt>Insert TCard</dt><dd>The Transclusion Cards panel inserts the selected TCard at the saved cursor position.</dd>
+          <dt>Style controls</dt><dd>The TCard panel includes background, border, text color, heading color, and text-size controls.</dd>
+          <dt>Inline edit</dt><dd>Rendered TCards show an edit button on hover; clicking it opens that TCard in the side panel.</dd>
+          <dt>Drag/move</dt><dd>TCards can be dragged up/down inside the writing area.</dd>
+        </dl>
       </section>
       <section>
-        <h3>TBA and drafting notes</h3>
-        <p>Special lightweight drafting TCards may exist for <strong>TBA</strong>, <strong>IDEA</strong>, <strong>REWORK</strong>, <strong>LORE CHECK</strong>, <strong>SONG TODO</strong>, and <strong>VOICE TODO</strong>. These are simple outlined/status cards for drafting workflow, not separate database systems.</p>
+        <h3>Tables</h3>
+        <p>Tables insert at the cursor, use rounded corners, and can be dragged within the document.</p>
+        <dl>
+          <dt>Hover edit</dt><dd>Hover over a table for about one second to show the table edit control. When the mouse leaves and edit is not open, it vanishes.</dd>
+          <dt>Inline table tools</dt><dd>Click the table edit icon to reveal popup tools for add row, add column, delete row, delete column, widen columns, background color, and border color.</dd>
+        </dl>
       </section>
       <section>
-        <h3>Timeline blocks</h3>
-        <p>Timeline Blocks are experimental secondary systems, not core architecture. A Timeline Block could be a year/date block such as <code>[1422]</code> that dynamically collects linked events, wars, births, deaths, story scenes, and linked TCards onto generated timeline pages.</p>
-        <p>This should remain lightweight and optional until the core Writing Room, Folder, Tab, File, and TCard workflow is working well.</p>
+        <h3>Emoji picker</h3>
+        <p>The Emoji Spark button opens an emoji grid. Click an emoji to insert it at the saved cursor position. Right-click an emoji in the grid to copy it to the clipboard instead.</p>
+      </section>
+      <section>
+        <h3>Emphasis boxes</h3>
+        <p>Highlight text and use Emphasis to wrap it in a bordered emphasis block. Emphasis boxes can be dragged in the writing area and bulk-styled from the file card color action.</p>
+      </section>
+      <section>
+        <h3>Document editing and autosave</h3>
+        <dl>
+          <dt>Document title</dt><dd>The title field edits the current file title and is intentionally only slightly larger than an H1 heading.</dd>
+          <dt>Writing area</dt><dd>The main editable page supports browser rich-text editing, headings, links, images, tables, TCards, and emphasis boxes.</dd>
+          <dt>Autosave</dt><dd>Changes save to browser <code>localStorage</code>. The status box shows saving/autosaved messages.</dd>
+          <dt>Reset Local Save</dt><dd>In Settings → Help, this clears the browser autosave and reloads starter content.</dd>
+        </dl>
       </section>
       <section>
         <h3>Download and backups</h3>
         <dl>
-          <dt>Download builder</dt><dd>Choose files and/or TCards, reorder them, then download selected pieces.</dd>
+          <dt>Download builder</dt><dd>Choose files and/or TCards, reorder them as pills, then download selected pieces.</dd>
           <dt>Caps file</dt><dd>Downloads structured JSON for Capsanoto/Caps workflows.</dd>
           <dt>TXT</dt><dd>Downloads plain text.</dd>
           <dt>HTML</dt><dd>Downloads a browser-readable HTML file.</dd>
@@ -326,28 +337,33 @@
         </dl>
       </section>
       <section>
-        <h3>Design direction</h3>
-        <p>Capsanoto should prioritize speed, readability, portability, low complexity, local-first compatibility, simple JSON storage, offline capability, and low corruption risk.</p>
-        <p>The app should enhance human writing workflow rather than becoming AI-first or database-heavy.</p>
+        <h3>Design settings</h3>
+        <p>Settings → Design controls button colors, borders, text colors, text size, background image, dialog colors, status bar colors, emphasis box colors, panel colors, label text, dynamic text, scrollbar colors, and favorite colors. The designer is laid out as controls on the left and a sticky preview column on the right.</p>
+        <p>Fonts are standardized: UI and writing text use <strong>Arial</strong>; code-like text uses <strong>Courier New</strong>.</p>
       </section>
       <section>
-        <h3>Design settings</h3>
-        <p>Settings → Design controls button colors, borders, text colors, text size, background image, dialog colors, status bar colors, emphasis box colors, panel colors, label text, dynamic text, and scrollbar colors. Settings are saved under <code>capsanoto-design-settings-v1</code> in browser storage.</p>
+        <h3>Planned workflow systems</h3>
+        <dl>
+          <dt>Subnoto</dt><dd>A placeholder menu item has been added. The workflow will be defined later.</dd>
+          <dt>Slash commands</dt><dd>Planned examples include <code>/dialogue</code>, <code>/scene</code>, <code>/song</code>, <code>/spell</code>, <code>/tba</code>, <code>/pill</code>, and <code>/tcard</code>.</dd>
+          <dt>Timeline blocks</dt><dd>Experimental secondary system for year/date blocks that collect linked events, scenes, and TCards.</dd>
+          <dt>Search</dt><dd>The top-bar search button is present as a placeholder for the upcoming search interface.</dd>
+        </dl>
       </section>
       <section>
         <h3>Technical notes</h3>
         <dl>
           <dt>Code type</dt><dd>Static HTML, CSS, and plain JavaScript. No framework build step is required.</dd>
-          <dt>Main app file</dt><dd><code>app.js</code> handles state, events, autosave, routing, TCards/transclusion behavior, links, downloads, dialogs, and design settings.</dd>
-          <dt>Styles</dt><dd><code>styles.css</code> controls the Writing Room theme and CSS variables.</dd>
-          <dt>Local storage keys</dt><dd><code>forever-bound-writing-room-v2</code> stores files/TCards, and <code>capsanoto-design-settings-v1</code> stores design settings.</dd>
+          <dt>Main app file</dt><dd><code>app.js</code> handles state, events, autosave, routing, TCards, links, downloads, dialogs, Filing Cabinet behavior, table tools, emoji picker, and design settings.</dd>
+          <dt>Styles</dt><dd><code>styles.css</code> controls the theme, layouts, panels, typography, and CSS variables.</dd>
+          <dt>Local storage keys</dt><dd><code>forever-bound-writing-room-v2</code> stores files/TCards, <code>capsanoto-design-settings-v1</code> stores design settings, and <code>capsanoto-writing-room-layout-v1</code> stores Filing Cabinet panel position/size.</dd>
         </dl>
       </section>
       <section>
         <h3>Release notes draft</h3>
-        <p><strong>Capsanoto v1 — May 8, 2026:</strong> static local-first Writing Room preview with local autosave, Writing Room Filing Cabinet with Folder → Tab → Document structure, inline metadata pills, hover help, emphasis boxes, TCard/transclusion behavior, Link Pills, Link Anchors, design settings, and Download builder.</p>
+        <p><strong>Capsanoto v1 — May 8, 2026:</strong> static local-first Writing Room preview with local autosave, Filing Cabinet Folder → Tab → File structure, TCards, Link Pills, Link Anchors, emphasis boxes, table tools, emoji picker, design settings, Download builder, and editable Help.</p>
+        <p><strong>Latest update:</strong> added the Capsanoto title icon, unified fonts, Subnoto placeholder, search placeholder, horizontal rule insertion, emoji picker grid, right-click pill editing/color, inline table tool icons, folder/tab locks, rail collapse/expand controls, tighter Filing Cabinet spacing, and updated TCard panel styling.</p>
         <p><strong>Versioning rule:</strong> start at <code>v1</code>, then increase by <code>.1</code> for each update, for example <code>v1.1</code>, <code>v1.2</code>, and so on.</p>
-        <p><strong>Release note info still needed from you:</strong> public launcher URL, final wording for the Writing Room name/profile list, which features should be marked beta versus ready, and whether the password gate should return in a later version.</p>
       </section>
     </aside>
 

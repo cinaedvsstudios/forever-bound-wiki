@@ -1509,3 +1509,32 @@ code, pre, .editor code {
 .selection-menu button[data-context-action="pill-color"] {
   display: flex;
 }
+
+/* Help guide update: logo lockup and font consistency */
+.help-title-lockup {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.help-logo {
+  width: 2.4rem;
+  height: 2.4rem;
+  object-fit: contain;
+  border-radius: 10px;
+  flex: 0 0 auto;
+}
+.help-panel,
+.help-panel *:not(code):not(pre) {
+  font-family: Arial, Helvetica, sans-serif !important;
+}
+.help-panel code,
+.help-panel pre {
+  font-family: "Courier New", Courier, monospace !important;
+}
+.help-panel h2,
+.help-panel h3,
+.help-panel dt,
+.help-panel dd,
+.help-panel p {
+  letter-spacing: normal;
+}
