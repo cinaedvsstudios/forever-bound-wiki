@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Forever Bound Writing Room</title>
+  <title>Capsanoto</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body class="is-locked">
@@ -11,7 +11,7 @@
     <form id="passwordForm" class="password-card">
       <img src="lanternlogo small.png" alt="Forever Bound lantern logo">
       <p class="eyebrow">Forever Bound</p>
-      <h1 id="passwordTitle">Enter the writing room</h1>
+      <h1 id="passwordTitle">Enter Capsanoto</h1>
       <p>Use the shared project password to unlock this browser session.</p>
       <label for="passwordInput">Password</label>
       <input id="passwordInput" type="password" autocomplete="current-password" required>
@@ -23,31 +23,45 @@
   <main id="editorApp" class="writer-shell" aria-label="Forever Bound writing editor" hidden>
     <header class="writer-header">
       <div class="document-controls">
+        <strong class="app-name">Capsanoto</strong>
         <label for="documentSelect" class="sr-only">Current document</label>
-        <select id="documentSelect"></select>
-        <button id="newDocumentButton" type="button">New Document</button>
+        <select id="documentSelect" title="Document Switcher"></select>
+        <button id="newDocumentButton" class="icon-button" type="button" title="New Document" aria-label="New Document" data-tool-name="Document Forge">📄</button>
       </div>
       <div class="save-controls">
         <span id="saveStatus" class="save-status">Loading…</span>
-        <button id="exportButton" type="button">Export JSON</button>
-        <button id="logoutButton" type="button">Logout</button>
+        <button id="exportButton" class="icon-button" type="button" title="Export JSON" aria-label="Export JSON" data-tool-name="Archive Export">📥</button>
+        <button id="logoutButton" class="icon-button" type="button" title="Logout" aria-label="Logout" data-tool-name="Session Lock">🔒</button>
       </div>
     </header>
 
-    <section class="toolbar" aria-label="Formatting toolbar">
-      <button data-command="bold" type="button"><strong>B</strong></button>
-      <button data-command="italic" type="button"><em>I</em></button>
-      <button data-block="h1" type="button">H1</button>
-      <button data-block="h2" type="button">H2</button>
-      <button data-block="p" type="button">Text</button>
-      <button data-command="insertUnorderedList" type="button">List</button>
-      <button id="linkButton" type="button">Link</button>
-      <button id="pillLinkButton" type="button">Pill Link</button>
-      <button id="bookmarkButton" type="button">Bookmark</button>
-      <button id="tableButton" type="button">Table</button>
-      <button id="imageButton" type="button">Image</button>
-      <button id="emojiButton" type="button">Emoji</button>
-      <button id="blockButton" type="button">Block</button>
+    <section class="toolbar" aria-label="Capsanoto command bar">
+      <details class="tool-menu">
+        <summary title="Writing Tools" aria-label="Writing Tools">✍️</summary>
+        <button data-command="bold" type="button" title="Bold" aria-label="Bold" data-tool-name="Bold Mark"><strong>B</strong></button>
+        <button data-command="italic" type="button" title="Italic" aria-label="Italic" data-tool-name="Italic Mark"><em>I</em></button>
+        <button data-block="h1" type="button" title="Heading 1" aria-label="Heading 1" data-tool-name="Chapter Heading">H1</button>
+        <button data-block="h2" type="button" title="Heading 2" aria-label="Heading 2" data-tool-name="Section Heading">H2</button>
+        <button data-block="p" type="button" title="Paragraph" aria-label="Paragraph" data-tool-name="Body Text">¶</button>
+        <button data-command="insertUnorderedList" type="button" title="Bullet List" aria-label="Bullet List" data-tool-name="Lore List">☰</button>
+      </details>
+
+      <details class="tool-menu">
+        <summary title="Linking Tools" aria-label="Linking Tools">🔗</summary>
+        <button id="linkButton" type="button" title="Hyperlink" aria-label="Hyperlink" data-tool-name="Path Link">🔗</button>
+        <button id="pillLinkButton" type="button" title="Pill Link" aria-label="Pill Link" data-tool-name="Pill Gate">💊</button>
+        <button id="bookmarkButton" type="button" title="Bookmark" aria-label="Bookmark" data-tool-name="Anchor Rune">⚓</button>
+      </details>
+
+      <details class="tool-menu">
+        <summary title="Insert Tools" aria-label="Insert Tools">🧰</summary>
+        <button id="tableButton" type="button" title="Table" aria-label="Table" data-tool-name="Lore Table">▦</button>
+        <button id="imageButton" type="button" title="Image" aria-label="Image" data-tool-name="Image Embed">🖼️</button>
+        <button id="emojiButton" type="button" title="Emoji" aria-label="Emoji" data-tool-name="Emoji Spark">✨</button>
+        <button id="blockButton" type="button" title="Transclusion Blocks" aria-label="Transclusion Blocks" data-tool-name="Canon Block" data-icon-src="lanternlogo small.png">▣</button>
+      </details>
+
+      <button id="helpButton" class="icon-button" type="button" title="Capsanoto Help" aria-label="Capsanoto Help" data-tool-name="Guidebook">❔</button>
       <input id="imageInput" type="file" accept="image/*" hidden>
     </section>
 
@@ -59,6 +73,40 @@
     </section>
 
     <article id="editor" class="editor" contenteditable="true" spellcheck="true" aria-label="Writing area"></article>
+
+
+    <aside id="helpPanel" class="help-panel" aria-label="Capsanoto guidebook" hidden>
+      <header>
+        <div>
+          <p class="eyebrow">CINAEDVS Studios · 2026</p>
+          <h2>Capsanoto Guidebook</h2>
+        </div>
+        <button id="closeHelpPanel" class="icon-button" type="button" aria-label="Close help">×</button>
+      </header>
+      <section>
+        <h3>What Capsanoto is</h3>
+        <p>Capsanoto is a lightweight browser-based word app for large lore projects, long-form worldbuilding, and linked narrative documents.</p>
+      </section>
+      <section>
+        <h3>Named functions</h3>
+        <dl>
+          <dt>Document Switcher</dt><dd>Moves between lore documents loaded from <code>?doc=Document-ID</code>.</dd>
+          <dt>Command Bar</dt><dd>The single-row toolbar. Related commands are grouped into dropdowns.</dd>
+          <dt>Anchor Rune</dt><dd>Creates a heading bookmark with a direct section URL.</dd>
+          <dt>Pill Gate</dt><dd>Turns selected text into a rounded hyperlink to a document, bookmark, or external URL.</dd>
+          <dt>Canon Block</dt><dd>Reusable transclusion content referenced with <code>{{Item-Runestones}}</code>.</dd>
+          <dt>Archive Export</dt><dd>Downloads the current local workspace JSON for backup or later sync.</dd>
+        </dl>
+      </section>
+      <section>
+        <h3>Icons and PNG buttons</h3>
+        <p>Most buttons use emojis first. Any toolbar button can also use a PNG by adding <code>data-icon-src="path/to/icon.png"</code>.</p>
+      </section>
+      <section>
+        <h3>Release notes</h3>
+        <p><strong>Capsanoto preview build:</strong> local autosave, password unlock, document routes, section links, bookmark copy buttons, pill links, and transclusion blocks.</p>
+      </section>
+    </aside>
 
     <aside id="blockPanel" class="block-panel" aria-label="Transclusion blocks" hidden>
       <header>

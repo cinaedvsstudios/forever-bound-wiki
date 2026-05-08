@@ -34,6 +34,9 @@ const els = {
   imageInput: document.querySelector("#imageInput"),
   emojiButton: document.querySelector("#emojiButton"),
   blockButton: document.querySelector("#blockButton"),
+  helpButton: document.querySelector("#helpButton"),
+  helpPanel: document.querySelector("#helpPanel"),
+  closeHelpPanel: document.querySelector("#closeHelpPanel"),
   bookmarkBar: document.querySelector("#bookmarkBar"),
   titleInput: document.querySelector("#titleInput"),
   tagsInput: document.querySelector("#tagsInput"),
@@ -93,6 +96,7 @@ function bindAuthEvents() {
 async function startEditor() {
   setAuthVisibility(true);
   await loadWorkspace();
+  hydrateIconButtons();
   bindEditorEvents();
   applyRouteToState();
   renderAll();
@@ -191,6 +195,8 @@ function bindEditorEvents() {
   els.imageInput.addEventListener("change", embedSelectedImage);
   els.emojiButton.addEventListener("click", () => insertHtml("✨"));
   els.exportButton.addEventListener("click", exportWorkspace);
+  els.helpButton.addEventListener("click", () => toggleHelpPanel(true));
+  els.closeHelpPanel.addEventListener("click", () => toggleHelpPanel(false));
 
   els.bookmarkBar.addEventListener("click", (event) => {
     const copyButton = event.target.closest("button[data-copy-bookmark]");
@@ -422,6 +428,30 @@ function insertHtml(html) {
   ensureHeadingIds();
   renderBookmarks();
   syncAndSave("Content inserted");
+}
+
+function toggleHelpPanel(show) {
+  els.helpPanel.hidden = !show;
+}
+
+function hydrateIconButtons() {
+  document.querySelectorAll("button[data-icon-src]").forEach((button) => {
+    const src = button.dataset.iconSrc;
+    if (!src || button.querySelector("img.tool-icon-img")) return;
+    const fallback = button.textContent.trim();
+    button.textContent = "";
+    const image = document.createElement("img");
+    image.className = "tool-icon-img";
+    image.src = src;
+    image.alt = "";
+    button.append(image);
+    if (fallback) {
+      const label = document.createElement("span");
+      label.className = "sr-only";
+      label.textContent = button.getAttribute("aria-label") || fallback;
+      button.append(label);
+    }
+  });
 }
 
 function toggleBlockPanel(show) {
