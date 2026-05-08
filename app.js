@@ -1,9 +1,50 @@
 const STORAGE_KEY = "forever-bound-writing-room-v2";
 const AUTH_KEY = "forever-bound-authenticated";
 const AUTH_CONFIG_PATH = "config/auth.json";
+const CONTENT_PATH = "content/documents.json";
 const EDITOR_ENTRY = "editor.html";
 const AUTOSAVE_DELAY = 600;
 const DESIGN_KEY = "capsanoto-design-settings-v1";
+
+const DEFAULT_WORKSPACE = {
+  schemaVersion: 2,
+  updatedAt: "2026-05-08T00:00:00.000Z",
+  documents: [
+    {
+      id: "project-overview",
+      title: "Project Overview",
+      tags: ["overview", "worldbuilding", "editor"],
+      updatedAt: "2026-05-07T00:00:00.000Z",
+      content: '<h1 id="writing-room">Forever Bound Writing Room</h1><p>This is a minimal browser-based writing space for long-form lore and interconnected worldbuilding. The interface stays out of the way until formatting, links, bookmarks, or reusable blocks are needed.</p><h2 id="bookmarks">Bookmarks</h2><p>Any heading with an ID becomes a bookmark pill under the toolbar. Use the Bookmark button to create a new jump target with a direct URL anchor.</p><h2 id="links-and-pills">Links and Pill Links</h2><p>Normal hyperlinks work inside the document, and selected text can also become a <a class="pill-link" href="editor.html?doc=episode-01">rounded pill-style document link</a>.</p><h2 id="transclusions">Transclusions</h2><p>Reusable content blocks appear wherever their token is used. Example:</p><p>{{Item-Runestones}}</p>',
+    },
+    {
+      id: "episode-01",
+      title: "Episode 01",
+      tags: ["season-1", "episode"],
+      updatedAt: "2026-05-07T00:00:00.000Z",
+      content: '<h1 id="episode-01">Episode 01</h1><p>Draft the episode here in a clean writing environment.</p><h2 id="synopsis">Synopsis</h2><p>Write the episode summary.</p><h2 id="canon-notes">Canon Notes</h2><p>Use reusable blocks for shared lore, such as {{Location-Ironvale}}.</p><h2 id="structure">Structure</h2><table><thead><tr><th>Beat</th><th>Notes</th></tr></thead><tbody><tr><td>Opening</td><td></td></tr><tr><td>Turn</td><td></td></tr><tr><td>Ending</td><td></td></tr></tbody></table>',
+    },
+    {
+      id: "Character-Mel-Ameldra",
+      title: "Character Mel Ameldra",
+      tags: ["character", "example", "deep-link"],
+      updatedAt: "2026-05-08T00:00:00.000Z",
+      content: '<h1 id="Overview">Character Mel Ameldra</h1><p>This starter profile demonstrates document URLs like <code>editor.html?doc=Character-Mel-Ameldra</code>.</p><h2 id="Runestones">Runestones</h2><p>This section demonstrates direct bookmark URLs like <code>editor.html?doc=Character-Mel-Ameldra#Runestones</code>.</p><h2 id="Relationships">Relationships</h2><p>Add linked characters, factions, and locations here.</p>',
+    },
+  ],
+  blocks: {
+    "Item-Runestones": {
+      id: "Item-Runestones",
+      content: "Runestones are reusable canon items that can be referenced across lore documents without duplicating text.",
+      updatedAt: "2026-05-07T00:00:00.000Z",
+    },
+    "Location-Ironvale": {
+      id: "Location-Ironvale",
+      content: "Ironvale is a sample location block used to demonstrate how edits update every {{Location-Ironvale}} reference.",
+      updatedAt: "2026-05-07T00:00:00.000Z",
+    },
+  },
+};
 
 const state = {
   documents: [],
@@ -129,7 +170,7 @@ async function boot() {
   } catch (error) {
     console.error(error);
     localStorage.removeItem(AUTH_KEY);
-    showPasswordScreen("Password accepted, but the editor workspace could not load. Check content/documents.json or clear this site's local storage.");
+    showPasswordScreen("Password accepted, but the editor could not initialize. Refresh the page and try again.");
   }
 }
 
@@ -162,15 +203,15 @@ async function loadAuthConfig() {
 
 function authConfigUrls() {
   const urls = [];
-  addAuthConfigUrl(urls, AUTH_CONFIG_PATH, document.baseURI);
-  addAuthConfigUrl(urls, AUTH_CONFIG_PATH, location.href);
+  addUniqueUrl(urls, AUTH_CONFIG_PATH, document.baseURI);
+  addUniqueUrl(urls, AUTH_CONFIG_PATH, location.href);
   const scriptSrc = document.currentScript?.src || document.querySelector('script[src$="app.js"]')?.src;
-  if (scriptSrc) addAuthConfigUrl(urls, AUTH_CONFIG_PATH, scriptSrc);
-  if (location.origin && location.origin !== "null") addAuthConfigUrl(urls, `/${AUTH_CONFIG_PATH}`, location.origin);
+  if (scriptSrc) addUniqueUrl(urls, AUTH_CONFIG_PATH, scriptSrc);
+  if (location.origin && location.origin !== "null") addUniqueUrl(urls, `/${AUTH_CONFIG_PATH}`, location.origin);
   return urls;
 }
 
-function addAuthConfigUrl(urls, path, base) {
+function addUniqueUrl(urls, path, base) {
   try {
     const url = new URL(path, base).href;
     if (!urls.includes(url)) urls.push(url);
@@ -204,7 +245,7 @@ function bindAuthEvents() {
       console.error(error);
       localStorage.removeItem(AUTH_KEY);
       setPasswordFormState(true);
-      showPasswordScreen("Password accepted, but the editor workspace could not load. Check content/documents.json or clear this site's local storage.");
+      showPasswordScreen("Password accepted, but the editor could not initialize. Refresh the page and try again.");
     }
   });
 
@@ -276,9 +317,7 @@ async function loadWorkspace() {
   }
 
   if (!state.documents.length) {
-    const response = await fetch("content/documents.json", { cache: "no-store" });
-    if (!response.ok) throw new Error("Unable to load content/documents.json");
-    const payload = await response.json();
+    const payload = await loadStarterWorkspace();
     state.documents = Array.isArray(payload.documents) ? payload.documents : [];
     state.blocks = payload.blocks && typeof payload.blocks === "object" ? payload.blocks : {};
     persistNow("Loaded starter workspace");
@@ -286,6 +325,38 @@ async function loadWorkspace() {
 
   if (!state.documents.length) createDocument();
   state.activeId = state.documents[0].id;
+}
+
+async function loadStarterWorkspace() {
+  const errors = [];
+  for (const url of contentWorkspaceUrls()) {
+    try {
+      const response = await fetch(url, { cache: "no-store" });
+      if (!response.ok) throw new Error(`${response.status} ${response.statusText}`.trim());
+      const payload = await response.json();
+      if (Array.isArray(payload.documents)) return payload;
+      throw new Error("Missing documents array");
+    } catch (error) {
+      errors.push(`${url}: ${error.message}`);
+    }
+  }
+
+  console.warn(`Using embedded Capsanoto starter workspace after content load failed: ${errors.join(" | ")}`);
+  return cloneDefaultWorkspace();
+}
+
+function contentWorkspaceUrls() {
+  const urls = [];
+  addUniqueUrl(urls, CONTENT_PATH, document.baseURI);
+  addUniqueUrl(urls, CONTENT_PATH, location.href);
+  const scriptSrc = document.currentScript?.src || document.querySelector('script[src$="app.js"]')?.src;
+  if (scriptSrc) addUniqueUrl(urls, CONTENT_PATH, scriptSrc);
+  if (location.origin && location.origin !== "null") addUniqueUrl(urls, `/${CONTENT_PATH}`, location.origin);
+  return urls;
+}
+
+function cloneDefaultWorkspace() {
+  return JSON.parse(JSON.stringify(DEFAULT_WORKSPACE));
 }
 
 function bindEditorEvents() {
