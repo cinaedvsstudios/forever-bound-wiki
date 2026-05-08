@@ -20,7 +20,16 @@ const CAPSANOTO_PALETTE = {
   parchment: "#fbf4d6",
 };
 
-const DEFAULT_FAVORITE_COLORS = Object.values(CAPSANOTO_PALETTE);
+const DEFAULT_FAVORITE_COLORS = [
+  CAPSANOTO_PALETTE.black,
+  CAPSANOTO_PALETTE.deepPlum,
+  CAPSANOTO_PALETTE.espresso,
+  CAPSANOTO_PALETTE.amethyst,
+  CAPSANOTO_PALETTE.clay,
+  CAPSANOTO_PALETTE.ochre,
+  CAPSANOTO_PALETTE.ember,
+  CAPSANOTO_PALETTE.peach,
+];
 
 const DEFAULT_WORKSPACE = {
   schemaVersion: 2,
@@ -76,6 +85,7 @@ const state = {
   deprecated: [],
   draggedDocId: "",
   lastColorInput: null,
+  favoriteColors: [...DEFAULT_FAVORITE_COLORS],
   contextStatusLocked: false,
   contextStatusTimer: null,
 };
@@ -406,7 +416,7 @@ function bindEditorEvents() {
     openDocument(doc.id);
     markDirty("New document created");
   });
-  els.documentSettingsButton.addEventListener("click", openDocumentSettings);
+  els.documentSettingsButton.addEventListener("click", openFilingCabinetSettingsMode);
 
   els.titleInput.addEventListener("input", () => {
     activeDocument().title = els.titleInput.value || "Untitled Document";
@@ -459,7 +469,7 @@ function bindEditorEvents() {
   els.closeWritingRoomPanel.addEventListener("click", () => toggleWritingRoomPanel(false));
   els.editWritingRoomButton.addEventListener("click", toggleFilingEditMode);
   els.newFolderButton.addEventListener("click", () => createFilingGroup("folder"));
-  els.newTabButton.addEventListener("click", () => createFilingGroup("tab"));
+  els.newTabButton.addEventListener("click", createFilingTab);
   els.trashCanButton.addEventListener("click", () => setContextStatus(`${state.trash.length} items in Trash · ${state.deprecated.length} deprecated`, false));
   els.writingRoomCards.addEventListener("click", handleWritingRoomCardClick);
   els.writingRoomCards.addEventListener("dragstart", handleFilingDragStart);
@@ -474,6 +484,8 @@ function bindEditorEvents() {
   window.addEventListener("pointerup", stopPanelDrag);
   document.addEventListener("keydown", (event) => { if (event.key === "Escape") { toggleHelpPanel(false); toggleSettingsPanel(false); toggleWritingRoomPanel(false); } });
   bindDesignColorTools();
+  bindDesignToggle(els.designBoldToggle, els.designBold);
+  bindDesignToggle(els.dialogBoldToggle, els.dialogBold);
   els.helpButton.addEventListener("click", () => { toggleSettingsPanel(false); toggleHelpPanel(true); });
   els.closeHelpPanel.addEventListener("click", () => toggleHelpPanel(false));
   els.logoutButton.addEventListener("click", resetLocalWorkspace);
@@ -737,16 +749,24 @@ async function createTransclusionFromSelection() {
 
 function openCapsDialog(title, fields) {
   els.dialogTitle.textContent = title;
-  els.dialogFields.innerHTML = fields.map((field) => `
+  els.dialogFields.innerHTML = fields.map(renderDialogField).join("");
+  els.dialogOverlay.hidden = false;
+  els.dialogFields.querySelector("input:not([readonly]), textarea:not([readonly])")?.focus();
+  return new Promise((resolve) => { state.dialogResolver = resolve; });
+}
+
+function renderDialogField(field) {
+  if (field.checkbox) {
+    return `<label class="dialog-check"><input type="checkbox" name="${escapeAttr(field.name)}"> ${escapeHtml(field.label)}</label>`;
+  }
+  const readonly = field.readonly ? " readonly" : "";
+  return `
     <label>${escapeHtml(field.label)}
       ${field.multiline
-        ? `<textarea name="${escapeAttr(field.name)}" rows="5" placeholder="${escapeAttr(field.placeholder || "")}">${escapeHtml(field.value || "")}</textarea>`
-        : `<input name="${escapeAttr(field.name)}" value="${escapeAttr(field.value || "")}" placeholder="${escapeAttr(field.placeholder || "")}">`}
+        ? `<textarea name="${escapeAttr(field.name)}" rows="5" placeholder="${escapeAttr(field.placeholder || "")}"${readonly}>${escapeHtml(field.value || "")}</textarea>`
+        : `<input name="${escapeAttr(field.name)}" value="${escapeAttr(field.value || "")}" placeholder="${escapeAttr(field.placeholder || "")}"${readonly}>`}
     </label>
-  `).join("");
-  els.dialogOverlay.hidden = false;
-  els.dialogFields.querySelector("input, textarea")?.focus();
-  return new Promise((resolve) => { state.dialogResolver = resolve; });
+  `;
 }
 
 function submitDialog(event) {
@@ -971,7 +991,10 @@ function insertHtml(html) {
 function toggleSettingsPanel(show) {
   els.settingsPanel.hidden = !show;
   if (show) {
-    els.settingsSections.forEach((section) => { section.hidden = false; });
+    els.settingsSections.forEach((section) => {
+      section.hidden = false;
+      section.classList.add("is-collapsed");
+    });
     renderExportSourceSelect();
     renderExportQueue();
     loadDesignForm();
@@ -997,6 +1020,12 @@ function showSettingsSection(sectionName) {
   els.settingsSections.forEach((section) => {
     section.hidden = section.dataset.settingsSection !== sectionName;
   });
+}
+
+function openFilingCabinetSettingsMode() {
+  toggleWritingRoomPanel(true);
+  if (!state.filingEditMode) toggleFilingEditMode();
+  setContextStatus("Filing Cabinet settings: click Settings on a folder, tab, or document");
 }
 
 function toggleWritingRoomPanel(show = els.writingRoomPanel.hidden) {
@@ -1025,6 +1054,18 @@ async function createFilingGroup(type) {
   markDirty(`${type === "folder" ? "Folder" : "Tab"} added`);
 }
 
+async function createFilingTab() {
+  const result = await openCapsDialog("New Tab", [
+    { name: "title", label: "Tab title", value: "Untitled Document" },
+  ]);
+  const title = result?.title?.trim() || "Untitled Document";
+  const doc = createDocument(`doc-${Date.now()}`, title);
+  doc.filingGroupId = state.filingGroups[0]?.id || defaultFilingGroups()[0].id;
+  openDocument(doc.id);
+  toggleWritingRoomPanel(true);
+  markDirty("New Filing Cabinet tab created");
+}
+
 function defaultFilingGroups() {
   return [
     { id: "writing-room-tabs", label: "Writing Room Tabs", type: "folder" },
@@ -1039,7 +1080,7 @@ function renderWritingRoomCards() {
   const groups = groupedDocuments();
   const groupHtml = groups.map((group, groupIndex) => `
     <details class="writing-room-group" data-group-id="${escapeAttr(group.id)}" ${groupIndex === 0 ? "open" : ""}>
-      <summary><span class="card-arrow">›</span><strong>${escapeHtml(group.label)}</strong><small>${group.documents.length} ${group.documents.length === 1 ? "tab" : "tabs"}</small></summary>
+      <summary><span class="card-arrow">›</span><strong>${escapeHtml(group.label)}</strong><small>${group.documents.length} ${group.documents.length === 1 ? "tab" : "tabs"}</small>${state.filingEditMode ? `<span class="filing-group-actions"><button type="button" data-group-action="settings" data-group-id="${escapeAttr(group.id)}">Settings</button><button type="button" data-group-action="delete" data-group-id="${escapeAttr(group.id)}">Delete</button></span>` : ""}</summary>
       <div class="writing-room-card-stack" data-drop-group="${escapeAttr(group.id)}">
         ${group.documents.map((doc) => renderWritingRoomCard(doc, group.depth)).join("")}
         ${state.filingEditMode && !group.documents.length ? '<p class="panel-help">Drop files here or use metadata tags later.</p>' : ''}
@@ -1093,13 +1134,23 @@ function archivedCard(doc, source) {
 
 function groupedDocuments() {
   const baseGroups = state.filingGroups.length ? state.filingGroups : defaultFilingGroups();
-  const groups = new Map(baseGroups.map((group, index) => [group.label, { ...group, documents: [], depth: index ? 1 : 0 }]));
+  const groupsById = new Map(baseGroups.map((group, index) => [group.id, { ...group, documents: [], depth: index ? 1 : 0 }]));
+  const groupsByLabel = new Map([...groupsById.values()].map((group) => [group.label, group]));
   state.documents.forEach((doc) => {
-    const label = writingRoomGroupLabel(doc);
-    if (!groups.has(label)) groups.set(label, { id: slugify(label), label, type: "folder", documents: [], depth: groups.size ? 1 : 0 });
-    groups.get(label).documents.push(doc);
+    let group = doc.filingGroupId ? groupsById.get(doc.filingGroupId) : null;
+    if (!group) {
+      const label = writingRoomGroupLabel(doc);
+      group = groupsByLabel.get(label);
+      if (!group) {
+        group = { id: slugify(label), label, type: "folder", documents: [], depth: groupsById.size ? 1 : 0 };
+        groupsById.set(group.id, group);
+        groupsByLabel.set(group.label, group);
+      }
+      doc.filingGroupId = group.id;
+    }
+    group.documents.push(doc);
   });
-  return [...groups.values()];
+  return [...groupsById.values()];
 }
 
 function writingRoomGroupLabel(doc) {
@@ -1119,6 +1170,11 @@ function docIcon(doc) {
 }
 
 async function handleWritingRoomCardClick(event) {
+  const groupButton = event.target.closest("button[data-group-action]");
+  if (groupButton) {
+    event.preventDefault();
+    return handleFilingGroupAction(groupButton.dataset.groupAction, groupButton.dataset.groupId);
+  }
   const button = event.target.closest("button[data-card-action]");
   if (!button) return;
   const docId = button.dataset.docId;
@@ -1132,6 +1188,41 @@ async function handleWritingRoomCardClick(event) {
   if (action === "copy") {
     await copyText(new URL(documentUrl(docId), location.href).href);
     setStatus("Copied Writing Room tab link", "saved");
+  }
+}
+
+async function handleFilingGroupAction(action, groupId) {
+  const group = state.filingGroups.find((item) => item.id === groupId) || groupedDocuments().find((item) => item.id === groupId);
+  if (!group) return;
+  const groupDocs = state.documents.filter((doc) => doc.filingGroupId === groupId);
+  if (action === "settings") {
+    const result = await openCapsDialog("Folder Settings", [
+      { name: "label", label: "Folder / tab label", value: group.label },
+      { name: "type", label: "Type metadata", value: group.type || "folder", placeholder: "folder or tab" },
+    ]);
+    const label = result?.label?.trim();
+    if (!label) return;
+    const storedGroup = state.filingGroups.find((item) => item.id === groupId);
+    if (storedGroup) {
+      storedGroup.label = label;
+      storedGroup.type = result.type?.trim() || storedGroup.type || "folder";
+    } else {
+      state.filingGroups.push({ id: group.id, label, type: result.type?.trim() || "folder" });
+    }
+    renderWritingRoomCards();
+    markDirty("Filing Cabinet folder settings updated");
+    return;
+  }
+  if (action === "delete") {
+    if (groupDocs.length) {
+      await openCapsDialog("Folder Not Empty", [
+        { name: "warning", label: `${group.label} contains ${groupDocs.length} ${groupDocs.length === 1 ? "tab" : "tabs"}. Move, delete, deprecate, or restore those tabs before deleting the folder.`, value: "", readonly: true },
+      ]);
+      return;
+    }
+    state.filingGroups = state.filingGroups.filter((item) => item.id !== groupId);
+    renderWritingRoomCards();
+    markDirty("Empty Filing Cabinet folder deleted");
   }
 }
 
@@ -1158,15 +1249,25 @@ function deprecateDocument(docId) {
   markDirty("Document deprecated");
 }
 
+function documentTextStats(html) {
+  const withBreaks = String(html || "")
+    .replace(/<\/(p|div|h[1-6]|li|tr|blockquote|aside)>/gi, "\n")
+    .replace(/<br\s*\/?\s*>/gi, "\n");
+  const text = textFromHtml(withBreaks).trim();
+  return {
+    characters: text.length,
+    lines: text.split(/\n|\r/).filter((line) => line.trim()).length || (text ? 1 : 0),
+  };
+}
+
 async function deleteDocumentSafely(docId) {
   const index = state.documents.findIndex((item) => item.id === docId);
   if (index < 0) return;
   const doc = state.documents[index];
-  const text = textFromHtml(doc.content || "");
-  const lines = text.split(/\n|\r/).filter((line) => line.trim()).length || (text.trim() ? 1 : 0);
-  if (text.trim()) {
+  const stats = documentTextStats(doc.content || "");
+  if (stats.characters) {
     const result = await openCapsDialog("Confirm Delete", [
-      { name: "warning", label: `You are deleting ${lines} lines and ${text.length} characters from ${doc.title}.`, value: "", readonly: true },
+      { name: "warning", label: `You are deleting ${stats.lines} lines and ${stats.characters} characters from ${doc.title}.`, value: "", readonly: true },
       { name: "confirm", label: "Yes, move this file to Trash", checkbox: true },
     ]);
     if (result?.confirm !== "on") return;
@@ -1217,13 +1318,22 @@ function handleFilingDragOver(event) {
 function handleFilingDrop(event) {
   if (!state.filingEditMode || !state.draggedDocId) return;
   const targetCard = event.target.closest("[data-doc-card]");
-  if (!targetCard || targetCard.dataset.docCard === state.draggedDocId) return;
+  const targetGroup = event.target.closest("[data-drop-group]");
+  if (!targetCard && !targetGroup) return;
+  if (targetCard?.dataset.docCard === state.draggedDocId) return;
   event.preventDefault();
   const from = state.documents.findIndex((doc) => doc.id === state.draggedDocId);
-  const to = state.documents.findIndex((doc) => doc.id === targetCard.dataset.docCard);
-  if (from < 0 || to < 0) return;
+  if (from < 0) return;
   const [doc] = state.documents.splice(from, 1);
-  state.documents.splice(to, 0, doc);
+  if (targetGroup) doc.filingGroupId = targetGroup.dataset.dropGroup;
+  if (targetCard) {
+    const targetDoc = state.documents.find((item) => item.id === targetCard.dataset.docCard);
+    if (targetDoc?.filingGroupId) doc.filingGroupId = targetDoc.filingGroupId;
+    const to = state.documents.findIndex((item) => item.id === targetCard.dataset.docCard);
+    state.documents.splice(Math.max(0, to), 0, doc);
+  } else {
+    state.documents.push(doc);
+  }
   state.draggedDocId = "";
   renderWritingRoomCards();
   markDirty("Filing Cabinet order updated");
@@ -1425,12 +1535,22 @@ function textFromHtml(html) {
   return div.textContent || "";
 }
 
+function bindDesignToggle(button, input) {
+  if (!button || !input) return;
+  button.addEventListener("click", () => {
+    input.checked = !input.checked;
+    button.setAttribute("aria-pressed", String(input.checked));
+  });
+}
+
 function bindDesignColorTools() {
   renderFavoriteColors();
   const colorInputs = document.querySelectorAll(".design-section input[type='color']");
   colorInputs.forEach((input) => {
+    input.draggable = true;
     input.addEventListener("focus", () => syncActiveColorInput(input));
     input.addEventListener("input", () => syncActiveColorInput(input));
+    input.addEventListener("dragstart", (event) => event.dataTransfer?.setData("text/plain", input.value));
     if (!state.lastColorInput) state.lastColorInput = input;
   });
   els.activeColorHex?.addEventListener("input", () => applyHexToActiveColor(els.activeColorHex.value));
@@ -1439,13 +1559,28 @@ function bindDesignColorTools() {
     if (!button) return;
     applyHexToActiveColor(button.dataset.favoriteColor);
   });
+  els.favoriteColors?.addEventListener("dragover", (event) => {
+    if (event.target.closest("button[data-favorite-index]")) event.preventDefault();
+  });
+  els.favoriteColors?.addEventListener("drop", handleFavoriteColorDrop);
 }
 
 function renderFavoriteColors() {
   if (!els.favoriteColors) return;
-  els.favoriteColors.innerHTML = DEFAULT_FAVORITE_COLORS.map((color) => (
-    `<button type="button" data-favorite-color="${escapeAttr(color)}" aria-label="Use ${escapeAttr(color)}" style="--favorite-color:${escapeAttr(color)}"></button>`
+  els.favoriteColors.innerHTML = state.favoriteColors.map((color, index) => (
+    `<button type="button" data-favorite-index="${index}" data-favorite-color="${escapeAttr(color)}" aria-label="Use ${escapeAttr(color)}" style="--favorite-color:${escapeAttr(color)}"></button>`
   )).join("");
+}
+
+function handleFavoriteColorDrop(event) {
+  const button = event.target.closest("button[data-favorite-index]");
+  if (!button) return;
+  event.preventDefault();
+  const color = normalizeHexColor(event.dataTransfer?.getData("text/plain") || state.lastColorInput?.value || "");
+  if (!color) return;
+  state.favoriteColors[Number(button.dataset.favoriteIndex)] = color;
+  renderFavoriteColors();
+  setStatus("Favorite color updated", "saved");
 }
 
 function syncActiveColorInput(input) {
@@ -1472,6 +1607,8 @@ function normalizeHexColor(value) {
 
 function loadDesignForm() {
   const settings = currentDesignSettings();
+  state.favoriteColors = validFavoriteColors(settings.favoriteColors);
+  renderFavoriteColors();
   els.designButtonBg.value = settings.buttonBg;
   els.designBorderColor.value = settings.borderColor;
   els.designTextColor.value = settings.textColor;
@@ -1503,6 +1640,11 @@ function loadDesignForm() {
   els.designBoldToggle?.setAttribute("aria-pressed", String(settings.bold));
   els.dialogBoldToggle?.setAttribute("aria-pressed", String(settings.dialogBold));
   syncActiveColorInput(els.designBorderColor);
+}
+
+function validFavoriteColors(colors) {
+  const values = Array.isArray(colors) ? colors.map(normalizeHexColor).filter(Boolean) : [];
+  return [...values, ...DEFAULT_FAVORITE_COLORS].slice(0, DEFAULT_FAVORITE_COLORS.length);
 }
 
 function currentDesignSettings() {
@@ -1546,11 +1688,12 @@ function defaultDesignSettings() {
     emphasisText: palette.parchment,
     panelBg: palette.espresso,
     panelBorder: palette.clay,
+    favoriteColors: [...DEFAULT_FAVORITE_COLORS],
   };
 }
 
 function saveDesignSettings() {
-  const settings = { buttonBg: els.designButtonBg.value, borderColor: els.designBorderColor.value, textColor: els.designTextColor.value, fontSize: els.designFontSize.value || "14", bold: els.designBold.checked, bgImage: els.designBgImage.value.trim(), dialogBg: els.dialogBgColor.value, dialogBorder: els.dialogBorderColor.value, dialogShadow: els.dialogShadowColor.value, dialogText: els.dialogTextColor.value, dialogFontSize: els.dialogFontSize.value || "14", dialogBold: els.dialogBold.checked, dialogButtonBg: els.dialogButtonBg.value, dialogButtonBorder: els.dialogButtonBorder.value, dialogButtonText: els.dialogButtonText.value, dialogButtonShadow: els.dialogButtonShadow.value, labelText: els.labelTextColor.value, dynamicText: els.dynamicTextColor.value, scrollbarTrack: els.scrollbarTrackColor.value, scrollbarThumb: els.scrollbarThumbColor.value, statusBg: els.statusBgColor.value, statusBorder: els.statusBorderColor.value, statusText: els.statusTextColor.value, emphasisBg: els.emphasisBgColor.value, emphasisBorder: els.emphasisBorderColor.value, emphasisText: els.emphasisTextColor.value, panelBg: els.panelBgColor.value, panelBorder: els.panelBorderColor.value };
+  const settings = { buttonBg: els.designButtonBg.value, borderColor: els.designBorderColor.value, textColor: els.designTextColor.value, fontSize: els.designFontSize.value || "14", bold: els.designBold.checked, bgImage: els.designBgImage.value.trim(), dialogBg: els.dialogBgColor.value, dialogBorder: els.dialogBorderColor.value, dialogShadow: els.dialogShadowColor.value, dialogText: els.dialogTextColor.value, dialogFontSize: els.dialogFontSize.value || "14", dialogBold: els.dialogBold.checked, dialogButtonBg: els.dialogButtonBg.value, dialogButtonBorder: els.dialogButtonBorder.value, dialogButtonText: els.dialogButtonText.value, dialogButtonShadow: els.dialogButtonShadow.value, labelText: els.labelTextColor.value, dynamicText: els.dynamicTextColor.value, scrollbarTrack: els.scrollbarTrackColor.value, scrollbarThumb: els.scrollbarThumbColor.value, statusBg: els.statusBgColor.value, statusBorder: els.statusBorderColor.value, statusText: els.statusTextColor.value, emphasisBg: els.emphasisBgColor.value, emphasisBorder: els.emphasisBorderColor.value, emphasisText: els.emphasisTextColor.value, panelBg: els.panelBgColor.value, panelBorder: els.panelBorderColor.value, favoriteColors: [...state.favoriteColors] };
   localStorage.setItem(DESIGN_KEY, JSON.stringify(settings));
   applyDesignSettings(settings);
   setStatus("Design applied", "saved");
@@ -1810,7 +1953,7 @@ function updateHoverStatus(event) {
   else if (interactive === els.tagsInput) setContextStatus("Document metadata tags");
   else if (interactive === els.documentSelect) setContextStatus("Current document selector");
   else if (interactive === els.newDocumentButton) setContextStatus("Create a new Writing Room document");
-  else if (interactive === els.documentSettingsButton) setContextStatus("Open document settings: title and metadata");
+  else if (interactive === els.documentSettingsButton) setContextStatus("Open Filing Cabinet settings for folders, tabs, and documents");
   else if (interactive === els.writingRoomButton) setContextStatus("Open Writing Room filing cabinet tabs");
   else if (interactive === els.settingsButton) setContextStatus("Open Writing Room settings");
   else if (interactive === els.topHelpButton || interactive === els.helpButton) setContextStatus("Open Help and release notes");
