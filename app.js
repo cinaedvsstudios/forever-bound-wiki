@@ -144,6 +144,8 @@ const els = {
   designBorderColor: document.querySelector("#designBorderColor"),
   designTextColor: document.querySelector("#designTextColor"),
   designFontSize: document.querySelector("#designFontSize"),
+  designFontFamily: document.querySelector("#designFontFamily"),
+  titleIconScale: document.querySelector("#titleIconScale"),
   designBold: document.querySelector("#designBold"),
   designBgImage: document.querySelector("#designBgImage"),
   dialogBgColor: document.querySelector("#dialogBgColor"),
@@ -654,16 +656,16 @@ function renderDocumentEndBar() {
   const doc = activeDocument();
   const fileType = documentFileType(doc);
   els.documentEndBar.innerHTML = `
-    <button type="button" data-end-action="writing-room">Writing Room</button>
+    <button type="button" data-end-action="writing-room" data-tool-name="Open the Writing Room Filing Cabinet">Writing Room</button>
     <span class="end-doc-title"><span class="card-icon">${docIcon(doc)}</span><strong>${escapeHtml(doc.title)}</strong></span>
     <span class="end-doc-meta">${escapeHtml(fileType)} · ${escapeHtml(doc.id)} · ${escapeHtml((doc.tags || []).join(", ") || "No tags")}</span>
     <span class="document-card-actions">
-      <button type="button" data-end-action="open">↗</button>
-      <button type="button" data-end-action="bulk-style">🎨</button>
-      <button type="button" data-end-action="duplicate">⧉</button>
-      <button type="button" data-end-action="deprecate">🕰</button>
-      <button type="button" data-end-action="delete">❌</button>
-      <button type="button" data-end-action="copy">🔗</button>
+      <button type="button" data-end-action="open" data-tool-name="Open this file in the Writing Room panel">↗</button>
+      <button type="button" data-end-action="bulk-style" data-tool-name="Bulk style TCards, tables, or emphasis boxes in this file">🎨</button>
+      <button type="button" data-end-action="duplicate" data-tool-name="Duplicate this file">⧉</button>
+      <button type="button" data-end-action="deprecate" data-tool-name="Deprecate this file as an old version">🕰</button>
+      <button type="button" data-end-action="delete" data-tool-name="Move this file to Trash">❌</button>
+      <button type="button" data-end-action="copy" data-tool-name="Copy this file URL">🔗</button>
     </span>`;
 }
 
@@ -2329,6 +2331,8 @@ function loadDesignForm() {
   els.designBorderColor.value = settings.borderColor;
   els.designTextColor.value = settings.textColor;
   els.designFontSize.value = settings.fontSize;
+  if (els.designFontFamily) els.designFontFamily.value = settings.fontFamily;
+  if (els.titleIconScale) els.titleIconScale.value = settings.titleIconScale;
   els.designBold.checked = settings.bold;
   els.designBgImage.value = settings.bgImage;
   els.dialogBgColor.value = settings.dialogBg;
@@ -2380,6 +2384,8 @@ function defaultDesignSettings() {
     borderColor: palette.peach,
     textColor: palette.parchment,
     fontSize: "14",
+    fontFamily: "Arial, Helvetica, sans-serif",
+    titleIconScale: "143",
     bold: true,
     bgImage: "wallpapersm.jpg",
     dialogBg: palette.espresso,
@@ -2409,7 +2415,7 @@ function defaultDesignSettings() {
 }
 
 function saveDesignSettings() {
-  const settings = { buttonBg: els.designButtonBg.value, borderColor: els.designBorderColor.value, textColor: els.designTextColor.value, fontSize: els.designFontSize.value || "14", bold: els.designBold.checked, bgImage: els.designBgImage.value.trim(), dialogBg: els.dialogBgColor.value, dialogBorder: els.dialogBorderColor.value, dialogShadow: els.dialogShadowColor.value, dialogText: els.dialogTextColor.value, dialogFontSize: els.dialogFontSize.value || "14", dialogBold: els.dialogBold.checked, dialogButtonBg: els.dialogButtonBg.value, dialogButtonBorder: els.dialogButtonBorder.value, dialogButtonText: els.dialogButtonText.value, dialogButtonShadow: els.dialogButtonShadow.value, labelText: els.labelTextColor.value, dynamicText: els.dynamicTextColor.value, scrollbarTrack: els.scrollbarTrackColor.value, scrollbarThumb: els.scrollbarThumbColor.value, statusBg: els.statusBgColor.value, statusBorder: els.statusBorderColor.value, statusText: els.statusTextColor.value, emphasisBg: els.emphasisBgColor.value, emphasisBorder: els.emphasisBorderColor.value, emphasisText: els.emphasisTextColor.value, panelBg: els.panelBgColor.value, panelBorder: els.panelBorderColor.value, favoriteColors: [...state.favoriteColors] };
+  const settings = { buttonBg: els.designButtonBg.value, borderColor: els.designBorderColor.value, textColor: els.designTextColor.value, fontSize: els.designFontSize.value || "14", fontFamily: els.designFontFamily?.value || "Arial, Helvetica, sans-serif", titleIconScale: els.titleIconScale?.value || "143", bold: els.designBold.checked, bgImage: els.designBgImage.value.trim(), dialogBg: els.dialogBgColor.value, dialogBorder: els.dialogBorderColor.value, dialogShadow: els.dialogShadowColor.value, dialogText: els.dialogTextColor.value, dialogFontSize: els.dialogFontSize.value || "14", dialogBold: els.dialogBold.checked, dialogButtonBg: els.dialogButtonBg.value, dialogButtonBorder: els.dialogButtonBorder.value, dialogButtonText: els.dialogButtonText.value, dialogButtonShadow: els.dialogButtonShadow.value, labelText: els.labelTextColor.value, dynamicText: els.dynamicTextColor.value, scrollbarTrack: els.scrollbarTrackColor.value, scrollbarThumb: els.scrollbarThumbColor.value, statusBg: els.statusBgColor.value, statusBorder: els.statusBorderColor.value, statusText: els.statusTextColor.value, emphasisBg: els.emphasisBgColor.value, emphasisBorder: els.emphasisBorderColor.value, emphasisText: els.emphasisTextColor.value, panelBg: els.panelBgColor.value, panelBorder: els.panelBorderColor.value, favoriteColors: [...state.favoriteColors] };
   localStorage.setItem(DESIGN_KEY, JSON.stringify(settings));
   applyDesignSettings(settings);
   setStatus("Design applied", "saved");
@@ -2432,6 +2438,8 @@ function applyDesignSettings(settings) {
   root.style.setProperty("--line", settings.borderColor);
   root.style.setProperty("--ink", settings.textColor);
   root.style.setProperty("--button-font-size", `${settings.fontSize}px`);
+  root.style.setProperty("--app-font-family", settings.fontFamily || "Arial, Helvetica, sans-serif");
+  root.style.setProperty("--title-icon-scale", `${settings.titleIconScale || 143}%`);
   root.style.setProperty("--button-font-weight", settings.bold ? "800" : "500");
   root.style.setProperty("--app-bg-image", settings.bgImage ? `url("${escapeCssUrl(settings.bgImage)}")` : "none");
   root.style.setProperty("--dialog-bg", settings.dialogBg);

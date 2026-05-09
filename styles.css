@@ -1684,3 +1684,52 @@ h1, h2, h3, h4, .settings-section h3, .help-panel h3, .block-panel h2, .writing-
   font-size: 11pt !important;
   line-height: 1.35;
 }
+
+/* Feedback pass: title icon sizing, global font control, and true 1px gray color inputs */
+:root {
+  --app-font-family: Arial, Helvetica, sans-serif;
+  --title-icon-scale: 143%;
+}
+body, button, input, select, textarea, summary, .editor, .help-panel, .settings-panel, .block-panel, .writing-room-panel,
+body *:not(code):not(pre) {
+  font-family: var(--app-font-family) !important;
+}
+.app-name {
+  color: #28133f !important;
+}
+.app-name img {
+  width: calc(1.65rem * var(--title-icon-scale) / 100) !important;
+  height: calc(1.65rem * var(--title-icon-scale) / 100) !important;
+}
+.design-section input[type="color"],
+.design-section input[type="color"]::-webkit-color-swatch-wrapper,
+.design-section input[type="color"]::-webkit-color-swatch,
+.design-section input[type="color"]::-moz-color-swatch,
+.tcard-style-grid input[type="color"],
+.table-tool-row input[type="color"] {
+  border: 1px solid #777 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+}
+.design-section input[type="color"] {
+  width: 2rem !important;
+  height: 1.55rem !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  appearance: none;
+  -webkit-appearance: none;
+}
+.design-section input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 2px !important;
+}
+.design-section input[type="color"]::-webkit-color-swatch {
+  border-radius: 0 !important;
+}
+.design-section input[type="color"]::-moz-color-swatch {
+  border-radius: 0 !important;
+}
+.design-section select {
+  border: 1px solid #777 !important;
+  box-shadow: none !important;
+}
