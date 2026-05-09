@@ -32,7 +32,7 @@
     },
     "Location-Ironvale": {
       "id": "Location-Ironvale",
-      "content": "Ironvale is a sample location block used to demonstrate how edits update every {{Location-Ironvale}} reference.",
+      "content": "Ironvale is a sample location TCard used to demonstrate how edits update every {{Location-Ironvale}} reference.",
       "updatedAt": "2026-05-07T00:00:00.000Z"
     }
   }

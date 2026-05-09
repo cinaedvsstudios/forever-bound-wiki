@@ -60,7 +60,7 @@ const DEFAULT_WORKSPACE = {
     },
     "Location-Ironvale": {
       id: "Location-Ironvale",
-      content: "Ironvale is a sample location block used to demonstrate how edits update every {{Location-Ironvale}} reference.",
+      content: "Ironvale is a sample location TCard used to demonstrate how edits update every {{Location-Ironvale}} reference.",
       updatedAt: "2026-05-07T00:00:00.000Z",
     },
   },
@@ -724,7 +724,7 @@ function ensureHeadingIds() {
 function renderTransclusions(html) {
   return String(html ?? "").replace(/\{\{([A-Za-z]+-[A-Za-z0-9-]+)\}\}/g, (_, id) => {
     const block = state.blocks[id];
-    const content = block ? block.content : "Missing transclusion block";
+    const content = block ? block.content : "Missing TCard";
     const style = blockStyleAttr(block?.style);
     return `<aside class="transclusion-ref" contenteditable="false" draggable="true" data-block-id="${escapeAttr(id)}"${style}><button type="button" class="floating-edit-button tcard-edit-button" data-edit-tcard="${escapeAttr(id)}" title="Edit TCard">✎</button><span>${escapeHtml(id)}</span><div>${sanitizeBlockContent(content)}</div></aside>`;
   });
@@ -840,7 +840,7 @@ async function createTransclusionFromSelection() {
   insertHtml(`{{${escapeHtml(id)}}}`);
   renderBlockList();
   renderExportSourceSelect();
-  setStatus("Transclusion created", "saved");
+  setStatus("TCard created", "saved");
 }
 
 function openCapsDialog(title, fields) {
@@ -900,7 +900,7 @@ async function createPillLink() {
     return;
   }
 
-  const result = await openCapsDialog("Create Pill Link", [{ name: "target", label: "Target", value: "", placeholder: "document id, #bookmark, block:Item-Name, {{Item-Name}}, or https://" }]);
+  const result = await openCapsDialog("Create Link Pill", [{ name: "target", label: "Target", value: "", placeholder: "document id, #bookmark, block:Item-Name, {{Item-Name}}, or https://" }]);
   if (!result?.target) return;
   restoreSelectionRange();
   runLinkCommand(result.target, { pill: true });
@@ -953,7 +953,7 @@ function runLinkCommand(target, options = {}) {
   const matchingLinks = [...els.editor.querySelectorAll(`a[href="${cssString(normalized.href)}"]`)];
   const link = currentLink() || matchingLinks[matchingLinks.length - 1];
   if (link) applyLinkMetadata(link, normalized, options.pill);
-  syncAndSave(options.pill ? "Pill link created" : "Link created");
+  syncAndSave(options.pill ? "Link Pill created" : "Link created");
 }
 
 function applyLinkTarget(link, target, keepPill = false) {
@@ -2385,7 +2385,7 @@ function defaultDesignSettings() {
     borderColor: palette.peach,
     textColor: palette.parchment,
     fontSize: "14",
-    fontFamily: "Arial, Helvetica, sans-serif",
+    fontFamily: "Inter, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
     titleIconScale: "143",
     bold: true,
     bgImage: "wallpapersm.jpg",
@@ -2416,7 +2416,7 @@ function defaultDesignSettings() {
 }
 
 function saveDesignSettings() {
-  const settings = { buttonBg: els.designButtonBg.value, borderColor: els.designBorderColor.value, textColor: els.designTextColor.value, fontSize: els.designFontSize.value || "14", fontFamily: els.designFontFamily?.value || "Arial, Helvetica, sans-serif", titleIconScale: els.titleIconScale?.value || "143", bold: els.designBold.checked, bgImage: els.designBgImage.value.trim(), dialogBg: els.dialogBgColor.value, dialogBorder: els.dialogBorderColor.value, dialogShadow: els.dialogShadowColor.value, dialogText: els.dialogTextColor.value, dialogFontSize: els.dialogFontSize.value || "14", dialogBold: els.dialogBold.checked, dialogButtonBg: els.dialogButtonBg.value, dialogButtonBorder: els.dialogButtonBorder.value, dialogButtonText: els.dialogButtonText.value, dialogButtonShadow: els.dialogButtonShadow.value, labelText: els.labelTextColor.value, dynamicText: els.dynamicTextColor.value, scrollbarTrack: els.scrollbarTrackColor.value, scrollbarThumb: els.scrollbarThumbColor.value, statusBg: els.statusBgColor.value, statusBorder: els.statusBorderColor.value, statusText: els.statusTextColor.value, emphasisBg: els.emphasisBgColor.value, emphasisBorder: els.emphasisBorderColor.value, emphasisText: els.emphasisTextColor.value, panelBg: els.panelBgColor.value, panelBorder: els.panelBorderColor.value, favoriteColors: [...state.favoriteColors] };
+  const settings = { buttonBg: els.designButtonBg.value, borderColor: els.designBorderColor.value, textColor: els.designTextColor.value, fontSize: els.designFontSize.value || "14", fontFamily: els.designFontFamily?.value || "Inter, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif", titleIconScale: els.titleIconScale?.value || "143", bold: els.designBold.checked, bgImage: els.designBgImage.value.trim(), dialogBg: els.dialogBgColor.value, dialogBorder: els.dialogBorderColor.value, dialogShadow: els.dialogShadowColor.value, dialogText: els.dialogTextColor.value, dialogFontSize: els.dialogFontSize.value || "14", dialogBold: els.dialogBold.checked, dialogButtonBg: els.dialogButtonBg.value, dialogButtonBorder: els.dialogButtonBorder.value, dialogButtonText: els.dialogButtonText.value, dialogButtonShadow: els.dialogButtonShadow.value, labelText: els.labelTextColor.value, dynamicText: els.dynamicTextColor.value, scrollbarTrack: els.scrollbarTrackColor.value, scrollbarThumb: els.scrollbarThumbColor.value, statusBg: els.statusBgColor.value, statusBorder: els.statusBorderColor.value, statusText: els.statusTextColor.value, emphasisBg: els.emphasisBgColor.value, emphasisBorder: els.emphasisBorderColor.value, emphasisText: els.emphasisTextColor.value, panelBg: els.panelBgColor.value, panelBorder: els.panelBorderColor.value, favoriteColors: [...state.favoriteColors] };
   localStorage.setItem(DESIGN_KEY, JSON.stringify(settings));
   applyDesignSettings(settings);
   setStatus("Design applied", "saved");
@@ -2439,7 +2439,7 @@ function applyDesignSettings(settings) {
   root.style.setProperty("--line", settings.borderColor);
   root.style.setProperty("--ink", settings.textColor);
   root.style.setProperty("--button-font-size", `${settings.fontSize}px`);
-  root.style.setProperty("--app-font-family", settings.fontFamily || "Arial, Helvetica, sans-serif");
+  root.style.setProperty("--app-font-family", settings.fontFamily || "Inter, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif");
   const iconScale = Math.max(50, Math.min(250, Number(settings.titleIconScale) || 143));
   root.style.setProperty("--title-icon-scale", `${iconScale}%`);
   root.style.setProperty("--title-icon-size", `${(1.65 * iconScale / 100).toFixed(2)}rem`);
@@ -2663,8 +2663,8 @@ function updateContextStatus() {
   const emphasis = node?.closest?.(".emphasis-box");
 
   if (emphasis) parts.push("emphasis box");
-  if (block) parts.push(`inside transclusion block ${block.dataset.blockId || ""}`.trim());
-  if (link) parts.push(link.classList.contains("pill-link") ? "pill link" : "link");
+  if (block) parts.push(`inside TCard ${block.dataset.blockId || ""}`.trim());
+  if (link) parts.push(link.classList.contains("pill-link") ? "Link Pill" : "link");
   if (heading) parts.push(`bookmark heading #${heading.id}`);
   if (table) parts.push("table");
   if (list) parts.push("list");

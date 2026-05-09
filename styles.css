@@ -1345,10 +1345,10 @@ input, textarea, select, .panel-help, .help-panel p, .help-panel dd, .document-c
 
 /* Feedback pass: typography, icon title, compact designer, table/emoji/pill polish */
 :root {
-  font-family: Arial, Helvetica, sans-serif !important;
+  font-family: var(--app-font-family, Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif) !important;
 }
 body, button, input, select, textarea, summary, .editor, .help-panel, .settings-panel, .block-panel {
-  font-family: Arial, Helvetica, sans-serif !important;
+  font-family: var(--app-font-family, Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif) !important;
 }
 code, pre, .editor code {
   font-family: "Courier New", Courier, monospace !important;
@@ -1525,7 +1525,7 @@ code, pre, .editor code {
 }
 .help-panel,
 .help-panel *:not(code):not(pre) {
-  font-family: Arial, Helvetica, sans-serif !important;
+  font-family: var(--app-font-family, Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif) !important;
 }
 .help-panel code,
 .help-panel pre {
@@ -1552,7 +1552,7 @@ body, button, input, select, textarea, summary, .editor, .help-panel, .settings-
 }
 h1, h2, h3, h4, .settings-section h3, .help-panel h3, .block-panel h2, .writing-room-panel h2,
 .writing-room-card summary strong, .filing-tab summary strong, .writing-room-group summary strong {
-  font-family: Arial, Helvetica, sans-serif !important;
+  font-family: var(--app-font-family, Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif) !important;
   font-weight: 700 !important;
 }
 .settings-section h3, .help-panel h3, .writing-room-card summary strong, .filing-tab summary strong, .writing-room-group summary strong {
@@ -1582,7 +1582,7 @@ h1, h2, h3, h4, .settings-section h3, .help-panel h3, .block-panel h2, .writing-
   line-height: 1.55;
 }
 .editor h1, .editor h2, .editor h3 {
-  font-family: Arial, Helvetica, sans-serif !important;
+  font-family: var(--app-font-family, Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif) !important;
   font-weight: 700 !important;
   letter-spacing: normal !important;
 }
@@ -1687,7 +1687,7 @@ h1, h2, h3, h4, .settings-section h3, .help-panel h3, .block-panel h2, .writing-
 
 /* Feedback pass: title icon sizing, global font control, and true 1px gray color inputs */
 :root {
-  --app-font-family: Arial, Helvetica, sans-serif;
+  --app-font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --title-icon-scale: 143%;
 }
 body, button, input, select, textarea, summary, .editor, .help-panel, .settings-panel, .block-panel, .writing-room-panel,
@@ -1764,4 +1764,21 @@ button, summary, input, select, textarea, .context-status, .document-end-bar, .w
   border: 1px solid #777 !important;
   box-shadow: none !important;
   outline: 0 !important;
+}
+
+/* Guidebook terminology update and Inter-first font stack */
+:root {
+  --app-font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+.help-panel,
+.help-panel *:not(code):not(pre),
+h1, h2, h3, h4,
+.editor h1, .editor h2, .editor h3,
+.settings-section h3,
+.block-panel h2,
+.writing-room-panel h2,
+.writing-room-card summary strong,
+.filing-tab summary strong,
+.writing-room-group summary strong {
+  font-family: var(--app-font-family) !important;
 }
