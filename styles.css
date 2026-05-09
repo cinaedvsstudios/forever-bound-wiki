@@ -1733,3 +1733,35 @@ body *:not(code):not(pre) {
   border: 1px solid #777 !important;
   box-shadow: none !important;
 }
+
+/* Stabilization pass: avoid broken calc sizing and over-broad typography side effects */
+:root {
+  --title-icon-size: 2.36rem;
+}
+.app-name img {
+  width: var(--title-icon-size) !important;
+  height: var(--title-icon-size) !important;
+}
+body, button, input, select, textarea, summary, .editor, .help-panel, .settings-panel, .block-panel, .writing-room-panel {
+  font-family: var(--app-font-family) !important;
+}
+.editor code, code, pre,
+.editor code *, code *, pre * {
+  font-family: "Courier New", Courier, monospace !important;
+}
+button, summary, input, select, textarea, .context-status, .document-end-bar, .writing-room-card-body {
+  font-size: 12pt !important;
+}
+.app-name, .app-name * {
+  font-weight: 700 !important;
+}
+.tool-menu-trigger[data-tool-name="Subnoto"] + .tool-menu-panel {
+  display: none !important;
+}
+.design-section input[type="color"] {
+  appearance: auto !important;
+  -webkit-appearance: auto !important;
+  border: 1px solid #777 !important;
+  box-shadow: none !important;
+  outline: 0 !important;
+}

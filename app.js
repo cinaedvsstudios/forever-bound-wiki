@@ -490,6 +490,7 @@ function bindEditorEvents() {
   els.emojiButton.addEventListener("click", showEmojiPicker);
   els.searchButton?.addEventListener("click", () => setContextStatus("Search will be built next", "saved"));
   els.subnotoButton?.addEventListener("click", () => openSubnotoWindow());
+  document.querySelector('.tool-menu-trigger[data-tool-name="Subnoto"]')?.addEventListener("click", openSubnotoWindow);
   els.emphasisButton.addEventListener("click", insertEmphasisBox);
   els.topHelpButton.addEventListener("click", () => toggleHelpPanel(true));
   els.settingsButton.addEventListener("click", () => toggleSettingsPanel(true));
@@ -2439,7 +2440,9 @@ function applyDesignSettings(settings) {
   root.style.setProperty("--ink", settings.textColor);
   root.style.setProperty("--button-font-size", `${settings.fontSize}px`);
   root.style.setProperty("--app-font-family", settings.fontFamily || "Arial, Helvetica, sans-serif");
-  root.style.setProperty("--title-icon-scale", `${settings.titleIconScale || 143}%`);
+  const iconScale = Math.max(50, Math.min(250, Number(settings.titleIconScale) || 143));
+  root.style.setProperty("--title-icon-scale", `${iconScale}%`);
+  root.style.setProperty("--title-icon-size", `${(1.65 * iconScale / 100).toFixed(2)}rem`);
   root.style.setProperty("--button-font-weight", settings.bold ? "800" : "500");
   root.style.setProperty("--app-bg-image", settings.bgImage ? `url("${escapeCssUrl(settings.bgImage)}")` : "none");
   root.style.setProperty("--dialog-bg", settings.dialogBg);
