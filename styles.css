@@ -1,0 +1,200 @@
+:root {
+  --system-background: #191711;
+  --system-foreground: #f7ead2;
+  --system-accent: #d88a64;
+  --system-surface: #2e2721;
+  --system-muted: #8b775e;
+  --system-font-size: 16px;
+  --system-border-radius: 14px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--system-background);
+  color: var(--system-foreground);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: var(--system-font-size);
+}
+
+.page-shell {
+  width: min(1120px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 24px 0 48px;
+}
+
+.top-menu-bar {
+  background: var(--top-menu-bar-background, var(--system-surface));
+  color: var(--top-menu-bar-foreground, var(--system-foreground));
+  border-bottom: 3px solid var(--top-menu-bar-accent, var(--system-accent));
+  padding: 14px 22px;
+}
+
+.top-menu-bar a {
+  color: inherit;
+  margin-right: 18px;
+  text-decoration: none;
+}
+
+.writing-room {
+  background: var(--writing-room-background, var(--system-surface));
+  border: 1px solid var(--writing-room-accent, var(--system-accent));
+  border-radius: var(--writing-room-border-radius, var(--system-border-radius));
+  padding: 24px;
+}
+
+.element-designer {
+  margin-top: 28px;
+  padding: 22px;
+  background: color-mix(in srgb, var(--system-surface) 88%, black);
+  border: 1px solid var(--system-accent);
+  border-radius: var(--system-border-radius);
+}
+
+.element-designer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.element-designer-header h2 {
+  margin: 0;
+}
+
+.design-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.design-actions button,
+.design-card button,
+.primary-action {
+  border: 1px solid var(--system-accent);
+  border-radius: 999px;
+  background: var(--system-surface);
+  color: var(--system-foreground);
+  cursor: pointer;
+  padding: 8px 14px;
+}
+
+.design-controls {
+  display: grid;
+  gap: 12px;
+}
+
+.design-card {
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid color-mix(in srgb, var(--system-accent) 70%, transparent);
+  border-radius: var(--system-border-radius);
+}
+
+.design-card summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  background: rgba(0, 0, 0, 0.22);
+  color: var(--system-foreground);
+  cursor: pointer;
+  font-weight: 700;
+  list-style: none;
+}
+
+.design-card summary::-webkit-details-marker {
+  display: none;
+}
+
+.design-card summary::after {
+  content: "▾";
+  transition: transform 160ms ease;
+}
+
+.design-card:not([open]) summary::after {
+  transform: rotate(-90deg);
+}
+
+.design-card-body {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+}
+
+.design-card-body fieldset {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.design-card-body label {
+  display: grid;
+  gap: 6px;
+  font-size: 0.92rem;
+}
+
+.design-card-body input[type="color"],
+.design-card-body input[type="number"] {
+  width: 100%;
+  min-height: 38px;
+  border: 1px solid var(--system-muted);
+  border-radius: 8px;
+  background: #fff;
+  color: #111;
+}
+
+.use-system-defaults {
+  display: flex !important;
+  grid-template-columns: auto 1fr !important;
+  align-items: center;
+  justify-content: start;
+  gap: 8px !important;
+  width: fit-content;
+}
+
+.design-card.is-inheriting {
+  border-style: dashed;
+}
+
+.design-card.is-inheriting .inherited-controls,
+.inherited-controls:disabled {
+  opacity: 0.45;
+  filter: grayscale(0.7);
+}
+
+.design-card.is-inheriting .inherited-controls input,
+.inherited-controls:disabled input {
+  cursor: not-allowed;
+}
+
+.subnoto {
+  background: var(--subnoto-background, var(--system-surface));
+}
+
+.specnoto {
+  background: var(--specnoto-background, var(--system-surface));
+}
+
+.writing-area {
+  background: var(--writing-area-background, #fff8e8);
+  color: var(--writing-area-foreground, #1b1610);
+  border-radius: var(--writing-area-border-radius, var(--system-border-radius));
+  padding: 18px;
+}
+
+.help-guidebook,
+.settings-window,
+.transclusion-card {
+  border-color: var(--help-accent, var(--system-accent));
+  border-radius: var(--help-border-radius, var(--system-border-radius));
+}
