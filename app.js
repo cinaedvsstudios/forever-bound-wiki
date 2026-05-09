@@ -1,67 +1,60 @@
+const DESIGN_KEY = 'capsanoto-design-settings-v1';
 const HEX_SHORT_OR_LONG = /^#?(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
-const DEFAULT_SETTINGS_PATH = 'data.json';
 
-const designerState = {
-  settings: null,
+const state = {
+  lastColorInput: null,
+  settings: {},
 };
 
-function normalizeHex(value) {
-  const rawValue = String(value || '').trim();
+function normalizeHexColor(value) {
+  const raw = String(value || '').trim();
+  if (!HEX_SHORT_OR_LONG.test(raw)) return '';
 
-  if (!HEX_SHORT_OR_LONG.test(rawValue)) {
-    return null;
-  }
-
-  const hex = rawValue.replace(/^#/, '').toLowerCase();
-  const expanded = hex.length === 3
+  const hex = raw.replace(/^#/, '').toLowerCase();
+  const normalized = hex.length === 3
     ? hex.split('').map((character) => character + character).join('')
     : hex;
 
-  return `#${expanded}`;
-}
-
-function getStatusElement() {
-  return document.getElementById('designerStatus');
+  return `#${normalized}`;
 }
 
 function setDesignerStatus(message, tone = 'info') {
-  const status = getStatusElement();
+  const status = document.querySelector('#designerStatus');
   if (!status) return;
 
   status.textContent = message;
   status.dataset.tone = tone;
 }
 
-function updateCurrentColor(hex) {
-  const currentColor = document.getElementById('currentColorValue');
-  if (!currentColor) return;
+function updateCurrentColor(value) {
+  const color = normalizeHexColor(value);
+  if (!color) return;
 
-  currentColor.value = hex;
-  currentColor.textContent = hex;
-}
+  const currentColor = document.querySelector('#currentColorValue');
+  const activeHex = document.querySelector('#activeColorHex');
 
-function toCamelIdentifier(path) {
-  return path
-    .replace(/[^a-zA-Z0-9]+(.)/g, (_, character) => character.toUpperCase())
-    .replace(/^[^a-zA-Z]+/, '')
-    .replace(/^./, (character) => character.toLowerCase());
-}
-
-function escapeSelectorValue(value) {
-  if (window.CSS?.escape) {
-    return CSS.escape(value);
+  if (currentColor) {
+    currentColor.value = color;
+    currentColor.textContent = color;
   }
 
+  if (activeHex && document.activeElement !== activeHex) {
+    activeHex.value = color;
+  }
+}
+
+function selectorEscape(value) {
+  if (window.CSS?.escape) return CSS.escape(value);
   return String(value).replace(/\\/g, '\\\\').replace(/"/g, '\\"');
 }
 
 function findPairedHexInput(colorInput) {
   if (colorInput.dataset.colorFor) {
-    return document.querySelector(`input[data-hex-for="${escapeSelectorValue(colorInput.dataset.colorFor)}"]`);
+    return document.querySelector(`input[data-hex-for="${selectorEscape(colorInput.dataset.colorFor)}"]`);
   }
 
   if (colorInput.id.endsWith('Color')) {
-    return document.getElementById(`${colorInput.id.slice(0, -5)}Hex`);
+    return document.querySelector(`#${selectorEscape(colorInput.id.slice(0, -5))}Hex`);
   }
 
   return colorInput.closest('.color-control')?.querySelector('.color-control__hex') || null;
@@ -69,70 +62,61 @@ function findPairedHexInput(colorInput) {
 
 function findPairedColorInput(hexInput) {
   if (hexInput.dataset.hexFor) {
-    return document.querySelector(`input[type="color"][data-color-for="${escapeSelectorValue(hexInput.dataset.hexFor)}"]`);
+    return document.querySelector(`input[type="color"][data-color-for="${selectorEscape(hexInput.dataset.hexFor)}"]`);
   }
 
   if (hexInput.id.endsWith('Hex')) {
-    return document.getElementById(`${hexInput.id.slice(0, -3)}Color`);
+    return document.querySelector(`#${selectorEscape(hexInput.id.slice(0, -3))}Color`);
   }
 
   return hexInput.closest('.color-control')?.querySelector('input[type="color"]') || null;
 }
 
-function getPathParts(path) {
-  return String(path || '').split('.').filter(Boolean);
-}
+function colorPathToCustomProperty(path) {
+  const propertyMap = {
+    'system.buttonBg': '--button',
+    'system.borderColor': '--line',
+    'system.textColor': '--ink',
+    'dialog.bg': '--dialog-bg',
+    'dialog.border': '--dialog-border',
+    'dialog.shadow': '--dialog-shadow',
+    'dialog.text': '--dialog-text',
+    'dialog.buttonBg': '--dialog-button-bg',
+    'dialog.buttonBorder': '--dialog-button-border',
+    'dialog.buttonText': '--dialog-button-text',
+    'dialog.buttonShadow': '--dialog-button-shadow',
+    'writingRoom.statusBg': '--status-bg',
+    'writingRoom.statusBorder': '--status-border',
+    'writingRoom.statusText': '--status-text',
+    'writingRoom.emphasisBg': '--emphasis-bg',
+    'writingRoom.emphasisBorder': '--emphasis-border',
+    'writingRoom.emphasisText': '--emphasis-text',
+    'settings.panelBg': '--panel-bg',
+    'settings.panelBorder': '--panel-border',
+    'settings.labelText': '--label-text',
+    'settings.dynamicText': '--dynamic-text',
+    'help.scrollbarTrack': '--scrollbar-track',
+    'help.scrollbarThumb': '--scrollbar-thumb',
+  };
 
-function setSettingByPath(path, value) {
-  if (!designerState.settings) return;
-
-  const pathParts = getPathParts(path);
-  let target = designerState.settings;
-
-  if (pathParts[0] === 'system') {
-    target = designerState.settings.settings?.systemStyles || designerState.settings.systemStyles;
-    pathParts.shift();
-  }
-
-  if (!target || !pathParts.length) return;
-
-  for (let index = 0; index < pathParts.length - 1; index += 1) {
-    target = target[pathParts[index]];
-    if (!target) return;
-  }
-
-  target[pathParts.at(-1)] = value;
-}
-
-function applyColorSetting(path, hex, { save = true } = {}) {
-  if (path) {
-    setSettingByPath(path, hex);
-    document.documentElement.style.setProperty(`--${path.replace(/[^a-zA-Z0-9-]/g, '-')}`, hex);
-  }
-
-  updateCurrentColor(hex);
-
-  window.dispatchEvent(new CustomEvent('element-designer:color-change', {
-    detail: { path, value: hex },
-  }));
-
-  if (save) {
-    saveAndApplySettings();
-  }
+  return propertyMap[path] || `--${path.replace(/[^a-zA-Z0-9-]/g, '-')}`;
 }
 
 function saveAndApplySettings() {
-  if (typeof window.applySettings === 'function') {
-    window.applySettings(designerState.settings);
+  localStorage.setItem(DESIGN_KEY, JSON.stringify(state.settings));
+  window.dispatchEvent(new CustomEvent('element-designer:settings-save', { detail: { settings: state.settings } }));
+}
+
+function applyColorSetting(path, color, { save = true } = {}) {
+  if (path) {
+    state.settings[path] = color;
+    document.documentElement.style.setProperty(colorPathToCustomProperty(path), color);
   }
 
-  if (typeof window.saveSettings === 'function') {
-    window.saveSettings(designerState.settings);
-  }
+  updateCurrentColor(color);
+  window.dispatchEvent(new CustomEvent('element-designer:color-change', { detail: { path, value: color } }));
 
-  window.dispatchEvent(new CustomEvent('element-designer:settings-save', {
-    detail: { settings: designerState.settings },
-  }));
+  if (save) saveAndApplySettings();
 }
 
 function handleColorInput(event) {
@@ -141,46 +125,46 @@ function handleColorInput(event) {
   const colorInput = event.target.closest('input[type="color"][data-color-for], .color-control input[type="color"]');
   if (!colorInput) return;
 
-  const normalizedColor = normalizeHex(colorInput.value);
-  if (!normalizedColor) return;
+  const color = normalizeHexColor(colorInput.value);
+  if (!color) return;
+
+  state.lastColorInput = colorInput;
+  colorInput.value = color;
 
   const hexInput = findPairedHexInput(colorInput);
-  if (hexInput) {
-    hexInput.value = normalizedColor;
-  }
+  if (hexInput) hexInput.value = color;
 
-  colorInput.value = normalizedColor;
-  applyColorSetting(colorInput.dataset.colorFor, normalizedColor);
-  setDesignerStatus(`Applied ${normalizedColor}.`, 'success');
+  applyColorSetting(colorInput.dataset.colorFor, color);
+  setDesignerStatus(`Applied ${color}.`, 'success');
 }
 
 function commitHexInput(hexInput) {
-  const colorInput = findPairedColorInput(hexInput);
-  const normalizedColor = normalizeHex(hexInput.value);
-
-  if (!normalizedColor) {
+  const color = normalizeHexColor(hexInput.value);
+  if (!color) {
     setDesignerStatus('Enter a valid hex color, such as #c9a or #cc99aa.', 'error');
     return false;
   }
 
-  hexInput.value = normalizedColor;
+  const colorInput = findPairedColorInput(hexInput) || state.lastColorInput;
+  hexInput.value = color;
 
   if (colorInput) {
-    colorInput.value = normalizedColor;
-    applyColorSetting(hexInput.dataset.hexFor || colorInput.dataset.colorFor, normalizedColor);
+    colorInput.value = color;
+    state.lastColorInput = colorInput;
+    applyColorSetting(hexInput.dataset.hexFor || colorInput.dataset.colorFor, color);
   } else {
-    updateCurrentColor(normalizedColor);
+    updateCurrentColor(color);
     saveAndApplySettings();
   }
 
-  setDesignerStatus(`Applied ${normalizedColor}.`, 'success');
+  setDesignerStatus(`Applied ${color}.`, 'success');
   return true;
 }
 
 function handleHexBlur(event) {
   if (!(event.target instanceof Element)) return;
 
-  const hexInput = event.target.closest('.color-control__hex, input[data-hex-for]');
+  const hexInput = event.target.closest('.color-control__hex, input[data-hex-for], #activeColorHex');
   if (!hexInput) return;
 
   commitHexInput(hexInput);
@@ -189,102 +173,65 @@ function handleHexBlur(event) {
 function handleHexKeydown(event) {
   if (event.key !== 'Enter' || !(event.target instanceof Element)) return;
 
-  const hexInput = event.target.closest('.color-control__hex, input[data-hex-for]');
+  const hexInput = event.target.closest('.color-control__hex, input[data-hex-for], #activeColorHex');
   if (!hexInput) return;
 
   event.preventDefault();
   commitHexInput(hexInput);
 }
 
-function createColorControl({ path, label, value }) {
-  const template = document.getElementById('colorControlTemplate');
-  const fragment = template.content.cloneNode(true);
-  const control = fragment.querySelector('.color-control');
-  const labelText = fragment.querySelector('.color-control__label');
-  const colorInput = fragment.querySelector('.color-control__picker');
-  const hexInput = fragment.querySelector('.color-control__hex');
-  const normalizedColor = normalizeHex(value) || '#000000';
-  const inputBaseId = toCamelIdentifier(path);
-
-  control.dataset.colorControlFor = path;
-  labelText.textContent = label;
-
-  colorInput.id = `${inputBaseId}Color`;
-  colorInput.name = path;
-  colorInput.value = normalizedColor;
-  colorInput.dataset.colorFor = path;
-  colorInput.setAttribute('aria-label', `${label} color picker`);
-
-  hexInput.id = `${inputBaseId}Hex`;
-  hexInput.name = `${path}.hex`;
-  hexInput.value = normalizedColor;
-  hexInput.dataset.hexFor = path;
-  hexInput.setAttribute('aria-label', `${label} hex code`);
-
-  return fragment;
-}
-
-function getSystemColorDescriptors(settings) {
-  const systemStyles = settings?.settings?.systemStyles || settings?.systemStyles || {};
-
-  return Object.entries(systemStyles).flatMap(([systemId, styleConfig]) => (
-    Object.entries(styleConfig)
-      .filter(([propertyName, value]) => /color/i.test(propertyName) && normalizeHex(value))
-      .map(([propertyName, value]) => ({
-        path: `system.${systemId}.${propertyName}`,
-        label: `${styleConfig.name || systemId} ${propertyName}`,
-        value,
-      }))
-  ));
-}
-
-function renderSystemColorControls(settings) {
-  const container = document.getElementById('systemColorControls');
-  if (!container) return;
-
-  const controls = getSystemColorDescriptors(settings);
-  container.replaceChildren();
-
-  if (!controls.length) {
-    container.textContent = 'No system color controls were found.';
-    return;
+function loadSavedColorSettings() {
+  try {
+    state.settings = JSON.parse(localStorage.getItem(DESIGN_KEY) || '{}') || {};
+  } catch (error) {
+    state.settings = {};
+    localStorage.removeItem(DESIGN_KEY);
+    console.warn('Ignoring unreadable Capsanoto design settings', error);
   }
 
-  controls.forEach((controlConfig) => {
-    container.append(createColorControl(controlConfig));
+  document.querySelectorAll('input[type="color"][data-color-for]').forEach((colorInput) => {
+    const savedColor = normalizeHexColor(state.settings[colorInput.dataset.colorFor]);
+    const color = savedColor || normalizeHexColor(colorInput.value) || '#000000';
+    const hexInput = findPairedHexInput(colorInput);
+
+    colorInput.value = color;
+    if (hexInput) hexInput.value = color;
+    applyColorSetting(colorInput.dataset.colorFor, color, { save: false });
+    if (!state.lastColorInput) state.lastColorInput = colorInput;
   });
 
-  updateCurrentColor(normalizeHex(controls[0].value) || '#000000');
+  if (state.lastColorInput) updateCurrentColor(state.lastColorInput.value);
 }
 
-async function loadDesignerSettings() {
-  try {
-    const response = await fetch(DEFAULT_SETTINGS_PATH);
-    if (!response.ok) {
-      throw new Error(`Unable to load ${DEFAULT_SETTINGS_PATH}.`);
-    }
-
-    designerState.settings = await response.json();
-  } catch (error) {
-    designerState.settings = { settings: { systemStyles: {} } };
-    setDesignerStatus(error.message, 'error');
-  }
-
-  renderSystemColorControls(designerState.settings);
+function resetDesignSettings() {
+  localStorage.removeItem(DESIGN_KEY);
+  state.settings = {};
+  document.querySelectorAll('input[type="color"][data-color-for]').forEach((colorInput) => {
+    const color = normalizeHexColor(colorInput.defaultValue || colorInput.getAttribute('value')) || '#000000';
+    const hexInput = findPairedHexInput(colorInput);
+    colorInput.value = color;
+    if (hexInput) hexInput.value = color;
+    applyColorSetting(colorInput.dataset.colorFor, color, { save: false });
+  });
+  saveAndApplySettings();
+  setDesignerStatus('Design reset.', 'success');
 }
 
 function initializeColorControls(root = document) {
   root.addEventListener('input', handleColorInput);
   root.addEventListener('blur', handleHexBlur, true);
   root.addEventListener('keydown', handleHexKeydown);
+
+  document.querySelector('#applyDesignButton')?.addEventListener('click', saveAndApplySettings);
+  document.querySelector('#resetDesignButton')?.addEventListener('click', resetDesignSettings);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
   initializeColorControls();
-  loadDesignerSettings();
+  loadSavedColorSettings();
 });
 
 window.ElementDesignerColorControls = {
   initializeColorControls,
-  normalizeHex,
+  normalizeHexColor,
 };
