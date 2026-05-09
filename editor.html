@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Forever Bound Editor</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <nav class="top-menu-bar" aria-label="Primary navigation">
+    <a href="index.html">Home</a>
+    <a href="editor.html">Editor</a>
+    <a href="writing-room.html">Writing Room</a>
+  </nav>
+
+  <main class="page-shell">
+    <section class="writing-room">
+      <h1>Editor</h1>
+      <p>Tune the experience, edit references, and shape the visual system.</p>
+      <div class="writing-area">
+        <p>Use the Element Designer below to adjust system-level defaults or override individual interface sections.</p>
+      </div>
+    </section>
+
+  <section class="element-designer" aria-labelledby="element-designer-title">
+    <div class="element-designer-header">
+      <h2 id="element-designer-title">Element Designer</h2>
+      <div class="design-actions" aria-label="Element Designer card actions">
+        <button type="button" data-design-expand-all>Expand All</button>
+        <button type="button" data-design-collapse-all>Collapse All</button>
+      </div>
+    </div>
+    <div class="design-controls">
+      <details class="design-card" data-design-section="system" open>
+        <summary>System</summary>
+        <div class="design-card-body">
+          <fieldset class="inherited-controls">
+            <label>
+              Background
+              <input type="color" data-design-token="background" value="#191711">
+            </label>
+            <label>
+              Text
+              <input type="color" data-design-token="foreground" value="#f7ead2">
+            </label>
+            <label>
+              Accent
+              <input type="color" data-design-token="accent" value="#d88a64">
+            </label>
+            <label>
+              Surface
+              <input type="color" data-design-token="surface" value="#2e2721">
+            </label>
+            <label>
+              Font Size
+              <input type="number" min="10" max="32" data-design-token="fontSize" value="16">
+            </label>
+            <label>
+              Border Radius
+              <input type="number" min="0" max="40" data-design-token="borderRadius" value="14">
+            </label>
+          </fieldset>
+        </div>
+      </details>
+      <details class="design-card" data-design-section="topMenuBar" open>
+        <summary>Top Menu Bar</summary>
+        <div class="design-card-body">
+          <label class="use-system-defaults">
+            <input type="checkbox" data-design-use-system checked>
+            Use System Defaults
+          </label>
+          <fieldset class="inherited-controls">
+            <label>
+              Background
+              <input type="color" data-design-token="background" value="#191711">
+            </label>
+            <label>
+              Text
+              <input type="color" data-design-token="foreground" value="#f7ead2">
+            </label>
+            <label>
+              Accent
+              <input type="color" data-design-token="accent" value="#d88a64">
+            </label>
+            <label>
+              Surface
+              <input type="color" data-design-token="surface" value="#2e2721">
+            </label>
+            <label>
+              Font Size
+              <input type="number" min="10" max="32" data-design-token="fontSize" value="16">
+            </label>
+            <label>
+              Border Radius
+              <input type="number" min="0" max="40" data-design-token="borderRadius" value="14">
+            </label>
+          </fieldset>
+        </div>
+      </details>
+      <details class="design-card" data-design-section="writingRoom" open>
+        <summary>Writing Room / Filing Cabinet</summary>
+        <div class="design-card-body">
+          <label class="use-system-defaults">
+            <input type="checkbox" data-design-use-system checked>
+            Use System Defaults
+          </label>
+          <fieldset class="inherited-controls">
+            <label>
+              Background
+              <input type="color" data-design-token="background" value="#191711">
+            </label>
+            <label>
+              Text
+              <input type="color" data-design-token="foreground" value="#f7ead2">
+            </label>
+            <label>
+              Accent
+              <input type="color" data-design-token="accent" value="#d88a64">
+            </label>
+            <label>
+              Surface
+              <input type="color" data-design-token="surface" value="#2e2721">
+            </label>
+            <label>
+              Font Size
+              <input type="number" min="10" max="32" data-design-token="fontSize" value="16">
+            </label>
+            <label>
+              Border Radius
+              <input type="number" min="0" max="40" data-design-token="borderRadius" value="14">
+            </label>
+          </fieldset>
+        </div>
+      </details>
+      <details class="design-card" data-design-section="subnoto" open>
+        <summary>Subnoto</summary>
+        <div class="design-card-body">
+          <label class="use-system-defaults">
+            <input type="checkbox" data-design-use-system checked>
+            Use System Defaults
+          </label>
+          <fieldset class="inherited-controls">
+            <label>
+              Background
+              <input type="color" data-design-token="background" value="#191711">
+            </label>
+            <label>
+              Text
+              <input type="color" data-design-token="foreground" value="#f7ead2">
+            </label>
+            <label>
+              Accent
+              <input type="color" data-design-token="accent" value="#d88a64">
+            </label>
+            <label>
+              Surface
+              <input type="color" data-design-token="surface" value="#2e2721">
+            </label>
+            <label>
+              Font Size
+              <input type="number" min="10" max="32" data-design-token="fontSize" value="16">
+            </label>
+            <label>
+              Border Radius
+              <input type="number" min="0" max="40" data-design-token="borderRadius" value="14">
+            </label>
+          </fieldset>
+        </div>
+      </details>
+      <details class="design-card" data-design-section="specnoto" open>
+        <summary>Specnoto</summary>
+        <div class="design-card-body">
+          <label class="use-system-defaults">
+            <input type="checkbox" data-design-use-system checked>
+            Use System Defaults
+          </label>
+          <fieldset class="inherited-controls">
+            <label>
+              Background
+              <input type="color" data-design-token="background" value="#191711">
+            </label>
+            <label>
+              Text
+              <input type="color" data-design-token="foreground" value="#f7ead2">
+            </label>
+            <label>
+              Accent
+              <input type="color" data-design-token="accent" value="#d88a64">
+            </label>
+            <label>
+              Surface
+              <input type="color" data-design-token="surface" value="#2e2721">
+            </label>
+            <label>
+              Font Size
+              <input type="number" min="10" max="32" data-design-token="fontSize" value="16">
+            </label>
+            <label>
+              Border Radius
+              <input type="number" min="0" max="40" data-design-token="borderRadius" value="14">
+            </label>
+          </fieldset>
+        </div>
+      </details>
+      <details class="design-card" data-design-section="writingArea" open>
+        <summary>Writing Area</summary>
+        <div class="design-card-body">
+          <label class="use-system-defaults">
+            <input type="checkbox" data-design-use-system checked>
+            Use System Defaults
+          </label>
+          <fieldset class="inherited-controls">
+            <label>
+              Background
+              <input type="color" data-design-token="background" value="#191711">
+            </label>
+            <label>
+              Text
+              <input type="color" data-design-token="foreground" value="#f7ead2">
+            </label>
+            <label>
+              Accent
+              <input type="color" data-design-token="accent" value="#d88a64">
+            </label>
+            <label>
+              Surface
+              <input type="color" data-design-token="surface" value="#2e2721">
+            </label>
+            <label>
+              Font Size
+              <input type="number" min="10" max="32" data-design-token="fontSize" value="16">
+            </label>
+            <label>
+              Border Radius
+              <input type="number" min="0" max="40" data-design-token="borderRadius" value="14">
+            </label>
+          </fieldset>
+        </div>
+      </details>
+      <details class="design-card" data-design-section="help" open>
+        <summary>Help / Guidebook</summary>
+        <div class="design-card-body">
+          <label class="use-system-defaults">
+            <input type="checkbox" data-design-use-system checked>
+            Use System Defaults
+          </label>
+          <fieldset class="inherited-controls">
+            <label>
+              Background
+              <input type="color" data-design-token="background" value="#191711">
+            </label>
+            <label>
+              Text
+              <input type="color" data-design-token="foreground" value="#f7ead2">
+            </label>
+            <label>
+              Accent
+              <input type="color" data-design-token="accent" value="#d88a64">
+            </label>
+            <label>
+              Surface
+              <input type="color" data-design-token="surface" value="#2e2721">
+            </label>
+            <label>
+              Font Size
+              <input type="number" min="10" max="32" data-design-token="fontSize" value="16">
+            </label>
+            <label>
+              Border Radius
+              <input type="number" min="0" max="40" data-design-token="borderRadius" value="14">
+            </label>
+          </fieldset>
+        </div>
+      </details>
+      <details class="design-card" data-design-section="settingsWindow" open>
+        <summary>Settings Window</summary>
+        <div class="design-card-body">
+          <label class="use-system-defaults">
+            <input type="checkbox" data-design-use-system checked>
+            Use System Defaults
+          </label>
+          <fieldset class="inherited-controls">
+            <label>
+              Background
+              <input type="color" data-design-token="background" value="#191711">
+            </label>
+            <label>
+              Text
+              <input type="color" data-design-token="foreground" value="#f7ead2">
+            </label>
+            <label>
+              Accent
+              <input type="color" data-design-token="accent" value="#d88a64">
+            </label>
+            <label>
+              Surface
+              <input type="color" data-design-token="surface" value="#2e2721">
+            </label>
+            <label>
+              Font Size
+              <input type="number" min="10" max="32" data-design-token="fontSize" value="16">
+            </label>
+            <label>
+              Border Radius
+              <input type="number" min="0" max="40" data-design-token="borderRadius" value="14">
+            </label>
+          </fieldset>
+        </div>
+      </details>
+      <details class="design-card" data-design-section="transclusionCards" open>
+        <summary>Transclusion Cards</summary>
+        <div class="design-card-body">
+          <label class="use-system-defaults">
+            <input type="checkbox" data-design-use-system checked>
+            Use System Defaults
+          </label>
+          <fieldset class="inherited-controls">
+            <label>
+              Background
+              <input type="color" data-design-token="background" value="#191711">
+            </label>
+            <label>
+              Text
+              <input type="color" data-design-token="foreground" value="#f7ead2">
+            </label>
+            <label>
+              Accent
+              <input type="color" data-design-token="accent" value="#d88a64">
+            </label>
+            <label>
+              Surface
+              <input type="color" data-design-token="surface" value="#2e2721">
+            </label>
+            <label>
+              Font Size
+              <input type="number" min="10" max="32" data-design-token="fontSize" value="16">
+            </label>
+            <label>
+              Border Radius
+              <input type="number" min="0" max="40" data-design-token="borderRadius" value="14">
+            </label>
+          </fieldset>
+        </div>
+      </details>
+    </div>
+  </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
