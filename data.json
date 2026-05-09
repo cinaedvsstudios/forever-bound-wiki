@@ -266,6 +266,15 @@
       "link": "https://cinaedvsstudios.github.io/forever-bound-wiki/",
       "placement": "top",
       "parentId": null
+    },
+    {
+      "id": 1778355812930,
+      "type": "button",
+      "name": "Blank",
+      "desc": "https://www.lipsum.com/",
+      "link": "https://www.lipsum.com/",
+      "placement": "top",
+      "parentId": null
     }
   ]
 }
