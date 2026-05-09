@@ -1,0 +1,131 @@
+:root {
+  --palette-border: #8a7762;
+  --palette-panel: #f5efe6;
+  --palette-text: #2e2721;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: Georgia, "Times New Roman", serif;
+  color: var(--palette-text);
+  background: #fbf7f0;
+}
+
+.editor-shell {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.palette-panel {
+  padding: 1.25rem;
+  border: 1px solid var(--palette-border);
+  border-radius: 18px;
+  background: var(--palette-panel);
+}
+
+.active-color-field,
+.palette-label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+#activeColorHex {
+  width: 10rem;
+  min-height: 2.5rem;
+  margin-bottom: 1rem;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid var(--palette-border);
+  border-radius: 10px;
+  color: var(--palette-text);
+  font: 700 1rem/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  text-transform: uppercase;
+}
+
+.favorite-colors {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--palette-border);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.48);
+}
+
+.current-color-wrap {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.current-color-box,
+.favorite-color-slot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3.5rem;
+  padding: 0.65rem 1rem;
+  border: 1px solid var(--palette-border);
+  border-radius: 999px;
+  background: var(--swatch-color, #ffffff);
+  color: var(--swatch-text, #111111);
+  font: 800 1rem/1.1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.35), 0 -1px 2px rgba(0, 0, 0, 0.28);
+  cursor: pointer;
+  user-select: none;
+}
+
+.current-color-box {
+  width: min(100%, 18rem);
+  min-height: 4.25rem;
+  border-radius: 18px;
+  cursor: grab;
+}
+
+.current-color-box:active,
+.favorite-color-slot:active {
+  cursor: grabbing;
+}
+
+.favorite-color-slots {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(7rem, 1fr));
+  grid-auto-rows: minmax(3.75rem, auto);
+  gap: 0.75rem;
+}
+
+.favorite-color-slot {
+  width: 100%;
+  min-width: 0;
+}
+
+.favorite-color-slot.is-drag-over {
+  outline: 3px solid rgba(136, 119, 98, 0.35);
+  outline-offset: 3px;
+}
+
+.sample-color-inputs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.sample-color-inputs label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+@media (max-width: 720px) {
+  .favorite-color-slots {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
