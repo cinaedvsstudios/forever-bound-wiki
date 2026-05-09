@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Capsanoto</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="is-unlocked">
+  <main id="passwordScreen" class="password-screen" aria-labelledby="passwordTitle" hidden>
+    <form id="passwordForm" class="password-card" data-shared-password="Omega593!">
+      <img src="lanternlogo small.png" alt="Forever Bound lantern logo">
+      <p class="eyebrow">Forever Bound</p>
+      <h1 id="passwordTitle">Enter Capsanoto</h1>
+      <p>This preview opens directly into the Writing Room.</p>
+      <label for="passwordInput">Password</label>
+      <input id="passwordInput" type="password" autocomplete="current-password" required>
+      <button type="submit">Unlock Editor</button>
+      <p id="passwordError" class="error" role="alert"></p>
+    </form>
+  </main>
+
+  <main id="editorApp" class="writer-shell" aria-label="Forever Bound writing editor">
+    <header class="writer-header toolbar" aria-label="Capsanoto command bar">
+      <div class="document-controls">
+        <strong class="app-name"><img src="https://raw.githubusercontent.com/cinaedvsstudios/forever-bound-wiki/refs/heads/main/iconcapsanoto.png" alt="Capsanoto icon">Capsanoto</strong>
+        <button id="writingRoomButton" class="writing-room-button" type="button" aria-expanded="false" aria-controls="writingRoomPanel">Writing Room</button>
+        <label for="documentSelect" class="sr-only">Current document</label>
+        <select id="documentSelect" title="Document Switcher" hidden></select>
+      </div>
+      <div id="contextStatus" class="context-status" role="status" aria-live="polite">Cursor: Writing Room ready</div>
+      <nav class="top-command-menus" aria-label="Writing Room controls">
+        <div class="tool-menu">
+          <button class="tool-menu-trigger" type="button" aria-haspopup="true">Format</button>
+          <div class="tool-menu-panel">
+            <button data-command="bold" type="button" title="Bold" aria-label="Bold" data-tool-name="Bold Mark"><strong>B</strong> Bold</button>
+            <button data-command="italic" type="button" title="Italic" aria-label="Italic" data-tool-name="Italic Mark"><em>I</em> Italic</button>
+            <button data-block="h1" type="button" title="Heading 1" aria-label="Heading 1" data-tool-name="Chapter Heading">H1 Chapter</button>
+            <button data-block="h2" type="button" title="Heading 2" aria-label="Heading 2" data-tool-name="Section Heading">H2 Section</button>
+            <button data-block="p" type="button" title="Paragraph" aria-label="Paragraph" data-tool-name="Body Text">¶ Normal Text</button>
+            <button data-command="insertUnorderedList" type="button" title="Bullet List" aria-label="Bullet List" data-tool-name="Lore List">☰ List</button>
+          </div>
+        </div>
+        <div class="tool-menu">
+          <button class="tool-menu-trigger" type="button" aria-haspopup="false" data-tool-name="Subnoto">Subnoto</button>
+          <div class="tool-menu-panel">
+            <button id="subnotoButton" type="button" title="Subnoto" aria-label="Subnoto" data-tool-name="Subnoto">🧩 Subnoto</button>
+            <button id="linkButton" type="button" title="Create Link" aria-label="Create Link" data-tool-name="Path Link" hidden>🔗 Path Link</button>
+            <button id="editLinkButton" type="button" title="Edit Link" aria-label="Edit Link" data-tool-name="Link Editor" hidden>🛠️ Link Editor</button>
+            <button id="pillLinkButton" type="button" title="Convert Selection to Pill" aria-label="Convert Selection to Pill" data-tool-name="Link Pill" hidden>💊 Link Pill</button>
+            <button id="removeLinkButton" type="button" title="Remove Link" aria-label="Remove Link" data-tool-name="Link Breaker" hidden>❌ Link Breaker</button>
+            <button id="bookmarkButton" type="button" title="Bookmark" aria-label="Bookmark" data-tool-name="Link Anchor" hidden>⚓ Link Anchor</button>
+          </div>
+        </div>
+        <div class="tool-menu">
+          <button class="tool-menu-trigger" type="button" aria-haspopup="true">Insert</button>
+          <div class="tool-menu-panel">
+            <button id="tableButton" type="button" title="Table" aria-label="Table" data-tool-name="Lore Table">▦ Lore Table</button>
+            <button data-command="insertHorizontalRule" type="button" title="Horizontal Rule" aria-label="Horizontal Rule" data-tool-name="Divider Rule">— Rule</button>
+            <button id="imageButton" type="button" title="Image" aria-label="Image" data-tool-name="Image Embed">🖼️ Image Embed</button>
+            <button id="emojiButton" type="button" title="Emoji" aria-label="Emoji" data-tool-name="Emoji Spark">✨ Emoji Spark</button>
+            <button id="blockButton" type="button" title="TCards" aria-label="TCards" data-tool-name="TCard">𝞃 TCard</button>
+            <button id="emphasisButton" type="button" title="Emphasis Box" aria-label="Emphasis Box">ε Emphasis</button>
+          </div>
+        </div>
+      </nav>
+      <div class="save-controls">
+        <span id="saveStatus" class="save-status"></span>
+        <button id="searchButton" class="icon-button" type="button" title="Search" aria-label="Search" data-tool-name="Search preview">🔍</button><button id="topHelpButton" class="icon-button" type="button" title="Help" aria-label="Help">?</button>
+        <button id="settingsButton" class="icon-button" type="button" title="Settings" aria-label="Settings" data-tool-name="Capsanoto Settings">⚙️</button>
+      </div>
+      <input id="imageInput" type="file" accept="image/*" hidden>
+    </header>
+
+    <menu id="selectionMenu" class="selection-menu" hidden>
+      <li class="selection-menu-heading">Selection actions</li>
+      <li><button type="button" data-context-action="bookmark"><span>⚓</span><strong>Bookmark</strong><small>Create a jump heading.</small></button></li>
+      <li><button type="button" data-context-action="transclusion"><span>𝞃</span><strong>TCard</strong><small>Save selection as a reusable TCard.</small></button></li>
+      <li><button type="button" data-context-action="link"><span>🔗</span><strong>Link</strong><small>Point selection at a path.</small></button></li>
+      <li><button type="button" data-context-action="pill"><span>💊</span><strong>Link Pill</strong><small>Make a rounded reference card.</small></button></li>
+      <li><button type="button" data-context-action="edit-link"><span>🛠️</span><strong>Edit Link</strong><small>Edit an existing link or pill.</small></button></li>
+      <li><button type="button" data-context-action="pill-color"><span>🎨</span><strong>Pill Color</strong><small>Change selected pill color.</small></button></li>
+    </menu>
+
+    <div id="dialogOverlay" class="dialog-overlay" hidden>
+      <form id="dialogBox" class="caps-dialog">
+        <header>
+          <h2 id="dialogTitle">Capsanoto Action</h2>
+          <button id="dialogCancelButton" class="icon-button" type="button" aria-label="Cancel dialog">×</button>
+        </header>
+        <div id="dialogFields" class="dialog-fields"></div>
+        <footer>
+          <button id="dialogConfirmButton" type="submit">Apply</button>
+        </footer>
+      </form>
+    </div>
+
+    <aside id="writingRoomPanel" class="writing-room-panel" aria-label="Writing Room document tabs" hidden>
+      <header id="writingRoomPanelHeader">
+        <div>
+          <p class="eyebrow">Writing Room</p>
+          <h2 id="writingRoomTitle">Writing Room</h2>
+        </div>
+        <div class="panel-header-actions"><button id="newDocumentButton" class="icon-button" type="button" title="New Document" aria-label="New Document" data-tool-name="Document Forge">📄</button><button id="newFolderButton" class="icon-button" type="button" title="New Folder" aria-label="New Folder">📁</button><button id="newTabButton" class="icon-button" type="button" title="New Tab" aria-label="New Tab">▱</button><button id="editWritingRoomButton" class="icon-button" type="button" aria-pressed="false" aria-label="Edit filing cabinet">✎</button><button id="saveWritingRoomLayoutButton" class="icon-button" type="button" title="Save default position and size" aria-label="Save Writing Room panel default position and size" hidden>💾</button><button id="closeWritingRoomPanel" class="icon-button" type="button" aria-label="Close Writing Room">×</button></div>
+      </header>
+      <div id="writingRoomEditBar" class="writing-room-editbar" hidden></div><div id="writingRoomCards" class="writing-room-cards"></div>
+    </aside>
+
+    <nav id="bookmarkBar" class="bookmark-bar" aria-label="Document bookmarks" hidden></nav>
+
+    <section class="title-strip">
+      <input id="titleInput" class="title-input" aria-label="Document title">
+      <input id="tagsInput" class="tags-input" aria-label="Document tags" placeholder="tags: character, location, episode" hidden>
+    </section>
+
+    <article id="editor" class="editor" contenteditable="true" spellcheck="true" aria-label="Writing area"></article>
+
+    <section id="documentEndBar" class="document-end-bar" aria-label="End of document controls"></section>
+
+    <aside id="settingsPanel" class="settings-panel" aria-label="Capsanoto settings" hidden>
+      <header>
+        <div>
+          <p class="eyebrow">Writing Room</p>
+          <h2>Settings</h2>
+        </div>
+        <button id="closeSettingsPanel" class="icon-button" type="button" aria-label="Close settings">×</button>
+      </header>
+
+      <nav class="settings-menu" aria-label="Settings sections">
+        <button type="button" data-settings-tab="design" aria-pressed="true">Design</button>
+        <button type="button" data-settings-tab="export" aria-pressed="false">Download</button>
+        <button type="button" data-settings-tab="support" aria-pressed="false">Help</button>
+      </nav>
+
+      <section class="settings-section settings-card" data-settings-section="export" hidden>
+        <h3>Smart Download Builder</h3>
+        <p class="panel-help">Choose documents and/or TCards, reorder them as vertical pills, then download a Caps file, text, HTML, or Word-compatible document.</p>
+        <div class="export-picker">
+          <select id="exportSourceType" aria-label="Export source type">
+            <option value="document">Document</option>
+            <option value="block">TCard</option>
+          </select>
+          <select id="exportSourceSelect" aria-label="Export source"></select>
+          <button id="addExportItemButton" type="button">Add</button>
+        </div>
+        <div id="exportQueue" class="export-queue" aria-label="Selected export order"></div>
+        <div class="export-actions">
+          <button id="exportCapsButton" type="button">Download Caps</button>
+          <button id="exportTxtButton" type="button">Download TXT</button>
+          <button id="exportHtmlButton" type="button">Download HTML</button>
+          <button id="exportDocButton" type="button">Download Word</button>
+        </div>
+      </section>
+
+      <section class="settings-section settings-card design-section" data-settings-section="design">
+        <h3>Element Designer</h3>
+        <div class="design-controls">
+          <h4>System</h4>
+          <p class="design-section-note">Bars, borders, status box, Format/Subnoto/Insert command bar, icons, and global app text.</p>
+          <label>Button Color <input id="designButtonBg" type="color" value="#2c2c2c"></label>
+          <label>Border Color <input id="designBorderColor" type="color" value="#e88f69"></label>
+          <label>Text Color <input id="designTextColor" type="color" value="#fbf4d6"></label>
+          <label>Text Size <input id="designFontSize" type="number" min="10" max="32" value="14"></label>
+          <label>Global Font <select id="designFontFamily"><option value="Inter, system-ui, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif">Inter (recommended)</option><option value="Arial, Helvetica, sans-serif">Arial</option><option value="system-ui, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif">System UI</option><option value="Aptos, Calibri, Arial, sans-serif">Aptos / Calibri</option><option value="Courier New, Courier, monospace">Courier New</option><option value="Verdana, Geneva, sans-serif">Verdana</option><option value="Georgia, serif">Georgia</option><option value="Tahoma, Geneva, sans-serif">Tahoma</option><option value="Trebuchet MS, Arial, sans-serif">Trebuchet MS</option><option value="Times New Roman, Times, serif">Times New Roman</option></select></label>
+          <label>Title Icon Size % <input id="titleIconScale" type="number" min="50" max="250" value="143"></label>
+          <button id="designBoldToggle" class="toggle-pill" type="button" aria-pressed="true">Bold</button><input id="designBold" type="checkbox" checked hidden>
+          <label>Background Image URL <input id="designBgImage" type="text" placeholder="wallpapersm.jpg or https://..."></label>
+          <h4>Global Dialogue and Buttons</h4>
+          <p class="design-section-note">Dialog windows, dialog text, dialog buttons, shadows, and shared button treatment.</p>
+          <label>Dialog BG <input id="dialogBgColor" type="color" value="#211812"></label>
+          <label>Dialog Border <input id="dialogBorderColor" type="color" value="#e88f69"></label>
+          <label>Dialog Shadow <input id="dialogShadowColor" type="color" value="#000000"></label>
+          <label>Dialog Text <input id="dialogTextColor" type="color" value="#fbf4d6"></label>
+          <label>Dialog Text Size <input id="dialogFontSize" type="number" min="10" max="28" value="14"></label>
+          <button id="dialogBoldToggle" class="toggle-pill" type="button" aria-pressed="true">Dialog Bold</button><input id="dialogBold" type="checkbox" checked hidden>
+          <label>Dialog Button BG <input id="dialogButtonBg" type="color" value="#2c2c2c"></label>
+          <label>Dialog Button Border <input id="dialogButtonBorder" type="color" value="#e88f69"></label>
+          <label>Dialog Button Text <input id="dialogButtonText" type="color" value="#fbf4d6"></label>
+          <label>Dialog Button Shadow <input id="dialogButtonShadow" type="color" value="#000000"></label>
+          <h4>Writing Room Window</h4>
+          <p class="design-section-note">Filing Cabinet, document cards, metadata pills, status, emphasis boxes, and panel borders.</p>
+          <label>Status BG <input id="statusBgColor" type="color" value="#000000"></label>
+          <label>Status Border <input id="statusBorderColor" type="color" value="#a97b38"></label>
+          <label>Status Text <input id="statusTextColor" type="color" value="#fbf4d6"></label>
+          <label>Emphasis BG <input id="emphasisBgColor" type="color" value="#2f251c"></label>
+          <label>Emphasis Border <input id="emphasisBorderColor" type="color" value="#563485"></label>
+          <label>Emphasis Text <input id="emphasisTextColor" type="color" value="#fbf4d6"></label>
+          <h4>Settings Window</h4>
+          <p class="design-section-note">Settings panel background/border and shared settings card surfaces.</p>
+          <label>Panel BG <input id="panelBgColor" type="color" value="#211812"></label>
+          <label>Panel Border <input id="panelBorderColor" type="color" value="#724837"></label>
+          <label>Label Text <input id="labelTextColor" type="color" value="#a97b38"></label>
+          <label>Dynamic Text <input id="dynamicTextColor" type="color" value="#e88f69"></label>
+          <h4>Help Window</h4>
+          <p class="design-section-note">Help panel surface, scrollbars, guide text, and code text treatment.</p>
+          <label>Scrollbar Track <input id="scrollbarTrackColor" type="color" value="#211812"></label>
+          <label>Scrollbar Thumb <input id="scrollbarThumbColor" type="color" value="#e88f69"></label>
+        </div>
+        <div class="design-preview-column">
+          <div class="design-preview"><article><h4>Preview Title</h4><p>This preview shows sample dynamic text, a bordered panel, and a button.</p><button type="button">Preview Button</button></article></div>
+          <label class="hex-control">Hex Code <input id="activeColorHex" type="text" value="#e88f69" maxlength="7" placeholder="#e88f69"></label>
+          <div id="favoriteColors" class="favorite-colors" aria-label="Favorite colors"><button type="button" data-favorite-color="#000000"></button><button type="button" data-favorite-color="#28133f"></button><button type="button" data-favorite-color="#211812"></button><button type="button" data-favorite-color="#563485"></button><button type="button" data-favorite-color="#724837"></button><button type="button" data-favorite-color="#a97b38"></button><button type="button" data-favorite-color="#c55222"></button><button type="button" data-favorite-color="#e88f69"></button></div>
+          <div class="export-actions">
+            <button id="applyDesignButton" type="button">Apply</button>
+            <button id="resetDesignButton" type="button">Reset</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="settings-section settings-card settings-links" data-settings-section="support" hidden>
+        <button id="helpButton" type="button">❔ Help / Release Notes</button>
+        <button id="logoutButton" type="button">🧹 Reset Local Save</button>
+      </section>
+    </aside>
+
+    <aside id="helpPanel" class="help-panel" aria-label="Capsanoto guidebook" hidden>
+      <header>
+        <div class="help-title-lockup">
+          <img class="help-logo" src="https://raw.githubusercontent.com/cinaedvsstudios/forever-bound-wiki/refs/heads/main/iconcapsanoto.png" alt="Capsanoto icon">
+          <div>
+            <p class="eyebrow">CINAEDVS Studios · 2026</p>
+            <h2>Capsanoto Guidebook</h2>
+          </div>
+        </div>
+        <div class="panel-header-actions"><button id="helpEditButton" class="icon-button" type="button" aria-pressed="false" aria-label="Edit help">✎</button><button id="closeHelpPanel" class="icon-button" type="button" aria-label="Close help">×</button></div>
+      </header>
+      <section>
+        <h3>1. What Capsanoto Is</h3>
+        <p>Capsanoto is a lightweight structured writing environment for lore-heavy writing, long-form worldbuilding, scripts, novels, pitch material, and narrative documents.</p>
+        <p>It is human-writing-first, local-first, portable, and designed to avoid heavy database/wiki complexity. The goal is to help writers move quickly while still keeping large bodies of connected text organized.</p>
+      </section>
+      <section>
+        <h3>2. Why Capsanoto Exists</h3>
+        <p>Capsanoto exists because writers often need to retrieve, reuse, reshape, and organize text without breaking creative flow.</p>
+        <p>It prioritizes fast editing, contextual right-click tools, reusable TCards, local autosave, readable downloads, and creative ownership of the files.</p>
+      </section>
+      <section>
+        <h3>3. Application Structure</h3>
+        <p>The intended hierarchy is:</p>
+        <p><strong>Application → Writing Room → Folder → Tab → File → TCard</strong></p>
+        <dl>
+          <dt>Application</dt><dd>Capsanoto itself: the browser-based writing app.</dd>
+          <dt>Writing Room</dt><dd>The project/profile workspace for a story world or major writing project.</dd>
+          <dt>Folder</dt><dd>A large category inside a Writing Room, such as Characters, Locations, Items, Worldbuilding, or Episodes.</dd>
+          <dt>Tab</dt><dd>A grouping inside a folder, such as Main Characters, Recurring Characters, Season 1, Songs, or Lore Checks.</dd>
+          <dt>File</dt><dd>An individual writing document, such as Mel, Luca, Ironvale, Runestones, or Episode 01.</dd>
+          <dt>TCard</dt><dd>A Transclusion Card: a reusable synchronized text block.</dd>
+        </dl>
+      </section>
+      <section>
+        <h3>4. Writing Room / Filing Cabinet</h3>
+        <p>The <strong>Writing Room</strong> button opens the <strong>Filing Cabinet</strong>, the floating folder/tab/file manager.</p>
+        <dl>
+          <dt>Folders, tabs, and files</dt><dd>Folders contain tabs. Tabs contain files. Files are the documents you write in.</dd>
+          <dt>Metadata</dt><dd>File metadata such as type, ID, tags, and updated date lives in the Filing Cabinet metadata pill instead of cluttering the document body.</dd>
+          <dt>Edit mode</dt><dd>The pencil unlocks inline editing for Writing Room, folder, tab, file, and metadata text.</dd>
+          <dt>Duplicate</dt><dd>Creates a copy of a file for variants, rewrites, or experiments.</dd>
+          <dt>Trash</dt><dd>Deleted files move to Trash so they can be restored later.</dd>
+          <dt>Deprecated versions</dt><dd>Deprecated versions are preserved old versions of files. This language is reserved for old versions, retired files, snapshots, and preserved history.</dd>
+          <dt>Locks and expansion</dt><dd>Folder/tab lock icons mark containers that should stay open. The rail buttons can collapse all or expand all.</dd>
+          <dt>Jump rail</dt><dd>The right-side rail uses folder icons as jump points. Clicking one expands that folder and scrolls the Filing Cabinet to it.</dd>
+        </dl>
+      </section>
+      <section>
+        <h3>5. Top Bar and Status Box</h3>
+        <dl>
+          <dt>Capsanoto title/icon</dt><dd>Shows the app identity. The title icon size can be adjusted in Settings → Design.</dd>
+          <dt>Writing Room button</dt><dd>Opens the Filing Cabinet.</dd>
+          <dt>Dynamic status box</dt><dd>The center status box is intentionally important. It explains hovered controls, selected text, cursor context, clicked objects, save/autosave status, and what buttons will do.</dd>
+          <dt>Format menu</dt><dd>Contains Bold, Italic, H1, H2, Normal Text, and List commands.</dd>
+          <dt>Subnoto</dt><dd>Current state: placeholder. It opens a placeholder window and will be defined later.</dd>
+          <dt>Insert menu</dt><dd>Contains table insertion, horizontal rule, image insertion, Emoji Spark, TCard tools, and emphasis boxes.</dd>
+          <dt>Search</dt><dd>Current state: placeholder for future context/fuzzy search.</dd>
+          <dt>Help</dt><dd>Opens this Guidebook.</dd>
+          <dt>Settings</dt><dd>Opens Design, Download, and support/reset tools.</dd>
+        </dl>
+      </section>
+      <section>
+        <h3>6. Right-Click Context Tools</h3>
+        <p>Capsanoto is designed around highlighting text and right-clicking it. The context menu should keep common editing actions close to the writing surface.</p>
+        <dl>
+          <dt>Link Anchor</dt><dd>Turns selected text into a direct section target.</dd>
+          <dt>TCard</dt><dd>Creates a Transclusion Card from selected text.</dd>
+          <dt>Link</dt><dd>Creates a normal hyperlink to a file, section, TCard reference, or external URL.</dd>
+          <dt>Link Pill</dt><dd>Creates a rounded visual hyperlink.</dd>
+          <dt>Link Editor</dt><dd>Edits an existing link target without recreating the visible text.</dd>
+          <dt>Pill color/style editing</dt><dd>Right-click an existing Link Pill to change its visual color styling.</dd>
+        </dl>
+      </section>
+      <section>
+        <h3>7. Links and Navigation</h3>
+        <dl>
+          <dt>Document links</dt><dd>Files can be opened by URLs such as <code>editor.html?doc=Character-Mel-Ameldra</code>.</dd>
+          <dt>Section links / Link Anchors</dt><dd>Heading IDs create section routes such as <code>editor.html?doc=Character-Mel-Ameldra#Runestones</code>.</dd>
+          <dt>External links</dt><dd>Normal web URLs are supported.</dd>
+          <dt>TCard references</dt><dd>TCard targets can use supported references such as <code>block:Item-Runestones</code> or <code>{{Item-Runestones}}</code>.</dd>
+          <dt>Link Pills</dt><dd>Link Pills are rounded hyperlinks that visually stand out from normal text links.</dd>
+        </dl>
+      </section>
+      <section>
+        <h3>8. TCards / Transclusion Cards</h3>
+        <p>A <strong>TCard</strong> stores reusable text once and displays that same text wherever the TCard is referenced.</p>
+        <p>Editing the source text updates all referenced instances. Formatting may be local to the current document, while the underlying source text remains synchronized.</p>
+        <dl>
+          <dt>Syntax</dt><dd>Current supported reference syntax includes <code>{{Item-Runestones}}</code>.</dd>
+          <dt>TCard panel</dt><dd>The TCards panel lets you create, edit, style, and insert reusable cards.</dd>
+          <dt>Insert behavior</dt><dd>Insert TCard places the reference at the saved cursor position.</dd>
+          <dt>Inline edit</dt><dd>Rendered TCards show an edit button on hover; clicking it opens that TCard in the side panel.</dd>
+          <dt>Style controls</dt><dd>TCard background, border, text color, heading color, and text size can be adjusted.</dd>
+          <dt>Drag/move</dt><dd>Rendered TCards can be dragged within the writing area.</dd>
+        </dl>
+      </section>
+      <section>
+        <h3>9. Tables, Emoji Spark, and Emphasis Boxes</h3>
+        <dl>
+          <dt>Tables</dt><dd>Tables insert at the cursor, use rounded corners, can be dragged, and show inline table tools for row/column/color edits.</dd>
+          <dt>Emoji Spark</dt><dd>Opens a scrollable emoji grid. Click an emoji to insert it; right-click an emoji to search the grid by word.</dd>
+          <dt>Emphasis boxes</dt><dd>Wrap selected text in a bordered emphasis block that can be moved and styled.</dd>
+        </dl>
+      </section>
+      <section>
+        <h3>10. Document Editing and Autosave</h3>
+        <dl>
+          <dt>Document title</dt><dd>The title field edits the current file title.</dd>
+          <dt>Writing area</dt><dd>The main editable page supports browser rich-text editing, headings, links, images, tables, TCards, and emphasis boxes.</dd>
+          <dt>Autosave</dt><dd>Changes save locally in the browser. The status box reports saving and autosaved states.</dd>
+          <dt>Reset Local Save</dt><dd>Settings → Help includes Reset Local Save, which clears the browser autosave and reloads starter content.</dd>
+        </dl>
+      </section>
+      <section>
+        <h3>11. Download and Backups</h3>
+        <dl>
+          <dt>Download builder</dt><dd>Choose files and/or TCards, reorder them, and download selected pieces.</dd>
+          <dt>Caps file</dt><dd>Downloads structured JSON for Capsanoto/Caps workflows.</dd>
+          <dt>TXT</dt><dd>Downloads plain text.</dd>
+          <dt>HTML</dt><dd>Downloads a browser-readable HTML file.</dd>
+          <dt>Word-compatible</dt><dd>Downloads a Word-compatible <code>.doc</code> HTML document.</dd>
+          <dt>Clean output</dt><dd>Downloads should render cleanly and strip editor-only UI artifacts.</dd>
+        </dl>
+        <p>PDF and DOCX clean export are planned/experimental, not complete current features.</p>
+      </section>
+      <section>
+        <h3>12. Design Settings</h3>
+        <p>Settings → Design controls system styling, global dialogue/button styling, Writing Room window styling, Settings window styling, and Help window styling.</p>
+        <p>Recommended font stack: <code>Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif</code>. This keeps the app local-first and avoids requiring an external font dependency. Courier New is reserved for code-like/monospace text.</p>
+      </section>
+      <section>
+        <h3>13. Planned / Experimental Workflow Systems</h3>
+        <dl>
+          <dt>Subnoto</dt><dd>Placeholder. The workflow will be defined later.</dd>
+          <dt>Context Search / fuzzy search</dt><dd>Planned search tools for finding content across files, TCards, and metadata.</dd>
+          <dt>Slash Commands</dt><dd>Planned commands such as <code>/dialogue</code>, <code>/scene</code>, <code>/song</code>, <code>/spell</code>, <code>/tba</code>, <code>/pill</code>, and <code>/tcard</code>.</dd>
+          <dt>Timeline Blocks</dt><dd>Experimental year/date blocks that may gather linked events, scenes, and TCards.</dd>
+          <dt>Hover Names / entity profiles</dt><dd>Planned hover previews for characters, places, objects, and other named entities.</dd>
+          <dt>Speech Profiles</dt><dd>Planned voice/dialogue profile helpers.</dd>
+          <dt>Paragraph deprecation / deprecated TCards</dt><dd>Planned preserved-history workflow for smaller text units.</dd>
+          <dt>PDF/DOCX clean export</dt><dd>Planned export targets beyond the current Caps, TXT, HTML, and Word-compatible downloads.</dd>
+        </dl>
+      </section>
+      <section>
+        <h3>14. Technical Notes</h3>
+        <dl>
+          <dt>Code type</dt><dd>Static HTML, CSS, and plain JavaScript. No framework build step is required.</dd>
+          <dt>Main app file</dt><dd><code>app.js</code> handles state, events, autosave, routing, TCards, links, downloads, dialogs, Filing Cabinet behavior, table tools, emoji picker, and design settings.</dd>
+          <dt>Styles</dt><dd><code>styles.css</code> controls the theme, layouts, panels, typography, and CSS variables.</dd>
+          <dt>Starter files</dt><dd><code>content/documents.json</code> seeds first-run content. <code>config/auth.json</code> remains for future preview auth work.</dd>
+          <dt>Local storage keys</dt><dd><code>forever-bound-writing-room-v2</code> stores files/TCards, <code>capsanoto-design-settings-v1</code> stores design settings, <code>capsanoto-help-html-v1</code> stores edited Help text, and <code>capsanoto-writing-room-layout-v1</code> stores Filing Cabinet panel position/size.</dd>
+          <dt>Versioning rule</dt><dd>Use <code>v1</code> as the first version, then <code>v1.1</code>, <code>v1.2</code>, and so on for future updates.</dd>
+        </dl>
+      </section>
+      <section>
+        <h3>15. Release Notes</h3>
+        <p><strong>Capsanoto v1 — May 8, 2026:</strong> local-first Writing Room preview with Filing Cabinet organization, files, TCards, Link Anchors, Link Pills, right-click context tools, table tools, Emoji Spark, emphasis boxes, local autosave, design settings, Help, and Download builder.</p>
+        <p><strong>Current preview note:</strong> Subnoto, context search, slash commands, timeline blocks, hover names, speech profiles, paragraph-level deprecation, and PDF/DOCX clean export are planned or experimental.</p>
+      </section>
+    </aside>
+
+    <aside id="blockPanel" class="block-panel" aria-label="TCards" hidden>
+      <header>
+        <div>
+          <h2>TCards</h2>
+        </div>
+        <button id="closeBlockPanel" type="button" aria-label="Close TCards">×</button>
+      </header>
+      <p class="panel-help">Create reusable TCards with IDs like <code>Character-Name</code>, <code>Item-Name</code>, <code>Location-Name</code>, or <code>Mechanic-Name</code>. Reference them in files with <code>{{Item-Runestones}}</code>.</p>
+      <label>TCard ID <input id="blockIdInput" type="text" placeholder="Item-Runestones"></label>
+      <label>TCard Content <textarea id="blockContentInput" rows="8" placeholder="Reusable canon text"></textarea></label>
+      <div class="tcard-style-grid">
+        <label>BG <input id="blockBgInput" type="color" value="#28133f"></label>
+        <label>Border <input id="blockBorderInput" type="color" value="#e88f69"></label>
+        <label>Text <input id="blockTextInput" type="color" value="#fbf4d6"></label>
+        <label>Heading <input id="blockHeadingInput" type="color" value="#e88f69"></label>
+        <label>Text Size <input id="blockTextSizeInput" type="number" min="10" max="28" value="14"></label>
+      </div>
+      <div class="block-actions">
+        <button id="saveBlockButton" type="button">Save TCard</button>
+        <button id="insertBlockRefButton" type="button">Insert TCard</button>
+      </div>
+      <div id="blockList" class="block-list"></div>
+    </aside>
+  </main>
+
+  <template id="documentTemplate">
+    <h1 id="overview">New Lore Document</h1>
+    <p>Start writing here.</p>
+    <h2 id="notes">Notes</h2>
+    <p>Add internal references, links, and reusable TCards.</p>
+  </template>
+
+  <script src="app.js"></script>
+</body>
+</html>

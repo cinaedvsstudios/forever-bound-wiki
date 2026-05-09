@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 2,
+  "updatedAt": "2026-05-08T00:00:00.000Z",
+  "documents": [
+    {
+      "id": "episode-01",
+      "title": "Episode 01",
+      "tags": [
+        "season-1",
+        "episode"
+      ],
+      "updatedAt": "2026-05-07T00:00:00.000Z",
+      "content": "<h1 id=\"episode-01\">Episode 01</h1><p>Draft the episode here in a clean writing environment.</p><h2 id=\"synopsis\">Synopsis</h2><p>Write the episode summary.</p><h2 id=\"canon-notes\">Canon Notes</h2><p>Use reusable TCards for shared lore, such as {{Location-Ironvale}}.</p><h2 id=\"structure\">Structure</h2><table><thead><tr><th>Beat</th><th>Notes</th></tr></thead><tbody><tr><td>Opening</td><td></td></tr><tr><td>Turn</td><td></td></tr><tr><td>Ending</td><td></td></tr></tbody></table>"
+    },
+    {
+      "id": "Character-Mel-Ameldra",
+      "title": "Character Mel Ameldra",
+      "tags": [
+        "character",
+        "example",
+        "deep-link"
+      ],
+      "updatedAt": "2026-05-08T00:00:00.000Z",
+      "content": "<h1 id=\"Overview\">Character Mel Ameldra</h1><p>This starter profile demonstrates document URLs like <code>editor.html?doc=Character-Mel-Ameldra</code>.</p><h2 id=\"Runestones\">Runestones</h2><p>This section demonstrates direct bookmark URLs like <code>editor.html?doc=Character-Mel-Ameldra#Runestones</code>.</p><h2 id=\"Relationships\">Relationships</h2><p>Add linked characters, factions, and locations here.</p>"
+    }
+  ],
+  "blocks": {
+    "Item-Runestones": {
+      "id": "Item-Runestones",
+      "content": "Runestones are reusable canon items that can be referenced across lore documents without duplicating text.",
+      "updatedAt": "2026-05-07T00:00:00.000Z"
+    },
+    "Location-Ironvale": {
+      "id": "Location-Ironvale",
+      "content": "Ironvale is a sample location TCard used to demonstrate how edits update every {{Location-Ironvale}} reference.",
+      "updatedAt": "2026-05-07T00:00:00.000Z"
+    }
+  }
+}
