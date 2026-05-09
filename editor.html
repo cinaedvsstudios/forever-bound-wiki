@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Forever Bound Element Designer</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="settings-window element-designer-shell" id="settingsWindow">
+    <header class="top-menu-bar">
+      <img class="capsanoto-logo" src="iconcapsanoto.png" alt="Capsanoto" />
+      <h1>Element Designer</h1>
+      <button class="writing-room-button" type="button">Writing Room</button>
+      <div class="status-box">Unsaved design changes</div>
+      <input class="command-bar" type="search" placeholder="Command bar" />
+      <button class="dropdown-button" type="button">Designer ▾</button>
+      <button class="right-icon-button" type="button" aria-label="Open tools">☰</button>
+    </header>
+
+    <section class="designer-actions">
+      <button id="saveDesignSettings" type="button">Save Design Settings</button>
+      <button id="resetDesignSettings" type="button">Reset Defaults</button>
+    </section>
+
+    <section class="element-designer-cards" aria-label="Element Designer cards">
+        <section class="element-card" data-designer-section="system">
+          <h3>System</h3>
+          <label class="control-field" for="systemFont"><span>System font</span><input id="systemFont" type="text" data-design-key="systemFont" value="Georgia, 'Times New Roman', serif" /></label>
+          <label class="control-field" for="defaultTextSize"><span>Default text size</span><input id="defaultTextSize" type="number" min="0" step="1" data-design-key="defaultTextSize" value="16" /></label>
+          <label class="control-field" for="defaultTextColor"><span>Default text color</span><input id="defaultTextColor" type="color" data-design-key="defaultTextColor" value="#f4ead3" /></label>
+          <label class="control-field" for="defaultLabelColor"><span>Default label color</span><input id="defaultLabelColor" type="color" data-design-key="defaultLabelColor" value="#d6b981" /></label>
+          <label class="control-field" for="defaultDynamicTextColor"><span>Default dynamic text color</span><input id="defaultDynamicTextColor" type="color" data-design-key="defaultDynamicTextColor" value="#f7d27c" /></label>
+          <label class="control-field" for="defaultButtonBackground"><span>Default button background</span><input id="defaultButtonBackground" type="color" data-design-key="defaultButtonBackground" value="#3b2a18" /></label>
+          <label class="control-field" for="defaultButtonBorder"><span>Default button border</span><input id="defaultButtonBorder" type="text" data-design-key="defaultButtonBorder" value="1px solid #b58a4a" /></label>
+          <label class="control-field" for="defaultButtonText"><span>Default button text</span><input id="defaultButtonText" type="color" data-design-key="defaultButtonText" value="#fff5d6" /></label>
+          <label class="control-field" for="defaultButtonTextSize"><span>Default button text size</span><input id="defaultButtonTextSize" type="number" min="0" step="1" data-design-key="defaultButtonTextSize" value="14" /></label>
+          <label class="control-field" for="defaultButtonBold"><span>Default button bold</span><input id="defaultButtonBold" type="checkbox" data-design-key="defaultButtonBold" checked /></label>
+          <label class="control-field" for="defaultWindowBackground"><span>Default window background</span><input id="defaultWindowBackground" type="color" data-design-key="defaultWindowBackground" value="#1b1610" /></label>
+          <label class="control-field" for="defaultWindowBorder"><span>Default window border</span><input id="defaultWindowBorder" type="text" data-design-key="defaultWindowBorder" value="1px solid #8b6a3f" /></label>
+          <label class="control-field" for="defaultWindowShadow"><span>Default window shadow</span><input id="defaultWindowShadow" type="text" data-design-key="defaultWindowShadow" value="0 18px 40px rgba(0,0,0,.45)" /></label>
+          <label class="control-field" for="scrollbarTrack"><span>Scrollbar track</span><input id="scrollbarTrack" type="color" data-design-key="scrollbarTrack" value="#21170f" /></label>
+          <label class="control-field" for="scrollbarThumb"><span>Scrollbar thumb</span><input id="scrollbarThumb" type="color" data-design-key="scrollbarThumb" value="#a67c45" /></label>
+          <label class="control-field" for="globalBackgroundImage"><span>Global background image</span><input id="globalBackgroundImage" type="text" data-design-key="globalBackgroundImage" value="url('wallpaper.jpg')" /></label>
+          <label class="control-field" for="titleBarBackgroundImage"><span>Optional top title-bar background image</span><input id="titleBarBackgroundImage" type="text" data-design-key="titleBarBackgroundImage" value="" /></label>
+          <label class="control-field" for="dialogueBackground"><span>Dialogue background</span><input id="dialogueBackground" type="color" data-design-key="dialogueBackground" value="#21180f" /></label>
+          <label class="control-field" for="dialogueBorder"><span>Dialogue border</span><input id="dialogueBorder" type="text" data-design-key="dialogueBorder" value="1px solid #c79b5c" /></label>
+          <label class="control-field" for="dialogueShadow"><span>Dialogue shadow</span><input id="dialogueShadow" type="text" data-design-key="dialogueShadow" value="0 18px 42px rgba(0,0,0,.5)" /></label>
+          <label class="control-field" for="dialogueText"><span>Dialogue text</span><input id="dialogueText" type="color" data-design-key="dialogueText" value="#f7edd5" /></label>
+          <label class="control-field" for="dialogueTextSize"><span>Dialogue text size</span><input id="dialogueTextSize" type="number" min="0" step="1" data-design-key="dialogueTextSize" value="15" /></label>
+          <label class="control-field" for="dialogueBold"><span>Dialogue bold</span><input id="dialogueBold" type="checkbox" data-design-key="dialogueBold" /></label>
+          <label class="control-field" for="dialogueButtonBackground"><span>Dialogue button background</span><input id="dialogueButtonBackground" type="color" data-design-key="dialogueButtonBackground" value="#5b3f22" /></label>
+          <label class="control-field" for="dialogueButtonBorder"><span>Dialogue button border</span><input id="dialogueButtonBorder" type="text" data-design-key="dialogueButtonBorder" value="1px solid #d4ad6a" /></label>
+          <label class="control-field" for="dialogueButtonText"><span>Dialogue button text</span><input id="dialogueButtonText" type="color" data-design-key="dialogueButtonText" value="#fff7da" /></label>
+          <label class="control-field" for="dialogueButtonSize"><span>Dialogue button size</span><input id="dialogueButtonSize" type="number" min="0" step="1" data-design-key="dialogueButtonSize" value="14" /></label>
+          <label class="control-field" for="dialogueButtonShadow"><span>Dialogue button shadow</span><input id="dialogueButtonShadow" type="text" data-design-key="dialogueButtonShadow" value="0 3px 10px rgba(0,0,0,.35)" /></label>
+        </section>
+        <section class="element-card" data-designer-section="topMenu">
+          <h3>Top Menu Bar</h3>
+          <label class="control-field" for="capsanotoLogoSize"><span>Capsanoto logo size</span><input id="capsanotoLogoSize" type="number" min="0" step="1" data-design-key="capsanotoLogoSize" value="42" /></label>
+          <label class="control-field" for="topMenuTitleColor"><span>Title color</span><input id="topMenuTitleColor" type="color" data-design-key="topMenuTitleColor" value="#f6d98f" /></label>
+          <label class="control-field" for="topMenuTitleSize"><span>Title text size</span><input id="topMenuTitleSize" type="number" min="0" step="1" data-design-key="topMenuTitleSize" value="22" /></label>
+          <label class="control-field" for="topBarBackground"><span>Top bar background</span><input id="topBarBackground" type="color" data-design-key="topBarBackground" value="#18120b" /></label>
+          <label class="control-field" for="topBarBorder"><span>Top bar border</span><input id="topBarBorder" type="text" data-design-key="topBarBorder" value="1px solid #8d6638" /></label>
+          <label class="control-field" for="topBarImage"><span>Top bar image</span><input id="topBarImage" type="text" data-design-key="topBarImage" value="url('bar.jpg')" /></label>
+          <label class="control-field" for="writingRoomButtonBackground"><span>Writing Room button background</span><input id="writingRoomButtonBackground" type="color" data-design-key="writingRoomButtonBackground" value="#3a2615" /></label>
+          <label class="control-field" for="writingRoomButtonBorder"><span>Writing Room button border</span><input id="writingRoomButtonBorder" type="text" data-design-key="writingRoomButtonBorder" value="1px solid #b68a4c" /></label>
+          <label class="control-field" for="writingRoomButtonText"><span>Writing Room button text</span><input id="writingRoomButtonText" type="color" data-design-key="writingRoomButtonText" value="#fff1c2" /></label>
+          <label class="control-field" for="writingRoomButtonTextSize"><span>Writing Room button text size</span><input id="writingRoomButtonTextSize" type="number" min="0" step="1" data-design-key="writingRoomButtonTextSize" value="14" /></label>
+          <label class="control-field" for="statusBoxBackground"><span>Status box background</span><input id="statusBoxBackground" type="color" data-design-key="statusBoxBackground" value="#24180e" /></label>
+          <label class="control-field" for="statusBoxBorder"><span>Status box border</span><input id="statusBoxBorder" type="text" data-design-key="statusBoxBorder" value="1px solid #76502d" /></label>
+          <label class="control-field" for="statusBoxText"><span>Status box text</span><input id="statusBoxText" type="color" data-design-key="statusBoxText" value="#f5deaa" /></label>
+          <label class="control-field" for="statusBoxTextSize"><span>Status box text size</span><input id="statusBoxTextSize" type="number" min="0" step="1" data-design-key="statusBoxTextSize" value="13" /></label>
+          <label class="control-field" for="commandBarBackground"><span>Command bar background</span><input id="commandBarBackground" type="color" data-design-key="commandBarBackground" value="#100d09" /></label>
+          <label class="control-field" for="commandBarBorder"><span>Command bar border</span><input id="commandBarBorder" type="text" data-design-key="commandBarBorder" value="1px solid #694b2e" /></label>
+          <label class="control-field" for="commandBarText"><span>Command bar text</span><input id="commandBarText" type="color" data-design-key="commandBarText" value="#f3e8ca" /></label>
+          <label class="control-field" for="commandBarTextSize"><span>Command bar text size</span><input id="commandBarTextSize" type="number" min="0" step="1" data-design-key="commandBarTextSize" value="14" /></label>
+          <label class="control-field" for="dropdownButtonBackground"><span>Dropdown button background</span><input id="dropdownButtonBackground" type="color" data-design-key="dropdownButtonBackground" value="#302112" /></label>
+          <label class="control-field" for="dropdownButtonBorder"><span>Dropdown button border</span><input id="dropdownButtonBorder" type="text" data-design-key="dropdownButtonBorder" value="1px solid #987042" /></label>
+          <label class="control-field" for="dropdownButtonText"><span>Dropdown button text</span><input id="dropdownButtonText" type="color" data-design-key="dropdownButtonText" value="#fff4ce" /></label>
+          <label class="control-field" for="dropdownButtonTextSize"><span>Dropdown button text size</span><input id="dropdownButtonTextSize" type="number" min="0" step="1" data-design-key="dropdownButtonTextSize" value="14" /></label>
+          <label class="control-field" for="dropdownButtonBold"><span>Dropdown button bold</span><input id="dropdownButtonBold" type="checkbox" data-design-key="dropdownButtonBold" checked /></label>
+          <label class="control-field" for="rightIconButtonBackground"><span>Right-side icon button background</span><input id="rightIconButtonBackground" type="color" data-design-key="rightIconButtonBackground" value="#261a10" /></label>
+          <label class="control-field" for="rightIconButtonBorder"><span>Right-side icon button border</span><input id="rightIconButtonBorder" type="text" data-design-key="rightIconButtonBorder" value="1px solid #8f693e" /></label>
+          <label class="control-field" for="rightIconSize"><span>Right-side icon size</span><input id="rightIconSize" type="number" min="0" step="1" data-design-key="rightIconSize" value="18" /></label>
+        </section>
+        <section class="element-card" data-designer-section="writingRoom">
+          <h3>Writing Room / Filing Cabinet</h3>
+          <label class="control-field" for="writingRoomWindowBackground"><span>Window background</span><input id="writingRoomWindowBackground" type="color" data-design-key="writingRoomWindowBackground" value="#1d1711" /></label>
+          <label class="control-field" for="writingRoomWindowBorder"><span>Window border</span><input id="writingRoomWindowBorder" type="text" data-design-key="writingRoomWindowBorder" value="1px solid #8e6b42" /></label>
+          <label class="control-field" for="writingRoomWindowShadow"><span>Window shadow</span><input id="writingRoomWindowShadow" type="text" data-design-key="writingRoomWindowShadow" value="0 16px 36px rgba(0,0,0,.45)" /></label>
+          <label class="control-field" for="writingRoomTitleColor"><span>Title color</span><input id="writingRoomTitleColor" type="color" data-design-key="writingRoomTitleColor" value="#f3d68d" /></label>
+          <label class="control-field" for="writingRoomTitleSize"><span>Title size</span><input id="writingRoomTitleSize" type="number" min="0" step="1" data-design-key="writingRoomTitleSize" value="20" /></label>
+          <label class="control-field" for="headerIconSize"><span>Header icon size</span><input id="headerIconSize" type="number" min="0" step="1" data-design-key="headerIconSize" value="22" /></label>
+          <label class="control-field" for="folderIconSize"><span>Folder icon size</span><input id="folderIconSize" type="number" min="0" step="1" data-design-key="folderIconSize" value="18" /></label>
+          <label class="control-field" for="tabIconSize"><span>Tab icon size</span><input id="tabIconSize" type="number" min="0" step="1" data-design-key="tabIconSize" value="16" /></label>
+          <label class="control-field" for="documentIconSize"><span>Document icon size</span><input id="documentIconSize" type="number" min="0" step="1" data-design-key="documentIconSize" value="16" /></label>
+          <label class="control-field" for="railIconSize"><span>Rail icon size</span><input id="railIconSize" type="number" min="0" step="1" data-design-key="railIconSize" value="15" /></label>
+          <label class="control-field" for="folderRowBackground"><span>Folder row background</span><input id="folderRowBackground" type="color" data-design-key="folderRowBackground" value="#2d2116" /></label>
+          <label class="control-field" for="folderRowBorder"><span>Folder row border</span><input id="folderRowBorder" type="text" data-design-key="folderRowBorder" value="1px solid #765637" /></label>
+          <label class="control-field" for="folderRowText"><span>Folder row text</span><input id="folderRowText" type="color" data-design-key="folderRowText" value="#f6e0b4" /></label>
+          <label class="control-field" for="folderRowTextSize"><span>Folder row text size</span><input id="folderRowTextSize" type="number" min="0" step="1" data-design-key="folderRowTextSize" value="14" /></label>
+          <label class="control-field" for="tabRowBackground"><span>Tab row background</span><input id="tabRowBackground" type="color" data-design-key="tabRowBackground" value="#241a12" /></label>
+          <label class="control-field" for="tabRowBorder"><span>Tab row border</span><input id="tabRowBorder" type="text" data-design-key="tabRowBorder" value="1px solid #60452c" /></label>
+          <label class="control-field" for="tabRowText"><span>Tab row text</span><input id="tabRowText" type="color" data-design-key="tabRowText" value="#ead0a3" /></label>
+          <label class="control-field" for="tabRowTextSize"><span>Tab row text size</span><input id="tabRowTextSize" type="number" min="0" step="1" data-design-key="tabRowTextSize" value="14" /></label>
+          <label class="control-field" for="documentRowBackground"><span>Document row background</span><input id="documentRowBackground" type="color" data-design-key="documentRowBackground" value="#1a140e" /></label>
+          <label class="control-field" for="documentRowBorder"><span>Document row border</span><input id="documentRowBorder" type="text" data-design-key="documentRowBorder" value="1px solid #4f3925" /></label>
+          <label class="control-field" for="documentRowText"><span>Document row text</span><input id="documentRowText" type="color" data-design-key="documentRowText" value="#f0e3ca" /></label>
+          <label class="control-field" for="documentRowTextSize"><span>Document row text size</span><input id="documentRowTextSize" type="number" min="0" step="1" data-design-key="documentRowTextSize" value="14" /></label>
+          <label class="control-field" for="expandedDocumentTextColor"><span>Expanded document text color</span><input id="expandedDocumentTextColor" type="color" data-design-key="expandedDocumentTextColor" value="#d6c39e" /></label>
+          <label class="control-field" for="expandedDocumentTextSize"><span>Expanded document text size</span><input id="expandedDocumentTextSize" type="number" min="0" step="1" data-design-key="expandedDocumentTextSize" value="13" /></label>
+          <label class="control-field" for="metadataPillBackground"><span>Metadata pill background</span><input id="metadataPillBackground" type="color" data-design-key="metadataPillBackground" value="#362718" /></label>
+          <label class="control-field" for="metadataPillBorder"><span>Metadata pill border</span><input id="metadataPillBorder" type="text" data-design-key="metadataPillBorder" value="1px solid #86623b" /></label>
+          <label class="control-field" for="metadataPillText"><span>Metadata pill text</span><input id="metadataPillText" type="color" data-design-key="metadataPillText" value="#f6dca7" /></label>
+          <label class="control-field" for="metadataPillTextSize"><span>Metadata pill text size</span><input id="metadataPillTextSize" type="number" min="0" step="1" data-design-key="metadataPillTextSize" value="12" /></label>
+          <label class="control-field" for="trashSectionBackground"><span>Trash section background</span><input id="trashSectionBackground" type="color" data-design-key="trashSectionBackground" value="#251412" /></label>
+          <label class="control-field" for="trashSectionBorder"><span>Trash section border</span><input id="trashSectionBorder" type="text" data-design-key="trashSectionBorder" value="1px solid #7b423a" /></label>
+          <label class="control-field" for="jumpRailLineColor"><span>Jump rail line color</span><input id="jumpRailLineColor" type="color" data-design-key="jumpRailLineColor" value="#785939" /></label>
+          <label class="control-field" for="jumpRailButtonColor"><span>Jump rail button color</span><input id="jumpRailButtonColor" type="color" data-design-key="jumpRailButtonColor" value="#d4ad6a" /></label>
+          <label class="control-field" for="jumpRailIconColor"><span>Jump rail icon color</span><input id="jumpRailIconColor" type="color" data-design-key="jumpRailIconColor" value="#fff1c5" /></label>
+        </section>
+        <section class="element-card" data-designer-section="writingArea">
+          <h3>Writing Area</h3>
+          <label class="control-field" for="editorBackground"><span>Editor background</span><input id="editorBackground" type="color" data-design-key="editorBackground" value="#211910" /></label>
+          <label class="control-field" for="editorOverlay"><span>Editor overlay</span><input id="editorOverlay" type="text" data-design-key="editorOverlay" value="linear-gradient(rgba(255,255,255,.03), rgba(0,0,0,.08))" /></label>
+          <label class="control-field" for="editorBorder"><span>Editor border</span><input id="editorBorder" type="text" data-design-key="editorBorder" value="1px solid #8c693d" /></label>
+          <label class="control-field" for="editorText"><span>Editor text</span><input id="editorText" type="color" data-design-key="editorText" value="#f7ecd3" /></label>
+          <label class="control-field" for="normalTextSize"><span>Normal text size</span><input id="normalTextSize" type="number" min="0" step="1" data-design-key="normalTextSize" value="16" /></label>
+          <label class="control-field" for="normalTextBold"><span>Normal text bold</span><input id="normalTextBold" type="checkbox" data-design-key="normalTextBold" /></label>
+          <label class="control-field" for="documentTitleColor"><span>Document title color</span><input id="documentTitleColor" type="color" data-design-key="documentTitleColor" value="#ffd98a" /></label>
+          <label class="control-field" for="documentTitleSize"><span>Document title size</span><input id="documentTitleSize" type="number" min="0" step="1" data-design-key="documentTitleSize" value="30" /></label>
+          <label class="control-field" for="h1Color"><span>H1 color</span><input id="h1Color" type="color" data-design-key="h1Color" value="#ffd27a" /></label>
+          <label class="control-field" for="h1Size"><span>H1 size</span><input id="h1Size" type="number" min="0" step="1" data-design-key="h1Size" value="26" /></label>
+          <label class="control-field" for="h1Bold"><span>H1 bold</span><input id="h1Bold" type="checkbox" data-design-key="h1Bold" checked /></label>
+          <label class="control-field" for="h2Color"><span>H2 color</span><input id="h2Color" type="color" data-design-key="h2Color" value="#efc06f" /></label>
+          <label class="control-field" for="h2Size"><span>H2 size</span><input id="h2Size" type="number" min="0" step="1" data-design-key="h2Size" value="22" /></label>
+          <label class="control-field" for="h2Bold"><span>H2 bold</span><input id="h2Bold" type="checkbox" data-design-key="h2Bold" checked /></label>
+          <label class="control-field" for="h3Color"><span>H3 color</span><input id="h3Color" type="color" data-design-key="h3Color" value="#e5b963" /></label>
+          <label class="control-field" for="h3Size"><span>H3 size</span><input id="h3Size" type="number" min="0" step="1" data-design-key="h3Size" value="19" /></label>
+          <label class="control-field" for="h3Bold"><span>H3 bold</span><input id="h3Bold" type="checkbox" data-design-key="h3Bold" checked /></label>
+          <label class="control-field" for="normalLinkColor"><span>Normal link color</span><input id="normalLinkColor" type="color" data-design-key="normalLinkColor" value="#8fd3ff" /></label>
+          <label class="control-field" for="normalLinkSize"><span>Normal link size</span><input id="normalLinkSize" type="number" min="0" step="1" data-design-key="normalLinkSize" value="16" /></label>
+          <label class="control-field" for="normalLinkBold"><span>Normal link bold</span><input id="normalLinkBold" type="checkbox" data-design-key="normalLinkBold" /></label>
+          <label class="control-field" for="normalLinkUnderline"><span>Normal link underline</span><input id="normalLinkUnderline" type="checkbox" data-design-key="normalLinkUnderline" checked /></label>
+          <label class="control-field" for="linkPillBackground"><span>Link Pill background</span><input id="linkPillBackground" type="color" data-design-key="linkPillBackground" value="#233247" /></label>
+          <label class="control-field" for="linkPillBorder"><span>Link Pill border</span><input id="linkPillBorder" type="text" data-design-key="linkPillBorder" value="1px solid #6094c1" /></label>
+          <label class="control-field" for="linkPillText"><span>Link Pill text</span><input id="linkPillText" type="color" data-design-key="linkPillText" value="#dff3ff" /></label>
+          <label class="control-field" for="linkPillSize"><span>Link Pill size</span><input id="linkPillSize" type="number" min="0" step="1" data-design-key="linkPillSize" value="14" /></label>
+          <label class="control-field" for="linkPillBold"><span>Link Pill bold</span><input id="linkPillBold" type="checkbox" data-design-key="linkPillBold" checked /></label>
+          <label class="control-field" for="linkPillUnderline"><span>Link Pill underline</span><input id="linkPillUnderline" type="checkbox" data-design-key="linkPillUnderline" /></label>
+          <label class="control-field" for="emphasisBoxBackground"><span>Emphasis box background</span><input id="emphasisBoxBackground" type="color" data-design-key="emphasisBoxBackground" value="#322211" /></label>
+          <label class="control-field" for="emphasisBoxBorder"><span>Emphasis box border</span><input id="emphasisBoxBorder" type="text" data-design-key="emphasisBoxBorder" value="1px solid #b47d3c" /></label>
+          <label class="control-field" for="emphasisBoxText"><span>Emphasis box text</span><input id="emphasisBoxText" type="color" data-design-key="emphasisBoxText" value="#fff0c8" /></label>
+          <label class="control-field" for="emphasisBoxSize"><span>Emphasis box size</span><input id="emphasisBoxSize" type="number" min="0" step="1" data-design-key="emphasisBoxSize" value="15" /></label>
+          <label class="control-field" for="emphasisBoxBold"><span>Emphasis box bold</span><input id="emphasisBoxBold" type="checkbox" data-design-key="emphasisBoxBold" /></label>
+          <label class="control-field" for="tableBackground"><span>Table background</span><input id="tableBackground" type="color" data-design-key="tableBackground" value="#19130d" /></label>
+          <label class="control-field" for="tableBorder"><span>Table border</span><input id="tableBorder" type="text" data-design-key="tableBorder" value="1px solid #6f5434" /></label>
+          <label class="control-field" for="tableHeaderText"><span>Table header text</span><input id="tableHeaderText" type="color" data-design-key="tableHeaderText" value="#ffe0a3" /></label>
+          <label class="control-field" for="tableBodyText"><span>Table body text</span><input id="tableBodyText" type="color" data-design-key="tableBodyText" value="#f0e4ce" /></label>
+          <label class="control-field" for="bottomDetailsBackground"><span>Bottom details bar background</span><input id="bottomDetailsBackground" type="color" data-design-key="bottomDetailsBackground" value="#18110b" /></label>
+          <label class="control-field" for="bottomDetailsBorder"><span>Bottom details bar border</span><input id="bottomDetailsBorder" type="text" data-design-key="bottomDetailsBorder" value="1px solid #6c4e2f" /></label>
+          <label class="control-field" for="bottomDetailsText"><span>Bottom details bar text</span><input id="bottomDetailsText" type="color" data-design-key="bottomDetailsText" value="#d9c7a7" /></label>
+          <label class="control-field" for="bottomDetailsTextSize"><span>Bottom details bar text size</span><input id="bottomDetailsTextSize" type="number" min="0" step="1" data-design-key="bottomDetailsTextSize" value="13" /></label>
+        </section>
+        <section class="element-card" data-designer-section="helpGuide">
+          <h3>Help / Guidebook</h3>
+          <label class="control-field" for="guideWindowBackground"><span>Window background</span><input id="guideWindowBackground" type="color" data-design-key="guideWindowBackground" value="#1c1711" /></label>
+          <label class="control-field" for="guideWindowBorder"><span>Window border</span><input id="guideWindowBorder" type="text" data-design-key="guideWindowBorder" value="1px solid #927046" /></label>
+          <label class="control-field" for="guideWindowShadow"><span>Window shadow</span><input id="guideWindowShadow" type="text" data-design-key="guideWindowShadow" value="0 18px 42px rgba(0,0,0,.45)" /></label>
+          <label class="control-field" for="guideLogoSize"><span>Logo size</span><input id="guideLogoSize" type="number" min="0" step="1" data-design-key="guideLogoSize" value="54" /></label>
+          <label class="control-field" for="guideTitleColor"><span>Title color</span><input id="guideTitleColor" type="color" data-design-key="guideTitleColor" value="#f8d98a" /></label>
+          <label class="control-field" for="guideTitleSize"><span>Title size</span><input id="guideTitleSize" type="number" min="0" step="1" data-design-key="guideTitleSize" value="26" /></label>
+          <label class="control-field" for="guideTextColor"><span>Normal text color</span><input id="guideTextColor" type="color" data-design-key="guideTextColor" value="#efe2c9" /></label>
+          <label class="control-field" for="guideTextSize"><span>Normal text size</span><input id="guideTextSize" type="number" min="0" step="1" data-design-key="guideTextSize" value="15" /></label>
+          <label class="control-field" for="guideHeadingColor"><span>Heading color</span><input id="guideHeadingColor" type="color" data-design-key="guideHeadingColor" value="#ffd685" /></label>
+          <label class="control-field" for="guideHeadingSize"><span>Heading size</span><input id="guideHeadingSize" type="number" min="0" step="1" data-design-key="guideHeadingSize" value="20" /></label>
+          <label class="control-field" for="guideRuleColor"><span>Horizontal rule color</span><input id="guideRuleColor" type="color" data-design-key="guideRuleColor" value="#7b5b37" /></label>
+          <label class="control-field" for="guideScrollbarTrack"><span>Scrollbar track</span><input id="guideScrollbarTrack" type="color" data-design-key="guideScrollbarTrack" value="#21170f" /></label>
+          <label class="control-field" for="guideScrollbarThumb"><span>Scrollbar thumb</span><input id="guideScrollbarThumb" type="color" data-design-key="guideScrollbarThumb" value="#b38245" /></label>
+          <label class="control-field" for="guideEditButtonBackground"><span>Edit button background</span><input id="guideEditButtonBackground" type="color" data-design-key="guideEditButtonBackground" value="#3b2918" /></label>
+          <label class="control-field" for="guideEditButtonBorder"><span>Edit button border</span><input id="guideEditButtonBorder" type="text" data-design-key="guideEditButtonBorder" value="1px solid #ad8049" /></label>
+          <label class="control-field" for="guideEditButtonText"><span>Edit button text</span><input id="guideEditButtonText" type="color" data-design-key="guideEditButtonText" value="#fff3cf" /></label>
+          <label class="control-field" for="guideEditButtonTextSize"><span>Edit button text size</span><input id="guideEditButtonTextSize" type="number" min="0" step="1" data-design-key="guideEditButtonTextSize" value="14" /></label>
+        </section>
+        <section class="element-card" data-designer-section="settingsWindow">
+          <h3>Settings Window</h3>
+          <label class="control-field" for="settingsWindowBackground"><span>Window background</span><input id="settingsWindowBackground" type="color" data-design-key="settingsWindowBackground" value="#1b1611" /></label>
+          <label class="control-field" for="settingsWindowBorder"><span>Window border</span><input id="settingsWindowBorder" type="text" data-design-key="settingsWindowBorder" value="1px solid #80613e" /></label>
+          <label class="control-field" for="settingsWindowShadow"><span>Window shadow</span><input id="settingsWindowShadow" type="text" data-design-key="settingsWindowShadow" value="0 18px 44px rgba(0,0,0,.48)" /></label>
+          <label class="control-field" for="settingsTitleColor"><span>Title color</span><input id="settingsTitleColor" type="color" data-design-key="settingsTitleColor" value="#f5d58b" /></label>
+          <label class="control-field" for="settingsTitleSize"><span>Title size</span><input id="settingsTitleSize" type="number" min="0" step="1" data-design-key="settingsTitleSize" value="24" /></label>
+          <label class="control-field" for="settingsCardBackground"><span>Card background</span><input id="settingsCardBackground" type="color" data-design-key="settingsCardBackground" value="#241b12" /></label>
+          <label class="control-field" for="settingsCardBorder"><span>Card border</span><input id="settingsCardBorder" type="text" data-design-key="settingsCardBorder" value="1px solid #6d5032" /></label>
+          <label class="control-field" for="settingsCardTitleColor"><span>Card title color</span><input id="settingsCardTitleColor" type="color" data-design-key="settingsCardTitleColor" value="#ffd98f" /></label>
+          <label class="control-field" for="settingsCardTitleSize"><span>Card title size</span><input id="settingsCardTitleSize" type="number" min="0" step="1" data-design-key="settingsCardTitleSize" value="18" /></label>
+          <label class="control-field" for="settingsLabelColor"><span>Label color</span><input id="settingsLabelColor" type="color" data-design-key="settingsLabelColor" value="#d9bf91" /></label>
+          <label class="control-field" for="settingsLabelSize"><span>Label size</span><input id="settingsLabelSize" type="number" min="0" step="1" data-design-key="settingsLabelSize" value="13" /></label>
+          <label class="control-field" for="settingsInputBackground"><span>Input background</span><input id="settingsInputBackground" type="color" data-design-key="settingsInputBackground" value="#120e0a" /></label>
+          <label class="control-field" for="settingsInputBorder"><span>Input border</span><input id="settingsInputBorder" type="text" data-design-key="settingsInputBorder" value="1px solid #755638" /></label>
+          <label class="control-field" for="settingsInputText"><span>Input text</span><input id="settingsInputText" type="color" data-design-key="settingsInputText" value="#fff3d6" /></label>
+          <label class="control-field" for="settingsInputTextSize"><span>Input text size</span><input id="settingsInputTextSize" type="number" min="0" step="1" data-design-key="settingsInputTextSize" value="14" /></label>
+          <label class="control-field" for="settingsScrollbarTrack"><span>Scrollbar track</span><input id="settingsScrollbarTrack" type="color" data-design-key="settingsScrollbarTrack" value="#20160f" /></label>
+          <label class="control-field" for="settingsScrollbarThumb"><span>Scrollbar thumb</span><input id="settingsScrollbarThumb" type="color" data-design-key="settingsScrollbarThumb" value="#9f7444" /></label>
+        </section>
+
+      <section class="element-card" data-designer-section="transclusionCards">
+        <h3>Transclusion Cards</h3>
+        <p>Use the existing Transclusion Card designer for card-specific layout and content styling.</p>
+        <button id="openTCardPanelButton" type="button">Open TCard Panel</button>
+      </section>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
