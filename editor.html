@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Forever Bound Editor</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="editor-shell">
+    <section class="palette-panel" aria-labelledby="favoriteColorsTitle">
+      <h2 id="favoriteColorsTitle">Favorite Colors</h2>
+
+      <label class="active-color-field" for="activeColorHex">Active Hex</label>
+      <input id="activeColorHex" type="text" inputmode="text" autocomplete="off" spellcheck="false" value="#bda170" aria-label="Active color hex code">
+
+      <div id="favoriteColors" class="favorite-colors" aria-label="Favorite color palette">
+        <div class="current-color-wrap">
+          <span class="palette-label">Current Color</span>
+          <div id="currentColorBox" class="current-color-box" draggable="true" role="button" tabindex="0" aria-label="Current Color #bda170" style="--swatch-color: #bda170;">#bda170</div>
+        </div>
+
+        <div id="favoriteColorSlots" class="favorite-color-slots" aria-label="Favorite color slots"></div>
+      </div>
+    </section>
+
+    <section class="sample-color-inputs" aria-label="Color inputs">
+      <label>Primary <input id="primaryColor" type="color" value="#bda170"></label>
+      <label>Accent <input id="accentColor" type="color" value="#d88a64"></label>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
