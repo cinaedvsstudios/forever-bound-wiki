@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Forever Bound Wiki Editor</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="editor-shell">
+    <section class="element-designer" aria-labelledby="elementDesignerTitle">
+      <header class="element-designer__header">
+        <div>
+          <p class="eyebrow">Forever Bound Wiki</p>
+          <h1 id="elementDesignerTitle">Element Designer</h1>
+        </div>
+        <p class="current-color" aria-live="polite">
+          Current Color: <output id="currentColorValue">#000000</output>
+        </p>
+      </header>
+
+      <p id="designerStatus" class="designer-status" role="status" aria-live="polite"></p>
+
+      <form id="elementDesignerForm" class="element-designer__form">
+        <fieldset>
+          <legend>System colors</legend>
+          <div id="systemColorControls" class="color-control-grid">
+            <p class="loading-message">Loading color controls…</p>
+          </div>
+        </fieldset>
+      </form>
+    </section>
+  </main>
+
+  <template id="colorControlTemplate">
+    <label class="color-control">
+      <span class="color-control__label"></span>
+      <input class="color-control__picker" type="color">
+      <input class="color-control__hex" type="text" inputmode="text" autocomplete="off" spellcheck="false" maxlength="7">
+    </label>
+  </template>
+
+  <script src="app.js" defer></script>
+</body>
+</html>
