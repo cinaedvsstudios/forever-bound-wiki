@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Forever Bound Editor</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <header class="editor-topbar" aria-label="Editor toolbar">
+      <h1 class="writing-room-title">Writing Room</h1>
+
+      <nav class="top-command-menus" aria-label="Command menus">
+        <div class="tool-menu">
+          <button
+            id="formatMenuButton"
+            class="tool-menu-trigger icon-button"
+            type="button"
+            aria-haspopup="true"
+            aria-expanded="false"
+            aria-controls="formatMenuPanel"
+            data-tool-name="Format"
+          >
+            🪶
+          </button>
+          <div id="formatMenuPanel" class="tool-menu-panel" role="menu" aria-labelledby="formatMenuButton">
+            <button type="button" role="menuitem">Bold</button>
+            <button type="button" role="menuitem">Italic</button>
+            <button type="button" role="menuitem">Underline</button>
+            <button type="button" role="menuitem">Strike</button>
+            <button type="button" role="menuitem">Heading</button>
+            <button type="button" role="menuitem">Quote</button>
+            <button type="button" role="menuitem">Code</button>
+            <button type="button" role="menuitem">Clear</button>
+          </div>
+        </div>
+
+        <button id="subnotoButton" class="tool-menu-trigger icon-button" type="button" data-tool-name="Subnoto">📜</button>
+        <button id="searchButton" class="tool-menu-trigger icon-button" type="button" data-tool-name="Specnoto/Search">🕯️</button>
+
+        <div class="tool-menu">
+          <button
+            id="insertMenuButton"
+            class="tool-menu-trigger icon-button"
+            type="button"
+            aria-haspopup="true"
+            aria-expanded="false"
+            aria-controls="insertMenuPanel"
+            data-tool-name="Insert"
+          >
+            🗡️
+          </button>
+          <div id="insertMenuPanel" class="tool-menu-panel" role="menu" aria-labelledby="insertMenuButton">
+            <button type="button" role="menuitem">Link</button>
+            <button type="button" role="menuitem">Image</button>
+            <button type="button" role="menuitem">Table</button>
+            <button type="button" role="menuitem">Divider</button>
+            <button type="button" role="menuitem">Footnote</button>
+            <button type="button" role="menuitem">Callout</button>
+            <button type="button" role="menuitem">Symbol</button>
+            <button type="button" role="menuitem">Template</button>
+          </div>
+        </div>
+
+        <button id="topHelpButton" class="tool-menu-trigger icon-button" type="button" data-tool-name="Help">🗿</button>
+        <button id="settingsButton" class="tool-menu-trigger icon-button" type="button" data-tool-name="Settings">🗝️</button>
+      </nav>
+    </header>
+
+    <main class="editor-shell">
+      <p id="editorStatus" class="editor-status" aria-live="polite">Ready</p>
+      <section class="editor-page" contenteditable="true" aria-label="Writing room editor"></section>
+    </main>
+  </body>
+</html>
