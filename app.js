@@ -31,6 +31,14 @@ const DEFAULT_FAVORITE_COLORS = [
   CAPSANOTO_PALETTE.ochre,
   CAPSANOTO_PALETTE.ember,
   CAPSANOTO_PALETTE.peach,
+  CAPSANOTO_PALETTE.umber,
+  CAPSANOTO_PALETTE.charcoal,
+  CAPSANOTO_PALETTE.parchment,
+  "#ffffff",
+  "#4b2b1f",
+  "#8f5cff",
+  "#d7a56d",
+  "#101010",
 ];
 
 const DEFAULT_WORKSPACE = {
@@ -173,7 +181,10 @@ const els = {
   designBoldToggle: document.querySelector("#designBoldToggle"),
   dialogBoldToggle: document.querySelector("#dialogBoldToggle"),
   activeColorHex: document.querySelector("#activeColorHex"),
+  currentColorBox: document.querySelector("#currentColorBox"),
   favoriteColors: document.querySelector("#favoriteColors"),
+  expandDesignerCards: document.querySelector("#expandDesignerCards"),
+  collapseDesignerCards: document.querySelector("#collapseDesignerCards"),
   settingsMenu: document.querySelector(".settings-menu"),
   settingsSections: document.querySelectorAll("[data-settings-section]"),
   writingRoomButton: document.querySelector("#writingRoomButton"),
@@ -523,6 +534,8 @@ function bindEditorEvents() {
   window.addEventListener("pointerup", stopPanelDrag);
   document.addEventListener("keydown", (event) => { if (event.key === "Escape") { toggleHelpPanel(false); toggleSettingsPanel(false); toggleWritingRoomPanel(false); } });
   bindDesignColorTools();
+  els.expandDesignerCards?.addEventListener("click", () => setElementDesignerCards(true));
+  els.collapseDesignerCards?.addEventListener("click", () => setElementDesignerCards(false));
   bindDesignToggle(els.designBoldToggle, els.designBold);
   bindDesignToggle(els.dialogBoldToggle, els.dialogBold);
   els.helpButton.addEventListener("click", () => { toggleSettingsPanel(false); toggleHelpPanel(true); });
@@ -845,15 +858,22 @@ async function createTransclusionFromSelection() {
 
 function openCapsDialog(title, fields) {
   els.dialogTitle.textContent = title;
+  els.dialogBox.classList.toggle("delete-confirm-dialog", title.toLowerCase().includes("delete") || title.toLowerCase().includes("not empty"));
   els.dialogFields.innerHTML = fields.map(renderDialogField).join("");
+  const footer = els.dialogBox.querySelector("footer");
+  footer.querySelectorAll(".dialog-footer-field").forEach((item) => item.remove());
+  els.dialogFields.querySelectorAll(".dialog-footer-field").forEach((item) => footer.insertBefore(item, els.dialogConfirmButton));
   els.dialogOverlay.hidden = false;
   els.dialogFields.querySelector("input:not([readonly]), textarea:not([readonly])")?.focus();
   return new Promise((resolve) => { state.dialogResolver = resolve; });
 }
 
 function renderDialogField(field) {
+  if (field.html) {
+    return `<div class="dialog-html-field ${field.compact ? "dialog-html-compact" : ""}">${field.html}</div>`;
+  }
   if (field.checkbox) {
-    return `<label class="dialog-check"><input type="checkbox" name="${escapeAttr(field.name)}"> ${escapeHtml(field.label)}</label>`;
+    return `<label class="dialog-check ${field.footer ? "dialog-footer-field" : ""}"><input type="checkbox" name="${escapeAttr(field.name)}"> ${escapeHtml(field.label)}</label>`;
   }
   const readonly = field.readonly ? " readonly" : "";
   return `
@@ -1175,8 +1195,9 @@ function handleSettingsMenuClick(event) {
 }
 
 function handleSettingsCardToggle(event) {
-  const heading = event.target.closest(".settings-section > h3");
+  const heading = event.target.closest(".settings-section > h3, .settings-section > .designer-heading-row");
   if (!heading) return;
+  if (event.target.closest("button")) return;
   heading.closest(".settings-section").classList.toggle("is-collapsed");
 }
 
@@ -1510,15 +1531,12 @@ async function handleFilingTabAction(action, tabId) {
     return;
   }
   if (action === "delete") {
-    if (tabDocs.length) {
-      await openCapsDialog("Tab Not Empty", [
-        { name: "warning", label: `${tab.label} contains ${tabDocs.length} ${tabDocs.length === 1 ? "document" : "documents"}. Move, delete, deprecate, or restore those documents before deleting the tab.`, value: "", readonly: true },
-      ]);
-      return;
-    }
+    const confirmed = await confirmFilingDelete({ type: "tab", label: tab.label, docs: tabDocs });
+    if (!confirmed) return;
+    moveDocumentsToTrash(tabDocs);
     state.filingTabs = state.filingTabs.filter((item) => item.id !== tabId);
-    renderWritingRoomCards();
-    markDirty("Empty Filing Cabinet tab deleted");
+    renderAll();
+    markDirty(tabDocs.length ? "Filing Cabinet tab and contents moved to Trash" : "Empty Filing Cabinet tab deleted");
   }
 }
 
@@ -1554,15 +1572,15 @@ async function handleFilingGroupAction(action, groupId) {
     return;
   }
   if (action === "delete") {
-    if (groupTabs.length || groupDocs.length) {
-      await openCapsDialog("Folder Not Empty", [
-        { name: "warning", label: `${group.label} contains ${groupTabs.length} ${groupTabs.length === 1 ? "tab" : "tabs"} and ${groupDocs.length} ${groupDocs.length === 1 ? "document" : "documents"}. Move or delete those tabs before deleting the folder.`, value: "", readonly: true },
-      ]);
-      return;
-    }
+    const confirmed = await confirmFilingDelete({ type: "folder", label: group.label, tabs: groupTabs, docs: groupDocs });
+    if (!confirmed) return;
+    moveDocumentsToTrash(groupDocs);
+    const tabIds = new Set(groupTabs.map((tab) => tab.id));
+    state.filingTabs = state.filingTabs.filter((item) => item.groupId !== groupId);
+    state.documents.filter((doc) => tabIds.has(doc.filingTabId)).forEach((doc) => moveDocumentsToTrash([doc]));
     state.filingGroups = state.filingGroups.filter((item) => item.id !== groupId);
-    renderWritingRoomCards();
-    markDirty("Empty Filing Cabinet folder deleted");
+    renderAll();
+    markDirty((groupTabs.length || groupDocs.length) ? "Filing Cabinet folder and contents moved to Trash" : "Empty Filing Cabinet folder deleted");
   }
 }
 
@@ -1608,19 +1626,52 @@ async function deleteDocumentSafely(docId) {
   if (index < 0) return;
   const doc = state.documents[index];
   const stats = documentTextStats(doc.content || "");
-  if (stats.characters) {
-    const result = await openCapsDialog("Confirm Delete", [
-      { name: "warning", label: `You are deleting ${stats.lines} lines and ${stats.characters} characters from ${doc.title}.`, value: "", readonly: true },
-      { name: "confirm", label: "Yes, move this file to Trash", checkbox: true },
-    ]);
-    if (result?.confirm !== "on") return;
-  }
-  const [deleted] = state.documents.splice(index, 1);
-  deleted.deletedAt = new Date().toISOString();
-  state.trash.push(deleted);
+  const confirmed = await confirmFilingDelete({ type: "document", label: doc.title, docs: [doc], stats });
+  if (!confirmed) return;
+  moveDocumentsToTrash([doc]);
   if (state.activeId === docId) state.activeId = state.documents[0]?.id || createDocument().id;
   renderAll();
   markDirty("Document moved to Trash");
+}
+
+function moveDocumentsToTrash(docs) {
+  const ids = new Set(docs.map((doc) => doc.id));
+  const moving = state.documents.filter((doc) => ids.has(doc.id));
+  state.documents = state.documents.filter((doc) => !ids.has(doc.id));
+  moving.forEach((doc) => {
+    doc.deletedAt = new Date().toISOString();
+    state.trash.push(doc);
+  });
+}
+
+async function confirmFilingDelete({ type, label, tabs = [], docs = [], stats = null }) {
+  const hasContent = tabs.length || docs.length || (stats && stats.characters);
+  const fields = [];
+  if (hasContent) {
+    fields.push({ html: `<p class="delete-warning-text">This section is not empty. You are about to delete:</p>${deleteTreeHtml({ type, label, tabs, docs, stats })}` });
+  } else {
+    fields.push({ html: `<p class="delete-warning-text">Delete empty ${escapeHtml(type)} <strong>${escapeHtml(label)}</strong>?</p>`, compact: true });
+  }
+  fields.push({ name: "confirm", label: "I still want to delete this.", checkbox: true, footer: true });
+  const result = await openCapsDialog("Confirm Delete", fields);
+  return result?.confirm === "on";
+}
+
+function deleteTreeHtml({ type, label, tabs = [], docs = [], stats = null }) {
+  const rows = [];
+  rows.push(`<li><span class="tree-type">${escapeHtml(type)}</span> ${escapeHtml(label)}</li>`);
+  if (tabs.length) {
+    rows.push(`<li><span class="tree-type">tabs</span><ul>${tabs.map((tab) => `<li>▱ ${escapeHtml(tab.label)}</li>`).join("")}</ul></li>`);
+  }
+  if (docs.length) {
+    rows.push(`<li><span class="tree-type">documents</span><ul>${docs.map((doc) => {
+      const docStats = documentTextStats(doc.content || "");
+      return `<li>📄 ${escapeHtml(doc.title)} <small>${docStats.lines} lines · ${docStats.characters} chars</small></li>`;
+    }).join("")}</ul></li>`);
+  } else if (stats?.characters) {
+    rows.push(`<li><span class="tree-type">content</span> ${stats.lines} lines · ${stats.characters} characters</li>`);
+  }
+  return `<div class="delete-tree-box"><ul>${rows.join("")}</ul></div>`;
 }
 
 function restoreArchivedDocument(docId, source) {
@@ -2273,10 +2324,15 @@ function bindDesignColorTools() {
     if (!state.lastColorInput) state.lastColorInput = input;
   });
   els.activeColorHex?.addEventListener("input", () => applyHexToActiveColor(els.activeColorHex.value));
+  els.currentColorBox?.addEventListener("dragstart", (event) => event.dataTransfer?.setData("text/plain", els.currentColorBox.dataset.currentColor || els.activeColorHex?.value || ""));
   els.favoriteColors?.addEventListener("click", (event) => {
     const button = event.target.closest("button[data-favorite-color]");
     if (!button) return;
     applyHexToActiveColor(button.dataset.favoriteColor);
+  });
+  els.favoriteColors?.addEventListener("dragstart", (event) => {
+    const button = event.target.closest("button[data-favorite-color]");
+    if (button) event.dataTransfer?.setData("text/plain", button.dataset.favoriteColor);
   });
   els.favoriteColors?.addEventListener("dragover", (event) => {
     if (event.target.closest("button[data-favorite-index]")) event.preventDefault();
@@ -2284,10 +2340,14 @@ function bindDesignColorTools() {
   els.favoriteColors?.addEventListener("drop", handleFavoriteColorDrop);
 }
 
+function setElementDesignerCards(open) {
+  document.querySelectorAll(".element-designer-card").forEach((card) => { card.open = open; });
+}
+
 function renderFavoriteColors() {
   if (!els.favoriteColors) return;
   els.favoriteColors.innerHTML = state.favoriteColors.map((color, index) => (
-    `<button type="button" data-favorite-index="${index}" data-favorite-color="${escapeAttr(color)}" aria-label="Use ${escapeAttr(color)}" style="--favorite-color:${escapeAttr(color)}"></button>`
+    `<button type="button" draggable="true" data-favorite-index="${index}" data-favorite-color="${escapeAttr(color)}" aria-label="Use ${escapeAttr(color)}" style="--favorite-color:${escapeAttr(color)}">${escapeHtml(color)}</button>`
   )).join("");
 }
 
@@ -2306,12 +2366,22 @@ function syncActiveColorInput(input) {
   if (!input) return;
   state.lastColorInput = input;
   if (els.activeColorHex) els.activeColorHex.value = input.value;
+  updateCurrentColorBox(input.value);
+}
+
+function updateCurrentColorBox(value) {
+  const color = normalizeHexColor(value);
+  if (!color || !els.currentColorBox) return;
+  els.currentColorBox.textContent = color;
+  els.currentColorBox.dataset.currentColor = color;
+  els.currentColorBox.style.setProperty("--current-color", color);
 }
 
 function applyHexToActiveColor(value) {
   const color = normalizeHexColor(value);
   if (!color || !state.lastColorInput) return;
   state.lastColorInput.value = color;
+  state.lastColorInput.dispatchEvent(new Event("input", { bubbles: true }));
   syncActiveColorInput(state.lastColorInput);
 }
 

@@ -790,7 +790,10 @@ input, textarea, select, .panel-help, .help-panel p, .help-panel dd, .document-c
   cursor: pointer;
   user-select: none;
 }
-.settings-panel .settings-section.is-collapsed > :not(h3) {
+.settings-panel .settings-section.is-collapsed > :not(h3):not(.designer-heading-row) {
+  display: none !important;
+}
+.settings-panel .settings-section.is-collapsed > .designer-heading-row > .designer-expand-actions {
   display: none !important;
 }
 .settings-panel .settings-section.is-collapsed h3::before {
@@ -1924,4 +1927,26 @@ h1, h2, h3, h4,
   .design-section.settings-card { grid-template-columns: 1fr !important; }
   .design-section .design-preview-column { grid-column: 1 !important; grid-row: auto !important; position: static !important; }
   .favorite-colors { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+}
+
+/* Fix Settings card headers after Element Designer card cleanup */
+.settings-panel .designer-heading-row {
+  cursor: pointer;
+  user-select: none;
+}
+.settings-panel .designer-heading-row h3::before {
+  content: "›";
+  display: inline-block;
+  margin-right: 0.55rem;
+  color: var(--accent);
+  transform: rotate(90deg);
+}
+.settings-panel .settings-section.is-collapsed .designer-heading-row h3::before {
+  transform: rotate(0deg);
+}
+.settings-panel .settings-links > h3 {
+  margin: 0;
+}
+.settings-panel .settings-links.is-collapsed > :not(h3) {
+  display: none !important;
 }
