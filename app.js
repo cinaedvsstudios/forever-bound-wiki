@@ -106,6 +106,7 @@ const state = {
   lastColorInput: null,
   favoriteColors: [...DEFAULT_FAVORITE_COLORS],
   favoriteEmojis: [],
+  settingsDirty: false,
   contextStatusLocked: false,
   contextStatusTimer: null,
 };
@@ -125,6 +126,8 @@ const els = {
   settingsButton: document.querySelector("#settingsButton"),
   settingsPanel: document.querySelector("#settingsPanel"),
   closeSettingsPanel: document.querySelector("#closeSettingsPanel"),
+  saveSettingsPanelButton: document.querySelector("#saveSettingsPanelButton"),
+  settingsEmojiLibraryButton: document.querySelector("#settingsEmojiLibraryButton"),
   logoutButton: document.querySelector("#logoutButton"),
   toolbar: document.querySelector(".toolbar"),
   linkButton: document.querySelector("#linkButton"),
@@ -512,7 +515,7 @@ function bindEditorEvents() {
   els.imageButton.addEventListener("click", () => els.imageInput.click());
   els.imageInput.addEventListener("change", embedSelectedImage);
   els.emojiButton.addEventListener("click", showEmojiPicker);
-  els.searchButton?.addEventListener("click", () => setContextStatus("Search will be built next", "saved"));
+  els.searchButton?.addEventListener("click", () => setContextStatus("Specnoto search/find workspace will be built next", "saved"));
   els.subnotoButton?.addEventListener("click", () => openSubnotoWindow());
   document.querySelector('.tool-menu-trigger[data-tool-name="Subnoto"]')?.addEventListener("click", openSubnotoWindow);
   els.emphasisButton.addEventListener("click", insertEmphasisBox);
@@ -1145,21 +1148,23 @@ function embedSelectedImage(event) {
 }
 
 
+const DEFAULT_FAVORITE_EMOJIS = ["⭐","✨","🔥","💎","🗝️","📜","🗡️","💜","🧙","🏰","🌙","☀️","💧","🌲","🧪","🪄","⚔️","🛡️","📖","📝","🎬","🎵","🎤","🎨","🖼️","🔗","⚓","💊","🧩","🔍","⚙️","❓","✅","❌","➕","➖"];
+
 const EMOJI_LIBRARY = [
   ["😀","grin smile happy face smiley"],["😃","smile happy face smiley"],["😄","laugh happy face smiley"],["😁","grin smiley"],["😆","laugh smiley"],["😅","sweat smile smiley"],["😂","tears laugh smiley"],["🤣","rolling laugh smiley"],["😊","blush smile smiley"],["🙂","slight smile smiley"],["🙃","upside down smile smiley"],["😉","wink smiley"],["😍","heart eyes love smiley"],["🥰","hearts love affectionate smiley"],["😘","kiss smiley"],["😗","kiss face smiley"],["😚","closed eye kiss smiley"],["😋","yum tasty smiley"],["😜","tongue wink silly smiley"],["🤪","zany crazy smiley"],["😝","tongue squint smiley"],["🤑","money face"],["🤗","hug smiley"],["🤭","hand mouth giggle"],["🫢","hand mouth shocked"],["🤫","shush quiet"],["🤔","thinking"],["🫡","salute"],["🤐","zip mouth"],["🤨","raised eyebrow"],["😐","neutral"],["😑","expressionless"],["😶","no mouth silent"],["😏","smirk"],["😒","unamused"],["🙄","eyeroll"],["😬","grimace"],["😮‍💨","exhale sigh"],["🤥","lying"],["😌","relieved"],["😔","sad pensive"],["😪","sleepy"],["🤤","drool"],["😴","sleep"],["😷","mask sick"],["🤒","thermometer sick"],["🤕","bandage hurt"],["🤢","nausea sick"],["🤮","vomit sick"],["🤧","sneeze sick"],["🥵","hot"],["🥶","cold freeze"],["🥴","woozy drunk"],["😵","dizzy"],["🤯","mind blown"],["🤠","cowboy"],["🥳","party"],["🥸","disguise"],["😎","cool sunglasses"],["🤓","nerd"],["🧐","monocle"],["😕","confused"],["🫤","diagonal mouth"],["😟","worried"],["🙁","frown"],["☹️","frown sad"],["😮","surprise"],["😯","hushed"],["😲","astonished"],["😳","flushed"],["🥺","pleading"],["🥹","holding tears"],["😦","frown open"],["😧","anguished"],["😨","fear"],["😰","cold sweat"],["😥","sad sweat"],["😢","cry"],["😭","sob"],["😱","scream fear"],["😖","confounded"],["😣","persevere"],["😞","disappointed"],["😓","sweat"],["😩","weary"],["😫","tired"],["🥱","yawn"],["😤","triumph steam"],["😡","angry"],["😠","mad angry"],["🤬","swear angry"],["😈","devil"],["👿","angry devil"],["👻","ghost"],["💀","skull death"],["☠️","skull crossbones death"],["🤡","clown"],["🤖","robot"],["👽","alien"],["👑","crown royal"],["🧑","person character"],["👤","profile person"],["🧙","wizard magic"],["🧝","elf fantasy"],["🧛","vampire"],["🐺","wolf"],["🐉","dragon"],["🦅","eagle"],["🕊️","dove peace"],["🔥","fire"],["💧","water"],["🌊","wave ocean"],["🌲","tree forest"],["🌙","moon"],["☀️","sun"],["⭐","star favorite"],["✨","sparkle magic"],["⚡","lightning"],["❄️","snow ice"],["🌫️","fog mist"],["🌹","rose flower"],["🍃","leaf"],["🏰","castle"],["⛪","church"],["🏠","house home"],["🗺️","map"],["🧭","compass"],["🛤️","road track"],["⚔️","sword battle"],["🛡️","shield"],["🏹","bow arrow"],["🗡️","dagger sword"],["🔫","gun"],["💣","bomb"],["🪄","wand spell"],["🧪","potion science"],["💎","gem crystal"],["🗝️","key"],["🔒","lock"],["🔓","unlock"],["📜","scroll parchment"],["📖","book"],["📕","red book"],["📝","note writing"],["✏️","pencil edit"],["🖋️","pen"],["📁","folder"],["📂","open folder"],["📄","file document"],["🗃️","file cabinet"],["🗑️","trash"],["🎬","movie scene script"],["🎵","music song"],["🎤","voice mic"],["🎧","headphones"],["🎨","paint color"],["🖼️","image picture"],["🔗","link chain"],["⚓","anchor bookmark"],["💊","pill"],["🧩","puzzle subnoto"],["🔍","search find"],["⚙️","settings gear"],["❓","question help"],["❗","warning"],["✅","check yes"],["❌","x delete no"],["➕","plus add"],["➖","minus remove"],["⬆️","up"],["⬇️","down"],["⬅️","left"],["➡️","right"],["↗️","open external"],["♻️","restore recycle"],["🕰️","old deprecated time"],["💗","heart love"],["❤️","heart red"],["🖤","black heart"],["💜","purple heart"]
 ];
 
 function favoriteEmojiList() {
   if (!state.favoriteEmojis.length) loadFavoriteEmojis();
-  return state.favoriteEmojis.length ? state.favoriteEmojis : ["⭐", "✨", "🔥", "💎", "🗝️", "📜", "🗡️", "💜"];
+  return state.favoriteEmojis.length ? state.favoriteEmojis : [...DEFAULT_FAVORITE_EMOJIS];
 }
 
 function loadFavoriteEmojis() {
   try {
     const saved = JSON.parse(localStorage.getItem(FAVORITE_EMOJI_KEY) || "null");
-    state.favoriteEmojis = Array.isArray(saved) ? saved.filter(Boolean).slice(0, 24) : ["⭐", "✨", "🔥", "💎", "🗝️", "📜", "🗡️", "💜"];
+    state.favoriteEmojis = Array.isArray(saved) ? saved.filter(Boolean).slice(0, 36) : [...DEFAULT_FAVORITE_EMOJIS];
   } catch {
-    state.favoriteEmojis = ["⭐", "✨", "🔥", "💎", "🗝️", "📜", "🗡️", "💜"];
+    state.favoriteEmojis = [...DEFAULT_FAVORITE_EMOJIS];
   }
 }
 
@@ -1170,7 +1175,7 @@ function loadFavoriteEmojiSettings() {
 
 function saveFavoriteEmojisFromSettings() {
   const values = Array.from((els.favoriteEmojiInput?.value || "").matchAll(/\p{Extended_Pictographic}(?:\uFE0F|\u200D\p{Extended_Pictographic}(?:\uFE0F)?)*|[\u2600-\u27BF]\uFE0F?/gu)).map((match) => match[0]);
-  state.favoriteEmojis = values.length ? values.slice(0, 24) : ["⭐", "✨", "🔥", "💎", "🗝️", "📜", "🗡️", "💜"];
+  state.favoriteEmojis = values.length ? values.slice(0, 36) : [...DEFAULT_FAVORITE_EMOJIS];
   localStorage.setItem(FAVORITE_EMOJI_KEY, JSON.stringify(state.favoriteEmojis));
   loadFavoriteEmojiSettings();
   setStatus("Favorite emojis saved", "saved");
@@ -1194,9 +1199,16 @@ function showEmojiPicker(event) {
     <input class="emoji-search" type="search" placeholder="Search emoji: smiley, sword, magic…" aria-label="Search emoji">
     <section class="emoji-section emoji-favorites"><h4>Favorites</h4><div class="emoji-grid">${favoriteButtons}</div></section>
     <section class="emoji-section emoji-library"><h4>Library</h4><div class="emoji-grid">${libraryButtons}</div></section>`;
+  const copyMode = event?.currentTarget?.id === "settingsEmojiLibraryButton";
   const insertEmoji = (button) => {
+    const emoji = button.dataset.emoji;
+    if (copyMode) {
+      navigator.clipboard?.writeText(emoji).catch(() => {});
+      setContextStatus(`Copied emoji ${emoji}. Paste it into a settings field.`, "saved");
+      return;
+    }
     restoreSelectionRange();
-    insertHtml(button.dataset.emoji);
+    insertHtml(emoji);
     picker.remove();
   };
   picker.addEventListener("click", (clickEvent) => {
@@ -1224,8 +1236,8 @@ function showEmojiPicker(event) {
   });
   document.body.append(picker);
   const rect = event.currentTarget.getBoundingClientRect();
-  picker.style.left = `${Math.max(8, Math.min(rect.left, window.innerWidth - 420))}px`;
-  picker.style.top = `${Math.min(rect.bottom + 8, window.innerHeight - 470)}px`;
+  picker.style.left = `${Math.max(8, Math.min(rect.left, window.innerWidth - 560))}px`;
+  picker.style.top = `${Math.min(rect.bottom + 8, window.innerHeight - 600)}px`;
   search.focus();
   setTimeout(() => document.addEventListener("pointerdown", closeEmojiPickerOnOutside, { once: true }), 0);
 }
@@ -1252,19 +1264,27 @@ function handleGlobalSettingsCloseClick(event) {
   closeSettingsPanelNow();
 }
 
-function closeSettingsPanelNow() {
+function closeSettingsPanelNow({ force = false } = {}) {
   state.panelDrag = null;
   if (!els.settingsPanel) return;
+  if (!force && state.settingsDirty && !confirm("You have unsaved settings changes. Are you sure you want to close without saving?")) return;
+  state.settingsDirty = false;
   els.settingsPanel.hidden = true;
   els.settingsPanel.setAttribute("hidden", "");
   els.settingsButton?.setAttribute("aria-expanded", "false");
 }
 
-function setSettingsCardsCollapsed(collapsed = true) {
-  els.settingsSections.forEach((section) => {
-    section.hidden = false;
-    section.classList.toggle("is-collapsed", collapsed);
-  });
+function markSettingsDirtyFromEvent(event) {
+  if (!els.settingsPanel || !els.settingsPanel.contains(event.target)) return;
+  if (event.target.closest("#settingsSearchInput")) return;
+  state.settingsDirty = true;
+}
+
+function saveSettingsAndClose() {
+  saveDesignSettings();
+  saveFavoriteEmojisFromSettings();
+  state.settingsDirty = false;
+  closeSettingsPanelNow({ force: true });
 }
 
 function toggleSettingsPanel(show) {
@@ -1276,39 +1296,28 @@ function toggleSettingsPanel(show) {
   els.settingsPanel.hidden = false;
   els.settingsPanel.removeAttribute("hidden");
   els.settingsButton?.setAttribute("aria-expanded", "true");
-  setSettingsCardsCollapsed(true);
   renderExportSourceSelect();
   renderExportQueue();
   loadDesignForm();
   loadFavoriteEmojiSettings();
   setElementDesignerCards(false);
+  showSettingsSection("design");
+  state.settingsDirty = false;
 }
 
 function handleSettingsMenuClick(event) {
   const button = event.target.closest("button[data-settings-tab]");
   if (!button) return;
-  const sectionName = button.dataset.settingsTab;
-  els.settingsMenu.querySelectorAll("button[data-settings-tab]").forEach((menuButton) => {
-    menuButton.setAttribute("aria-pressed", String(menuButton === button));
-  });
-  const section = [...els.settingsSections].find((candidate) => candidate.dataset.settingsSection === sectionName);
-  if (!section) return;
-  section.hidden = false;
-  section.classList.remove("is-collapsed");
-  requestAnimationFrame(() => section.scrollIntoView({ block: "start", behavior: "smooth" }));
+  showSettingsSection(button.dataset.settingsTab);
 }
 
 function handleSettingsCardToggle(event) {
-  const heading = event.target.closest(".settings-section > h3, .settings-section > .designer-heading-row, .settings-section > .designer-heading-row h3");
+  const heading = event.target.closest(".settings-section > .designer-heading-row, .settings-section > .designer-heading-row h3");
   if (!heading) return;
-  if (event.target.closest("button, input, select, textarea") && !event.target.closest(".settings-section > h3, .settings-section > .designer-heading-row h3")) return;
+  if (event.target.closest("button, input, select, textarea") && !event.target.closest(".settings-section > .designer-heading-row h3")) return;
   const section = heading.closest(".settings-section");
   if (!section) return;
-  section.hidden = false;
   section.classList.toggle("is-collapsed");
-  if (!section.classList.contains("is-collapsed")) {
-    requestAnimationFrame(() => section.scrollIntoView({ block: "start", behavior: "smooth" }));
-  }
 }
 
 function showSettingsSection(sectionName) {
@@ -1316,9 +1325,13 @@ function showSettingsSection(sectionName) {
     button.setAttribute("aria-pressed", String(button.dataset.settingsTab === sectionName));
   });
   els.settingsSections.forEach((section) => {
-    section.hidden = false;
-    section.classList.toggle("is-collapsed", section.dataset.settingsSection !== sectionName);
+    const isActive = section.dataset.settingsSection === sectionName;
+    section.hidden = !isActive;
+    section.classList.toggle("is-active-settings-card", isActive);
+    section.classList.remove("is-collapsed");
   });
+  const active = [...els.settingsSections].find((section) => section.dataset.settingsSection === sectionName);
+  if (active) requestAnimationFrame(() => active.scrollIntoView({ block: "nearest" }));
 }
 
 function openFilingCabinetSettingsMode() {
@@ -1546,12 +1559,21 @@ function writingRoomGroupLabel(doc) {
   return "Writing Room Tabs";
 }
 
+function designIconSetting(key, fallback) {
+  try {
+    const settings = JSON.parse(localStorage.getItem(DESIGN_KEY) || "{}");
+    return settings[key] || fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 function groupIcon(group) {
   const label = String(group.label || "").toLowerCase();
-  if (label.includes("character")) return "🧑";
-  if (label.includes("episode")) return "🎬";
-  if (label.includes("core") || label.includes("world")) return "💗";
-  return group.icon || "📁";
+  if (label.includes("character")) return designIconSetting("charactersIconText", "🧑");
+  if (label.includes("episode")) return designIconSetting("episodesIconText", "🎬");
+  if (label.includes("core") || label.includes("world")) return designIconSetting("coreIconText", "💗");
+  return group.icon || designIconSetting("folderIconText", "📁");
 }
 
 function documentFileType(doc) {
@@ -1565,11 +1587,11 @@ function documentFileType(doc) {
 
 function docIcon(doc) {
   const type = documentFileType(doc);
-  if (type === "Script") return "🎬";
-  if (type === "Character") return "🧑";
-  if (type === "Lore") return "💗";
+  if (type === "Script") return designIconSetting("episodesIconText", "🎬");
+  if (type === "Character") return designIconSetting("charactersIconText", "🧑");
+  if (type === "Lore") return designIconSetting("coreIconText", "💗");
   if (type === "Outline") return "▤";
-  return "📄";
+  return designIconSetting("documentIconText", "📄");
 }
 
 function renderDeprecatedVersions(doc) {
@@ -2012,6 +2034,7 @@ function saveWritingRoomPanelLayout() {
   };
   localStorage.setItem(WRITING_ROOM_LAYOUT_KEY, JSON.stringify(layout));
   setStatus("Writing Room layout saved", "saved");
+  if (state.filingEditMode) toggleFilingEditMode();
 }
 
 function applyWritingRoomPanelLayout() {

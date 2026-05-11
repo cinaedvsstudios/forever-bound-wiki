@@ -2971,3 +2971,187 @@ button {
   width: 100% !important;
   height: 2rem !important;
 }
+
+/* v2.1 settings card viewer, top bar, resize, and emoji refinements */
+:root {
+  --settings-outer-border-width: 3px;
+  --settings-viewer-border: #e88f69;
+  --delete-dialog-bg: var(--dialog-bg, #211812);
+  --delete-dialog-border: var(--dialog-border, #724837);
+  --delete-dialog-text: var(--dialog-text, #fbf4d6);
+  --delete-dialog-tree-bg: #160f0b;
+  --delete-dialog-tree-border: var(--dialog-border, #724837);
+  --delete-dialog-width: 420px;
+}
+.writer-header.toolbar {
+  grid-template-columns: auto minmax(240px, 1fr) auto auto !important;
+  align-items: center !important;
+}
+.document-controls {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.45rem !important;
+}
+.context-status {
+  justify-self: center !important;
+  text-align: center !important;
+  width: min(100%, 38rem) !important;
+}
+.icon-command-bar.top-command-menus {
+  justify-self: center !important;
+  min-width: min(46rem, 100%) !important;
+  max-width: 48rem !important;
+}
+.writing-room-button {
+  display: inline-grid !important;
+  grid-template-rows: 1fr auto !important;
+  place-items: center !important;
+  gap: 0.12rem !important;
+  min-width: 5.2rem !important;
+  min-height: 2.45rem !important;
+  padding: 0.24rem 0.55rem !important;
+  border-radius: 999px !important;
+}
+.writing-room-button .command-glyph { font-size: var(--command-icon-size, 1rem); line-height: 1; }
+.writing-room-button .command-label { font-size: var(--command-label-size, 0.54rem); line-height: 1; text-transform: uppercase; letter-spacing: 0.08em; }
+.icon-command-bar .command-glyph { font-size: var(--command-icon-size, 1rem) !important; }
+.icon-command-bar .command-label { font-size: var(--command-label-size, 0.54rem) !important; }
+.icon-command-bar .tool-menu-panel {
+  display: none !important;
+  grid-template-columns: repeat(3, minmax(8rem, 1fr)) !important;
+}
+.icon-command-bar .tool-menu.has-panel:hover > .tool-menu-panel,
+.icon-command-bar .tool-menu.has-panel:focus-within > .tool-menu-panel {
+  display: grid !important;
+}
+.icon-command-bar .tool-menu-panel button { min-width: 0 !important; justify-content: center !important; }
+#searchButton .command-label::after { content: none !important; }
+
+.settings-panel {
+  border: var(--settings-outer-border-width) solid var(--settings-viewer-border) !important;
+  border-radius: 24px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.65rem !important;
+}
+#settingsPanel[hidden] { display: none !important; }
+.settings-panel > header {
+  border-bottom: 1px solid var(--line) !important;
+  padding-bottom: 0.65rem !important;
+}
+.settings-panel > .settings-menu {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 6 !important;
+  display: flex !important;
+  gap: 0.45rem !important;
+  padding: 0.55rem !important;
+  border: 2px solid #006bff !important;
+  border-radius: 14px !important;
+  background: rgba(0,0,0,0.22) !important;
+  overflow-x: auto !important;
+}
+.settings-menu button {
+  flex: 0 0 auto !important;
+  min-width: 7rem !important;
+}
+.settings-section.settings-card {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow: auto !important;
+  border: 2px solid #ff00b8 !important;
+  border-radius: 20px !important;
+  padding: 1rem !important;
+}
+.settings-section[hidden] { display: none !important; }
+.settings-section.settings-card.is-active-settings-card { display: block !important; }
+.settings-panel .settings-section.is-collapsed > :not(h3):not(.designer-heading-row) { display: revert !important; }
+.settings-panel .settings-section h3::before,
+.settings-panel .settings-section.is-collapsed h3::before { transform: none !important; content: none !important; }
+.settings-save-button {
+  min-height: 2.35rem !important;
+  padding-inline: 1rem !important;
+  color: #000 !important;
+  background: var(--accent) !important;
+  border-color: var(--accent) !important;
+  font-weight: 900 !important;
+}
+#settingsEmojiLibraryButton { min-width: 2.35rem !important; }
+
+.writing-room-panel {
+  resize: both !important;
+  overflow: auto !important;
+  width: min(var(--writing-room-width, 520px), calc(100vw - 1.5rem)) !important;
+  height: min(var(--writing-room-height, 640px), calc(100vh - 1.5rem)) !important;
+  min-width: var(--writing-room-min-width, 240px) !important;
+  min-height: var(--writing-room-min-height, 240px) !important;
+  max-width: min(var(--writing-room-max-width, 1100px), calc(100vw - 1.5rem)) !important;
+  max-height: min(var(--writing-room-max-height, 900px), calc(100vh - 1.5rem)) !important;
+}
+.writing-room-cards { height: auto !important; max-height: none !important; overflow: auto !important; }
+
+.caps-dialog.delete-confirm-dialog {
+  width: min(var(--delete-dialog-width), calc(100vw - 2rem)) !important;
+  background: var(--delete-dialog-bg) !important;
+  border-color: var(--delete-dialog-border) !important;
+  color: var(--delete-dialog-text) !important;
+}
+.delete-tree-box {
+  background: var(--delete-dialog-tree-bg) !important;
+  border-color: var(--delete-dialog-tree-border) !important;
+}
+
+.import-placeholder-grid {
+  display: grid;
+  grid-template-columns: minmax(12rem, 0.85fr) minmax(14rem, 1fr);
+  gap: 1rem;
+  align-items: stretch;
+}
+.import-primary-buttons { display: grid; gap: 0.55rem; align-content: start; }
+.import-mini-buttons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.4rem; margin-top: 0.4rem; }
+.import-mini-buttons button { padding-inline: 0.35rem; }
+.import-preview-box {
+  min-height: 12rem;
+  display: grid;
+  place-items: center;
+  border: 1px dashed var(--line);
+  border-radius: 18px;
+  color: var(--muted);
+  background: rgba(0,0,0,0.22);
+}
+.icon-text-input { text-align: center; font-size: 1.3rem !important; }
+
+.emoji-picker {
+  width: min(36rem, calc(100vw - 1rem)) !important;
+  max-height: min(680px, 82vh) !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  resize: both !important;
+}
+.emoji-grid {
+  grid-template-columns: repeat(12, 2rem) !important;
+  justify-content: start !important;
+}
+.emoji-section.emoji-favorites {
+  padding: 0.5rem !important;
+  border: 1px solid var(--accent) !important;
+  border-radius: 14px !important;
+  background: rgba(232, 143, 105, 0.16) !important;
+}
+.emoji-section.emoji-favorites .emoji-grid {
+  grid-auto-rows: 2rem !important;
+  max-height: calc((2rem * 3) + (0.35rem * 2)) !important;
+  overflow: hidden !important;
+}
+.emoji-picker button[data-emoji] {
+  width: 2rem !important;
+  height: 2rem !important;
+  min-width: 2rem !important;
+  min-height: 2rem !important;
+  padding: 0 !important;
+}
+@media (max-width: 900px) {
+  .writer-header.toolbar { grid-template-columns: 1fr !important; }
+  .context-status, .icon-command-bar.top-command-menus { justify-self: stretch !important; width: 100% !important; }
+  .import-placeholder-grid { grid-template-columns: 1fr; }
+}

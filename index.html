@@ -1,654 +1,611 @@
-<!doctype html>
+<!DOCTYPE html>
+
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Capsanoto</title>
-  <link rel="stylesheet" href="styles.css">
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<title>Capsanoto</title>
+<link href="styles.css" rel="stylesheet"/>
 </head>
 <body class="is-unlocked">
-  <main id="passwordScreen" class="password-screen" aria-labelledby="passwordTitle" hidden>
-    <form id="passwordForm" class="password-card" data-shared-password="Omega593!">
-      <img src="lanternlogo small.png" alt="Forever Bound lantern logo">
-      <p class="eyebrow">Forever Bound</p>
-      <h1 id="passwordTitle">Enter Capsanoto</h1>
-      <p>This preview opens directly into the Writing Room.</p>
-      <label for="passwordInput">Password</label>
-      <input id="passwordInput" type="password" autocomplete="current-password" required>
-      <button type="submit">Unlock Editor</button>
-      <p id="passwordError" class="error" role="alert"></p>
-    </form>
-  </main>
-
-  <main id="editorApp" class="writer-shell" aria-label="Forever Bound writing editor">
-    <header class="writer-header toolbar" aria-label="Capsanoto command bar">
-      <div class="document-controls">
-        <strong class="app-name"><img src="https://raw.githubusercontent.com/cinaedvsstudios/forever-bound-wiki/refs/heads/main/iconcapsanoto.png" alt="Capsanoto icon"><span class="brand-word">Capsanoto</span><span class="app-version">v2.0</span></strong>
-        <button id="writingRoomButton" class="writing-room-button" type="button" aria-expanded="false" aria-controls="writingRoomPanel">Writing Room</button>
-        <label for="documentSelect" class="sr-only">Current document</label>
-        <select id="documentSelect" title="Document Switcher" hidden></select>
-      </div>
-      <div id="contextStatus" class="context-status" role="status" aria-live="polite">Cursor: Writing Room ready</div>
-      <nav class="top-command-menus icon-command-bar" aria-label="Writing Room controls">
-        <div class="tool-menu has-panel" data-menu-kind="format">
-          <button class="tool-menu-trigger command-icon" type="button" aria-haspopup="true" title="Format" aria-label="Format" data-tool-name="Format tools"><span class="command-glyph">🪶</span><span class="command-label">Format</span></button>
-          <div class="tool-menu-panel">
-            <button data-command="bold" type="button" title="Bold" aria-label="Bold" data-tool-name="Bold Mark"><strong>B</strong> Bold</button>
-            <button data-command="italic" type="button" title="Italic" aria-label="Italic" data-tool-name="Italic Mark"><em>I</em> Italic</button>
-            <button data-block="h1" type="button" title="Heading 1" aria-label="Heading 1" data-tool-name="Chapter Heading">H1 Chapter</button>
-            <button data-block="h2" type="button" title="Heading 2" aria-label="Heading 2" data-tool-name="Section Heading">H2 Section</button>
-            <button data-block="p" type="button" title="Paragraph" aria-label="Paragraph" data-tool-name="Body Text">¶ Normal Text</button>
-            <button data-command="insertUnorderedList" type="button" title="Bullet List" aria-label="Bullet List" data-tool-name="Lore List">☰ List</button>
-          </div>
-        </div>
-        <div class="tool-menu has-panel" data-menu-kind="insert">
-          <button class="tool-menu-trigger command-icon" type="button" aria-haspopup="true" title="Insert" aria-label="Insert" data-tool-name="Insert tools"><span class="command-glyph">🗡️</span><span class="command-label">Insert</span></button>
-          <div class="tool-menu-panel">
-            <button id="tableButton" type="button" title="Table" aria-label="Table" data-tool-name="Lore Table">▦ Lore Table</button>
-            <button data-command="insertHorizontalRule" type="button" title="Horizontal Rule" aria-label="Horizontal Rule" data-tool-name="Divider Rule">— Rule</button>
-            <button id="imageButton" type="button" title="Image" aria-label="Image" data-tool-name="Image Embed">🖼️ Image Embed</button>
-            <button id="emojiButton" type="button" title="Emoji" aria-label="Emoji" data-tool-name="Emoji Spark">✨ Emoji Spark</button>
-            <button id="blockButton" type="button" title="TCards" aria-label="TCards" data-tool-name="TCard">𝞃 TCard</button>
-            <button id="emphasisButton" type="button" title="Emphasis Box" aria-label="Emphasis Box">ε Emphasis</button>
-          </div>
-        </div>
-        <button id="subnotoButton" class="tool-menu-trigger command-icon direct-command" type="button" title="Subnoto" aria-label="Subnoto" data-tool-name="Subnoto clipboard"><span class="command-glyph">📜</span><span class="command-label">Subnoto</span></button>
-        <button id="searchButton" class="tool-menu-trigger command-icon direct-command" type="button" title="Search" aria-label="Search" data-tool-name="Specnoto search preview"><span class="command-glyph">🕯️</span><span class="command-label">Search</span></button>
-        <button id="topHelpButton" class="tool-menu-trigger command-icon direct-command" type="button" title="Help / Guidebook" aria-label="Help / Guidebook" data-tool-name="Help / Guidebook"><span class="command-glyph">🗿</span><span class="command-label">Help</span></button>
-        <button id="settingsButton" class="tool-menu-trigger command-icon direct-command" type="button" title="Settings" aria-label="Settings" data-tool-name="Capsanoto Settings"><span class="command-glyph">🗝️</span><span class="command-label">Settings</span></button>
-      </nav>
-      <span id="saveStatus" class="save-status"></span>
-      <input id="imageInput" type="file" accept="image/*" hidden>
-      <span id="linkButton" hidden></span><span id="editLinkButton" hidden></span><span id="pillLinkButton" hidden></span><span id="removeLinkButton" hidden></span><span id="bookmarkButton" hidden></span>
-    </header>
-
-    <menu id="selectionMenu" class="selection-menu" hidden>
-      <li class="selection-menu-heading">Selection actions</li>
-      <li><button type="button" data-context-action="bookmark"><span>⚓</span><strong>Bookmark</strong><small>Create a jump heading.</small></button></li>
-      <li><button type="button" data-context-action="transclusion"><span>𝞃</span><strong>TCard</strong><small>Save selection as a reusable TCard.</small></button></li>
-      <li><button type="button" data-context-action="link"><span>🔗</span><strong>Link</strong><small>Point selection at a path.</small></button></li>
-      <li><button type="button" data-context-action="pill"><span>💊</span><strong>Link Pill</strong><small>Make a rounded reference card.</small></button></li>
-      <li><button type="button" data-context-action="edit-link"><span>🛠️</span><strong>Edit Link</strong><small>Edit an existing link or pill.</small></button></li>
-      <li><button type="button" data-context-action="pill-color"><span>🎨</span><strong>Pill Color</strong><small>Change selected pill color.</small></button></li>
-    </menu>
-
-    <div id="dialogOverlay" class="dialog-overlay" hidden>
-      <form id="dialogBox" class="caps-dialog">
-        <header>
-          <h2 id="dialogTitle">Capsanoto Action</h2>
-          <button id="dialogCancelButton" class="icon-button" type="button" aria-label="Cancel dialog">×</button>
-        </header>
-        <div id="dialogFields" class="dialog-fields"></div>
-        <footer>
-          <button id="dialogConfirmButton" type="submit">Apply</button>
-        </footer>
-      </form>
-    </div>
-
-    <aside id="writingRoomPanel" class="writing-room-panel" aria-label="Writing Room document tabs" hidden>
-      <header id="writingRoomPanelHeader">
-        <div>
-          <p class="eyebrow">Writing Room</p>
-          <h2 id="writingRoomTitle">Writing Room</h2>
-        </div>
-        <div class="panel-header-actions"><button id="newDocumentButton" class="icon-button" type="button" title="New Document" aria-label="New Document" data-tool-name="Document Forge">📄</button><button id="newFolderButton" class="icon-button" type="button" title="New Folder" aria-label="New Folder">📁</button><button id="newTabButton" class="icon-button" type="button" title="New Tab" aria-label="New Tab">▱</button><button id="editWritingRoomButton" class="icon-button" type="button" aria-pressed="false" aria-label="Edit filing cabinet">✎</button><button id="saveWritingRoomLayoutButton" class="icon-button" type="button" title="Save default position and size" aria-label="Save Writing Room panel default position and size" hidden>💾</button><button id="closeWritingRoomPanel" class="icon-button" type="button" aria-label="Close Writing Room">×</button></div>
-      </header>
-      <div id="writingRoomEditBar" class="writing-room-editbar" hidden></div><div id="writingRoomCards" class="writing-room-cards"></div>
-    </aside>
-
-    <nav id="bookmarkBar" class="bookmark-bar" aria-label="Document bookmarks" hidden></nav>
-
-    <section class="title-strip">
-      <input id="titleInput" class="title-input" aria-label="Document title">
-      <input id="tagsInput" class="tags-input" aria-label="Document tags" placeholder="tags: character, location, episode" hidden>
-    </section>
-
-    <article id="editor" class="editor" contenteditable="true" spellcheck="true" aria-label="Writing area"></article>
-
-    <section id="documentEndBar" class="document-end-bar" aria-label="End of document controls"></section>
-
-    <div id="colorImagePopup" class="color-image-popup" hidden>
-      <button id="closeColorImagePopup" class="icon-button" type="button" aria-label="Close color reference image">×</button>
-      <img id="colorImagePreview" alt="Imported color reference">
-    </div>
-
-    <aside id="settingsPanel" class="settings-panel" aria-label="Capsanoto settings" hidden>
-      <header>
-        <div class="settings-title-row">
-          <h2>Settings</h2>
-          <div class="settings-search-tools" role="search">
-            <input id="settingsSearchInput" type="search" placeholder="Search settings…" aria-label="Search settings">
-            <button id="settingsSearchPrev" type="button" title="Previous setting">‹</button>
-            <button id="settingsSearchNext" type="button" title="Next setting">›</button>
-          </div>
-        </div>
-        <button id="closeSettingsPanel" class="icon-button" type="button" aria-label="Close settings">×</button>
-      </header>
-
-      <nav class="settings-menu" aria-label="Settings sections">
-        <button type="button" data-settings-tab="design" aria-pressed="true">Design</button>
-        <button type="button" data-settings-tab="export" aria-pressed="false">Download</button>
-        <button type="button" data-settings-tab="support" aria-pressed="false">Help</button>
-        <button type="button" data-settings-tab="import" aria-pressed="false">Import File</button>
-        <button type="button" data-settings-tab="emoji" aria-pressed="false">Emoji</button>
-      </nav>
-
-      <section class="settings-section settings-card" data-settings-section="export" hidden>
-        <h3>Smart Download Builder</h3>
-        <p class="panel-help">Choose documents and/or TCards, reorder them as vertical pills, then download a Caps file, text, HTML, or Word-compatible document.</p>
-        <div class="export-picker">
-          <select id="exportSourceType" aria-label="Export source type">
-            <option value="document">Document</option>
-            <option value="block">TCard</option>
-          </select>
-          <select id="exportSourceSelect" aria-label="Export source"></select>
-          <button id="addExportItemButton" type="button">Add</button>
-        </div>
-        <div id="exportQueue" class="export-queue" aria-label="Selected export order"></div>
-        <div class="export-actions">
-          <button id="exportCapsButton" type="button">Download Caps</button>
-          <button id="exportTxtButton" type="button">Download TXT</button>
-          <button id="exportHtmlButton" type="button">Download HTML</button>
-          <button id="exportDocButton" type="button">Download Word</button>
-        </div>
-      </section>
-
-      <section class="settings-section settings-card design-section" data-settings-section="design">
-        <div class="designer-heading-row">
-          <h3>Element Designer</h3>
-          <div class="designer-expand-actions">
-            <button id="expandDesignerCards" type="button">Expand All</button>
-            <button id="collapseDesignerCards" type="button">Collapse All</button>
-            <button id="applyDesignButton" type="button">Apply</button>
-            <button id="resetDesignButton" type="button">Reset</button>
-          </div>
-        </div>
-
-        <div class="design-editor-grid">
-          <div class="design-controls">
-
-            <details class="element-designer-card" data-designer-card="system">
-              <summary>System</summary>
-              <p class="design-section-note">Defaults for the whole app unless a section below overrides them.</p>
-
-              <label>System Font <select id="designFontFamily"><option value="Inter, system-ui, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif">Inter (recommended)</option><option value="Arial, Helvetica, sans-serif">Arial</option><option value="system-ui, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif">System UI</option><option value="Aptos, Calibri, Arial, sans-serif">Aptos / Calibri</option><option value="Courier New, Courier, monospace">Courier New</option><option value="Verdana, Geneva, sans-serif">Verdana</option><option value="Georgia, serif">Georgia</option><option value="Tahoma, Geneva, sans-serif">Tahoma</option><option value="Trebuchet MS, Arial, sans-serif">Trebuchet MS</option><option value="Times New Roman, Times, serif">Times New Roman</option></select></label>
-              <label>Default Text Size <input id="designFontSize" type="number" min="8" max="48" value="14"></label>
-              <label>Default Text Color <input id="designTextColor" type="color" value="#fbf4d6"></label>
-              <label>Default Label Color <input id="labelTextColor" type="color" value="#a97b38"></label>
-              <label>Default Dynamic Text <input id="dynamicTextColor" type="color" value="#e88f69"></label>
-              <label>Default Button BG <input id="designButtonBg" type="color" value="#2c2c2c"></label>
-              <label>Default Button Border <input id="designBorderColor" type="color" value="#e88f69"></label>
-              <label>Default Button Text <input data-design-key="buttonTextColor" data-css-var="--button-text-color" type="color" value="#fbf4d6"></label>
-              <label>Default Button Text Size <input data-design-key="buttonTextSize" data-css-var="--button-text-size" data-suffix="px" type="number" min="8" max="32" value="14"></label>
-              <button id="designBoldToggle" class="toggle-pill" type="button" aria-pressed="true">Default Button Bold</button><input id="designBold" type="checkbox" checked hidden>
-              <label>Default Window BG <input data-design-key="windowBg" data-css-var="--window-bg" type="color" value="#211812"></label>
-              <label>Default Window Border <input data-design-key="windowBorder" data-css-var="--window-border" type="color" value="#724837"></label>
-              <label>Default Window Shadow <input data-design-key="windowShadow" data-css-var="--window-shadow-color" type="color" value="#000000"></label>
-              <label>Default Scrollbar Track <input id="scrollbarTrackColor" type="color" value="#211812"></label>
-              <label>Default Scrollbar Thumb <input id="scrollbarThumbColor" type="color" value="#e88f69"></label>
-              <label>Global Background Image URL <input id="designBgImage" type="text" placeholder="wallpapersm.jpg or https://..."></label>
-              <label>Top Title-Bar Image URL <input data-design-key="topBarImage" data-css-var="--top-bar-image-url" type="text" placeholder="optional image URL"></label>
-
-              <h4>Dialogue Windows</h4>
-              <label>Dialogue BG <input id="dialogBgColor" type="color" value="#211812"></label>
-              <label>Dialogue Border <input id="dialogBorderColor" type="color" value="#e88f69"></label>
-              <label>Dialogue Shadow <input id="dialogShadowColor" type="color" value="#000000"></label>
-              <label>Dialogue Text <input id="dialogTextColor" type="color" value="#fbf4d6"></label>
-              <label>Dialogue Text Size <input id="dialogFontSize" type="number" min="8" max="32" value="14"></label>
-              <button id="dialogBoldToggle" class="toggle-pill" type="button" aria-pressed="true">Dialogue Bold</button><input id="dialogBold" type="checkbox" checked hidden>
-              <label>Dialogue Button BG <input id="dialogButtonBg" type="color" value="#2c2c2c"></label>
-              <label>Dialogue Button Border <input id="dialogButtonBorder" type="color" value="#e88f69"></label>
-              <label>Dialogue Button Text <input id="dialogButtonText" type="color" value="#fbf4d6"></label>
-              <label>Dialogue Button Text Size <input data-design-key="dialogButtonTextSize" data-css-var="--dialog-button-text-size" data-suffix="px" type="number" min="8" max="32" value="14"></label>
-              <label>Dialogue Button Shadow <input id="dialogButtonShadow" type="color" value="#000000"></label>
-            </details>
-
-            <details class="element-designer-card" data-designer-card="top-menu">
-              <summary>Top Menu Bar</summary>
-              <div class="inherit-controls"><input type="checkbox" data-inherit-section="top-menu" hidden><button type="button" class="toggle-pill inherit-row inherit-toggle" data-inherit-target="top-menu" aria-pressed="false">Use Defaults</button></div>
-              <p class="design-section-note">Capsanoto logo/title, Writing Room button, status box, command bar, dropdowns, and right-side icon buttons.</p>
-              <label>Capsanoto Logo Size % <input id="titleIconScale" type="number" min="50" max="250" value="143"></label>
-              <label>Capsanoto Title Color <input data-design-key="titleColor" data-css-var="--title-color" type="color" value="#563485"></label>
-              <label>Capsanoto Title Size <input data-design-key="titleSize" data-css-var="--title-text-size" data-suffix="rem" type="number" min="0.7" max="3" step="0.05" value="1"></label>
-              <label>Top Bar BG <input data-design-key="topBarBg" data-css-var="--top-bar-bg" type="color" value="#211812"></label>
-              <label>Top Bar Border <input data-design-key="topBarBorder" data-css-var="--top-bar-border" type="color" value="#724837"></label>
-              <label>Writing Room Button BG <input data-design-key="writingRoomButtonBg" data-css-var="--writing-room-button-bg" type="color" value="#e88f69"></label>
-              <label>Writing Room Button Border <input data-design-key="writingRoomButtonBorder" data-css-var="--writing-room-button-border" type="color" value="#724837"></label>
-              <label>Writing Room Button Text <input data-design-key="writingRoomButtonText" data-css-var="--writing-room-button-text" type="color" value="#000000"></label>
-              <label>Writing Room Button Text Size <input data-design-key="writingRoomButtonTextSize" data-css-var="--writing-room-button-text-size" data-suffix="rem" type="number" min="0.7" max="2" step="0.05" value="1"></label>
-              <label>Status Box BG <input id="statusBgColor" type="color" value="#000000"></label>
-              <label>Status Box Border <input id="statusBorderColor" type="color" value="#a97b38"></label>
-              <label>Status Box Text <input id="statusTextColor" type="color" value="#fbf4d6"></label>
-              <label>Status Box Text Size <input data-design-key="statusTextSize" data-css-var="--status-text-size" data-suffix="rem" type="number" min="0.65" max="1.5" step="0.05" value="0.86"></label>
-              <label>Menu Bar BG <input data-design-key="commandBarBg" data-css-var="--command-bar-bg" type="color" value="#28133f"></label>
-              <label>Menu Bar Border <input data-design-key="commandBarBorder" data-css-var="--command-bar-border" type="color" value="#e88f69"></label>
-              <label>Menu Text <input data-design-key="commandBarText" data-css-var="--command-bar-text" type="color" value="#fbf4d6"></label>
-              <label>Menu Text Size <input data-design-key="commandBarTextSize" data-css-var="--command-bar-text-size" data-suffix="rem" type="number" min="0.7" max="1.7" step="0.05" value="0.95"></label>
-              <label>Command Icon Size <input data-design-key="commandIconSize" data-css-var="--command-icon-size" data-suffix="rem" type="number" min="0.6" max="2.4" step="0.05" value="1.05"></label>
-              <label>Command Label Size <input data-design-key="commandLabelSize" data-css-var="--command-label-size" data-suffix="rem" type="number" min="0.35" max="1" step="0.01" value="0.48"></label>
-              <label>Dropdown Button BG <input data-design-key="dropdownButtonBg" data-css-var="--dropdown-button-bg" type="color" value="#2c2c2c"></label>
-              <label>Dropdown Button Border <input data-design-key="dropdownButtonBorder" data-css-var="--dropdown-button-border" type="color" value="#724837"></label>
-              <label>Dropdown Button Text <input data-design-key="dropdownButtonText" data-css-var="--dropdown-button-text" type="color" value="#fbf4d6"></label>
-              <label>Dropdown Button Text Size <input data-design-key="dropdownButtonTextSize" data-css-var="--dropdown-button-text-size" data-suffix="rem" type="number" min="0.65" max="1.5" step="0.05" value="0.9"></label>
-              <label>Right Icon Button BG <input data-design-key="rightIconButtonBg" data-css-var="--right-icon-button-bg" type="color" value="#2c2c2c"></label>
-              <label>Right Icon Button Border <input data-design-key="rightIconButtonBorder" data-css-var="--right-icon-button-border" type="color" value="#724837"></label>
-              <label>Right Icon Size <input data-design-key="rightIconSize" data-css-var="--right-icon-size" data-suffix="rem" type="number" min="0.7" max="2" step="0.05" value="1"></label>
-              <div class="placeholder-card">Menu button ordering and custom blank buttons will be added later.</div>
-            </details>
-
-            <details class="element-designer-card" data-designer-card="writing-room">
-              <summary>Writing Room / Filing Cabinet</summary>
-              <div class="inherit-controls"><input type="checkbox" data-inherit-section="writing-room" hidden><button type="button" class="toggle-pill inherit-row inherit-toggle" data-inherit-target="writing-room" aria-pressed="false">Use Defaults</button></div>
-              <p class="design-section-note">Filing Cabinet window, folders, tabs, document cards, metadata pills, trash, resize behavior, and jump rail.</p>
-
-              <h4>Window</h4>
-              <label>Writing Room Window BG <input id="panelBgColor" type="color" value="#211812"></label>
-              <label>Writing Room Window Border <input id="panelBorderColor" type="color" value="#724837"></label>
-              <label>Writing Room Window Shadow <input data-design-key="writingRoomShadow" data-css-var="--writing-room-shadow-color" type="color" value="#000000"></label>
-              <label>Writing Room Width <input data-design-key="writingRoomWidth" data-css-var="--writing-room-width" data-suffix="px" type="number" min="280" max="1600" value="520"></label>
-              <label>Writing Room Height <input data-design-key="writingRoomHeight" data-css-var="--writing-room-height" data-suffix="px" type="number" min="280" max="1200" value="640"></label>
-              <label>Writing Room Min Width <input data-design-key="writingRoomMinWidth" data-css-var="--writing-room-min-width" data-suffix="px" type="number" min="240" max="900" value="300"></label>
-              <label>Writing Room Min Height <input data-design-key="writingRoomMinHeight" data-css-var="--writing-room-min-height" data-suffix="px" type="number" min="220" max="900" value="280"></label>
-              <label>Writing Room Max Width <input data-design-key="writingRoomMaxWidth" data-css-var="--writing-room-max-width" data-suffix="px" type="number" min="360" max="1800" value="980"></label>
-              <label>Writing Room Max Height <input data-design-key="writingRoomMaxHeight" data-css-var="--writing-room-max-height" data-suffix="px" type="number" min="360" max="1400" value="720"></label>
-              <label>Title Color <input data-design-key="writingRoomTitleColor" data-css-var="--writing-room-title-color" type="color" value="#e88f69"></label>
-              <label>Title Text Size <input data-design-key="writingRoomTitleSize" data-css-var="--writing-room-title-size" data-suffix="rem" type="number" min="0.8" max="2" step="0.05" value="1.05"></label>
-
-              <h4>Icons</h4>
-              <label>Header Icon Size <input data-design-key="writingRoomHeaderIconSize" data-css-var="--writing-room-header-icon-size" data-suffix="rem" type="number" min="0.8" max="2.2" step="0.05" value="1"></label>
-              <label>Folder Icon Size <input data-design-key="folderIconSize" data-css-var="--folder-icon-size" data-suffix="rem" type="number" min="0.8" max="2" step="0.05" value="1"></label>
-              <label>Tab Icon Size <input data-design-key="tabIconSize" data-css-var="--tab-icon-size" data-suffix="rem" type="number" min="0.8" max="2" step="0.05" value="1"></label>
-              <label>Document Icon Size <input data-design-key="docIconSize" data-css-var="--doc-icon-size" data-suffix="rem" type="number" min="0.8" max="2" step="0.05" value="1"></label>
-              <label>Rail / Jump Icon Size <input data-design-key="railIconSize" data-css-var="--rail-icon-size" data-suffix="rem" type="number" min="0.65" max="1.8" step="0.05" value="0.9"></label>
-
-              <h4>Folders</h4>
-              <label>Folder Row Background <input data-design-key="folderRowBg" data-css-var="--folder-row-bg" type="color" value="#2c2c2c"></label>
-              <label>Folder Row Border <input data-design-key="folderRowBorder" data-css-var="--folder-row-border" type="color" value="#724837"></label>
-              <label>Folder Text Color <input data-design-key="folderTextColor" data-css-var="--folder-text-color" type="color" value="#fbf4d6"></label>
-              <label>Folder Text Size <input data-design-key="folderTextSize" data-css-var="--folder-text-size" data-suffix="rem" type="number" min="0.7" max="1.6" step="0.05" value="0.95"></label>
-
-              <h4>Tabs</h4>
-              <label>Tab Row Background <input data-design-key="tabRowBg" data-css-var="--tab-row-bg" type="color" value="#28133f"></label>
-              <label>Tab Row Border <input data-design-key="tabRowBorder" data-css-var="--tab-row-border" type="color" value="#563485"></label>
-              <label>Tab Text Color <input data-design-key="tabTextColor" data-css-var="--tab-text-color" type="color" value="#e7a2ff"></label>
-              <label>Tab Text Size <input data-design-key="tabTextSize" data-css-var="--tab-text-size" data-suffix="rem" type="number" min="0.7" max="1.5" step="0.05" value="0.9"></label>
-
-              <h4>Documents</h4>
-              <label>Document Row Background <input data-design-key="docRowBg" data-css-var="--doc-row-bg" type="color" value="#2c2c2c"></label>
-              <label>Document Row Border <input data-design-key="docRowBorder" data-css-var="--doc-row-border" type="color" value="#724837"></label>
-              <label>Document Text Color <input data-design-key="docTextColor" data-css-var="--doc-text-color" type="color" value="#fbf4d6"></label>
-              <label>Document Text Size <input data-design-key="docTextSize" data-css-var="--doc-text-size" data-suffix="rem" type="number" min="0.65" max="1.4" step="0.05" value="0.9"></label>
-              <label>Expanded Document Text Color <input data-design-key="expandedDocTextColor" data-css-var="--expanded-doc-text-color" type="color" value="#b88b65"></label>
-              <label>Expanded Document Text Size <input data-design-key="expandedDocTextSize" data-css-var="--expanded-doc-text-size" data-suffix="rem" type="number" min="0.6" max="1.3" step="0.05" value="0.82"></label>
-
-              <h4>Metadata / Trash</h4>
-              <label>Metadata Pill Background <input data-design-key="metadataPillBg" data-css-var="--metadata-pill-bg" type="color" value="#563485"></label>
-              <label>Metadata Pill Border <input data-design-key="metadataPillBorder" data-css-var="--metadata-pill-border" type="color" value="#724837"></label>
-              <label>Metadata Pill Text Color <input data-design-key="metadataPillTextColor" data-css-var="--metadata-pill-text-color" type="color" value="#fbf4d6"></label>
-              <label>Metadata Pill Text Size <input data-design-key="metadataPillTextSize" data-css-var="--metadata-pill-text-size" data-suffix="rem" type="number" min="0.6" max="1.3" step="0.05" value="0.78"></label>
-              <label>Trash Section Background <input data-design-key="trashBg" data-css-var="--trash-bg" type="color" value="#28133f"></label>
-              <label>Trash Section Border <input data-design-key="trashBorder" data-css-var="--trash-border" type="color" value="#563485"></label>
-
-              <h4>Jump Rail</h4>
-              <label>Scrollbar / Jump Rail Line Color <input data-design-key="jumpRailLine" data-css-var="--jump-rail-line" type="color" value="#69635f"></label>
-              <label>Jump Rail Button Background <input data-design-key="jumpRailButtonBg" data-css-var="--jump-rail-button-bg" type="color" value="#2c2c2c"></label>
-              <label>Jump Rail Button Border <input data-design-key="jumpRailButtonBorder" data-css-var="--jump-rail-button-border" type="color" value="#724837"></label>
-              <label>Jump Rail Icon Color <input data-design-key="jumpRailIconColor" data-css-var="--jump-rail-icon-color" type="color" value="#fbf4d6"></label>
-            </details>
-
-            <details class="element-designer-card" data-designer-card="subnoto">            <details class="element-designer-card" data-designer-card="subnoto">
-              <summary>Subnoto</summary>
-              <p class="placeholder-card">Reserved for the future Subnoto clipboard workspace.</p>
-            </details>
-
-            <details class="element-designer-card" data-designer-card="specnoto">
-              <summary>Specnoto</summary>
-              <p class="placeholder-card">Reserved for the future Specnoto search/find workspace.</p>
-            </details>
-
-            <details class="element-designer-card" data-designer-card="writing-area">
-              <summary>Writing Area</summary>
-              <div class="inherit-controls"><input type="checkbox" data-inherit-section="writing-area" hidden><button type="button" class="toggle-pill inherit-row inherit-toggle" data-inherit-target="writing-area" aria-pressed="false">Use Defaults</button></div>
-              <p class="design-section-note">Main editor, titles, headings, links, Link Pills, emphasis boxes, tables, and the bottom details bar.</p>
-              <label>Writing Surface BG <input data-design-key="writingSurfaceBg" data-css-var="--writing-surface-bg" type="color" value="#211812"></label>
-              <label>Overlay Transparency % <input data-design-key="writingOverlayOpacity" data-css-var="--writing-overlay-opacity" type="number" min="0" max="100" value="92"></label>
-              <label>Writing Surface Border <input data-design-key="writingSurfaceBorder" data-css-var="--writing-surface-border" type="color" value="#724837"></label>
-              <label>Document Title Color <input data-design-key="docTitleColor" data-css-var="--doc-title-color" type="color" value="#fbf4d6"></label>
-              <label>Document Title Size <input data-design-key="docTitleSize" data-css-var="--doc-title-size" data-suffix="rem" type="number" min="1" max="4" step="0.05" value="2.1"></label>
-              <label>Normal Text Color <input data-design-key="editorTextColor" data-css-var="--editor-text-color" type="color" value="#fbf4d6"></label>
-              <label>Normal Text Size <input data-design-key="editorTextSize" data-css-var="--editor-text-size" data-suffix="rem" type="number" min="0.7" max="1.5" step="0.05" value="1"></label>
-              <label>H1 Color <input data-design-key="h1Color" data-css-var="--h1-color" type="color" value="#fbf4d6"></label>
-              <label>H1 Size <input data-design-key="h1Size" data-css-var="--h1-size" data-suffix="rem" type="number" min="1" max="3" step="0.05" value="1.65"></label>
-              <label>H2 Color <input data-design-key="h2Color" data-css-var="--h2-color" type="color" value="#fbf4d6"></label>
-              <label>H2 Size <input data-design-key="h2Size" data-css-var="--h2-size" data-suffix="rem" type="number" min="0.9" max="2.5" step="0.05" value="1.35"></label>
-              <label>H3 Color <input data-design-key="h3Color" data-css-var="--h3-color" type="color" value="#fbf4d6"></label>
-              <label>H3 Size <input data-design-key="h3Size" data-css-var="--h3-size" data-suffix="rem" type="number" min="0.85" max="2" step="0.05" value="1.15"></label>
-              <label>Normal Link Color <input data-design-key="linkColor" data-css-var="--link-color" type="color" value="#e88f69"></label>
-              <label>Normal Link Size <input data-design-key="linkSize" data-css-var="--link-size" data-suffix="rem" type="number" min="0.7" max="1.5" step="0.05" value="1"></label>
-              <label>Link Pill BG <input data-design-key="linkPillBg" data-css-var="--link-pill-bg" type="color" value="#e88f69"></label>
-              <label>Link Pill Border <input data-design-key="linkPillBorder" data-css-var="--link-pill-border" type="color" value="#724837"></label>
-              <label>Link Pill Text <input data-design-key="linkPillText" data-css-var="--link-pill-text" type="color" value="#000000"></label>
-              <label>Link Pill Text Size <input data-design-key="linkPillTextSize" data-css-var="--link-pill-text-size" data-suffix="rem" type="number" min="0.65" max="1.5" step="0.05" value="0.9"></label>
-              <label>Emphasis BG <input id="emphasisBgColor" type="color" value="#2f251c"></label>
-              <label>Emphasis Border <input id="emphasisBorderColor" type="color" value="#563485"></label>
-              <label>Emphasis Text <input id="emphasisTextColor" type="color" value="#fbf4d6"></label>
-              <label>Emphasis Text Size <input data-design-key="emphasisTextSize" data-css-var="--emphasis-text-size" data-suffix="rem" type="number" min="0.7" max="1.5" step="0.05" value="1"></label>
-              <label>Table BG <input data-design-key="tableBg" data-css-var="--table-bg" type="color" value="#211812"></label>
-              <label>Table Border <input data-design-key="tableBorder" data-css-var="--table-border" type="color" value="#724837"></label>
-              <label>Table Heading BG <input data-design-key="tableHeadBg" data-css-var="--table-head-bg" type="color" value="#2f251c"></label>
-              <label>Table Heading Text <input data-design-key="tableHeadText" data-css-var="--table-head-text" type="color" value="#fbf4d6"></label>
-              <label>Table Text Size <input data-design-key="tableTextSize" data-css-var="--table-text-size" data-suffix="rem" type="number" min="0.65" max="1.4" step="0.05" value="0.95"></label>
-            </details>
-
-            <details class="element-designer-card" data-designer-card="help">
-              <summary>Help / Guidebook</summary>
-              <div class="inherit-controls"><input type="checkbox" data-inherit-section="help" hidden><button type="button" class="toggle-pill inherit-row inherit-toggle" data-inherit-target="help" aria-pressed="false">Use Defaults</button></div>
-              <p class="design-section-note">Help panel surface, logo, title, headings, guide text, rules, and scrollbars.</p>
-              <label>Help Window BG <input data-design-key="helpBg" data-css-var="--help-bg" type="color" value="#211812"></label>
-              <label>Help Window Border <input data-design-key="helpBorder" data-css-var="--help-border" type="color" value="#724837"></label>
-              <label>Help Logo Size <input data-design-key="helpLogoSize" data-css-var="--help-logo-size" data-suffix="rem" type="number" min="1" max="5" step="0.1" value="2.2"></label>
-              <label>Help Title Color <input data-design-key="helpTitleColor" data-css-var="--help-title-color" type="color" value="#e88f69"></label>
-              <label>Help Title Size <input data-design-key="helpTitleSize" data-css-var="--help-title-size" data-suffix="rem" type="number" min="1" max="3" step="0.05" value="1.4"></label>
-              <label>Help Text Color <input data-design-key="helpTextColor" data-css-var="--help-text-color" type="color" value="#fbf4d6"></label>
-              <label>Help Text Size <input data-design-key="helpTextSize" data-css-var="--help-text-size" data-suffix="rem" type="number" min="0.7" max="1.5" step="0.05" value="1"></label>
-              <label>Help Heading Color <input data-design-key="helpHeadingColor" data-css-var="--help-heading-color" type="color" value="#fbf4d6"></label>
-              <label>Help Heading Size <input data-design-key="helpHeadingSize" data-css-var="--help-heading-size" data-suffix="rem" type="number" min="0.9" max="2" step="0.05" value="1.15"></label>
-              <label>Help Rule Color <input data-design-key="helpRuleColor" data-css-var="--help-rule-color" type="color" value="#724837"></label>
-              <h4>Window Size</h4>
-              <label>Help Width <input data-design-key="helpWidth" data-css-var="--help-width" data-suffix="px" type="number" min="360" max="1600" value="760"></label>
-              <label>Help Height <input data-design-key="helpHeight" data-css-var="--help-height" data-suffix="px" type="number" min="300" max="1200" value="720"></label>
-              <label>Help Min Width <input data-design-key="helpMinWidth" data-css-var="--help-min-width" data-suffix="px" type="number" min="260" max="900" value="360"></label>
-              <label>Help Min Height <input data-design-key="helpMinHeight" data-css-var="--help-min-height" data-suffix="px" type="number" min="220" max="900" value="280"></label>
-              <label>Help Max Width <input data-design-key="helpMaxWidth" data-css-var="--help-max-width" data-suffix="px" type="number" min="420" max="1800" value="980"></label>
-              <label>Help Max Height <input data-design-key="helpMaxHeight" data-css-var="--help-max-height" data-suffix="px" type="number" min="360" max="1400" value="900"></label>
-            </details>
-
-            <details class="element-designer-card" data-designer-card="settings">
-              <summary>Settings Window</summary>
-              <div class="inherit-controls"><input type="checkbox" data-inherit-section="settings" hidden><button type="button" class="toggle-pill inherit-row inherit-toggle" data-inherit-target="settings" aria-pressed="false">Use Defaults</button></div>
-              <p class="design-section-note">Settings panel, cards, labels, inputs, scrollbars, and this Element Designer.</p>
-              <label>Settings Window BG <input data-design-key="settingsBg" data-css-var="--settings-bg" type="color" value="#211812"></label>
-              <label>Settings Window Border <input data-design-key="settingsBorder" data-css-var="--settings-border" type="color" value="#724837"></label>
-              <label>Settings Title Color <input data-design-key="settingsTitleColor" data-css-var="--settings-title-color" type="color" value="#e88f69"></label>
-              <label>Settings Title Size <input data-design-key="settingsTitleSize" data-css-var="--settings-title-size" data-suffix="rem" type="number" min="1" max="3" step="0.05" value="1.5"></label>
-              <label>Settings Card BG <input data-design-key="settingsCardBg" data-css-var="--settings-card-bg" type="color" value="#211812"></label>
-              <label>Settings Card Border <input data-design-key="settingsCardBorder" data-css-var="--settings-card-border" type="color" value="#724837"></label>
-              <label>Settings Label Color <input data-design-key="settingsLabelColor" data-css-var="--settings-label-color" type="color" value="#563485"></label>
-              <label>Settings Label Size <input data-design-key="settingsLabelSize" data-css-var="--settings-label-size" data-suffix="rem" type="number" min="0.65" max="1.4" step="0.05" value="0.82"></label>
-              <label>Settings Input BG <input data-design-key="settingsInputBg" data-css-var="--settings-input-bg" type="color" value="#000000"></label>
-              <label>Settings Input Text <input data-design-key="settingsInputText" data-css-var="--settings-input-text" type="color" value="#fbf4d6"></label>
-              <label>Element Designer Font Size <input data-design-key="elementDesignerTextSize" data-css-var="--element-designer-text-size" data-suffix="rem" type="number" min="0.65" max="1.4" step="0.05" value="0.88"></label>
-              <h4>Window Size</h4>
-              <label>Settings Width <input data-design-key="settingsWidth" data-css-var="--settings-width" data-suffix="px" type="number" min="420" max="1800" value="1100"></label>
-              <label>Settings Height <input data-design-key="settingsHeight" data-css-var="--settings-height" data-suffix="px" type="number" min="320" max="1200" value="760"></label>
-              <label>Settings Min Width <input data-design-key="settingsMinWidth" data-css-var="--settings-min-width" data-suffix="px" type="number" min="320" max="900" value="560"></label>
-              <label>Settings Min Height <input data-design-key="settingsMinHeight" data-css-var="--settings-min-height" data-suffix="px" type="number" min="240" max="900" value="320"></label>
-              <label>Settings Max Width <input data-design-key="settingsMaxWidth" data-css-var="--settings-max-width" data-suffix="px" type="number" min="520" max="2200" value="1400"></label>
-              <label>Settings Max Height <input data-design-key="settingsMaxHeight" data-css-var="--settings-max-height" data-suffix="px" type="number" min="420" max="1400" value="980"></label>
-            </details>
-
-            <details class="element-designer-card" data-designer-card="tcards">
-              <summary>Transclusion Cards</summary>
-              <div class="inherit-controls"><input type="checkbox" data-inherit-section="tcards" hidden><button type="button" class="toggle-pill inherit-row inherit-toggle" data-inherit-target="tcards" aria-pressed="false">Use Defaults</button></div>
-              <p class="design-section-note">Default TCard styling and the Transclusion Cards side panel.</p>
-              <label>TCard Default BG <input data-design-key="tcardBg" data-css-var="--tcard-bg" type="color" value="#28133f"></label>
-              <label>TCard Default Border <input data-design-key="tcardBorder" data-css-var="--tcard-border" type="color" value="#e88f69"></label>
-              <label>TCard Text <input data-design-key="tcardText" data-css-var="--tcard-text" type="color" value="#fbf4d6"></label>
-              <label>TCard Text Size <input data-design-key="tcardTextSize" data-css-var="--tcard-text-size" data-suffix="rem" type="number" min="0.65" max="1.5" step="0.05" value="0.95"></label>
-              <label>TCard Heading <input data-design-key="tcardHeading" data-css-var="--tcard-heading" type="color" value="#e88f69"></label>
-              <label>TCard Panel BG <input data-design-key="tcardPanelBg" data-css-var="--tcard-panel-bg" type="color" value="#211812"></label>
-              <label>TCard Panel Border <input data-design-key="tcardPanelBorder" data-css-var="--tcard-panel-border" type="color" value="#724837"></label>
-              <label>TCard Input BG <input data-design-key="tcardInputBg" data-css-var="--tcard-input-bg" type="color" value="#28133f"></label>
-              <label>TCard Input Text <input data-design-key="tcardInputText" data-css-var="--tcard-input-text" type="color" value="#fbf4d6"></label>
-              <h4>Window Size</h4>
-              <label>TCard Panel Width <input data-design-key="tcardPanelWidth" data-css-var="--tcard-panel-width" data-suffix="px" type="number" min="320" max="1200" value="430"></label>
-              <label>TCard Panel Height <input data-design-key="tcardPanelHeight" data-css-var="--tcard-panel-height" data-suffix="px" type="number" min="280" max="1200" value="720"></label>
-              <label>TCard Panel Min Width <input data-design-key="tcardPanelMinWidth" data-css-var="--tcard-panel-min-width" data-suffix="px" type="number" min="260" max="900" value="320"></label>
-              <label>TCard Panel Min Height <input data-design-key="tcardPanelMinHeight" data-css-var="--tcard-panel-min-height" data-suffix="px" type="number" min="220" max="900" value="280"></label>
-              <label>TCard Panel Max Width <input data-design-key="tcardPanelMaxWidth" data-css-var="--tcard-panel-max-width" data-suffix="px" type="number" min="360" max="1600" value="760"></label>
-              <label>TCard Panel Max Height <input data-design-key="tcardPanelMaxHeight" data-css-var="--tcard-panel-max-height" data-suffix="px" type="number" min="360" max="1400" value="900"></label>
-              <h4>Delete / Dialog Window Size</h4>
-              <label>Dialog Width <input data-design-key="dialogWindowWidth" data-css-var="--dialog-window-width" data-suffix="px" type="number" min="280" max="1100" value="500"></label>
-              <label>Dialog Height <input data-design-key="dialogWindowHeight" data-css-var="--dialog-window-height" data-suffix="px" type="number" min="180" max="900" value="360"></label>
-              <label>Dialog Min Width <input data-design-key="dialogWindowMinWidth" data-css-var="--dialog-window-min-width" data-suffix="px" type="number" min="240" max="800" value="300"></label>
-              <label>Dialog Max Width <input data-design-key="dialogWindowMaxWidth" data-css-var="--dialog-window-max-width" data-suffix="px" type="number" min="320" max="1400" value="640"></label>
-            </details>
-          </div>
-
-          <aside class="design-preview-column" aria-label="Design preview and colors">
-            <div class="design-preview">
-              <article>
-                <div class="preview-title-row"><h4>Preview Title</h4><span><a href="#">Normal link</a> <a class="pill-link" href="#">Link Pill</a></span></div>
-                <p>This preview shows sample dynamic text inside a bordered panel/card.</p>
-                <div class="preview-card"><strong>Sample Card</strong><span>Panel text and section border preview.</span></div>
-                <button type="button">Preview Button</button>
-              </article>
-            </div>
-            <div class="current-color-box" id="currentColorBox" draggable="true" aria-label="Current color">#e88f69</div>
-            <div class="hex-image-row"><label class="hex-control">Hex Code <input id="activeColorHex" type="text" value="#e88f69" maxlength="7" placeholder="#e88f69"></label><button id="importColorImageButton" type="button">Import Image</button><input id="colorImageInput" type="file" accept="image/*" hidden></div>
-            <div id="favoriteColors" class="favorite-colors" aria-label="Favorite colors"><button type="button" data-favorite-color="#000000">#000000</button><button type="button" data-favorite-color="#28133f">#28133f</button><button type="button" data-favorite-color="#211812">#211812</button><button type="button" data-favorite-color="#563485">#563485</button><button type="button" data-favorite-color="#724837">#724837</button><button type="button" data-favorite-color="#a97b38">#a97b38</button><button type="button" data-favorite-color="#c55222">#c55222</button><button type="button" data-favorite-color="#e88f69">#e88f69</button><button type="button" data-favorite-color="#2f251c">#2f251c</button><button type="button" data-favorite-color="#2c2c2c">#2c2c2c</button><button type="button" data-favorite-color="#fbf4d6">#fbf4d6</button><button type="button" data-favorite-color="#ffffff">#ffffff</button><button type="button" data-favorite-color="#4b2b1f">#4b2b1f</button><button type="button" data-favorite-color="#8f5cff">#8f5cff</button><button type="button" data-favorite-color="#d7a56d">#d7a56d</button><button type="button" data-favorite-color="#101010">#101010</button></div>
-          </aside>
-        </div>
-      </section>
-
-      <section class="settings-section settings-card" data-settings-section="import" hidden>
-        <h3>Import File</h3>
-        <p class="panel-help">Placeholder for future Capsanoto file import tools. This will later support importing saved Caps files, document bundles, and other compatible writing-room data.</p>
-        <button type="button" disabled>Import File Placeholder</button>
-      </section>
-
-      <section class="settings-section settings-card" data-settings-section="emoji" hidden>
-        <h3>Emoji Favorites</h3>
-        <p class="panel-help">Edit the favourite emojis shown at the top of the Emoji Spark window. Separate each emoji with a space.</p>
-        <div class="emoji-favorite-settings">
-          <input id="favoriteEmojiInput" type="text" aria-label="Favorite emojis" placeholder="⭐ ✨ 🔥 💎 🗝️ 📜 🗡️ 💜">
-          <button id="saveFavoriteEmojiButton" type="button">Save Favorite Emojis</button>
-        </div>
-      </section>
-
-      <section class="settings-section settings-card settings-links" data-settings-section="support" hidden>
-        <h3>Help / Guidebook</h3>
-        <button id="helpButton" type="button">❔ Help / Release Notes</button>
-        <button id="logoutButton" type="button">🧹 Reset Local Save</button>
-        <button type="button" disabled>Placeholder</button>
-        <button type="button" disabled>Placeholder</button>
-      </section>
-    </aside>
-
-    <aside id="helpPanel" class="help-panel" aria-label="Capsanoto guidebook" hidden>
-      <header>
-        <div class="help-title-lockup">
-          <img class="help-logo" src="https://raw.githubusercontent.com/cinaedvsstudios/forever-bound-wiki/refs/heads/main/iconcapsanoto.png" alt="Capsanoto icon">
-          <div>
-            <p class="eyebrow">CINAEDVS Studios · 2026</p>
-            <h2>Capsanoto Guidebook</h2>
-          </div>
-        </div>
-        <div class="panel-header-actions"><button id="helpEditButton" class="icon-button" type="button" aria-pressed="false" aria-label="Edit help">✎</button><button id="closeHelpPanel" class="icon-button" type="button" aria-label="Close help">×</button></div>
-      </header>
-      <section>
-        <h3>1. What Capsanoto Is</h3>
-        <p>Capsanoto is a lightweight structured writing environment for lore-heavy writing, long-form worldbuilding, scripts, novels, pitch material, and narrative documents.</p>
-        <p>It is human-writing-first, local-first, portable, and designed to avoid heavy database/wiki complexity. The goal is to help writers move quickly while still keeping large bodies of connected text organized.</p>
-      </section>
-      <section>
-        <h3>2. Why Capsanoto Exists</h3>
-        <p>Capsanoto exists because writers often need to retrieve, reuse, reshape, and organize text without breaking creative flow.</p>
-        <p>It prioritizes fast editing, contextual right-click tools, reusable TCards, local autosave, readable downloads, and creative ownership of the files.</p>
-      </section>
-      <section>
-        <h3>3. Application Structure</h3>
-        <p>The intended hierarchy is:</p>
-        <p><strong>Application → Writing Room → Folder → Tab → File → TCard</strong></p>
-        <dl>
-          <dt>Application</dt><dd>Capsanoto itself: the browser-based writing app.</dd>
-          <dt>Writing Room</dt><dd>The project/profile workspace for a story world or major writing project.</dd>
-          <dt>Folder</dt><dd>A large category inside a Writing Room, such as Characters, Locations, Items, Worldbuilding, or Episodes.</dd>
-          <dt>Tab</dt><dd>A grouping inside a folder, such as Main Characters, Recurring Characters, Season 1, Songs, or Lore Checks.</dd>
-          <dt>File</dt><dd>An individual writing document, such as Mel, Luca, Ironvale, Runestones, or Episode 01.</dd>
-          <dt>TCard</dt><dd>A Transclusion Card: a reusable synchronized text block.</dd>
-        </dl>
-      </section>
-      <section>
-        <h3>4. Writing Room / Filing Cabinet</h3>
-        <p>The <strong>Writing Room</strong> button opens the <strong>Filing Cabinet</strong>, the floating folder/tab/file manager.</p>
-        <dl>
-          <dt>Folders, tabs, and files</dt><dd>Folders contain tabs. Tabs contain files. Files are the documents you write in.</dd>
-          <dt>Metadata</dt><dd>File metadata such as type, ID, tags, and updated date lives in the Filing Cabinet metadata pill instead of cluttering the document body.</dd>
-          <dt>Edit mode</dt><dd>The pencil unlocks inline editing for Writing Room, folder, tab, file, and metadata text.</dd>
-          <dt>Duplicate</dt><dd>Creates a copy of a file for variants, rewrites, or experiments.</dd>
-          <dt>Trash</dt><dd>Deleted files move to Trash so they can be restored later.</dd>
-          <dt>Deprecated versions</dt><dd>Deprecated versions are preserved old versions of files. This language is reserved for old versions, retired files, snapshots, and preserved history.</dd>
-          <dt>Locks and expansion</dt><dd>Folder/tab lock icons mark containers that should stay open. The rail buttons can collapse all or expand all.</dd>
-          <dt>Jump rail</dt><dd>The right-side rail uses folder icons as jump points. Clicking one expands that folder and scrolls the Filing Cabinet to it.</dd>
-        </dl>
-      </section>
-      <section>
-        <h3>5. Top Bar and Status Box</h3>
-        <dl>
-          <dt>Capsanoto title/icon</dt><dd>Shows the app identity. The title icon size can be adjusted in Settings → Design.</dd>
-          <dt>Writing Room button</dt><dd>Opens the Filing Cabinet.</dd>
-          <dt>Dynamic status box</dt><dd>The center status box is intentionally important. It explains hovered controls, selected text, cursor context, clicked objects, save/autosave status, and what buttons will do.</dd>
-          <dt>Format menu</dt><dd>Contains Bold, Italic, H1, H2, Normal Text, and List commands.</dd>
-          <dt>Subnoto</dt><dd>Current state: placeholder. It opens a placeholder window and will be defined later.</dd>
-          <dt>Insert menu</dt><dd>Contains table insertion, horizontal rule, image insertion, Emoji Spark, TCard tools, and emphasis boxes.</dd>
-          <dt>Search</dt><dd>Current state: placeholder for future context/fuzzy search.</dd>
-          <dt>Help</dt><dd>Opens this Guidebook.</dd>
-          <dt>Settings</dt><dd>Opens Design, Download, and support/reset tools.</dd>
-        </dl>
-      </section>
-      <section>
-        <h3>6. Right-Click Context Tools</h3>
-        <p>Capsanoto is designed around highlighting text and right-clicking it. The context menu should keep common editing actions close to the writing surface.</p>
-        <dl>
-          <dt>Link Anchor</dt><dd>Turns selected text into a direct section target.</dd>
-          <dt>TCard</dt><dd>Creates a Transclusion Card from selected text.</dd>
-          <dt>Link</dt><dd>Creates a normal hyperlink to a file, section, TCard reference, or external URL.</dd>
-          <dt>Link Pill</dt><dd>Creates a rounded visual hyperlink.</dd>
-          <dt>Link Editor</dt><dd>Edits an existing link target without recreating the visible text.</dd>
-          <dt>Pill color/style editing</dt><dd>Right-click an existing Link Pill to change its visual color styling.</dd>
-        </dl>
-      </section>
-      <section>
-        <h3>7. Links and Navigation</h3>
-        <dl>
-          <dt>Document links</dt><dd>Files can be opened by URLs such as <code>editor.html?doc=Character-Mel-Ameldra</code>.</dd>
-          <dt>Section links / Link Anchors</dt><dd>Heading IDs create section routes such as <code>editor.html?doc=Character-Mel-Ameldra#Runestones</code>.</dd>
-          <dt>External links</dt><dd>Normal web URLs are supported.</dd>
-          <dt>TCard references</dt><dd>TCard targets can use supported references such as <code>block:Item-Runestones</code> or <code>{{Item-Runestones}}</code>.</dd>
-          <dt>Link Pills</dt><dd>Link Pills are rounded hyperlinks that visually stand out from normal text links.</dd>
-        </dl>
-      </section>
-      <section>
-        <h3>8. TCards / Transclusion Cards</h3>
-        <p>A <strong>TCard</strong> stores reusable text once and displays that same text wherever the TCard is referenced.</p>
-        <p>Editing the source text updates all referenced instances. Formatting may be local to the current document, while the underlying source text remains synchronized.</p>
-        <dl>
-          <dt>Syntax</dt><dd>Current supported reference syntax includes <code>{{Item-Runestones}}</code>.</dd>
-          <dt>TCard panel</dt><dd>The TCards panel lets you create, edit, style, and insert reusable cards.</dd>
-          <dt>Insert behavior</dt><dd>Insert TCard places the reference at the saved cursor position.</dd>
-          <dt>Inline edit</dt><dd>Rendered TCards show an edit button on hover; clicking it opens that TCard in the side panel.</dd>
-          <dt>Style controls</dt><dd>TCard background, border, text color, heading color, and text size can be adjusted.</dd>
-          <dt>Drag/move</dt><dd>Rendered TCards can be dragged within the writing area.</dd>
-        </dl>
-      </section>
-      <section>
-        <h3>9. Tables, Emoji Spark, and Emphasis Boxes</h3>
-        <dl>
-          <dt>Tables</dt><dd>Tables insert at the cursor, use rounded corners, can be dragged, and show inline table tools for row/column/color edits.</dd>
-          <dt>Emoji Spark</dt><dd>Opens a scrollable emoji grid. Click an emoji to insert it; right-click an emoji to search the grid by word.</dd>
-          <dt>Emphasis boxes</dt><dd>Wrap selected text in a bordered emphasis block that can be moved and styled.</dd>
-        </dl>
-      </section>
-      <section>
-        <h3>10. Document Editing and Autosave</h3>
-        <dl>
-          <dt>Document title</dt><dd>The title field edits the current file title.</dd>
-          <dt>Writing area</dt><dd>The main editable page supports browser rich-text editing, headings, links, images, tables, TCards, and emphasis boxes.</dd>
-          <dt>Autosave</dt><dd>Changes save locally in the browser. The status box reports saving and autosaved states.</dd>
-          <dt>Reset Local Save</dt><dd>Settings → Help includes Reset Local Save, which clears the browser autosave and reloads starter content.</dd>
-        </dl>
-      </section>
-      <section>
-        <h3>11. Download and Backups</h3>
-        <dl>
-          <dt>Download builder</dt><dd>Choose files and/or TCards, reorder them, and download selected pieces.</dd>
-          <dt>Caps file</dt><dd>Downloads structured JSON for Capsanoto/Caps workflows.</dd>
-          <dt>TXT</dt><dd>Downloads plain text.</dd>
-          <dt>HTML</dt><dd>Downloads a browser-readable HTML file.</dd>
-          <dt>Word-compatible</dt><dd>Downloads a Word-compatible <code>.doc</code> HTML document.</dd>
-          <dt>Clean output</dt><dd>Downloads should render cleanly and strip editor-only UI artifacts.</dd>
-        </dl>
-        <p>PDF and DOCX clean export are planned/experimental, not complete current features.</p>
-      </section>
-      <section>
-        <h3>12. Design Settings</h3>
-        <p>Settings → Design controls system styling, global dialogue/button styling, Writing Room window styling, Settings window styling, and Help window styling.</p>
-        <p>Recommended font stack: <code>Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif</code>. This keeps the app local-first and avoids requiring an external font dependency. Courier New is reserved for code-like/monospace text.</p>
-      </section>
-      <section>
-        <h3>13. Planned / Experimental Workflow Systems</h3>
-        <dl>
-          <dt>Subnoto</dt><dd>Placeholder. The workflow will be defined later.</dd>
-          <dt>Context Search / fuzzy search</dt><dd>Planned search tools for finding content across files, TCards, and metadata.</dd>
-          <dt>Slash Commands</dt><dd>Planned commands such as <code>/dialogue</code>, <code>/scene</code>, <code>/song</code>, <code>/spell</code>, <code>/tba</code>, <code>/pill</code>, and <code>/tcard</code>.</dd>
-          <dt>Timeline Blocks</dt><dd>Experimental year/date blocks that may gather linked events, scenes, and TCards.</dd>
-          <dt>Hover Names / entity profiles</dt><dd>Planned hover previews for characters, places, objects, and other named entities.</dd>
-          <dt>Speech Profiles</dt><dd>Planned voice/dialogue profile helpers.</dd>
-          <dt>Paragraph deprecation / deprecated TCards</dt><dd>Planned preserved-history workflow for smaller text units.</dd>
-          <dt>PDF/DOCX clean export</dt><dd>Planned export targets beyond the current Caps, TXT, HTML, and Word-compatible downloads.</dd>
-        </dl>
-      </section>
-      <section>
-        <h3>14. Technical Notes</h3>
-        <dl>
-          <dt>Code type</dt><dd>Static HTML, CSS, and plain JavaScript. No framework build step is required.</dd>
-          <dt>Main app file</dt><dd><code>app.js</code> handles state, events, autosave, routing, TCards, links, downloads, dialogs, Filing Cabinet behavior, table tools, emoji picker, and design settings.</dd>
-          <dt>Styles</dt><dd><code>styles.css</code> controls the theme, layouts, panels, typography, and CSS variables.</dd>
-          <dt>Starter files</dt><dd><code>content/documents.json</code> seeds first-run content. <code>config/auth.json</code> remains for future preview auth work.</dd>
-          <dt>Local storage keys</dt><dd><code>forever-bound-writing-room-v2</code> stores files/TCards, <code>capsanoto-design-settings-v1</code> stores design settings, <code>capsanoto-help-html-v1</code> stores edited Help text, and <code>capsanoto-writing-room-layout-v1</code> stores Filing Cabinet panel position/size.</dd>
-          <dt>Versioning rule</dt><dd>Use <code>v1</code> as the first version, then <code>v1.1</code>, <code>v1.2</code>, and so on for future updates.</dd>
-        </dl>
-      </section>
-      <section>
-        <h3>15. Release Notes</h3>
-        <p><strong>Capsanoto v1 — May 8, 2026:</strong> local-first Writing Room preview with Filing Cabinet organization, files, TCards, Link Anchors, Link Pills, right-click context tools, table tools, Emoji Spark, emphasis boxes, local autosave, design settings, Help, and Download builder.</p>
-        <p><strong>Current preview note:</strong> Subnoto, context search, slash commands, timeline blocks, hover names, speech profiles, paragraph-level deprecation, and PDF/DOCX clean export are planned or experimental.</p>
-      </section>
-    </aside>
-
-    <aside id="blockPanel" class="block-panel" aria-label="TCards" hidden>
-      <header>
-        <div>
-          <h2>TCards</h2>
-        </div>
-        <button id="closeBlockPanel" type="button" aria-label="Close TCards">×</button>
-      </header>
-      <p class="panel-help">Create reusable TCards with IDs like <code>Character-Name</code>, <code>Item-Name</code>, <code>Location-Name</code>, or <code>Mechanic-Name</code>. Reference them in files with <code>{{Item-Runestones}}</code>.</p>
-      <label>TCard ID <input id="blockIdInput" type="text" placeholder="Item-Runestones"></label>
-      <label>TCard Content <textarea id="blockContentInput" rows="8" placeholder="Reusable canon text"></textarea></label>
-      <div class="tcard-style-grid">
-        <label>BG <input id="blockBgInput" type="color" value="#28133f"></label>
-        <label>Border <input id="blockBorderInput" type="color" value="#e88f69"></label>
-        <label>Text <input id="blockTextInput" type="color" value="#fbf4d6"></label>
-        <label>Heading <input id="blockHeadingInput" type="color" value="#e88f69"></label>
-        <label>Text Size <input id="blockTextSizeInput" type="number" min="10" max="28" value="14"></label>
-      </div>
-      <div class="block-actions">
-        <button id="saveBlockButton" type="button">Save TCard</button>
-        <button id="insertBlockRefButton" type="button">Insert TCard</button>
-      </div>
-      <div id="blockList" class="block-list"></div>
-    </aside>
-  </main>
-
-  <template id="documentTemplate">
-    <h1 id="overview">New Lore Document</h1>
-    <p>Start writing here.</p>
-    <h2 id="notes">Notes</h2>
-    <p>Add internal references, links, and reusable TCards.</p>
-  </template>
-
-  <script src="app.js"></script>
+<main aria-labelledby="passwordTitle" class="password-screen" hidden="" id="passwordScreen">
+<form class="password-card" data-shared-password="Omega593!" id="passwordForm">
+<img alt="Forever Bound lantern logo" src="lanternlogo small.png"/>
+<p class="eyebrow">Forever Bound</p>
+<h1 id="passwordTitle">Enter Capsanoto</h1>
+<p>This preview opens directly into the Writing Room.</p>
+<label for="passwordInput">Password</label>
+<input autocomplete="current-password" id="passwordInput" required="" type="password"/>
+<button type="submit">Unlock Editor</button>
+<p class="error" id="passwordError" role="alert"></p>
+</form>
+</main>
+<main aria-label="Forever Bound writing editor" class="writer-shell" id="editorApp">
+<header aria-label="Capsanoto command bar" class="writer-header toolbar">
+<div class="document-controls">
+<strong class="app-name"><img alt="Capsanoto icon" src="https://raw.githubusercontent.com/cinaedvsstudios/forever-bound-wiki/refs/heads/main/iconcapsanoto.png"/><span class="brand-word">Capsanoto</span><span class="app-version">v2.1</span></strong>
+<button aria-controls="writingRoomPanel" aria-expanded="false" class="writing-room-button" id="writingRoomButton" type="button"><span class="command-glyph">📚</span><span class="command-label">Writing Room</span></button>
+<label class="sr-only" for="documentSelect">Current document</label>
+<select hidden="" id="documentSelect" title="Document Switcher"></select>
+</div>
+<div aria-live="polite" class="context-status" id="contextStatus" role="status">Cursor: Writing Room ready</div>
+<nav aria-label="Writing Room controls" class="top-command-menus icon-command-bar">
+<div class="tool-menu has-panel" data-menu-kind="format">
+<button aria-haspopup="true" aria-label="Format" class="tool-menu-trigger command-icon" data-tool-name="Format tools" title="Format" type="button"><span class="command-glyph">🪶</span><span class="command-label">Format</span></button>
+<div class="tool-menu-panel">
+<button aria-label="Bold" data-command="bold" data-tool-name="Bold Mark" title="Bold" type="button"><strong>B</strong> Bold</button>
+<button aria-label="Italic" data-command="italic" data-tool-name="Italic Mark" title="Italic" type="button"><em>I</em> Italic</button>
+<button aria-label="Heading 1" data-block="h1" data-tool-name="Chapter Heading" title="Heading 1" type="button">H1 Chapter</button>
+<button aria-label="Heading 2" data-block="h2" data-tool-name="Section Heading" title="Heading 2" type="button">H2 Section</button>
+<button aria-label="Paragraph" data-block="p" data-tool-name="Body Text" title="Paragraph" type="button">¶ Normal Text</button>
+<button aria-label="Bullet List" data-command="insertUnorderedList" data-tool-name="Lore List" title="Bullet List" type="button">☰ List</button>
+</div>
+</div>
+<div class="tool-menu has-panel" data-menu-kind="insert">
+<button aria-haspopup="true" aria-label="Insert" class="tool-menu-trigger command-icon" data-tool-name="Insert tools" title="Insert" type="button"><span class="command-glyph">🗡️</span><span class="command-label">Insert</span></button>
+<div class="tool-menu-panel">
+<button aria-label="Table" data-tool-name="Lore Table" id="tableButton" title="Table" type="button">▦ Lore Table</button>
+<button aria-label="Horizontal Rule" data-command="insertHorizontalRule" data-tool-name="Divider Rule" title="Horizontal Rule" type="button">— Rule</button>
+<button aria-label="Image" data-tool-name="Image Embed" id="imageButton" title="Image" type="button">🖼️ Image Embed</button>
+<button aria-label="Emoji" data-tool-name="Emoji Spark" id="emojiButton" title="Emoji" type="button">✨ Emoji Spark</button>
+<button aria-label="TCards" data-tool-name="TCard" id="blockButton" title="TCards" type="button">𝞃 TCard</button>
+<button aria-label="Emphasis Box" id="emphasisButton" title="Emphasis Box" type="button">ε Emphasis</button>
+</div>
+</div>
+<button aria-label="Subnoto" class="tool-menu-trigger command-icon direct-command" data-tool-name="Subnoto clipboard" id="subnotoButton" title="Subnoto" type="button"><span class="command-glyph">📜</span><span class="command-label">Subnoto</span></button>
+<button aria-label="Specnoto" class="tool-menu-trigger command-icon direct-command" data-tool-name="Specnoto search/find workspace" id="searchButton" title="Specnoto" type="button"><span class="command-glyph">🕯️</span><span class="command-label">Specnoto</span></button>
+<button aria-label="Help / Guidebook" class="tool-menu-trigger command-icon direct-command" data-tool-name="Help / Guidebook" id="topHelpButton" title="Help / Guidebook" type="button"><span class="command-glyph">🗿</span><span class="command-label">Help</span></button>
+<button aria-label="Settings" class="tool-menu-trigger command-icon direct-command" data-tool-name="Capsanoto Settings" id="settingsButton" title="Settings" type="button"><span class="command-glyph">🗝️</span><span class="command-label">Settings</span></button>
+</nav>
+<span class="save-status" id="saveStatus"></span>
+<input accept="image/*" hidden="" id="imageInput" type="file"/>
+<span hidden="" id="linkButton"></span><span hidden="" id="editLinkButton"></span><span hidden="" id="pillLinkButton"></span><span hidden="" id="removeLinkButton"></span><span hidden="" id="bookmarkButton"></span>
+</header>
+<menu class="selection-menu" hidden="" id="selectionMenu">
+<li class="selection-menu-heading">Selection actions</li>
+<li><button data-context-action="bookmark" type="button"><span>⚓</span><strong>Bookmark</strong><small>Create a jump heading.</small></button></li>
+<li><button data-context-action="transclusion" type="button"><span>𝞃</span><strong>TCard</strong><small>Save selection as a reusable TCard.</small></button></li>
+<li><button data-context-action="link" type="button"><span>🔗</span><strong>Link</strong><small>Point selection at a path.</small></button></li>
+<li><button data-context-action="pill" type="button"><span>💊</span><strong>Link Pill</strong><small>Make a rounded reference card.</small></button></li>
+<li><button data-context-action="edit-link" type="button"><span>🛠️</span><strong>Edit Link</strong><small>Edit an existing link or pill.</small></button></li>
+<li><button data-context-action="pill-color" type="button"><span>🎨</span><strong>Pill Color</strong><small>Change selected pill color.</small></button></li>
+</menu>
+<div class="dialog-overlay" hidden="" id="dialogOverlay">
+<form class="caps-dialog" id="dialogBox">
+<header>
+<h2 id="dialogTitle">Capsanoto Action</h2>
+<button aria-label="Cancel dialog" class="icon-button" id="dialogCancelButton" type="button">×</button>
+</header>
+<div class="dialog-fields" id="dialogFields"></div>
+<footer>
+<button id="dialogConfirmButton" type="submit">Apply</button>
+</footer>
+</form>
+</div>
+<aside aria-label="Writing Room document tabs" class="writing-room-panel" hidden="" id="writingRoomPanel">
+<header id="writingRoomPanelHeader">
+<div>
+<p class="eyebrow">Writing Room</p>
+<h2 id="writingRoomTitle">Writing Room</h2>
+</div>
+<div class="panel-header-actions"><button aria-label="New Document" class="icon-button" data-tool-name="Document Forge" id="newDocumentButton" title="New Document" type="button">📄</button><button aria-label="New Folder" class="icon-button" id="newFolderButton" title="New Folder" type="button">📁</button><button aria-label="New Tab" class="icon-button" id="newTabButton" title="New Tab" type="button">▱</button><button aria-label="Edit filing cabinet" aria-pressed="false" class="icon-button" id="editWritingRoomButton" type="button">✎</button><button aria-label="Save Writing Room panel default position and size" class="icon-button" hidden="" id="saveWritingRoomLayoutButton" title="Save default position and size" type="button">💾</button><button aria-label="Close Writing Room" class="icon-button" id="closeWritingRoomPanel" type="button">×</button></div>
+</header>
+<div class="writing-room-editbar" hidden="" id="writingRoomEditBar"></div><div class="writing-room-cards" id="writingRoomCards"></div>
+</aside>
+<nav aria-label="Document bookmarks" class="bookmark-bar" hidden="" id="bookmarkBar"></nav>
+<section class="title-strip">
+<input aria-label="Document title" class="title-input" id="titleInput"/>
+<input aria-label="Document tags" class="tags-input" hidden="" id="tagsInput" placeholder="tags: character, location, episode"/>
+</section>
+<article aria-label="Writing area" class="editor" contenteditable="true" id="editor" spellcheck="true"></article>
+<section aria-label="End of document controls" class="document-end-bar" id="documentEndBar"></section>
+<div class="color-image-popup" hidden="" id="colorImagePopup">
+<button aria-label="Close color reference image" class="icon-button" id="closeColorImagePopup" type="button">×</button>
+<img alt="Imported color reference" id="colorImagePreview"/>
+</div>
+<aside aria-label="Capsanoto settings" class="settings-panel" hidden="" id="settingsPanel">
+<header>
+<div class="settings-title-row">
+<h2>Settings</h2>
+<div class="settings-search-tools" role="search">
+<input aria-label="Search settings" id="settingsSearchInput" placeholder="Search settings…" type="search"/>
+<button id="settingsSearchPrev" title="Previous setting" type="button">‹</button>
+<button id="settingsSearchNext" title="Next setting" type="button">›</button>
+</div>
+</div>
+<button aria-label="Open emoji library" class="icon-button" id="settingsEmojiLibraryButton" title="Emoji library" type="button">😊</button><button class="settings-save-button" id="saveSettingsPanelButton" title="Save settings and close" type="button">Save</button><button aria-label="Close settings" class="icon-button" id="closeSettingsPanel" type="button">×</button>
+</header>
+<nav aria-label="Settings sections" class="settings-menu">
+<button aria-pressed="true" data-settings-tab="design" type="button">Design</button>
+<button aria-pressed="false" data-settings-tab="export" type="button">Download</button>
+<button aria-pressed="false" data-settings-tab="support" type="button">Help</button>
+<button aria-pressed="false" data-settings-tab="import" type="button">Import File</button>
+<button aria-pressed="false" data-settings-tab="emoji" type="button">Emoji</button>
+</nav>
+<section class="settings-section settings-card" data-settings-section="export" hidden="">
+<h3>Smart Download Builder</h3>
+<p class="panel-help">Choose documents and/or TCards, reorder them as vertical pills, then download a Caps file, text, HTML, or Word-compatible document.</p>
+<div class="export-picker">
+<select aria-label="Export source type" id="exportSourceType">
+<option value="document">Document</option>
+<option value="block">TCard</option>
+</select>
+<select aria-label="Export source" id="exportSourceSelect"></select>
+<button id="addExportItemButton" type="button">Add</button>
+</div>
+<div aria-label="Selected export order" class="export-queue" id="exportQueue"></div>
+<div class="export-actions">
+<button id="exportCapsButton" type="button">Download Caps</button>
+<button id="exportTxtButton" type="button">Download TXT</button>
+<button id="exportHtmlButton" type="button">Download HTML</button>
+<button id="exportDocButton" type="button">Download Word</button>
+</div>
+</section>
+<section class="settings-section settings-card design-section" data-settings-section="design">
+<div class="designer-heading-row">
+<h3>Element Designer</h3>
+<div class="designer-expand-actions">
+<button id="expandDesignerCards" type="button">Expand All</button>
+<button id="collapseDesignerCards" type="button">Collapse All</button>
+<button id="applyDesignButton" type="button">Apply</button>
+<button id="resetDesignButton" type="button">Reset</button>
+</div>
+</div>
+<div class="design-editor-grid">
+<div class="design-controls">
+<details class="element-designer-card" data-designer-card="system">
+<summary>System</summary>
+<p class="design-section-note">Defaults for the whole app unless a section below overrides them.</p>
+<label>System Font <select id="designFontFamily"><option value='Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'>Inter (recommended)</option><option value="Arial, Helvetica, sans-serif">Arial</option><option value='system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'>System UI</option><option value="Aptos, Calibri, Arial, sans-serif">Aptos / Calibri</option><option value="Courier New, Courier, monospace">Courier New</option><option value="Verdana, Geneva, sans-serif">Verdana</option><option value="Georgia, serif">Georgia</option><option value="Tahoma, Geneva, sans-serif">Tahoma</option><option value="Trebuchet MS, Arial, sans-serif">Trebuchet MS</option><option value="Times New Roman, Times, serif">Times New Roman</option></select></label>
+<label>Default Text Size <input id="designFontSize" max="48" min="8" type="number" value="14"/></label>
+<label>Default Text Color <input id="designTextColor" type="color" value="#fbf4d6"/></label>
+<label>Default Label Color <input id="labelTextColor" type="color" value="#a97b38"/></label>
+<label>Default Dynamic Text <input id="dynamicTextColor" type="color" value="#e88f69"/></label>
+<label>Default Button BG <input id="designButtonBg" type="color" value="#2c2c2c"/></label>
+<label>Default Button Border <input id="designBorderColor" type="color" value="#e88f69"/></label>
+<label>Default Button Text <input data-css-var="--button-text-color" data-design-key="buttonTextColor" type="color" value="#fbf4d6"/></label>
+<label>Default Button Text Size <input data-css-var="--button-text-size" data-design-key="buttonTextSize" data-suffix="px" max="32" min="8" type="number" value="14"/></label>
+<button aria-pressed="true" class="toggle-pill" id="designBoldToggle" type="button">Default Button Bold</button><input checked="" hidden="" id="designBold" type="checkbox"/>
+<label>Default Window BG <input data-css-var="--window-bg" data-design-key="windowBg" type="color" value="#211812"/></label>
+<label>Default Window Border <input data-css-var="--window-border" data-design-key="windowBorder" type="color" value="#724837"/></label>
+<label>Default Window Shadow <input data-css-var="--window-shadow-color" data-design-key="windowShadow" type="color" value="#000000"/></label>
+<label>Default Scrollbar Track <input id="scrollbarTrackColor" type="color" value="#211812"/></label>
+<label>Default Scrollbar Thumb <input id="scrollbarThumbColor" type="color" value="#e88f69"/></label>
+<label>Global Background Image URL <input id="designBgImage" placeholder="wallpapersm.jpg or https://..." type="text"/></label>
+<label>Top Title-Bar Image URL <input data-css-var="--top-bar-image-url" data-design-key="topBarImage" placeholder="optional image URL" type="text"/></label>
+<h4>Dialogue Windows</h4>
+<label>Dialogue BG <input id="dialogBgColor" type="color" value="#211812"/></label>
+<label>Dialogue Border <input id="dialogBorderColor" type="color" value="#e88f69"/></label>
+<label>Dialogue Shadow <input id="dialogShadowColor" type="color" value="#000000"/></label>
+<label>Dialogue Text <input id="dialogTextColor" type="color" value="#fbf4d6"/></label>
+<label>Dialogue Text Size <input id="dialogFontSize" max="32" min="8" type="number" value="14"/></label>
+<button aria-pressed="true" class="toggle-pill" id="dialogBoldToggle" type="button">Dialogue Bold</button><input checked="" hidden="" id="dialogBold" type="checkbox"/>
+<label>Dialogue Button BG <input id="dialogButtonBg" type="color" value="#2c2c2c"/></label>
+<label>Dialogue Button Border <input id="dialogButtonBorder" type="color" value="#e88f69"/></label>
+<label>Dialogue Button Text <input id="dialogButtonText" type="color" value="#fbf4d6"/></label>
+<label>Dialogue Button Text Size <input data-css-var="--dialog-button-text-size" data-design-key="dialogButtonTextSize" data-suffix="px" max="32" min="8" type="number" value="14"/></label>
+<label>Dialogue Button Shadow <input id="dialogButtonShadow" type="color" value="#000000"/></label>
+</details>
+<details class="element-designer-card" data-designer-card="top-menu">
+<summary>Top Menu Bar</summary>
+<div class="inherit-controls"><input data-inherit-section="top-menu" hidden="" type="checkbox"/><button aria-pressed="false" class="toggle-pill inherit-row inherit-toggle" data-inherit-target="top-menu" type="button">Use Defaults</button></div>
+<p class="design-section-note">Capsanoto logo/title, Writing Room button, status box, command bar, dropdowns, and right-side icon buttons.</p>
+<label>Capsanoto Logo Size % <input id="titleIconScale" max="250" min="50" type="number" value="143"/></label>
+<label>Capsanoto Title Color <input data-css-var="--title-color" data-design-key="titleColor" type="color" value="#563485"/></label>
+<label>Capsanoto Title Size <input data-css-var="--title-text-size" data-design-key="titleSize" data-suffix="rem" max="3" min="0.7" step="0.05" type="number" value="1"/></label>
+<label>Top Bar BG <input data-css-var="--top-bar-bg" data-design-key="topBarBg" type="color" value="#211812"/></label>
+<label>Top Bar Border <input data-css-var="--top-bar-border" data-design-key="topBarBorder" type="color" value="#724837"/></label>
+<label>Writing Room Button BG <input data-css-var="--writing-room-button-bg" data-design-key="writingRoomButtonBg" type="color" value="#e88f69"/></label>
+<label>Writing Room Button Border <input data-css-var="--writing-room-button-border" data-design-key="writingRoomButtonBorder" type="color" value="#724837"/></label>
+<label>Writing Room Button Text <input data-css-var="--writing-room-button-text" data-design-key="writingRoomButtonText" type="color" value="#000000"/></label>
+<label>Writing Room Button Text Size <input data-css-var="--writing-room-button-text-size" data-design-key="writingRoomButtonTextSize" data-suffix="rem" max="2" min="0.7" step="0.05" type="number" value="1"/></label>
+<label>Status Box BG <input id="statusBgColor" type="color" value="#000000"/></label>
+<label>Status Box Border <input id="statusBorderColor" type="color" value="#a97b38"/></label>
+<label>Status Box Text <input id="statusTextColor" type="color" value="#fbf4d6"/></label>
+<label>Status Box Text Size <input data-css-var="--status-text-size" data-design-key="statusTextSize" data-suffix="rem" max="1.5" min="0.65" step="0.05" type="number" value="0.86"/></label>
+<label>Menu Bar BG <input data-css-var="--command-bar-bg" data-design-key="commandBarBg" type="color" value="#28133f"/></label>
+<label>Menu Bar Border <input data-css-var="--command-bar-border" data-design-key="commandBarBorder" type="color" value="#e88f69"/></label>
+<label>Menu Text <input data-css-var="--command-bar-text" data-design-key="commandBarText" type="color" value="#fbf4d6"/></label>
+<label>Menu Text Size <input data-css-var="--command-bar-text-size" data-design-key="commandBarTextSize" data-suffix="rem" max="1.7" min="0.7" step="0.05" type="number" value="0.95"/></label>
+<label>Command Icon Size <input data-css-var="--command-icon-size" data-design-key="commandIconSize" data-suffix="rem" max="2.4" min="0.6" step="0.05" type="number" value="1.05"/></label>
+<label>Command Label Size <input data-css-var="--command-label-size" data-design-key="commandLabelSize" data-suffix="rem" max="1" min="0.35" step="0.01" type="number" value="0.48"/></label>
+<label>Dropdown Button BG <input data-css-var="--dropdown-button-bg" data-design-key="dropdownButtonBg" type="color" value="#2c2c2c"/></label>
+<label>Dropdown Button Border <input data-css-var="--dropdown-button-border" data-design-key="dropdownButtonBorder" type="color" value="#724837"/></label>
+<label>Dropdown Button Text <input data-css-var="--dropdown-button-text" data-design-key="dropdownButtonText" type="color" value="#fbf4d6"/></label>
+<label>Dropdown Button Text Size <input data-css-var="--dropdown-button-text-size" data-design-key="dropdownButtonTextSize" data-suffix="rem" max="1.5" min="0.65" step="0.05" type="number" value="0.9"/></label>
+<label>Right Icon Button BG <input data-css-var="--right-icon-button-bg" data-design-key="rightIconButtonBg" type="color" value="#2c2c2c"/></label>
+<label>Right Icon Button Border <input data-css-var="--right-icon-button-border" data-design-key="rightIconButtonBorder" type="color" value="#724837"/></label>
+<label>Right Icon Size <input data-css-var="--right-icon-size" data-design-key="rightIconSize" data-suffix="rem" max="2" min="0.7" step="0.05" type="number" value="1"/></label>
+<div class="placeholder-card">Menu button ordering and custom blank buttons will be added later.</div>
+</details>
+<details class="element-designer-card" data-designer-card="writing-room">
+<summary>Writing Room / Filing Cabinet</summary>
+<div class="inherit-controls"><input data-inherit-section="writing-room" hidden="" type="checkbox"/><button aria-pressed="false" class="toggle-pill inherit-row inherit-toggle" data-inherit-target="writing-room" type="button">Use Defaults</button></div>
+<p class="design-section-note">Filing Cabinet window, folders, tabs, document cards, metadata pills, trash, resize behavior, and jump rail.</p>
+<h4>Window</h4>
+<label>Writing Room Window BG <input id="panelBgColor" type="color" value="#211812"/></label>
+<label>Writing Room Window Border <input id="panelBorderColor" type="color" value="#724837"/></label>
+<label>Writing Room Window Shadow <input data-css-var="--writing-room-shadow-color" data-design-key="writingRoomShadow" type="color" value="#000000"/></label>
+<label>Writing Room Width <input data-css-var="--writing-room-width" data-design-key="writingRoomWidth" data-suffix="px" max="1600" min="280" type="number" value="520"/></label>
+<label>Writing Room Height <input data-css-var="--writing-room-height" data-design-key="writingRoomHeight" data-suffix="px" max="1200" min="280" type="number" value="640"/></label>
+<label>Writing Room Min Width <input data-css-var="--writing-room-min-width" data-design-key="writingRoomMinWidth" data-suffix="px" max="900" min="240" type="number" value="300"/></label>
+<label>Writing Room Min Height <input data-css-var="--writing-room-min-height" data-design-key="writingRoomMinHeight" data-suffix="px" max="900" min="220" type="number" value="280"/></label>
+<label>Writing Room Max Width <input data-css-var="--writing-room-max-width" data-design-key="writingRoomMaxWidth" data-suffix="px" max="1800" min="360" type="number" value="980"/></label>
+<label>Writing Room Max Height <input data-css-var="--writing-room-max-height" data-design-key="writingRoomMaxHeight" data-suffix="px" max="1400" min="360" type="number" value="720"/></label>
+<label>Title Color <input data-css-var="--writing-room-title-color" data-design-key="writingRoomTitleColor" type="color" value="#e88f69"/></label>
+<label>Title Text Size <input data-css-var="--writing-room-title-size" data-design-key="writingRoomTitleSize" data-suffix="rem" max="2" min="0.8" step="0.05" type="number" value="1.05"/></label>
+<h4>Icons</h4>
+<label>Header Icon Size <input data-css-var="--writing-room-header-icon-size" data-design-key="writingRoomHeaderIconSize" data-suffix="rem" max="2.2" min="0.8" step="0.05" type="number" value="1"/></label>
+<label>Folder Icon Size <input data-css-var="--folder-icon-size" data-design-key="folderIconSize" data-suffix="rem" max="2" min="0.8" step="0.05" type="number" value="1"/></label>
+<label>Tab Icon Size <input data-css-var="--tab-icon-size" data-design-key="tabIconSize" data-suffix="rem" max="2" min="0.8" step="0.05" type="number" value="1"/></label>
+<label>Document Icon Size <input data-css-var="--doc-icon-size" data-design-key="docIconSize" data-suffix="rem" max="2" min="0.8" step="0.05" type="number" value="1"/></label>
+<label>Rail / Jump Icon Size <input data-css-var="--rail-icon-size" data-design-key="railIconSize" data-suffix="rem" max="1.8" min="0.65" step="0.05" type="number" value="0.9"/></label>
+<h4>Folders</h4>
+<label>Folder Row Background <input data-css-var="--folder-row-bg" data-design-key="folderRowBg" type="color" value="#2c2c2c"/></label>
+<label>Folder Row Border <input data-css-var="--folder-row-border" data-design-key="folderRowBorder" type="color" value="#724837"/></label>
+<label>Folder Text Color <input data-css-var="--folder-text-color" data-design-key="folderTextColor" type="color" value="#fbf4d6"/></label>
+<label>Folder Text Size <input data-css-var="--folder-text-size" data-design-key="folderTextSize" data-suffix="rem" max="1.6" min="0.7" step="0.05" type="number" value="0.95"/></label>
+<h4>Tabs</h4>
+<label>Tab Row Background <input data-css-var="--tab-row-bg" data-design-key="tabRowBg" type="color" value="#28133f"/></label>
+<label>Tab Row Border <input data-css-var="--tab-row-border" data-design-key="tabRowBorder" type="color" value="#563485"/></label>
+<label>Tab Text Color <input data-css-var="--tab-text-color" data-design-key="tabTextColor" type="color" value="#e7a2ff"/></label>
+<label>Tab Text Size <input data-css-var="--tab-text-size" data-design-key="tabTextSize" data-suffix="rem" max="1.5" min="0.7" step="0.05" type="number" value="0.9"/></label>
+<h4>Documents</h4>
+<label>Document Row Background <input data-css-var="--doc-row-bg" data-design-key="docRowBg" type="color" value="#2c2c2c"/></label>
+<label>Document Row Border <input data-css-var="--doc-row-border" data-design-key="docRowBorder" type="color" value="#724837"/></label>
+<label>Document Text Color <input data-css-var="--doc-text-color" data-design-key="docTextColor" type="color" value="#fbf4d6"/></label>
+<label>Document Text Size <input data-css-var="--doc-text-size" data-design-key="docTextSize" data-suffix="rem" max="1.4" min="0.65" step="0.05" type="number" value="0.9"/></label>
+<label>Expanded Document Text Color <input data-css-var="--expanded-doc-text-color" data-design-key="expandedDocTextColor" type="color" value="#b88b65"/></label>
+<label>Expanded Document Text Size <input data-css-var="--expanded-doc-text-size" data-design-key="expandedDocTextSize" data-suffix="rem" max="1.3" min="0.6" step="0.05" type="number" value="0.82"/></label>
+<h4>Metadata / Trash</h4>
+<label>Metadata Pill Background <input data-css-var="--metadata-pill-bg" data-design-key="metadataPillBg" type="color" value="#563485"/></label>
+<label>Metadata Pill Border <input data-css-var="--metadata-pill-border" data-design-key="metadataPillBorder" type="color" value="#724837"/></label>
+<label>Metadata Pill Text Color <input data-css-var="--metadata-pill-text-color" data-design-key="metadataPillTextColor" type="color" value="#fbf4d6"/></label>
+<label>Metadata Pill Text Size <input data-css-var="--metadata-pill-text-size" data-design-key="metadataPillTextSize" data-suffix="rem" max="1.3" min="0.6" step="0.05" type="number" value="0.78"/></label>
+<label>Trash Section Background <input data-css-var="--trash-bg" data-design-key="trashBg" type="color" value="#28133f"/></label>
+<label>Trash Section Border <input data-css-var="--trash-border" data-design-key="trashBorder" type="color" value="#563485"/></label>
+<h4>Jump Rail</h4>
+<label>Scrollbar / Jump Rail Line Color <input data-css-var="--jump-rail-line" data-design-key="jumpRailLine" type="color" value="#69635f"/></label>
+<label>Jump Rail Button Background <input data-css-var="--jump-rail-button-bg" data-design-key="jumpRailButtonBg" type="color" value="#2c2c2c"/></label>
+<label>Jump Rail Button Border <input data-css-var="--jump-rail-button-border" data-design-key="jumpRailButtonBorder" type="color" value="#724837"/></label>
+<label>Jump Rail Icon Color <input data-css-var="--jump-rail-icon-color" data-design-key="jumpRailIconColor" type="color" value="#fbf4d6"/></label>
+<h4>Delete / Writing Room Confirmation Dialog</h4><label>Delete Dialog BG <input data-css-var="--delete-dialog-bg" data-design-key="deleteDialogBg" type="color" value="#211812"/></label><label>Delete Dialog Border <input data-css-var="--delete-dialog-border" data-design-key="deleteDialogBorder" type="color" value="#724837"/></label><label>Delete Dialog Text <input data-css-var="--delete-dialog-text" data-design-key="deleteDialogText" type="color" value="#fbf4d6"/></label><label>Delete Tree BG <input data-css-var="--delete-dialog-tree-bg" data-design-key="deleteDialogTreeBg" type="color" value="#160f0b"/></label><label>Delete Tree Border <input data-css-var="--delete-dialog-tree-border" data-design-key="deleteDialogTreeBorder" type="color" value="#724837"/></label><label>Delete Dialog Width <input data-css-var="--delete-dialog-width" data-design-key="deleteDialogWidth" data-suffix="px" max="900" min="260" type="number" value="420"/></label><h4>Editable Filing Cabinet Icons</h4><label>Folder Icon <input class="icon-text-input" data-design-key="folderIconText" maxlength="4" type="text" value="📁"/></label><label>Tab Icon <input class="icon-text-input" data-design-key="tabIconText" maxlength="4" type="text" value="▱"/></label><label>Document Icon <input class="icon-text-input" data-design-key="documentIconText" maxlength="4" type="text" value="📄"/></label><label>Characters Icon <input class="icon-text-input" data-design-key="charactersIconText" maxlength="4" type="text" value="🧑"/></label><label>Episodes Icon <input class="icon-text-input" data-design-key="episodesIconText" maxlength="4" type="text" value="🎬"/></label><label>Core Icon <input class="icon-text-input" data-design-key="coreIconText" maxlength="4" type="text" value="💗"/></label></details>
+<details class="element-designer-card" data-designer-card="subnoto"> <details class="element-designer-card" data-designer-card="subnoto">
+<summary>Subnoto</summary>
+<p class="placeholder-card">Reserved for the future Subnoto clipboard workspace.</p>
+</details>
+<details class="element-designer-card" data-designer-card="specnoto">
+<summary>Specnoto</summary>
+<p class="placeholder-card">Reserved for the future Specnoto search/find workspace.</p>
+</details>
+<details class="element-designer-card" data-designer-card="writing-area">
+<summary>Writing Area</summary>
+<div class="inherit-controls"><input data-inherit-section="writing-area" hidden="" type="checkbox"/><button aria-pressed="false" class="toggle-pill inherit-row inherit-toggle" data-inherit-target="writing-area" type="button">Use Defaults</button></div>
+<p class="design-section-note">Main editor, titles, headings, links, Link Pills, emphasis boxes, tables, and the bottom details bar.</p>
+<label>Writing Surface BG <input data-css-var="--writing-surface-bg" data-design-key="writingSurfaceBg" type="color" value="#211812"/></label>
+<label>Overlay Transparency % <input data-css-var="--writing-overlay-opacity" data-design-key="writingOverlayOpacity" max="100" min="0" type="number" value="92"/></label>
+<label>Writing Surface Border <input data-css-var="--writing-surface-border" data-design-key="writingSurfaceBorder" type="color" value="#724837"/></label>
+<label>Document Title Color <input data-css-var="--doc-title-color" data-design-key="docTitleColor" type="color" value="#fbf4d6"/></label>
+<label>Document Title Size <input data-css-var="--doc-title-size" data-design-key="docTitleSize" data-suffix="rem" max="4" min="1" step="0.05" type="number" value="2.1"/></label>
+<label>Normal Text Color <input data-css-var="--editor-text-color" data-design-key="editorTextColor" type="color" value="#fbf4d6"/></label>
+<label>Normal Text Size <input data-css-var="--editor-text-size" data-design-key="editorTextSize" data-suffix="rem" max="1.5" min="0.7" step="0.05" type="number" value="1"/></label>
+<label>H1 Color <input data-css-var="--h1-color" data-design-key="h1Color" type="color" value="#fbf4d6"/></label>
+<label>H1 Size <input data-css-var="--h1-size" data-design-key="h1Size" data-suffix="rem" max="3" min="1" step="0.05" type="number" value="1.65"/></label>
+<label>H2 Color <input data-css-var="--h2-color" data-design-key="h2Color" type="color" value="#fbf4d6"/></label>
+<label>H2 Size <input data-css-var="--h2-size" data-design-key="h2Size" data-suffix="rem" max="2.5" min="0.9" step="0.05" type="number" value="1.35"/></label>
+<label>H3 Color <input data-css-var="--h3-color" data-design-key="h3Color" type="color" value="#fbf4d6"/></label>
+<label>H3 Size <input data-css-var="--h3-size" data-design-key="h3Size" data-suffix="rem" max="2" min="0.85" step="0.05" type="number" value="1.15"/></label>
+<label>Normal Link Color <input data-css-var="--link-color" data-design-key="linkColor" type="color" value="#e88f69"/></label>
+<label>Normal Link Size <input data-css-var="--link-size" data-design-key="linkSize" data-suffix="rem" max="1.5" min="0.7" step="0.05" type="number" value="1"/></label>
+<label>Link Pill BG <input data-css-var="--link-pill-bg" data-design-key="linkPillBg" type="color" value="#e88f69"/></label>
+<label>Link Pill Border <input data-css-var="--link-pill-border" data-design-key="linkPillBorder" type="color" value="#724837"/></label>
+<label>Link Pill Text <input data-css-var="--link-pill-text" data-design-key="linkPillText" type="color" value="#000000"/></label>
+<label>Link Pill Text Size <input data-css-var="--link-pill-text-size" data-design-key="linkPillTextSize" data-suffix="rem" max="1.5" min="0.65" step="0.05" type="number" value="0.9"/></label>
+<label>Emphasis BG <input id="emphasisBgColor" type="color" value="#2f251c"/></label>
+<label>Emphasis Border <input id="emphasisBorderColor" type="color" value="#563485"/></label>
+<label>Emphasis Text <input id="emphasisTextColor" type="color" value="#fbf4d6"/></label>
+<label>Emphasis Text Size <input data-css-var="--emphasis-text-size" data-design-key="emphasisTextSize" data-suffix="rem" max="1.5" min="0.7" step="0.05" type="number" value="1"/></label>
+<label>Table BG <input data-css-var="--table-bg" data-design-key="tableBg" type="color" value="#211812"/></label>
+<label>Table Border <input data-css-var="--table-border" data-design-key="tableBorder" type="color" value="#724837"/></label>
+<label>Table Heading BG <input data-css-var="--table-head-bg" data-design-key="tableHeadBg" type="color" value="#2f251c"/></label>
+<label>Table Heading Text <input data-css-var="--table-head-text" data-design-key="tableHeadText" type="color" value="#fbf4d6"/></label>
+<label>Table Text Size <input data-css-var="--table-text-size" data-design-key="tableTextSize" data-suffix="rem" max="1.4" min="0.65" step="0.05" type="number" value="0.95"/></label>
+</details>
+<details class="element-designer-card" data-designer-card="help">
+<summary>Help / Guidebook</summary>
+<div class="inherit-controls"><input data-inherit-section="help" hidden="" type="checkbox"/><button aria-pressed="false" class="toggle-pill inherit-row inherit-toggle" data-inherit-target="help" type="button">Use Defaults</button></div>
+<p class="design-section-note">Help panel surface, logo, title, headings, guide text, rules, and scrollbars.</p>
+<label>Help Window BG <input data-css-var="--help-bg" data-design-key="helpBg" type="color" value="#211812"/></label>
+<label>Help Window Border <input data-css-var="--help-border" data-design-key="helpBorder" type="color" value="#724837"/></label>
+<label>Help Logo Size <input data-css-var="--help-logo-size" data-design-key="helpLogoSize" data-suffix="rem" max="5" min="1" step="0.1" type="number" value="2.2"/></label>
+<label>Help Title Color <input data-css-var="--help-title-color" data-design-key="helpTitleColor" type="color" value="#e88f69"/></label>
+<label>Help Title Size <input data-css-var="--help-title-size" data-design-key="helpTitleSize" data-suffix="rem" max="3" min="1" step="0.05" type="number" value="1.4"/></label>
+<label>Help Text Color <input data-css-var="--help-text-color" data-design-key="helpTextColor" type="color" value="#fbf4d6"/></label>
+<label>Help Text Size <input data-css-var="--help-text-size" data-design-key="helpTextSize" data-suffix="rem" max="1.5" min="0.7" step="0.05" type="number" value="1"/></label>
+<label>Help Heading Color <input data-css-var="--help-heading-color" data-design-key="helpHeadingColor" type="color" value="#fbf4d6"/></label>
+<label>Help Heading Size <input data-css-var="--help-heading-size" data-design-key="helpHeadingSize" data-suffix="rem" max="2" min="0.9" step="0.05" type="number" value="1.15"/></label>
+<label>Help Rule Color <input data-css-var="--help-rule-color" data-design-key="helpRuleColor" type="color" value="#724837"/></label>
+<h4>Window Size</h4>
+<label>Help Width <input data-css-var="--help-width" data-design-key="helpWidth" data-suffix="px" max="1600" min="360" type="number" value="760"/></label>
+<label>Help Height <input data-css-var="--help-height" data-design-key="helpHeight" data-suffix="px" max="1200" min="300" type="number" value="720"/></label>
+<label>Help Min Width <input data-css-var="--help-min-width" data-design-key="helpMinWidth" data-suffix="px" max="900" min="260" type="number" value="360"/></label>
+<label>Help Min Height <input data-css-var="--help-min-height" data-design-key="helpMinHeight" data-suffix="px" max="900" min="220" type="number" value="280"/></label>
+<label>Help Max Width <input data-css-var="--help-max-width" data-design-key="helpMaxWidth" data-suffix="px" max="1800" min="420" type="number" value="980"/></label>
+<label>Help Max Height <input data-css-var="--help-max-height" data-design-key="helpMaxHeight" data-suffix="px" max="1400" min="360" type="number" value="900"/></label>
+</details>
+<details class="element-designer-card" data-designer-card="settings">
+<summary>Settings Window</summary>
+<div class="inherit-controls"><input data-inherit-section="settings" hidden="" type="checkbox"/><button aria-pressed="false" class="toggle-pill inherit-row inherit-toggle" data-inherit-target="settings" type="button">Use Defaults</button></div>
+<p class="design-section-note">Settings panel, cards, labels, inputs, scrollbars, and this Element Designer.</p>
+<label>Settings Window BG <input data-css-var="--settings-bg" data-design-key="settingsBg" type="color" value="#211812"/></label>
+<label>Settings Window Border <input data-css-var="--settings-border" data-design-key="settingsBorder" type="color" value="#724837"/></label>
+<label>Settings Title Color <input data-css-var="--settings-title-color" data-design-key="settingsTitleColor" type="color" value="#e88f69"/></label>
+<label>Settings Title Size <input data-css-var="--settings-title-size" data-design-key="settingsTitleSize" data-suffix="rem" max="3" min="1" step="0.05" type="number" value="1.5"/></label>
+<label>Settings Card BG <input data-css-var="--settings-card-bg" data-design-key="settingsCardBg" type="color" value="#211812"/></label>
+<label>Settings Card Border <input data-css-var="--settings-card-border" data-design-key="settingsCardBorder" type="color" value="#724837"/></label>
+<label>Settings Label Color <input data-css-var="--settings-label-color" data-design-key="settingsLabelColor" type="color" value="#563485"/></label>
+<label>Settings Label Size <input data-css-var="--settings-label-size" data-design-key="settingsLabelSize" data-suffix="rem" max="1.4" min="0.65" step="0.05" type="number" value="0.82"/></label>
+<label>Settings Input BG <input data-css-var="--settings-input-bg" data-design-key="settingsInputBg" type="color" value="#000000"/></label>
+<label>Settings Input Text <input data-css-var="--settings-input-text" data-design-key="settingsInputText" type="color" value="#fbf4d6"/></label>
+<label>Element Designer Font Size <input data-css-var="--element-designer-text-size" data-design-key="elementDesignerTextSize" data-suffix="rem" max="1.4" min="0.65" step="0.05" type="number" value="0.88"/></label>
+<h4>Window Size</h4>
+<label>Settings Width <input data-css-var="--settings-width" data-design-key="settingsWidth" data-suffix="px" max="1800" min="420" type="number" value="1100"/></label>
+<label>Settings Height <input data-css-var="--settings-height" data-design-key="settingsHeight" data-suffix="px" max="1200" min="320" type="number" value="760"/></label>
+<label>Settings Min Width <input data-css-var="--settings-min-width" data-design-key="settingsMinWidth" data-suffix="px" max="900" min="320" type="number" value="560"/></label>
+<label>Settings Min Height <input data-css-var="--settings-min-height" data-design-key="settingsMinHeight" data-suffix="px" max="900" min="240" type="number" value="320"/></label>
+<label>Settings Max Width <input data-css-var="--settings-max-width" data-design-key="settingsMaxWidth" data-suffix="px" max="2200" min="520" type="number" value="1400"/></label>
+<label>Settings Max Height <input data-css-var="--settings-max-height" data-design-key="settingsMaxHeight" data-suffix="px" max="1400" min="420" type="number" value="980"/></label>
+</details>
+<details class="element-designer-card" data-designer-card="tcards">
+<summary>Transclusion Cards</summary>
+<div class="inherit-controls"><input data-inherit-section="tcards" hidden="" type="checkbox"/><button aria-pressed="false" class="toggle-pill inherit-row inherit-toggle" data-inherit-target="tcards" type="button">Use Defaults</button></div>
+<p class="design-section-note">Default TCard styling and the Transclusion Cards side panel.</p>
+<label>TCard Default BG <input data-css-var="--tcard-bg" data-design-key="tcardBg" type="color" value="#28133f"/></label>
+<label>TCard Default Border <input data-css-var="--tcard-border" data-design-key="tcardBorder" type="color" value="#e88f69"/></label>
+<label>TCard Text <input data-css-var="--tcard-text" data-design-key="tcardText" type="color" value="#fbf4d6"/></label>
+<label>TCard Text Size <input data-css-var="--tcard-text-size" data-design-key="tcardTextSize" data-suffix="rem" max="1.5" min="0.65" step="0.05" type="number" value="0.95"/></label>
+<label>TCard Heading <input data-css-var="--tcard-heading" data-design-key="tcardHeading" type="color" value="#e88f69"/></label>
+<label>TCard Panel BG <input data-css-var="--tcard-panel-bg" data-design-key="tcardPanelBg" type="color" value="#211812"/></label>
+<label>TCard Panel Border <input data-css-var="--tcard-panel-border" data-design-key="tcardPanelBorder" type="color" value="#724837"/></label>
+<label>TCard Input BG <input data-css-var="--tcard-input-bg" data-design-key="tcardInputBg" type="color" value="#28133f"/></label>
+<label>TCard Input Text <input data-css-var="--tcard-input-text" data-design-key="tcardInputText" type="color" value="#fbf4d6"/></label>
+<h4>Window Size</h4>
+<label>TCard Panel Width <input data-css-var="--tcard-panel-width" data-design-key="tcardPanelWidth" data-suffix="px" max="1200" min="320" type="number" value="430"/></label>
+<label>TCard Panel Height <input data-css-var="--tcard-panel-height" data-design-key="tcardPanelHeight" data-suffix="px" max="1200" min="280" type="number" value="720"/></label>
+<label>TCard Panel Min Width <input data-css-var="--tcard-panel-min-width" data-design-key="tcardPanelMinWidth" data-suffix="px" max="900" min="260" type="number" value="320"/></label>
+<label>TCard Panel Min Height <input data-css-var="--tcard-panel-min-height" data-design-key="tcardPanelMinHeight" data-suffix="px" max="900" min="220" type="number" value="280"/></label>
+<label>TCard Panel Max Width <input data-css-var="--tcard-panel-max-width" data-design-key="tcardPanelMaxWidth" data-suffix="px" max="1600" min="360" type="number" value="760"/></label>
+<label>TCard Panel Max Height <input data-css-var="--tcard-panel-max-height" data-design-key="tcardPanelMaxHeight" data-suffix="px" max="1400" min="360" type="number" value="900"/></label>
+<h4>Delete / Dialog Window Size</h4>
+<label>Dialog Width <input data-css-var="--dialog-window-width" data-design-key="dialogWindowWidth" data-suffix="px" max="1100" min="280" type="number" value="500"/></label>
+<label>Dialog Height <input data-css-var="--dialog-window-height" data-design-key="dialogWindowHeight" data-suffix="px" max="900" min="180" type="number" value="360"/></label>
+<label>Dialog Min Width <input data-css-var="--dialog-window-min-width" data-design-key="dialogWindowMinWidth" data-suffix="px" max="800" min="240" type="number" value="300"/></label>
+<label>Dialog Max Width <input data-css-var="--dialog-window-max-width" data-design-key="dialogWindowMaxWidth" data-suffix="px" max="1400" min="320" type="number" value="640"/></label>
+</details>
+</details></div>
+<aside aria-label="Design preview and colors" class="design-preview-column">
+<div class="design-preview">
+<article>
+<div class="preview-title-row"><h4>Preview Title</h4><span><a href="#">Normal link</a> <a class="pill-link" href="#">Link Pill</a></span></div>
+<p>This preview shows sample dynamic text inside a bordered panel/card.</p>
+<div class="preview-card"><strong>Sample Card</strong><span>Panel text and section border preview.</span></div>
+<button type="button">Preview Button</button>
+</article>
+</div>
+<div aria-label="Current color" class="current-color-box" draggable="true" id="currentColorBox">#e88f69</div>
+<div class="hex-image-row"><label class="hex-control">Hex Code <input id="activeColorHex" maxlength="7" placeholder="#e88f69" type="text" value="#e88f69"/></label><button id="importColorImageButton" type="button">Import Image</button><input accept="image/*" hidden="" id="colorImageInput" type="file"/></div>
+<div aria-label="Favorite colors" class="favorite-colors" id="favoriteColors"><button data-favorite-color="#000000" type="button">#000000</button><button data-favorite-color="#28133f" type="button">#28133f</button><button data-favorite-color="#211812" type="button">#211812</button><button data-favorite-color="#563485" type="button">#563485</button><button data-favorite-color="#724837" type="button">#724837</button><button data-favorite-color="#a97b38" type="button">#a97b38</button><button data-favorite-color="#c55222" type="button">#c55222</button><button data-favorite-color="#e88f69" type="button">#e88f69</button><button data-favorite-color="#2f251c" type="button">#2f251c</button><button data-favorite-color="#2c2c2c" type="button">#2c2c2c</button><button data-favorite-color="#fbf4d6" type="button">#fbf4d6</button><button data-favorite-color="#ffffff" type="button">#ffffff</button><button data-favorite-color="#4b2b1f" type="button">#4b2b1f</button><button data-favorite-color="#8f5cff" type="button">#8f5cff</button><button data-favorite-color="#d7a56d" type="button">#d7a56d</button><button data-favorite-color="#101010" type="button">#101010</button></div>
+</aside>
+</div>
+</section>
+<section class="settings-section settings-card" data-settings-section="import" hidden=""><h3>Import File</h3><p class="panel-help">Placeholder for future Capsanoto file import tools. This will later support importing saved Caps files, document bundles, and other compatible writing-room data.</p><div class="import-placeholder-grid"><div class="import-primary-buttons"><button disabled="" type="button">Import Caps File</button><button disabled="" type="button">Import Document Bundle</button><button disabled="" type="button">Import TCards</button><button disabled="" type="button">Import Writing Room Backup</button><div class="import-mini-buttons"><button disabled="" type="button">JSON</button><button disabled="" type="button">HTML</button><button disabled="" type="button">TXT</button><button disabled="" type="button">Word</button><button disabled="" type="button">Images</button><button disabled="" type="button">TBA</button></div></div><div class="import-preview-box">Preview window TBA</div></div></section>
+<section class="settings-section settings-card" data-settings-section="emoji" hidden="">
+<h3>Emoji Favorites</h3>
+<p class="panel-help">Edit the favourite emojis shown at the top of the Emoji Spark window. Separate each emoji with a space.</p>
+<div class="emoji-favorite-settings">
+<input aria-label="Favorite emojis" id="favoriteEmojiInput" placeholder="⭐ ✨ 🔥 💎 🗝️ 📜 🗡️ 💜 🧙 🏰 🌙 🔥 💧 🌲 🧪 🪄 ⚔️ 🛡️ 📖 📝 🎬 🎵 🎤 🎨 🖼️ 🔗 ⚓ 💊 🧩 🔍 ⚙️ ❓ ✅ ❌ ➕ ➖" type="text"/>
+<button id="saveFavoriteEmojiButton" type="button">Save Favorite Emojis</button>
+</div>
+</section>
+<section class="settings-section settings-card settings-links" data-settings-section="support" hidden="">
+<h3>Help / Guidebook</h3>
+<button id="helpButton" type="button">❔ Help / Release Notes</button>
+<button id="logoutButton" type="button">🧹 Reset Local Save</button>
+<button disabled="" type="button">Placeholder</button>
+<button disabled="" type="button">Placeholder</button>
+</section>
+</aside>
+<aside aria-label="Capsanoto guidebook" class="help-panel" hidden="" id="helpPanel">
+<header>
+<div class="help-title-lockup">
+<img alt="Capsanoto icon" class="help-logo" src="https://raw.githubusercontent.com/cinaedvsstudios/forever-bound-wiki/refs/heads/main/iconcapsanoto.png"/>
+<div>
+<p class="eyebrow">CINAEDVS Studios · 2026</p>
+<h2>Capsanoto Guidebook</h2>
+</div>
+</div>
+<div class="panel-header-actions"><button aria-label="Edit help" aria-pressed="false" class="icon-button" id="helpEditButton" type="button">✎</button><button aria-label="Close help" class="icon-button" id="closeHelpPanel" type="button">×</button></div>
+</header>
+<section>
+<h3>1. What Capsanoto Is</h3>
+<p>Capsanoto is a lightweight structured writing environment for lore-heavy writing, long-form worldbuilding, scripts, novels, pitch material, and narrative documents.</p>
+<p>It is human-writing-first, local-first, portable, and designed to avoid heavy database/wiki complexity. The goal is to help writers move quickly while still keeping large bodies of connected text organized.</p>
+</section>
+<section>
+<h3>2. Why Capsanoto Exists</h3>
+<p>Capsanoto exists because writers often need to retrieve, reuse, reshape, and organize text without breaking creative flow.</p>
+<p>It prioritizes fast editing, contextual right-click tools, reusable TCards, local autosave, readable downloads, and creative ownership of the files.</p>
+</section>
+<section>
+<h3>3. Application Structure</h3>
+<p>The intended hierarchy is:</p>
+<p><strong>Application → Writing Room → Folder → Tab → File → TCard</strong></p>
+<dl>
+<dt>Application</dt><dd>Capsanoto itself: the browser-based writing app.</dd>
+<dt>Writing Room</dt><dd>The project/profile workspace for a story world or major writing project.</dd>
+<dt>Folder</dt><dd>A large category inside a Writing Room, such as Characters, Locations, Items, Worldbuilding, or Episodes.</dd>
+<dt>Tab</dt><dd>A grouping inside a folder, such as Main Characters, Recurring Characters, Season 1, Songs, or Lore Checks.</dd>
+<dt>File</dt><dd>An individual writing document, such as Mel, Luca, Ironvale, Runestones, or Episode 01.</dd>
+<dt>TCard</dt><dd>A Transclusion Card: a reusable synchronized text block.</dd>
+</dl>
+</section>
+<section>
+<h3>4. Writing Room / Filing Cabinet</h3>
+<p>The <strong>Writing Room</strong> button opens the <strong>Filing Cabinet</strong>, the floating folder/tab/file manager.</p>
+<dl>
+<dt>Folders, tabs, and files</dt><dd>Folders contain tabs. Tabs contain files. Files are the documents you write in.</dd>
+<dt>Metadata</dt><dd>File metadata such as type, ID, tags, and updated date lives in the Filing Cabinet metadata pill instead of cluttering the document body.</dd>
+<dt>Edit mode</dt><dd>The pencil unlocks inline editing for Writing Room, folder, tab, file, and metadata text.</dd>
+<dt>Duplicate</dt><dd>Creates a copy of a file for variants, rewrites, or experiments.</dd>
+<dt>Trash</dt><dd>Deleted files move to Trash so they can be restored later.</dd>
+<dt>Deprecated versions</dt><dd>Deprecated versions are preserved old versions of files. This language is reserved for old versions, retired files, snapshots, and preserved history.</dd>
+<dt>Locks and expansion</dt><dd>Folder/tab lock icons mark containers that should stay open. The rail buttons can collapse all or expand all.</dd>
+<dt>Jump rail</dt><dd>The right-side rail uses folder icons as jump points. Clicking one expands that folder and scrolls the Filing Cabinet to it.</dd>
+</dl>
+</section>
+<section>
+<h3>5. Top Bar and Status Box</h3>
+<dl>
+<dt>Capsanoto title/icon</dt><dd>Shows the app identity. The title icon size can be adjusted in Settings → Design.</dd>
+<dt>Writing Room button</dt><dd>Opens the Filing Cabinet.</dd>
+<dt>Dynamic status box</dt><dd>The center status box is intentionally important. It explains hovered controls, selected text, cursor context, clicked objects, save/autosave status, and what buttons will do.</dd>
+<dt>Format menu</dt><dd>Contains Bold, Italic, H1, H2, Normal Text, and List commands.</dd>
+<dt>Subnoto</dt><dd>Current state: placeholder. It opens a placeholder window and will be defined later.</dd>
+<dt>Insert menu</dt><dd>Contains table insertion, horizontal rule, image insertion, Emoji Spark, TCard tools, and emphasis boxes.</dd>
+<dt>Search</dt><dd>Current state: placeholder for future context/fuzzy search.</dd>
+<dt>Help</dt><dd>Opens this Guidebook.</dd>
+<dt>Settings</dt><dd>Opens Design, Download, and support/reset tools.</dd>
+</dl>
+</section>
+<section>
+<h3>6. Right-Click Context Tools</h3>
+<p>Capsanoto is designed around highlighting text and right-clicking it. The context menu should keep common editing actions close to the writing surface.</p>
+<dl>
+<dt>Link Anchor</dt><dd>Turns selected text into a direct section target.</dd>
+<dt>TCard</dt><dd>Creates a Transclusion Card from selected text.</dd>
+<dt>Link</dt><dd>Creates a normal hyperlink to a file, section, TCard reference, or external URL.</dd>
+<dt>Link Pill</dt><dd>Creates a rounded visual hyperlink.</dd>
+<dt>Link Editor</dt><dd>Edits an existing link target without recreating the visible text.</dd>
+<dt>Pill color/style editing</dt><dd>Right-click an existing Link Pill to change its visual color styling.</dd>
+</dl>
+</section>
+<section>
+<h3>7. Links and Navigation</h3>
+<dl>
+<dt>Document links</dt><dd>Files can be opened by URLs such as <code>editor.html?doc=Character-Mel-Ameldra</code>.</dd>
+<dt>Section links / Link Anchors</dt><dd>Heading IDs create section routes such as <code>editor.html?doc=Character-Mel-Ameldra#Runestones</code>.</dd>
+<dt>External links</dt><dd>Normal web URLs are supported.</dd>
+<dt>TCard references</dt><dd>TCard targets can use supported references such as <code>block:Item-Runestones</code> or <code>{{Item-Runestones}}</code>.</dd>
+<dt>Link Pills</dt><dd>Link Pills are rounded hyperlinks that visually stand out from normal text links.</dd>
+</dl>
+</section>
+<section>
+<h3>8. TCards / Transclusion Cards</h3>
+<p>A <strong>TCard</strong> stores reusable text once and displays that same text wherever the TCard is referenced.</p>
+<p>Editing the source text updates all referenced instances. Formatting may be local to the current document, while the underlying source text remains synchronized.</p>
+<dl>
+<dt>Syntax</dt><dd>Current supported reference syntax includes <code>{{Item-Runestones}}</code>.</dd>
+<dt>TCard panel</dt><dd>The TCards panel lets you create, edit, style, and insert reusable cards.</dd>
+<dt>Insert behavior</dt><dd>Insert TCard places the reference at the saved cursor position.</dd>
+<dt>Inline edit</dt><dd>Rendered TCards show an edit button on hover; clicking it opens that TCard in the side panel.</dd>
+<dt>Style controls</dt><dd>TCard background, border, text color, heading color, and text size can be adjusted.</dd>
+<dt>Drag/move</dt><dd>Rendered TCards can be dragged within the writing area.</dd>
+</dl>
+</section>
+<section>
+<h3>9. Tables, Emoji Spark, and Emphasis Boxes</h3>
+<dl>
+<dt>Tables</dt><dd>Tables insert at the cursor, use rounded corners, can be dragged, and show inline table tools for row/column/color edits.</dd>
+<dt>Emoji Spark</dt><dd>Opens a scrollable emoji grid. Click an emoji to insert it; right-click an emoji to search the grid by word.</dd>
+<dt>Emphasis boxes</dt><dd>Wrap selected text in a bordered emphasis block that can be moved and styled.</dd>
+</dl>
+</section>
+<section>
+<h3>10. Document Editing and Autosave</h3>
+<dl>
+<dt>Document title</dt><dd>The title field edits the current file title.</dd>
+<dt>Writing area</dt><dd>The main editable page supports browser rich-text editing, headings, links, images, tables, TCards, and emphasis boxes.</dd>
+<dt>Autosave</dt><dd>Changes save locally in the browser. The status box reports saving and autosaved states.</dd>
+<dt>Reset Local Save</dt><dd>Settings → Help includes Reset Local Save, which clears the browser autosave and reloads starter content.</dd>
+</dl>
+</section>
+<section>
+<h3>11. Download and Backups</h3>
+<dl>
+<dt>Download builder</dt><dd>Choose files and/or TCards, reorder them, and download selected pieces.</dd>
+<dt>Caps file</dt><dd>Downloads structured JSON for Capsanoto/Caps workflows.</dd>
+<dt>TXT</dt><dd>Downloads plain text.</dd>
+<dt>HTML</dt><dd>Downloads a browser-readable HTML file.</dd>
+<dt>Word-compatible</dt><dd>Downloads a Word-compatible <code>.doc</code> HTML document.</dd>
+<dt>Clean output</dt><dd>Downloads should render cleanly and strip editor-only UI artifacts.</dd>
+</dl>
+<p>PDF and DOCX clean export are planned/experimental, not complete current features.</p>
+</section>
+<section>
+<h3>12. Design Settings</h3>
+<p>Settings → Design controls system styling, global dialogue/button styling, Writing Room window styling, Settings window styling, and Help window styling.</p>
+<p>Recommended font stack: <code>Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif</code>. This keeps the app local-first and avoids requiring an external font dependency. Courier New is reserved for code-like/monospace text.</p>
+</section>
+<section>
+<h3>13. Planned / Experimental Workflow Systems</h3>
+<dl>
+<dt>Subnoto</dt><dd>Placeholder. The workflow will be defined later.</dd>
+<dt>Context Search / fuzzy search</dt><dd>Planned search tools for finding content across files, TCards, and metadata.</dd>
+<dt>Slash Commands</dt><dd>Planned commands such as <code>/dialogue</code>, <code>/scene</code>, <code>/song</code>, <code>/spell</code>, <code>/tba</code>, <code>/pill</code>, and <code>/tcard</code>.</dd>
+<dt>Timeline Blocks</dt><dd>Experimental year/date blocks that may gather linked events, scenes, and TCards.</dd>
+<dt>Hover Names / entity profiles</dt><dd>Planned hover previews for characters, places, objects, and other named entities.</dd>
+<dt>Speech Profiles</dt><dd>Planned voice/dialogue profile helpers.</dd>
+<dt>Paragraph deprecation / deprecated TCards</dt><dd>Planned preserved-history workflow for smaller text units.</dd>
+<dt>PDF/DOCX clean export</dt><dd>Planned export targets beyond the current Caps, TXT, HTML, and Word-compatible downloads.</dd>
+</dl>
+</section>
+<section>
+<h3>14. Technical Notes</h3>
+<dl>
+<dt>Code type</dt><dd>Static HTML, CSS, and plain JavaScript. No framework build step is required.</dd>
+<dt>Main app file</dt><dd><code>app.js</code> handles state, events, autosave, routing, TCards, links, downloads, dialogs, Filing Cabinet behavior, table tools, emoji picker, and design settings.</dd>
+<dt>Styles</dt><dd><code>styles.css</code> controls the theme, layouts, panels, typography, and CSS variables.</dd>
+<dt>Starter files</dt><dd><code>content/documents.json</code> seeds first-run content. <code>config/auth.json</code> remains for future preview auth work.</dd>
+<dt>Local storage keys</dt><dd><code>forever-bound-writing-room-v2</code> stores files/TCards, <code>capsanoto-design-settings-v1</code> stores design settings, <code>capsanoto-help-html-v1</code> stores edited Help text, and <code>capsanoto-writing-room-layout-v1</code> stores Filing Cabinet panel position/size.</dd>
+<dt>Versioning rule</dt><dd>Use <code>v1</code> as the first version, then <code>v1.1</code>, <code>v1.2</code>, and so on for future updates.</dd>
+</dl>
+</section>
+<section>
+<h3>15. Release Notes</h3>
+<p><strong>Capsanoto v1 — May 8, 2026:</strong> local-first Writing Room preview with Filing Cabinet organization, files, TCards, Link Anchors, Link Pills, right-click context tools, table tools, Emoji Spark, emphasis boxes, local autosave, design settings, Help, and Download builder.</p>
+<p><strong>Current preview note:</strong> Subnoto, context search, slash commands, timeline blocks, hover names, speech profiles, paragraph-level deprecation, and PDF/DOCX clean export are planned or experimental.</p>
+</section>
+<section><h3>v2.1 interface update</h3><p>Updated Settings into a tabbed card viewer, added the Import File placeholder layout, improved Emoji Spark favorites/library behavior, added Specnoto naming, and refined Writing Room edit/save behavior.</p></section></aside>
+<aside aria-label="TCards" class="block-panel" hidden="" id="blockPanel">
+<header>
+<div>
+<h2>TCards</h2>
+</div>
+<button aria-label="Close TCards" id="closeBlockPanel" type="button">×</button>
+</header>
+<p class="panel-help">Create reusable TCards with IDs like <code>Character-Name</code>, <code>Item-Name</code>, <code>Location-Name</code>, or <code>Mechanic-Name</code>. Reference them in files with <code>{{Item-Runestones}}</code>.</p>
+<label>TCard ID <input id="blockIdInput" placeholder="Item-Runestones" type="text"/></label>
+<label>TCard Content <textarea id="blockContentInput" placeholder="Reusable canon text" rows="8"></textarea></label>
+<div class="tcard-style-grid">
+<label>BG <input id="blockBgInput" type="color" value="#28133f"/></label>
+<label>Border <input id="blockBorderInput" type="color" value="#e88f69"/></label>
+<label>Text <input id="blockTextInput" type="color" value="#fbf4d6"/></label>
+<label>Heading <input id="blockHeadingInput" type="color" value="#e88f69"/></label>
+<label>Text Size <input id="blockTextSizeInput" max="28" min="10" type="number" value="14"/></label>
+</div>
+<div class="block-actions">
+<button id="saveBlockButton" type="button">Save TCard</button>
+<button id="insertBlockRefButton" type="button">Insert TCard</button>
+</div>
+<div class="block-list" id="blockList"></div>
+</aside>
+</main>
+<template id="documentTemplate">
+<h1 id="overview">New Lore Document</h1>
+<p>Start writing here.</p>
+<h2 id="notes">Notes</h2>
+<p>Add internal references, links, and reusable TCards.</p>
+</template>
+<script src="app.js"></script>
 </body>
 </html>
