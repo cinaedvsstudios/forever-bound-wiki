@@ -108,6 +108,8 @@ const state = {
   favoriteColors: [...DEFAULT_FAVORITE_COLORS],
   favoriteEmojis: [],
   customEmojis: [],
+  blockDeleteMode: false,
+  inlineTCardEditId: "",
   emojiDrag: null,
   settingsDirty: false,
   contextStatusLocked: false,
@@ -244,6 +246,8 @@ const els = {
   blockTextSizeInput: document.querySelector("#blockTextSizeInput"),
   saveBlockButton: document.querySelector("#saveBlockButton"),
   insertBlockRefButton: document.querySelector("#insertBlockRefButton"),
+  deleteBlockButton: document.querySelector("#deleteBlockButton"),
+  editBlockInlineButton: document.querySelector("#editBlockInlineButton"),
   blockList: document.querySelector("#blockList"),
   documentTemplate: document.querySelector("#documentTemplate"),
 };
@@ -609,7 +613,11 @@ function bindEditorEvents() {
   els.closeBlockPanel.addEventListener("click", () => toggleBlockPanel(false));
   els.saveBlockButton.addEventListener("click", saveBlock);
   els.insertBlockRefButton.addEventListener("click", insertBlockReference);
+  els.deleteBlockButton?.addEventListener("click", toggleBlockDeleteMode);
+  els.editBlockInlineButton?.addEventListener("click", toggleInlineTCardEditMode);
   els.blockList.addEventListener("click", (event) => {
+    const deleteButton = event.target.closest("button[data-delete-block-id]");
+    if (deleteButton) { confirmDeleteBlock(deleteButton.dataset.deleteBlockId); return; }
     const button = event.target.closest("button[data-block-id]");
     if (!button) return;
     selectBlock(button.dataset.blockId);
@@ -793,8 +801,32 @@ function syncEditorToDocument(updateTimestamp = true) {
 
 function runCommand(command) {
   els.editor.focus();
+  if (command === "cycleTextAlign") {
+    cycleTextAlignment();
+    return;
+  }
   document.execCommand(command, false, null);
   syncAndSave("Formatting updated");
+}
+
+function cycleTextAlignment(targetNode = null) {
+  const selection = window.getSelection();
+  let node = targetNode || selection?.anchorNode;
+  if (node?.nodeType === Node.TEXT_NODE) node = node.parentElement;
+  const block = node?.closest?.("th, td, p, h1, h2, h3, li, aside") || currentEditableBlock();
+  if (!block || !els.editor.contains(block)) return;
+  const current = (block.style.textAlign || getComputedStyle(block).textAlign || "left").toLowerCase();
+  const next = current.includes("center") ? "right" : current.includes("right") ? "left" : "center";
+  block.style.textAlign = next;
+  syncAndSave(`Alignment set to ${next}`);
+}
+
+function currentEditableBlock() {
+  const selection = window.getSelection();
+  if (!selection?.rangeCount) return null;
+  let node = selection.getRangeAt(0).commonAncestorContainer;
+  if (node.nodeType === Node.TEXT_NODE) node = node.parentElement;
+  return node?.closest?.("p, h1, h2, h3, li, th, td, aside") || null;
 }
 
 function formatBlock(tag) {
@@ -826,6 +858,12 @@ function selectedPlainText() {
 }
 
 function openSelectionContextMenu(event) {
+  const table = event.target.closest("table");
+  if (table && els.editor.contains(table)) {
+    event.preventDefault();
+    showTableEditButton(table, true);
+    return;
+  }
   const pill = event.target.closest("a.pill-link");
   const selection = window.getSelection();
   if (pill) {
@@ -1048,7 +1086,7 @@ function currentLink() {
 
 function handleEditorClick(event) {
   const cell = event.target.closest("th, td");
-  if (cell && els.editor.contains(cell)) state.activeTableCell = cell;
+  if (cell && els.editor.contains(cell)) { state.activeTableCell = cell; highlightActiveTableCell(cell.closest("table")); }
   const tcardButton = event.target.closest("[data-edit-tcard]");
   if (tcardButton) { toggleBlockPanel(true); selectBlock(tcardButton.dataset.editTcard); return; }
   const tableButton = event.target.closest(".table-edit-button");
@@ -2226,29 +2264,40 @@ function handleEditorMouseOut(event) {
   }
 }
 
-function showTableEditButton(table) {
+function showTableEditButton(table, open = false) {
   const existing = table.previousElementSibling;
-  if (existing?.classList.contains("table-edit-toolbar")) return;
+  if (existing?.classList.contains("table-edit-toolbar")) {
+    if (open) existing.classList.add("is-open");
+    return;
+  }
   removeFloatingEditorButtons(".table-edit-toolbar");
   const toolbar = document.createElement("span");
-  toolbar.className = "floating-edit-button table-edit-toolbar";
-  toolbar.innerHTML = `<button type="button" class="table-edit-button" data-table-tool="toggle" title="Edit table">✎</button><span class="table-tool-row"><button type="button" data-table-tool="add-row" title="Add row">＋R</button><button type="button" data-table-tool="add-col" title="Add column">＋C</button><button type="button" data-table-tool="delete-row" title="Delete row">−R</button><button type="button" data-table-tool="delete-col" title="Delete column">−C</button><button type="button" data-table-tool="wider" title="Wider columns">⇔</button><input type="color" data-table-tool="bg" title="Background" value="#28133f"><input type="color" data-table-tool="border" title="Border" value="#e88f69"></span>`;
+  toolbar.className = "table-edit-toolbar";
+  if (open) toolbar.classList.add("is-open");
+  toolbar.innerHTML = `<button type="button" class="table-edit-button" data-table-tool="toggle" title="Edit table">✎</button><span class="table-tool-row"><button type="button" data-table-tool="add-row" title="Add row below selected cell">＋R</button><button type="button" data-table-tool="add-col" title="Add column right of selected cell">＋C</button><button type="button" data-table-tool="delete-row" title="Delete selected row">−R</button><button type="button" data-table-tool="delete-col" title="Delete selected column">−C</button><button type="button" data-table-tool="equalize" title="Equalize column widths">⇔</button><button type="button" data-table-tool="wider" title="Widen selected column">↔</button><button type="button" data-table-tool="align" title="Cycle selected cell text alignment">≡</button><input type="color" data-table-tool="header-bg" title="Header/title background" value="#28133f"><input type="color" data-table-tool="cell-bg" title="Selected cell background" value="#211812"><input type="color" data-table-tool="line" title="Inner line color" value="#563485"><input type="color" data-table-tool="outer-border" title="Outer table border" value="#e88f69"></span>`;
   toolbar.addEventListener("click", (event) => handleTableToolAction(event, table, toolbar));
   toolbar.addEventListener("input", (event) => handleTableToolAction(event, table, toolbar));
   table.parentElement?.insertBefore(toolbar, table);
+}
+
+function highlightActiveTableCell(table) {
+  table.querySelectorAll("th, td").forEach((cell) => cell.classList.remove("is-active-table-cell"));
+  if (state.activeTableCell && table.contains(state.activeTableCell)) state.activeTableCell.classList.add("is-active-table-cell");
 }
 
 function handleTableToolAction(event, table, toolbar) {
   const control = event.target.closest?.("[data-table-tool]");
   if (!control) return;
   const action = control.dataset.tableTool;
-  if (action === "toggle") { toolbar.classList.toggle("is-open"); return; }
-  if (action === "bg") table.style.backgroundColor = control.value;
-  if (action === "border") {
-    table.style.borderColor = control.value;
-    table.querySelectorAll("th, td").forEach((cell) => { cell.style.borderColor = control.value; });
-  }
-  if (["add-row", "add-col", "delete-row", "delete-col", "wider"].includes(action)) applyTableEdits(table, { action });
+  if (action === "toggle") { toolbar.classList.toggle("is-open"); highlightActiveTableCell(table); return; }
+  const activeCell = state.activeTableCell && table.contains(state.activeTableCell) ? state.activeTableCell : table.querySelector("td, th");
+  if (action === "header-bg") table.querySelectorAll("thead th, tr:first-child th, tr:first-child td").forEach((cell) => { cell.style.backgroundColor = control.value; });
+  if (action === "cell-bg" && activeCell) activeCell.style.backgroundColor = control.value;
+  if (action === "line") table.querySelectorAll("th, td").forEach((cell) => { cell.style.borderColor = control.value; });
+  if (action === "outer-border") table.style.borderColor = control.value;
+  if (action === "align" && activeCell) cycleTextAlignment(activeCell);
+  if (["add-row", "add-col", "delete-row", "delete-col", "wider", "equalize"].includes(action)) applyTableEdits(table, { action });
+  highlightActiveTableCell(table);
   syncAndSave("Table updated");
 }
 
@@ -2275,7 +2324,12 @@ function applyTableEdits(table, result) {
     table.querySelectorAll("th, td").forEach((cell) => { cell.style.borderColor = table.style.borderColor; });
   }
   if (result.columnWidth) table.querySelectorAll("tr > *").forEach((cell) => { cell.style.width = result.columnWidth; });
-  if (result.action === "wider") table.querySelectorAll("tr > *").forEach((cell) => { cell.style.minWidth = `${(parseInt(cell.style.minWidth, 10) || 120) + 40}px`; });
+  if (result.action === "equalize") table.querySelectorAll("tr > *").forEach((cell) => { cell.style.width = `${Math.floor(100 / (table.rows[0]?.cells.length || 1))}%`; });
+  if (result.action === "wider") {
+    const activeCellForWidth = state.activeTableCell && table.contains(state.activeTableCell) ? state.activeTableCell : null;
+    const index = activeCellForWidth?.cellIndex ?? 0;
+    table.querySelectorAll("tr").forEach((row) => { const cell = row.cells[index]; if (cell) cell.style.minWidth = `${(parseInt(cell.style.minWidth, 10) || 120) + 40}px`; });
+  }
   const action = String(result.action || "").trim().toLowerCase();
   const rows = [...table.rows];
   const activeCell = state.activeTableCell && table.contains(state.activeTableCell) ? state.activeTableCell : rows[rows.length - 1]?.cells[0];
@@ -2451,9 +2505,56 @@ function insertBlockReference() {
 
 function renderBlockList() {
   const blocks = Object.values(state.blocks).sort((a, b) => a.id.localeCompare(b.id));
+  els.blockList.classList.toggle("is-delete-mode", state.blockDeleteMode);
   els.blockList.innerHTML = blocks.length ? blocks.map((block) => (
-    `<button type="button" data-block-id="${escapeAttr(block.id)}"><strong>${escapeHtml(block.id)}</strong><span>${escapeHtml(block.content).slice(0, 90)}</span></button>`
+    `<div class="block-list-row"><button type="button" data-block-id="${escapeAttr(block.id)}"><strong>${escapeHtml(block.id)}</strong><span>${escapeHtml(block.content).slice(0, 90)}</span></button>${state.blockDeleteMode ? `<button type="button" class="block-delete-x" data-delete-block-id="${escapeAttr(block.id)}" title="Delete TCard">×</button>` : ""}</div>`
   )).join("") : `<p class="panel-help">No reusable TCards yet.</p>`;
+}
+
+function toggleBlockDeleteMode() {
+  state.blockDeleteMode = !state.blockDeleteMode;
+  els.deleteBlockButton?.classList.toggle("is-active", state.blockDeleteMode);
+  renderBlockList();
+  setStatus(state.blockDeleteMode ? "TCard delete mode on" : "TCard delete mode off", "saved");
+}
+
+function getBlockUsage(id) {
+  const token = `{{${id}}}`;
+  return state.documents.map((doc) => {
+    const count = (doc.content.match(new RegExp(escapeRegExp(token), "g")) || []).length;
+    return count ? { doc, count } : null;
+  }).filter(Boolean);
+}
+
+async function confirmDeleteBlock(id) {
+  const usage = getBlockUsage(id);
+  const useText = usage.length ? usage.map(({ doc, count }) => `${doc.title}: ${count}`).join("\n") : "No file currently references this TCard.";
+  const result = await openCapsDialog("Delete Transclusion Card", [
+    { html: `<p><strong>Warning:</strong> this Transclusion Card is being used ${usage.reduce((sum, item) => sum + item.count, 0)} times in ${usage.length} documents. Deleting it removes the TCard from the system and removes its references from files.</p>`, compact: true },
+    { name: "uses", label: "Current use", value: useText, multiline: true, readonly: true },
+    { name: "confirm", label: "Type DELETE to confirm", value: "" },
+  ]);
+  if (result?.confirm !== "DELETE") return;
+  delete state.blocks[id];
+  state.documents.forEach((doc) => { doc.content = doc.content.replace(new RegExp(escapeRegExp(`{{${id}}}`), "g"), ""); });
+  renderActiveDocument();
+  renderBlockList();
+  renderExportSourceSelect();
+  markDirty("TCard deleted everywhere");
+}
+
+function escapeRegExp(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function toggleInlineTCardEditMode() {
+  const id = els.blockIdInput.value.trim();
+  if (!id || !state.blocks[id]) { setStatus("Select a TCard first", "dirty"); return; }
+  state.inlineTCardEditId = state.inlineTCardEditId === id ? "" : id;
+  els.editBlockInlineButton.textContent = state.inlineTCardEditId ? "Change" : "Edit TCard";
+  els.editBlockInlineButton.classList.toggle("is-flashing", Boolean(state.inlineTCardEditId));
+  if (!state.inlineTCardEditId) { saveBlock(); }
+  setStatus(state.inlineTCardEditId ? "Edit the TCard content, then click Change" : "TCard changed everywhere", "saved");
 }
 
 function selectBlock(id) {
@@ -2725,6 +2826,22 @@ function extraDesignInputs() {
   return Array.from(document.querySelectorAll("[data-design-key]"));
 }
 
+function applyTopCommandIconSettings(settings) {
+  const defaults = {
+    topIconWritingRoom: "📚",
+    topIconFormat: "🪶",
+    topIconInsert: "🗡️",
+    topIconSubnoto: "📜",
+    topIconSpecnoto: "🕯️",
+    topIconHelp: "🗿",
+    topIconSettings: "🗝️",
+  };
+  Object.entries(defaults).forEach(([key, fallback]) => {
+    const glyph = document.querySelector(`[data-icon-key="${key}"] .command-glyph`);
+    if (glyph) glyph.innerHTML = iconMarkupFromValue(settings[key] || fallback, fallback);
+  });
+}
+
 function refreshIconInputPreviews() {
   document.querySelectorAll(".icon-text-input").forEach((input) => {
     let preview = input.parentElement?.querySelector(".icon-input-preview");
@@ -2771,6 +2888,7 @@ function applyExtraDesignSettings(settings) {
   });
   document.body.dataset.writingSurfaceLayout = settings.writingSurfaceLayout || "center";
   refreshIconInputPreviews();
+  applyTopCommandIconSettings(settings);
   document.querySelectorAll("[data-inherit-section]").forEach((input) => {
     input.checked = Boolean(settings[`inherit_${input.dataset.inheritSection}`]);
     updateInheritedDesignerSection(input);

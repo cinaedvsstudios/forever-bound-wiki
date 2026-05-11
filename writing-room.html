@@ -23,39 +23,41 @@
 <main aria-label="Forever Bound writing editor" class="writer-shell" id="editorApp">
 <header aria-label="Capsanoto command bar" class="writer-header toolbar">
 <div class="document-controls">
-<strong class="app-name"><img alt="Capsanoto icon" src="https://raw.githubusercontent.com/cinaedvsstudios/forever-bound-wiki/refs/heads/main/iconcapsanoto.png"/><span class="brand-word">Capsanoto</span><span class="app-version">v2.3</span></strong>
+<strong class="app-name"><img alt="Capsanoto icon" src="https://raw.githubusercontent.com/cinaedvsstudios/forever-bound-wiki/refs/heads/main/iconcapsanoto.png"/><span class="brand-word">Capsanoto</span><span class="app-version">v2.4</span></strong>
 <label class="sr-only" for="documentSelect">Current document</label>
 <select hidden="" id="documentSelect" title="Document Switcher"></select>
 </div>
 <nav aria-label="Writing Room controls" class="top-command-menus icon-command-bar unified-command-bar">
-<button aria-controls="writingRoomPanel" aria-expanded="false" class="writing-room-button command-icon direct-command" id="writingRoomButton" type="button"><span class="command-glyph">📚</span><span class="command-label">Writing Room</span></button>
+<button aria-controls="writingRoomPanel" aria-expanded="false" class="writing-room-button command-icon direct-command" data-icon-key="topIconWritingRoom" id="writingRoomButton" type="button"><span class="command-glyph">📚</span><span class="command-label">Writing Room</span></button>
 <div aria-live="polite" class="context-status command-status" id="contextStatus" role="status">Cursor: Writing Room ready</div>
 <div class="tool-menu has-panel" data-menu-kind="format">
-<button aria-haspopup="true" aria-label="Format" class="tool-menu-trigger command-icon" data-tool-name="Format tools" title="Format" type="button"><span class="command-glyph">🪶</span><span class="command-label">Format</span></button>
-<div class="tool-menu-panel">
-<button aria-label="Bold" data-command="bold" data-tool-name="Bold Mark" title="Bold" type="button"><strong>B</strong> Bold</button>
-<button aria-label="Italic" data-command="italic" data-tool-name="Italic Mark" title="Italic" type="button"><em>I</em> Italic</button>
-<button aria-label="Heading 1" data-block="h1" data-tool-name="Chapter Heading" title="Heading 1" type="button">H1 Chapter</button>
-<button aria-label="Heading 2" data-block="h2" data-tool-name="Section Heading" title="Heading 2" type="button">H2 Section</button>
-<button aria-label="Paragraph" data-block="p" data-tool-name="Body Text" title="Paragraph" type="button">¶ Normal Text</button>
-<button aria-label="Bullet List" data-command="insertUnorderedList" data-tool-name="Lore List" title="Bullet List" type="button">☰ List</button>
+<button aria-haspopup="true" aria-label="Format" class="tool-menu-trigger command-icon" data-icon-key="topIconFormat" data-tool-name="Format tools" title="Format" type="button"><span class="command-glyph">🪶</span><span class="command-label">Format</span></button>
+<div class="tool-menu-panel format-tool-panel">
+<button aria-label="Paragraph" data-block="p" data-tool-name="Normal Text" title="Normal Text" type="button">¶ Normal Text</button>
+<button aria-label="Bold" data-command="bold" data-tool-name="Bold" title="Bold" type="button"><strong>B</strong> Bold</button>
+<button aria-label="Italic" data-command="italic" data-tool-name="Italic" title="Italic" type="button"><em>I</em> Italic</button>
+<button aria-label="Bullet List" data-command="insertUnorderedList" data-tool-name="List" title="List" type="button">☰ List</button>
+<button aria-label="Heading 1" data-block="h1" data-tool-name="H1" title="Heading 1" type="button">H1</button>
+<button aria-label="Heading 2" data-block="h2" data-tool-name="H2" title="Heading 2" type="button">H2</button>
+<button aria-label="Heading 3" data-block="h3" data-tool-name="H3" title="Heading 3" type="button">H3</button>
+<button aria-label="Text Alignment" data-command="cycleTextAlign" data-tool-name="Text Alignment" title="Cycle text alignment" type="button">↔ Align</button>
 </div>
 </div>
 <div class="tool-menu has-panel" data-menu-kind="insert">
-<button aria-haspopup="true" aria-label="Insert" class="tool-menu-trigger command-icon" data-tool-name="Insert tools" title="Insert" type="button"><span class="command-glyph">🗡️</span><span class="command-label">Insert</span></button>
-<div class="tool-menu-panel">
-<button aria-label="Table" data-tool-name="Lore Table" id="tableButton" title="Table" type="button">▦ Lore Table</button>
-<button aria-label="Horizontal Rule" data-command="insertHorizontalRule" data-tool-name="Divider Rule" title="Horizontal Rule" type="button">— Rule</button>
-<button aria-label="Image" data-tool-name="Image Embed" id="imageButton" title="Image" type="button">🖼️ Image Embed</button>
-<button aria-label="Emoji" data-tool-name="Emoji Spark" id="emojiButton" title="Emoji" type="button">✨ Emoji Spark</button>
+<button aria-haspopup="true" aria-label="Insert" class="tool-menu-trigger command-icon" data-icon-key="topIconInsert" data-tool-name="Insert tools" title="Insert" type="button"><span class="command-glyph">🗡️</span><span class="command-label">Insert</span></button>
+<div class="tool-menu-panel insert-tool-panel">
+<button aria-label="Image" data-tool-name="Image" id="imageButton" title="Image" type="button">🖼️ Image</button>
+<button aria-label="Table" data-tool-name="Table" id="tableButton" title="Table" type="button">▦ Table</button>
 <button aria-label="TCards" data-tool-name="TCard" id="blockButton" title="TCards" type="button">𝞃 TCard</button>
+<button aria-label="Horizontal Rule" data-command="insertHorizontalRule" data-tool-name="Horizontal Rule" title="Horizontal Rule" type="button">— Horizontal Rule</button>
 <button aria-label="Emphasis Box" id="emphasisButton" title="Emphasis Box" type="button">ε Emphasis</button>
+<button aria-label="Emoji" data-tool-name="Emoji Spark" id="emojiButton" title="Emoji" type="button">✨ Emoji Spark</button>
 </div>
 </div>
-<button aria-label="Subnoto" class="tool-menu-trigger command-icon direct-command" data-tool-name="Subnoto clipboard" id="subnotoButton" title="Subnoto" type="button"><span class="command-glyph">📜</span><span class="command-label">Subnoto</span></button>
-<button aria-label="Specnoto" class="tool-menu-trigger command-icon direct-command" data-tool-name="Specnoto search/find workspace" id="searchButton" title="Specnoto" type="button"><span class="command-glyph">🕯️</span><span class="command-label">Specnoto</span></button>
-<button aria-label="Help / Guidebook" class="tool-menu-trigger command-icon direct-command" data-tool-name="Help / Guidebook" id="topHelpButton" title="Help / Guidebook" type="button"><span class="command-glyph">🗿</span><span class="command-label">Help</span></button>
-<button aria-label="Settings" class="tool-menu-trigger command-icon direct-command" data-tool-name="Capsanoto Settings" id="settingsButton" title="Settings" type="button"><span class="command-glyph">🗝️</span><span class="command-label">Settings</span></button>
+<button aria-label="Subnoto" class="tool-menu-trigger command-icon direct-command" data-icon-key="topIconSubnoto" data-tool-name="Subnoto clipboard" id="subnotoButton" title="Subnoto" type="button"><span class="command-glyph">📜</span><span class="command-label">Subnoto</span></button>
+<button aria-label="Specnoto" class="tool-menu-trigger command-icon direct-command" data-icon-key="topIconSpecnoto" data-tool-name="Specnoto search/find workspace" id="searchButton" title="Specnoto" type="button"><span class="command-glyph">🕯️</span><span class="command-label">Specnoto</span></button>
+<button aria-label="Help / Guidebook" class="tool-menu-trigger command-icon direct-command" data-icon-key="topIconHelp" data-tool-name="Help / Guidebook" id="topHelpButton" title="Help / Guidebook" type="button"><span class="command-glyph">🗿</span><span class="command-label">Help</span></button>
+<button aria-label="Settings" class="tool-menu-trigger command-icon direct-command" data-icon-key="topIconSettings" data-tool-name="Capsanoto Settings" id="settingsButton" title="Settings" type="button"><span class="command-glyph">🗝️</span><span class="command-label">Settings</span></button>
 </nav>
 <span class="save-status" id="saveStatus"></span>
 <input accept="image/*" hidden="" id="imageInput" type="file"/>
@@ -158,6 +160,7 @@
 <p class="design-section-note">Defaults for the whole app unless a section below overrides them.</p>
 <label>System Font <select id="designFontFamily"><option value='Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'>Inter (recommended)</option><option value="Arial, Helvetica, sans-serif">Arial</option><option value='system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'>System UI</option><option value="Aptos, Calibri, Arial, sans-serif">Aptos / Calibri</option><option value="Courier New, Courier, monospace">Courier New</option><option value="Verdana, Geneva, sans-serif">Verdana</option><option value="Georgia, serif">Georgia</option><option value="Tahoma, Geneva, sans-serif">Tahoma</option><option value="Trebuchet MS, Arial, sans-serif">Trebuchet MS</option><option value="Times New Roman, Times, serif">Times New Roman</option></select></label>
 <label>Default Text Size <input id="designFontSize" max="48" min="8" type="number" value="14"/></label>
+<label>Top Bar Height <input data-css-var="--top-bar-height" data-design-key="topBarHeight" data-suffix="px" max="120" min="42" type="number" value="64"/></label>
 <label>Default Text Color <input id="designTextColor" type="color" value="#fbf4d6"/></label>
 <label>Default Label Color <input id="labelTextColor" type="color" value="#a97b38"/></label>
 <label>Default Dynamic Text <input id="dynamicTextColor" type="color" value="#e88f69"/></label>
@@ -578,11 +581,11 @@
 <p><strong>Capsanoto v1 — May 8, 2026:</strong> local-first Writing Room preview with Filing Cabinet organization, files, TCards, Link Anchors, Link Pills, right-click context tools, table tools, Emoji Spark, emphasis boxes, local autosave, design settings, Help, and Download builder.</p>
 <p><strong>Current preview note:</strong> Subnoto, context search, slash commands, timeline blocks, hover names, speech profiles, paragraph-level deprecation, and PDF/DOCX clean export are planned or experimental.</p>
 </section>
-<section><h3>v2.3 interface update</h3><p>Stabilized the command bar sizing, restored Filing Cabinet close/resize behaviour, expanded Emoji Spark with draggable custom icon slots, added Writing Area placement controls, cleaned the Element Designer section list, and improved custom icon previews.</p></section><section><h3>v2.2 interface update</h3><p>Unified the top command bar, corrected the Settings card viewer so only one card displays at a time, fixed Settings save/emoji actions, restored Filing Cabinet resizing, and refined Emoji Spark selection/copy behavior.</p></section></aside>
-<aside aria-label="TCards" class="block-panel" hidden="" id="blockPanel">
+<section><h3>v2.4 interface update</h3><p>Added top bar height control, cleaned Format and Insert dropdowns, added editable top-bar icon fields, improved table edit controls, and refined the Transclusion Cards panel with delete/edit actions.</p></section><section><h3>v2.3 interface update</h3><p>Stabilized the command bar sizing, restored Filing Cabinet close/resize behaviour, expanded Emoji Spark with draggable custom icon slots, added Writing Area placement controls, cleaned the Element Designer section list, and improved custom icon previews.</p></section><section><h3>v2.2 interface update</h3><p>Unified the top command bar, corrected the Settings card viewer so only one card displays at a time, fixed Settings save/emoji actions, restored Filing Cabinet resizing, and refined Emoji Spark selection/copy behavior.</p></section></aside>
+<aside aria-label="Transclusion Cards" class="block-panel" hidden="" id="blockPanel">
 <header>
 <div>
-<h2>TCards</h2>
+<h2>Transclusion Cards</h2>
 </div>
 <button aria-label="Close TCards" id="closeBlockPanel" type="button">×</button>
 </header>
@@ -599,6 +602,8 @@
 <div class="block-actions">
 <button id="saveBlockButton" type="button">Save TCard</button>
 <button id="insertBlockRefButton" type="button">Insert TCard</button>
+<button id="deleteBlockButton" type="button">Delete</button>
+<button id="editBlockInlineButton" type="button">Edit TCard</button>
 </div>
 <div class="block-list" id="blockList"></div>
 </aside>
