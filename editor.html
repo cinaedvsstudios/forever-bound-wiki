@@ -41,8 +41,6 @@
             <button data-command="insertUnorderedList" type="button" title="Bullet List" aria-label="Bullet List" data-tool-name="Lore List">☰ List</button>
           </div>
         </div>
-        <button id="subnotoButton" class="tool-menu-trigger command-icon direct-command" type="button" title="Subnoto" aria-label="Subnoto" data-tool-name="Subnoto clipboard"><span class="command-glyph">📜</span><span class="command-label">Subnoto</span></button>
-        <button id="searchButton" class="tool-menu-trigger command-icon direct-command" type="button" title="Search" aria-label="Search" data-tool-name="Specnoto search preview"><span class="command-glyph">🕯️</span><span class="command-label">Search</span></button>
         <div class="tool-menu has-panel" data-menu-kind="insert">
           <button class="tool-menu-trigger command-icon" type="button" aria-haspopup="true" title="Insert" aria-label="Insert" data-tool-name="Insert tools"><span class="command-glyph">🗡️</span><span class="command-label">Insert</span></button>
           <div class="tool-menu-panel">
@@ -54,6 +52,8 @@
             <button id="emphasisButton" type="button" title="Emphasis Box" aria-label="Emphasis Box">ε Emphasis</button>
           </div>
         </div>
+        <button id="subnotoButton" class="tool-menu-trigger command-icon direct-command" type="button" title="Subnoto" aria-label="Subnoto" data-tool-name="Subnoto clipboard"><span class="command-glyph">📜</span><span class="command-label">Subnoto</span></button>
+        <button id="searchButton" class="tool-menu-trigger command-icon direct-command" type="button" title="Search" aria-label="Search" data-tool-name="Specnoto search preview"><span class="command-glyph">🕯️</span><span class="command-label">Search</span></button>
         <button id="topHelpButton" class="tool-menu-trigger command-icon direct-command" type="button" title="Help / Guidebook" aria-label="Help / Guidebook" data-tool-name="Help / Guidebook"><span class="command-glyph">🗿</span><span class="command-label">Help</span></button>
         <button id="settingsButton" class="tool-menu-trigger command-icon direct-command" type="button" title="Settings" aria-label="Settings" data-tool-name="Capsanoto Settings"><span class="command-glyph">🗝️</span><span class="command-label">Settings</span></button>
       </nav>
@@ -130,6 +130,7 @@
         <button type="button" data-settings-tab="export" aria-pressed="false">Download</button>
         <button type="button" data-settings-tab="support" aria-pressed="false">Help</button>
         <button type="button" data-settings-tab="import" aria-pressed="false">Import File</button>
+        <button type="button" data-settings-tab="emoji" aria-pressed="false">Emoji</button>
       </nav>
 
       <section class="settings-section settings-card" data-settings-section="export" hidden>
@@ -434,6 +435,15 @@
         <h3>Import File</h3>
         <p class="panel-help">Placeholder for future Capsanoto file import tools. This will later support importing saved Caps files, document bundles, and other compatible writing-room data.</p>
         <button type="button" disabled>Import File Placeholder</button>
+      </section>
+
+      <section class="settings-section settings-card" data-settings-section="emoji" hidden>
+        <h3>Emoji Favorites</h3>
+        <p class="panel-help">Edit the favourite emojis shown at the top of the Emoji Spark window. Separate each emoji with a space.</p>
+        <div class="emoji-favorite-settings">
+          <input id="favoriteEmojiInput" type="text" aria-label="Favorite emojis" placeholder="⭐ ✨ 🔥 💎 🗝️ 📜 🗡️ 💜">
+          <button id="saveFavoriteEmojiButton" type="button">Save Favorite Emojis</button>
+        </div>
       </section>
 
       <section class="settings-section settings-card settings-links" data-settings-section="support" hidden>

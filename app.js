@@ -7,6 +7,7 @@ const AUTOSAVE_DELAY = 600;
 const DESIGN_KEY = "capsanoto-design-settings-v1";
 const HELP_KEY = "capsanoto-help-html-v1";
 const WRITING_ROOM_LAYOUT_KEY = "capsanoto-writing-room-layout-v1";
+const FAVORITE_EMOJI_KEY = "capsanoto-favorite-emojis-v1";
 
 const CAPSANOTO_PALETTE = {
   black: "#000000",
@@ -104,6 +105,7 @@ const state = {
   cabinetScrollDrag: null,
   lastColorInput: null,
   favoriteColors: [...DEFAULT_FAVORITE_COLORS],
+  favoriteEmojis: [],
   contextStatusLocked: false,
   contextStatusTimer: null,
 };
@@ -188,6 +190,8 @@ const els = {
   colorImagePopup: document.querySelector("#colorImagePopup"),
   colorImagePreview: document.querySelector("#colorImagePreview"),
   closeColorImagePopup: document.querySelector("#closeColorImagePopup"),
+  favoriteEmojiInput: document.querySelector("#favoriteEmojiInput"),
+  saveFavoriteEmojiButton: document.querySelector("#saveFavoriteEmojiButton"),
   settingsSearchInput: document.querySelector("#settingsSearchInput"),
   settingsSearchPrev: document.querySelector("#settingsSearchPrev"),
   settingsSearchNext: document.querySelector("#settingsSearchNext"),
@@ -333,6 +337,7 @@ async function startEditor() {
   setAuthVisibility(true);
   await loadWorkspace();
   applySavedDesignSettings();
+  loadFavoriteEmojis();
   hydrateIconButtons();
   bindEditorEvents();
   applyRouteToState();
@@ -513,10 +518,9 @@ function bindEditorEvents() {
   els.emphasisButton.addEventListener("click", insertEmphasisBox);
   els.topHelpButton.addEventListener("click", () => toggleHelpPanel(true));
   els.settingsButton.addEventListener("click", () => toggleSettingsPanel(true));
-  els.closeSettingsPanel.addEventListener("pointerdown", (event) => { event.preventDefault(); event.stopPropagation(); if (typeof event.stopImmediatePropagation === "function") event.stopImmediatePropagation(); closeSettingsPanelNow(); }, true);
-  els.closeSettingsPanel.addEventListener("pointerup", handleGlobalSettingsCloseClick, true);
-  els.closeSettingsPanel.addEventListener("click", handleGlobalSettingsCloseClick, true);
-  document.addEventListener("pointerdown", handleGlobalSettingsCloseClick, true);
+  els.closeSettingsPanel.addEventListener("pointerdown", (event) => event.stopPropagation());
+  els.closeSettingsPanel.addEventListener("pointerup", (event) => { event.preventDefault(); event.stopPropagation(); toggleSettingsPanel(false); });
+  els.closeSettingsPanel.addEventListener("click", (event) => { event.preventDefault(); event.stopPropagation(); toggleSettingsPanel(false); });
   document.addEventListener("click", handleGlobalSettingsCloseClick, true);
   document.addEventListener("pointerup", handleGlobalSettingsCloseClick, true);
   els.settingsMenu.addEventListener("click", handleSettingsMenuClick);
@@ -527,6 +531,7 @@ function bindEditorEvents() {
   els.importColorImageButton?.addEventListener("click", () => els.colorImageInput?.click());
   els.colorImageInput?.addEventListener("change", showColorReferenceImage);
   els.closeColorImagePopup?.addEventListener("click", () => { if (els.colorImagePopup) els.colorImagePopup.hidden = true; });
+  els.saveFavoriteEmojiButton?.addEventListener("click", saveFavoriteEmojisFromSettings);
   els.writingRoomButton.addEventListener("click", () => toggleWritingRoomPanel());
   els.closeWritingRoomPanel.addEventListener("click", () => toggleWritingRoomPanel(false));
   els.editWritingRoomButton.addEventListener("click", toggleFilingEditMode);
@@ -551,7 +556,7 @@ function bindEditorEvents() {
   els.helpPanel.querySelector("header")?.addEventListener("pointerdown", (event) => startPanelDrag(event, els.helpPanel));
   window.addEventListener("pointermove", movePanelDrag);
   window.addEventListener("pointerup", stopPanelDrag);
-  document.addEventListener("keydown", (event) => { if (event.key === "Escape") { toggleHelpPanel(false); closeSettingsPanelNow(); toggleWritingRoomPanel(false); } });
+  document.addEventListener("keydown", (event) => { if (event.key === "Escape") { toggleHelpPanel(false); toggleSettingsPanel(false); toggleWritingRoomPanel(false); } });
   bindDesignColorTools();
   bindInheritanceToggles();
   bindElementDesignerCardScroll();
@@ -1141,45 +1146,87 @@ function embedSelectedImage(event) {
 
 
 const EMOJI_LIBRARY = [
-  ["😀","grin smile happy face"],["😃","smile happy face"],["😄","laugh happy face"],["😁","grin"],["😆","laugh"],["😅","sweat smile"],["😂","tears laugh"],["🤣","rolling laugh"],["😊","blush smile"],["🙂","slight smile"],["😉","wink"],["😍","heart eyes love"],["😘","kiss"],["😎","cool sunglasses"],["🤔","thinking"],["😐","neutral"],["😮","surprise"],["😢","cry"],["😭","sob"],["😡","angry"],["😈","devil"],["👻","ghost"],["💀","skull death"],["🤖","robot"],["👑","crown royal"],["🧑","person character"],["👤","profile person"],["🧙","wizard magic"],["🧝","elf fantasy"],["🧛","vampire"],["🐺","wolf"],["🐉","dragon"],["🦅","eagle"],["🕊️","dove peace"],["🔥","fire"],["💧","water"],["🌊","wave ocean"],["🌲","tree forest"],["🌙","moon"],["☀️","sun"],["⭐","star"],["✨","sparkle magic"],["⚡","lightning"],["❄️","snow ice"],["🌫️","fog mist"],["🌹","rose flower"],["🍃","leaf"],["🏰","castle"],["⛪","church"],["🏠","house home"],["🗺️","map"],["🧭","compass"],["🛤️","road track"],["⚔️","sword battle"],["🛡️","shield"],["🏹","bow arrow"],["🗡️","dagger"],["🔫","gun"],["💣","bomb"],["🪄","wand spell"],["🧪","potion science"],["💎","gem crystal"],["🗝️","key"],["🔒","lock"],["🔓","unlock"],["📜","scroll parchment"],["📖","book"],["📕","red book"],["📝","note writing"],["✏️","pencil edit"],["🖋️","pen"],["📁","folder"],["📂","open folder"],["📄","file document"],["🗃️","file cabinet"],["🗑️","trash"],["🎬","movie scene script"],["🎵","music song"],["🎤","voice mic"],["🎧","headphones"],["🎨","paint color"],["🖼️","image picture"],["🔗","link chain"],["⚓","anchor bookmark"],["💊","pill"],["🧩","puzzle subnoto"],["🔍","search"],["⚙️","settings"],["❓","question help"],["❗","warning"],["✅","check yes"],["❌","x delete no"],["➕","plus add"],["➖","minus remove"],["⬆️","up"],["⬇️","down"],["⬅️","left"],["➡️","right"],["↗️","open external"],["♻️","restore recycle"],["🕰️","old deprecated time"],["💗","heart love"],["❤️","heart red"],["🖤","black heart"],["💜","purple heart"]
+  ["😀","grin smile happy face smiley"],["😃","smile happy face smiley"],["😄","laugh happy face smiley"],["😁","grin smiley"],["😆","laugh smiley"],["😅","sweat smile smiley"],["😂","tears laugh smiley"],["🤣","rolling laugh smiley"],["😊","blush smile smiley"],["🙂","slight smile smiley"],["🙃","upside down smile smiley"],["😉","wink smiley"],["😍","heart eyes love smiley"],["🥰","hearts love affectionate smiley"],["😘","kiss smiley"],["😗","kiss face smiley"],["😚","closed eye kiss smiley"],["😋","yum tasty smiley"],["😜","tongue wink silly smiley"],["🤪","zany crazy smiley"],["😝","tongue squint smiley"],["🤑","money face"],["🤗","hug smiley"],["🤭","hand mouth giggle"],["🫢","hand mouth shocked"],["🤫","shush quiet"],["🤔","thinking"],["🫡","salute"],["🤐","zip mouth"],["🤨","raised eyebrow"],["😐","neutral"],["😑","expressionless"],["😶","no mouth silent"],["😏","smirk"],["😒","unamused"],["🙄","eyeroll"],["😬","grimace"],["😮‍💨","exhale sigh"],["🤥","lying"],["😌","relieved"],["😔","sad pensive"],["😪","sleepy"],["🤤","drool"],["😴","sleep"],["😷","mask sick"],["🤒","thermometer sick"],["🤕","bandage hurt"],["🤢","nausea sick"],["🤮","vomit sick"],["🤧","sneeze sick"],["🥵","hot"],["🥶","cold freeze"],["🥴","woozy drunk"],["😵","dizzy"],["🤯","mind blown"],["🤠","cowboy"],["🥳","party"],["🥸","disguise"],["😎","cool sunglasses"],["🤓","nerd"],["🧐","monocle"],["😕","confused"],["🫤","diagonal mouth"],["😟","worried"],["🙁","frown"],["☹️","frown sad"],["😮","surprise"],["😯","hushed"],["😲","astonished"],["😳","flushed"],["🥺","pleading"],["🥹","holding tears"],["😦","frown open"],["😧","anguished"],["😨","fear"],["😰","cold sweat"],["😥","sad sweat"],["😢","cry"],["😭","sob"],["😱","scream fear"],["😖","confounded"],["😣","persevere"],["😞","disappointed"],["😓","sweat"],["😩","weary"],["😫","tired"],["🥱","yawn"],["😤","triumph steam"],["😡","angry"],["😠","mad angry"],["🤬","swear angry"],["😈","devil"],["👿","angry devil"],["👻","ghost"],["💀","skull death"],["☠️","skull crossbones death"],["🤡","clown"],["🤖","robot"],["👽","alien"],["👑","crown royal"],["🧑","person character"],["👤","profile person"],["🧙","wizard magic"],["🧝","elf fantasy"],["🧛","vampire"],["🐺","wolf"],["🐉","dragon"],["🦅","eagle"],["🕊️","dove peace"],["🔥","fire"],["💧","water"],["🌊","wave ocean"],["🌲","tree forest"],["🌙","moon"],["☀️","sun"],["⭐","star favorite"],["✨","sparkle magic"],["⚡","lightning"],["❄️","snow ice"],["🌫️","fog mist"],["🌹","rose flower"],["🍃","leaf"],["🏰","castle"],["⛪","church"],["🏠","house home"],["🗺️","map"],["🧭","compass"],["🛤️","road track"],["⚔️","sword battle"],["🛡️","shield"],["🏹","bow arrow"],["🗡️","dagger sword"],["🔫","gun"],["💣","bomb"],["🪄","wand spell"],["🧪","potion science"],["💎","gem crystal"],["🗝️","key"],["🔒","lock"],["🔓","unlock"],["📜","scroll parchment"],["📖","book"],["📕","red book"],["📝","note writing"],["✏️","pencil edit"],["🖋️","pen"],["📁","folder"],["📂","open folder"],["📄","file document"],["🗃️","file cabinet"],["🗑️","trash"],["🎬","movie scene script"],["🎵","music song"],["🎤","voice mic"],["🎧","headphones"],["🎨","paint color"],["🖼️","image picture"],["🔗","link chain"],["⚓","anchor bookmark"],["💊","pill"],["🧩","puzzle subnoto"],["🔍","search find"],["⚙️","settings gear"],["❓","question help"],["❗","warning"],["✅","check yes"],["❌","x delete no"],["➕","plus add"],["➖","minus remove"],["⬆️","up"],["⬇️","down"],["⬅️","left"],["➡️","right"],["↗️","open external"],["♻️","restore recycle"],["🕰️","old deprecated time"],["💗","heart love"],["❤️","heart red"],["🖤","black heart"],["💜","purple heart"]
 ];
+
+function favoriteEmojiList() {
+  if (!state.favoriteEmojis.length) loadFavoriteEmojis();
+  return state.favoriteEmojis.length ? state.favoriteEmojis : ["⭐", "✨", "🔥", "💎", "🗝️", "📜", "🗡️", "💜"];
+}
+
+function loadFavoriteEmojis() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(FAVORITE_EMOJI_KEY) || "null");
+    state.favoriteEmojis = Array.isArray(saved) ? saved.filter(Boolean).slice(0, 24) : ["⭐", "✨", "🔥", "💎", "🗝️", "📜", "🗡️", "💜"];
+  } catch {
+    state.favoriteEmojis = ["⭐", "✨", "🔥", "💎", "🗝️", "📜", "🗡️", "💜"];
+  }
+}
+
+function loadFavoriteEmojiSettings() {
+  loadFavoriteEmojis();
+  if (els.favoriteEmojiInput) els.favoriteEmojiInput.value = favoriteEmojiList().join(" ");
+}
+
+function saveFavoriteEmojisFromSettings() {
+  const values = Array.from((els.favoriteEmojiInput?.value || "").matchAll(/\p{Extended_Pictographic}(?:\uFE0F|\u200D\p{Extended_Pictographic}(?:\uFE0F)?)*|[\u2600-\u27BF]\uFE0F?/gu)).map((match) => match[0]);
+  state.favoriteEmojis = values.length ? values.slice(0, 24) : ["⭐", "✨", "🔥", "💎", "🗝️", "📜", "🗡️", "💜"];
+  localStorage.setItem(FAVORITE_EMOJI_KEY, JSON.stringify(state.favoriteEmojis));
+  loadFavoriteEmojiSettings();
+  setStatus("Favorite emojis saved", "saved");
+}
+
+function emojiButtonHtml(emoji, name = "favorite emoji") {
+  return `<button type="button" data-emoji="${emoji}" data-emoji-name="${escapeAttr(name)}" title="${escapeAttr(name)}">${emoji}</button>`;
+}
 
 function showEmojiPicker(event) {
   saveSelectionRange();
   document.querySelector(".emoji-picker")?.remove();
+  loadFavoriteEmojis();
   const picker = document.createElement("div");
   picker.className = "emoji-picker";
   picker.setAttribute("role", "menu");
-  picker.innerHTML = `<input class="emoji-search" type="search" placeholder="Right-click emoji, type word, Enter" aria-label="Search emoji">` + EMOJI_LIBRARY.map(([emoji, name]) => `<button type="button" data-emoji="${emoji}" data-emoji-name="${escapeAttr(name)}" title="${escapeAttr(name)}">${emoji}</button>`).join("");
-  picker.addEventListener("click", (clickEvent) => {
-    const button = clickEvent.target.closest("button[data-emoji]");
-    if (!button) return;
+  const favoriteButtons = favoriteEmojiList().map((emoji) => emojiButtonHtml(emoji, "favorite emoji")).join("");
+  const libraryButtons = EMOJI_LIBRARY.map(([emoji, name]) => emojiButtonHtml(emoji, name)).join("");
+  picker.innerHTML = `
+    <div class="emoji-picker-header"><strong>Emoji Spark</strong><button type="button" class="emoji-close" aria-label="Close emoji picker">×</button></div>
+    <input class="emoji-search" type="search" placeholder="Search emoji: smiley, sword, magic…" aria-label="Search emoji">
+    <section class="emoji-section emoji-favorites"><h4>Favorites</h4><div class="emoji-grid">${favoriteButtons}</div></section>
+    <section class="emoji-section emoji-library"><h4>Library</h4><div class="emoji-grid">${libraryButtons}</div></section>`;
+  const insertEmoji = (button) => {
     restoreSelectionRange();
     insertHtml(button.dataset.emoji);
     picker.remove();
-  });
-  picker.addEventListener("contextmenu", (menuEvent) => {
-    const button = menuEvent.target.closest("button[data-emoji]");
+  };
+  picker.addEventListener("click", (clickEvent) => {
+    if (clickEvent.target.closest(".emoji-close")) {
+      picker.remove();
+      return;
+    }
+    const button = clickEvent.target.closest("button[data-emoji]");
     if (!button) return;
-    menuEvent.preventDefault();
-    const search = picker.querySelector(".emoji-search");
-    search.hidden = false;
-    search.value = "";
-    search.focus();
+    insertEmoji(button);
   });
-  picker.querySelector(".emoji-search").addEventListener("keydown", (keyEvent) => {
+  const search = picker.querySelector(".emoji-search");
+  search.addEventListener("input", () => {
+    const term = search.value.trim().toLowerCase();
+    picker.querySelectorAll(".emoji-library button[data-emoji]").forEach((button) => {
+      const haystack = `${button.dataset.emojiName || ""} ${button.dataset.emoji || ""}`.toLowerCase();
+      button.hidden = Boolean(term) && !haystack.includes(term);
+    });
+  });
+  search.addEventListener("keydown", (keyEvent) => {
     if (keyEvent.key !== "Enter") return;
     keyEvent.preventDefault();
-    const term = keyEvent.currentTarget.value.trim().toLowerCase();
-    if (!term) return;
-    const match = [...picker.querySelectorAll("button[data-emoji]")].find((button) => button.dataset.emojiName.includes(term));
-    match?.scrollIntoView({ behavior: "smooth", block: "center" });
-    keyEvent.currentTarget.hidden = true;
+    const match = picker.querySelector("button[data-emoji]:not([hidden])");
+    if (match) insertEmoji(match);
   });
   document.body.append(picker);
   const rect = event.currentTarget.getBoundingClientRect();
-  picker.style.left = `${Math.max(8, Math.min(rect.left, window.innerWidth - 330))}px`;
-  picker.style.top = `${Math.min(rect.bottom + 8, window.innerHeight - 360)}px`;
+  picker.style.left = `${Math.max(8, Math.min(rect.left, window.innerWidth - 420))}px`;
+  picker.style.top = `${Math.min(rect.bottom + 8, window.innerHeight - 470)}px`;
+  search.focus();
   setTimeout(() => document.addEventListener("pointerdown", closeEmojiPickerOnOutside, { once: true }), 0);
 }
 
@@ -1210,8 +1257,14 @@ function closeSettingsPanelNow() {
   if (!els.settingsPanel) return;
   els.settingsPanel.hidden = true;
   els.settingsPanel.setAttribute("hidden", "");
-  els.settingsPanel.style.display = "none";
   els.settingsButton?.setAttribute("aria-expanded", "false");
+}
+
+function setSettingsCardsCollapsed(collapsed = true) {
+  els.settingsSections.forEach((section) => {
+    section.hidden = false;
+    section.classList.toggle("is-collapsed", collapsed);
+  });
 }
 
 function toggleSettingsPanel(show) {
@@ -1220,31 +1273,38 @@ function toggleSettingsPanel(show) {
     closeSettingsPanelNow();
     return;
   }
-  els.settingsPanel.style.display = "";
   els.settingsPanel.hidden = false;
   els.settingsPanel.removeAttribute("hidden");
   els.settingsButton?.setAttribute("aria-expanded", "true");
-  els.settingsSections.forEach((section) => {
-    section.classList.add("is-collapsed");
-  });
+  setSettingsCardsCollapsed(true);
   renderExportSourceSelect();
   renderExportQueue();
   loadDesignForm();
+  loadFavoriteEmojiSettings();
   setElementDesignerCards(false);
 }
 
 function handleSettingsMenuClick(event) {
   const button = event.target.closest("button[data-settings-tab]");
   if (!button) return;
-  showSettingsSection(button.dataset.settingsTab);
+  const sectionName = button.dataset.settingsTab;
+  els.settingsMenu.querySelectorAll("button[data-settings-tab]").forEach((menuButton) => {
+    menuButton.setAttribute("aria-pressed", String(menuButton === button));
+  });
+  const section = [...els.settingsSections].find((candidate) => candidate.dataset.settingsSection === sectionName);
+  if (!section) return;
+  section.hidden = false;
+  section.classList.remove("is-collapsed");
+  requestAnimationFrame(() => section.scrollIntoView({ block: "start", behavior: "smooth" }));
 }
 
 function handleSettingsCardToggle(event) {
-  const heading = event.target.closest(".settings-section > h3, .settings-section > .designer-heading-row");
+  const heading = event.target.closest(".settings-section > h3, .settings-section > .designer-heading-row, .settings-section > .designer-heading-row h3");
   if (!heading) return;
-  if (event.target.closest("button, input, select, textarea") && !event.target.closest(".settings-section > h3")) return;
+  if (event.target.closest("button, input, select, textarea") && !event.target.closest(".settings-section > h3, .settings-section > .designer-heading-row h3")) return;
   const section = heading.closest(".settings-section");
   if (!section) return;
+  section.hidden = false;
   section.classList.toggle("is-collapsed");
   if (!section.classList.contains("is-collapsed")) {
     requestAnimationFrame(() => section.scrollIntoView({ block: "start", behavior: "smooth" }));
@@ -1256,7 +1316,8 @@ function showSettingsSection(sectionName) {
     button.setAttribute("aria-pressed", String(button.dataset.settingsTab === sectionName));
   });
   els.settingsSections.forEach((section) => {
-    section.hidden = section.dataset.settingsSection !== sectionName;
+    section.hidden = false;
+    section.classList.toggle("is-collapsed", section.dataset.settingsSection !== sectionName);
   });
 }
 
