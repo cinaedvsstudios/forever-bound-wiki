@@ -514,7 +514,10 @@ function bindEditorEvents() {
   els.topHelpButton.addEventListener("click", () => toggleHelpPanel(true));
   els.settingsButton.addEventListener("click", () => toggleSettingsPanel(true));
   els.closeSettingsPanel.addEventListener("pointerdown", (event) => event.stopPropagation());
+  els.closeSettingsPanel.addEventListener("pointerup", (event) => { event.preventDefault(); event.stopPropagation(); toggleSettingsPanel(false); });
   els.closeSettingsPanel.addEventListener("click", (event) => { event.preventDefault(); event.stopPropagation(); toggleSettingsPanel(false); });
+  document.addEventListener("click", handleGlobalSettingsCloseClick, true);
+  document.addEventListener("pointerup", handleGlobalSettingsCloseClick, true);
   els.settingsMenu.addEventListener("click", handleSettingsMenuClick);
   els.settingsPanel.addEventListener("click", handleSettingsCardToggle);
   els.settingsSearchInput?.addEventListener("input", handleSettingsSearchInput);
@@ -1190,6 +1193,15 @@ function insertHtml(html) {
   ensureHeadingIds();
   renderBookmarks();
   syncAndSave("Content inserted");
+}
+
+function handleGlobalSettingsCloseClick(event) {
+  const closeButton = event.target?.closest?.("#closeSettingsPanel");
+  if (!closeButton) return;
+  event.preventDefault();
+  event.stopPropagation();
+  if (typeof event.stopImmediatePropagation === "function") event.stopImmediatePropagation();
+  toggleSettingsPanel(false);
 }
 
 function toggleSettingsPanel(show) {

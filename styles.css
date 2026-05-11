@@ -2840,7 +2840,7 @@ button {
   line-height: 1 !important;
 }
 .command-glyph {
-  font-size: var(--right-icon-size, 1.05rem) !important;
+  font-size: var(--command-icon-size, var(--right-icon-size, 1.05rem)) !important;
   line-height: 1 !important;
 }
 .command-label {
@@ -2848,7 +2848,7 @@ button {
   max-width: 3.8rem;
   overflow: hidden;
   color: color-mix(in srgb, var(--command-bar-text, #fbf4d6) 88%, transparent);
-  font-size: 0.48rem;
+  font-size: var(--command-label-size, 0.48rem);
   font-weight: 800;
   line-height: 1;
   text-align: center;
@@ -2863,4 +2863,10 @@ button {
 @media (max-width: 760px) {
   .settings-menu { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
   .settings-links { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+}
+
+#closeSettingsPanel {
+  position: relative;
+  z-index: 20;
+  pointer-events: auto;
 }
