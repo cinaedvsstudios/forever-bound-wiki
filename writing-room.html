@@ -23,7 +23,7 @@
   <main id="editorApp" class="writer-shell" aria-label="Forever Bound writing editor">
     <header class="writer-header toolbar" aria-label="Capsanoto command bar">
       <div class="document-controls">
-        <strong class="app-name"><img src="https://raw.githubusercontent.com/cinaedvsstudios/forever-bound-wiki/refs/heads/main/iconcapsanoto.png" alt="Capsanoto icon"><span class="brand-word">Capsanoto</span></strong>
+        <strong class="app-name"><img src="https://raw.githubusercontent.com/cinaedvsstudios/forever-bound-wiki/refs/heads/main/iconcapsanoto.png" alt="Capsanoto icon"><span class="brand-word">Capsanoto</span><span class="app-version">v2.0</span></strong>
         <button id="writingRoomButton" class="writing-room-button" type="button" aria-expanded="false" aria-controls="writingRoomPanel">Writing Room</button>
         <label for="documentSelect" class="sr-only">Current document</label>
         <select id="documentSelect" title="Document Switcher" hidden></select>
@@ -31,7 +31,7 @@
       <div id="contextStatus" class="context-status" role="status" aria-live="polite">Cursor: Writing Room ready</div>
       <nav class="top-command-menus icon-command-bar" aria-label="Writing Room controls">
         <div class="tool-menu has-panel" data-menu-kind="format">
-          <button class="tool-menu-trigger command-icon" type="button" aria-haspopup="true" title="Format" aria-label="Format" data-tool-name="Format tools">🪶</button>
+          <button class="tool-menu-trigger command-icon" type="button" aria-haspopup="true" title="Format" aria-label="Format" data-tool-name="Format tools"><span class="command-glyph">🪶</span><span class="command-label">Format</span></button>
           <div class="tool-menu-panel">
             <button data-command="bold" type="button" title="Bold" aria-label="Bold" data-tool-name="Bold Mark"><strong>B</strong> Bold</button>
             <button data-command="italic" type="button" title="Italic" aria-label="Italic" data-tool-name="Italic Mark"><em>I</em> Italic</button>
@@ -41,10 +41,10 @@
             <button data-command="insertUnorderedList" type="button" title="Bullet List" aria-label="Bullet List" data-tool-name="Lore List">☰ List</button>
           </div>
         </div>
-        <button id="subnotoButton" class="tool-menu-trigger command-icon direct-command" type="button" title="Subnoto" aria-label="Subnoto" data-tool-name="Subnoto clipboard">📜</button>
-        <button id="searchButton" class="tool-menu-trigger command-icon direct-command" type="button" title="Search" aria-label="Search" data-tool-name="Specnoto search preview">🕯️</button>
+        <button id="subnotoButton" class="tool-menu-trigger command-icon direct-command" type="button" title="Subnoto" aria-label="Subnoto" data-tool-name="Subnoto clipboard"><span class="command-glyph">📜</span><span class="command-label">Subnoto</span></button>
+        <button id="searchButton" class="tool-menu-trigger command-icon direct-command" type="button" title="Search" aria-label="Search" data-tool-name="Specnoto search preview"><span class="command-glyph">🕯️</span><span class="command-label">Search</span></button>
         <div class="tool-menu has-panel" data-menu-kind="insert">
-          <button class="tool-menu-trigger command-icon" type="button" aria-haspopup="true" title="Insert" aria-label="Insert" data-tool-name="Insert tools">🗡️</button>
+          <button class="tool-menu-trigger command-icon" type="button" aria-haspopup="true" title="Insert" aria-label="Insert" data-tool-name="Insert tools"><span class="command-glyph">🗡️</span><span class="command-label">Insert</span></button>
           <div class="tool-menu-panel">
             <button id="tableButton" type="button" title="Table" aria-label="Table" data-tool-name="Lore Table">▦ Lore Table</button>
             <button data-command="insertHorizontalRule" type="button" title="Horizontal Rule" aria-label="Horizontal Rule" data-tool-name="Divider Rule">— Rule</button>
@@ -54,8 +54,8 @@
             <button id="emphasisButton" type="button" title="Emphasis Box" aria-label="Emphasis Box">ε Emphasis</button>
           </div>
         </div>
-        <button id="topHelpButton" class="tool-menu-trigger command-icon direct-command" type="button" title="Help / Guidebook" aria-label="Help / Guidebook" data-tool-name="Help / Guidebook">🗿</button>
-        <button id="settingsButton" class="tool-menu-trigger command-icon direct-command" type="button" title="Settings" aria-label="Settings" data-tool-name="Capsanoto Settings">🗝️</button>
+        <button id="topHelpButton" class="tool-menu-trigger command-icon direct-command" type="button" title="Help / Guidebook" aria-label="Help / Guidebook" data-tool-name="Help / Guidebook"><span class="command-glyph">🗿</span><span class="command-label">Help</span></button>
+        <button id="settingsButton" class="tool-menu-trigger command-icon direct-command" type="button" title="Settings" aria-label="Settings" data-tool-name="Capsanoto Settings"><span class="command-glyph">🗝️</span><span class="command-label">Settings</span></button>
       </nav>
       <span id="saveStatus" class="save-status"></span>
       <input id="imageInput" type="file" accept="image/*" hidden>
@@ -129,6 +129,7 @@
         <button type="button" data-settings-tab="design" aria-pressed="true">Design</button>
         <button type="button" data-settings-tab="export" aria-pressed="false">Download</button>
         <button type="button" data-settings-tab="support" aria-pressed="false">Help</button>
+        <button type="button" data-settings-tab="import" aria-pressed="false">Import File</button>
       </nav>
 
       <section class="settings-section settings-card" data-settings-section="export" hidden>
@@ -157,13 +158,15 @@
           <div class="designer-expand-actions">
             <button id="expandDesignerCards" type="button">Expand All</button>
             <button id="collapseDesignerCards" type="button">Collapse All</button>
+            <button id="applyDesignButton" type="button">Apply</button>
+            <button id="resetDesignButton" type="button">Reset</button>
           </div>
         </div>
 
         <div class="design-editor-grid">
           <div class="design-controls">
 
-            <details class="element-designer-card" data-designer-card="system" open>
+            <details class="element-designer-card" data-designer-card="system">
               <summary>System</summary>
               <p class="design-section-note">Defaults for the whole app unless a section below overrides them.</p>
 
@@ -201,7 +204,7 @@
 
             <details class="element-designer-card" data-designer-card="top-menu">
               <summary>Top Menu Bar</summary>
-              <label class="inherit-row"><input type="checkbox" data-inherit-section="top-menu"> Use System Defaults</label>
+              <div class="inherit-controls"><input type="checkbox" data-inherit-section="top-menu" hidden><button type="button" class="toggle-pill inherit-row inherit-toggle" data-inherit-target="top-menu" aria-pressed="false">Use Defaults</button></div>
               <p class="design-section-note">Capsanoto logo/title, Writing Room button, status box, command bar, dropdowns, and right-side icon buttons.</p>
               <label>Capsanoto Logo Size % <input id="titleIconScale" type="number" min="50" max="250" value="143"></label>
               <label>Capsanoto Title Color <input data-design-key="titleColor" data-css-var="--title-color" type="color" value="#563485"></label>
@@ -232,7 +235,7 @@
 
             <details class="element-designer-card" data-designer-card="writing-room">
               <summary>Writing Room / Filing Cabinet</summary>
-              <label class="inherit-row"><input type="checkbox" data-inherit-section="writing-room"> Use System Defaults</label>
+              <div class="inherit-controls"><input type="checkbox" data-inherit-section="writing-room" hidden><button type="button" class="toggle-pill inherit-row inherit-toggle" data-inherit-target="writing-room" aria-pressed="false">Use Defaults</button></div>
               <p class="design-section-note">Filing Cabinet window, folders, tabs, document cards, metadata pills, trash, resize behavior, and jump rail.</p>
 
               <h4>Window</h4>
@@ -302,7 +305,7 @@
 
             <details class="element-designer-card" data-designer-card="writing-area">
               <summary>Writing Area</summary>
-              <label class="inherit-row"><input type="checkbox" data-inherit-section="writing-area"> Use System Defaults</label>
+              <div class="inherit-controls"><input type="checkbox" data-inherit-section="writing-area" hidden><button type="button" class="toggle-pill inherit-row inherit-toggle" data-inherit-target="writing-area" aria-pressed="false">Use Defaults</button></div>
               <p class="design-section-note">Main editor, titles, headings, links, Link Pills, emphasis boxes, tables, and the bottom details bar.</p>
               <label>Writing Surface BG <input data-design-key="writingSurfaceBg" data-css-var="--writing-surface-bg" type="color" value="#211812"></label>
               <label>Overlay Transparency % <input data-design-key="writingOverlayOpacity" data-css-var="--writing-overlay-opacity" type="number" min="0" max="100" value="92"></label>
@@ -336,7 +339,7 @@
 
             <details class="element-designer-card" data-designer-card="help">
               <summary>Help / Guidebook</summary>
-              <label class="inherit-row"><input type="checkbox" data-inherit-section="help"> Use System Defaults</label>
+              <div class="inherit-controls"><input type="checkbox" data-inherit-section="help" hidden><button type="button" class="toggle-pill inherit-row inherit-toggle" data-inherit-target="help" aria-pressed="false">Use Defaults</button></div>
               <p class="design-section-note">Help panel surface, logo, title, headings, guide text, rules, and scrollbars.</p>
               <label>Help Window BG <input data-design-key="helpBg" data-css-var="--help-bg" type="color" value="#211812"></label>
               <label>Help Window Border <input data-design-key="helpBorder" data-css-var="--help-border" type="color" value="#724837"></label>
@@ -359,7 +362,7 @@
 
             <details class="element-designer-card" data-designer-card="settings">
               <summary>Settings Window</summary>
-              <label class="inherit-row"><input type="checkbox" data-inherit-section="settings"> Use System Defaults</label>
+              <div class="inherit-controls"><input type="checkbox" data-inherit-section="settings" hidden><button type="button" class="toggle-pill inherit-row inherit-toggle" data-inherit-target="settings" aria-pressed="false">Use Defaults</button></div>
               <p class="design-section-note">Settings panel, cards, labels, inputs, scrollbars, and this Element Designer.</p>
               <label>Settings Window BG <input data-design-key="settingsBg" data-css-var="--settings-bg" type="color" value="#211812"></label>
               <label>Settings Window Border <input data-design-key="settingsBorder" data-css-var="--settings-border" type="color" value="#724837"></label>
@@ -383,7 +386,7 @@
 
             <details class="element-designer-card" data-designer-card="tcards">
               <summary>Transclusion Cards</summary>
-              <label class="inherit-row"><input type="checkbox" data-inherit-section="tcards"> Use System Defaults</label>
+              <div class="inherit-controls"><input type="checkbox" data-inherit-section="tcards" hidden><button type="button" class="toggle-pill inherit-row inherit-toggle" data-inherit-target="tcards" aria-pressed="false">Use Defaults</button></div>
               <p class="design-section-note">Default TCard styling and the Transclusion Cards side panel.</p>
               <label>TCard Default BG <input data-design-key="tcardBg" data-css-var="--tcard-bg" type="color" value="#28133f"></label>
               <label>TCard Default Border <input data-design-key="tcardBorder" data-css-var="--tcard-border" type="color" value="#e88f69"></label>
@@ -421,18 +424,22 @@
             <div class="current-color-box" id="currentColorBox" draggable="true" aria-label="Current color">#e88f69</div>
             <div class="hex-image-row"><label class="hex-control">Hex Code <input id="activeColorHex" type="text" value="#e88f69" maxlength="7" placeholder="#e88f69"></label><button id="importColorImageButton" type="button">Import Image</button><input id="colorImageInput" type="file" accept="image/*" hidden></div>
             <div id="favoriteColors" class="favorite-colors" aria-label="Favorite colors"><button type="button" data-favorite-color="#000000">#000000</button><button type="button" data-favorite-color="#28133f">#28133f</button><button type="button" data-favorite-color="#211812">#211812</button><button type="button" data-favorite-color="#563485">#563485</button><button type="button" data-favorite-color="#724837">#724837</button><button type="button" data-favorite-color="#a97b38">#a97b38</button><button type="button" data-favorite-color="#c55222">#c55222</button><button type="button" data-favorite-color="#e88f69">#e88f69</button><button type="button" data-favorite-color="#2f251c">#2f251c</button><button type="button" data-favorite-color="#2c2c2c">#2c2c2c</button><button type="button" data-favorite-color="#fbf4d6">#fbf4d6</button><button type="button" data-favorite-color="#ffffff">#ffffff</button><button type="button" data-favorite-color="#4b2b1f">#4b2b1f</button><button type="button" data-favorite-color="#8f5cff">#8f5cff</button><button type="button" data-favorite-color="#d7a56d">#d7a56d</button><button type="button" data-favorite-color="#101010">#101010</button></div>
-            <div class="export-actions">
-              <button id="applyDesignButton" type="button">Apply</button>
-              <button id="resetDesignButton" type="button">Reset</button>
-            </div>
           </aside>
         </div>
+      </section>
+
+      <section class="settings-section settings-card" data-settings-section="import" hidden>
+        <h3>Import File</h3>
+        <p class="panel-help">Placeholder for future Capsanoto file import tools. This will later support importing saved Caps files, document bundles, and other compatible writing-room data.</p>
+        <button type="button" disabled>Import File Placeholder</button>
       </section>
 
       <section class="settings-section settings-card settings-links" data-settings-section="support" hidden>
         <h3>Help / Guidebook</h3>
         <button id="helpButton" type="button">❔ Help / Release Notes</button>
         <button id="logoutButton" type="button">🧹 Reset Local Save</button>
+        <button type="button" disabled>Placeholder</button>
+        <button type="button" disabled>Placeholder</button>
       </section>
     </aside>
 

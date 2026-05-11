@@ -513,7 +513,8 @@ function bindEditorEvents() {
   els.emphasisButton.addEventListener("click", insertEmphasisBox);
   els.topHelpButton.addEventListener("click", () => toggleHelpPanel(true));
   els.settingsButton.addEventListener("click", () => toggleSettingsPanel(true));
-  els.closeSettingsPanel.addEventListener("click", () => toggleSettingsPanel(false));
+  els.closeSettingsPanel.addEventListener("pointerdown", (event) => event.stopPropagation());
+  els.closeSettingsPanel.addEventListener("click", (event) => { event.preventDefault(); event.stopPropagation(); toggleSettingsPanel(false); });
   els.settingsMenu.addEventListener("click", handleSettingsMenuClick);
   els.settingsPanel.addEventListener("click", handleSettingsCardToggle);
   els.settingsSearchInput?.addEventListener("input", handleSettingsSearchInput);
@@ -1201,6 +1202,7 @@ function toggleSettingsPanel(show) {
     renderExportSourceSelect();
     renderExportQueue();
     loadDesignForm();
+    setElementDesignerCards(false);
   }
 }
 
@@ -1213,8 +1215,12 @@ function handleSettingsMenuClick(event) {
 function handleSettingsCardToggle(event) {
   const heading = event.target.closest(".settings-section > h3, .settings-section > .designer-heading-row");
   if (!heading) return;
-  if (event.target.closest("button")) return;
-  heading.closest(".settings-section").classList.toggle("is-collapsed");
+  if (event.target.closest("button, input, select, textarea")) return;
+  const section = heading.closest(".settings-section");
+  section.classList.toggle("is-collapsed");
+  if (!section.classList.contains("is-collapsed")) {
+    requestAnimationFrame(() => section.scrollIntoView({ block: "start", behavior: "smooth" }));
+  }
 }
 
 function showSettingsSection(sectionName) {
@@ -2521,9 +2527,10 @@ function updateInheritedDesignerSection(toggle) {
   if (!card) return;
   const inherited = toggle.checked;
   card.classList.toggle("uses-system-defaults", inherited);
+  card.querySelectorAll("[data-inherit-target]").forEach((button) => button.setAttribute("aria-pressed", String(inherited)));
   card.querySelectorAll("input, select, textarea, button").forEach((control) => {
-    if (control === toggle || control.closest("summary") || control.id === "expandDesignerCards" || control.id === "collapseDesignerCards") return;
-    if (control.matches("[data-inherit-section]")) return;
+    if (control === toggle || control.closest("summary") || control.closest(".inherit-controls") || control.id === "expandDesignerCards" || control.id === "collapseDesignerCards" || control.id === "applyDesignButton" || control.id === "resetDesignButton") return;
+    if (control.matches("[data-inherit-section], [data-inherit-target]")) return;
     control.disabled = inherited;
   });
 }
@@ -2531,6 +2538,11 @@ function updateInheritedDesignerSection(toggle) {
 function bindInheritanceToggles() {
   document.querySelectorAll("[data-inherit-section]").forEach((toggle) => {
     toggle.addEventListener("change", () => updateInheritedDesignerSection(toggle));
+    const button = toggle.closest(".inherit-controls")?.querySelector("[data-inherit-target]");
+    button?.addEventListener("click", () => {
+      toggle.checked = !toggle.checked;
+      toggle.dispatchEvent(new Event("change", { bubbles: true }));
+    });
     updateInheritedDesignerSection(toggle);
   });
 }

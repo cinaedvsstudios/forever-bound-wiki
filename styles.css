@@ -2747,3 +2747,120 @@ button {
   width: min(var(--dialog-window-width), calc(100vw - 2rem)) !important;
   max-width: min(var(--dialog-window-max-width), calc(100vw - 2rem)) !important;
 }
+
+/* Update pass: compact settings cards, version label, command labels */
+.app-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+}
+.app-version {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.06rem 0.32rem;
+  border: 1px solid color-mix(in srgb, var(--line) 65%, transparent);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 0.62rem;
+  letter-spacing: 0.04em;
+  text-transform: none;
+}
+.settings-menu {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+}
+.settings-section.settings-card {
+  margin-top: 0.55rem !important;
+}
+.settings-section.settings-card > h3,
+.settings-section.settings-card > .designer-heading-row {
+  cursor: pointer;
+}
+.settings-links {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  align-items: stretch;
+}
+.settings-links h3 {
+  grid-column: 1 / -1;
+}
+.settings-links button {
+  min-width: 0 !important;
+  width: auto !important;
+  white-space: normal !important;
+  line-height: 1.15 !important;
+}
+.designer-expand-actions {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 0.35rem !important;
+  flex-wrap: wrap !important;
+}
+.designer-expand-actions button {
+  min-height: 1.9rem !important;
+  padding: 0.28rem 0.58rem !important;
+  font-size: 0.74rem !important;
+}
+.inherit-controls {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.35rem !important;
+  margin: 0.15rem 0 0.45rem !important;
+}
+.inherit-toggle.inherit-row {
+  display: inline-flex !important;
+  width: auto !important;
+  min-height: 1.85rem !important;
+  padding: 0.28rem 0.62rem !important;
+  border-style: solid !important;
+  font-size: 0.76rem !important;
+  color: var(--dynamic-text) !important;
+}
+.inherit-toggle[aria-pressed="true"] {
+  color: #8c8782 !important;
+  border-color: #8c8782 !important;
+  opacity: 0.78;
+}
+.icon-command-bar.top-command-menus {
+  gap: 0 !important;
+  padding-inline: 0.18rem !important;
+}
+.icon-command-bar .tool-menu,
+.icon-command-bar .direct-command {
+  min-width: 0 !important;
+}
+.icon-command-bar .tool-menu-trigger,
+.icon-command-bar .direct-command {
+  display: grid !important;
+  grid-template-rows: auto auto !important;
+  place-items: center !important;
+  gap: 0.03rem !important;
+  min-width: 3.05rem !important;
+  min-height: 2.55rem !important;
+  padding: 0.2rem 0.34rem !important;
+  line-height: 1 !important;
+}
+.command-glyph {
+  font-size: var(--right-icon-size, 1.05rem) !important;
+  line-height: 1 !important;
+}
+.command-label {
+  display: block !important;
+  max-width: 3.8rem;
+  overflow: hidden;
+  color: color-mix(in srgb, var(--command-bar-text, #fbf4d6) 88%, transparent);
+  font-size: 0.48rem;
+  font-weight: 800;
+  line-height: 1;
+  text-align: center;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.settings-panel header .icon-button {
+  pointer-events: auto !important;
+  z-index: 4;
+}
+@media (max-width: 760px) {
+  .settings-menu { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  .settings-links { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+}
