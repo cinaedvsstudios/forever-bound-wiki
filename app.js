@@ -524,6 +524,8 @@ function bindEditorEvents() {
   els.closeSettingsPanel.addEventListener("pointerdown", (event) => event.stopPropagation());
   els.closeSettingsPanel.addEventListener("pointerup", (event) => { event.preventDefault(); event.stopPropagation(); toggleSettingsPanel(false); });
   els.closeSettingsPanel.addEventListener("click", (event) => { event.preventDefault(); event.stopPropagation(); toggleSettingsPanel(false); });
+  els.saveSettingsPanelButton?.addEventListener("click", (event) => { event.preventDefault(); event.stopPropagation(); saveSettingsAndClose(); });
+  els.settingsEmojiLibraryButton?.addEventListener("click", (event) => { event.preventDefault(); event.stopPropagation(); showEmojiPicker(event); });
   document.addEventListener("click", handleGlobalSettingsCloseClick, true);
   document.addEventListener("pointerup", handleGlobalSettingsCloseClick, true);
   els.settingsMenu.addEventListener("click", handleSettingsMenuClick);
@@ -1191,34 +1193,48 @@ function showEmojiPicker(event) {
   loadFavoriteEmojis();
   const picker = document.createElement("div");
   picker.className = "emoji-picker";
-  picker.setAttribute("role", "menu");
+  picker.setAttribute("role", "dialog");
+  picker.setAttribute("aria-label", "Emoji Spark");
   const favoriteButtons = favoriteEmojiList().map((emoji) => emojiButtonHtml(emoji, "favorite emoji")).join("");
   const libraryButtons = EMOJI_LIBRARY.map(([emoji, name]) => emojiButtonHtml(emoji, name)).join("");
   picker.innerHTML = `
     <div class="emoji-picker-header"><strong>Emoji Spark</strong><button type="button" class="emoji-close" aria-label="Close emoji picker">×</button></div>
-    <input class="emoji-search" type="search" placeholder="Search emoji: smiley, sword, magic…" aria-label="Search emoji">
+    <div class="emoji-search-row"><button type="button" class="emoji-copy" aria-label="Copy selected emoji">Copy</button><input class="emoji-search" type="search" placeholder="Search emoji: smiley, sword, magic…" aria-label="Search emoji"></div>
     <section class="emoji-section emoji-favorites"><h4>Favorites</h4><div class="emoji-grid">${favoriteButtons}</div></section>
     <section class="emoji-section emoji-library"><h4>Library</h4><div class="emoji-grid">${libraryButtons}</div></section>`;
   const copyMode = event?.currentTarget?.id === "settingsEmojiLibraryButton";
-  const insertEmoji = (button) => {
-    const emoji = button.dataset.emoji;
-    if (copyMode) {
-      navigator.clipboard?.writeText(emoji).catch(() => {});
-      setContextStatus(`Copied emoji ${emoji}. Paste it into a settings field.`, "saved");
-      return;
+  let selectedEmoji = "";
+  const selectEmoji = (button) => {
+    picker.querySelectorAll("button[data-emoji]").forEach((item) => item.classList.remove("is-selected"));
+    button.classList.add("is-selected");
+    selectedEmoji = button.dataset.emoji || "";
+    picker.dataset.selectedEmoji = selectedEmoji;
+    setContextStatus(`Selected emoji ${selectedEmoji}`, "saved");
+  };
+  const copySelectedEmoji = () => {
+    if (!selectedEmoji) {
+      const first = picker.querySelector("button[data-emoji]:not([hidden])");
+      if (first) selectEmoji(first);
     }
-    restoreSelectionRange();
-    insertHtml(emoji);
-    picker.remove();
+    if (!selectedEmoji) return;
+    navigator.clipboard?.writeText(selectedEmoji).catch(() => {});
+    setContextStatus(`Copied emoji ${selectedEmoji}. Paste it into a settings field.`, "saved");
   };
   picker.addEventListener("click", (clickEvent) => {
     if (clickEvent.target.closest(".emoji-close")) {
       picker.remove();
       return;
     }
+    if (clickEvent.target.closest(".emoji-copy")) {
+      copySelectedEmoji();
+      return;
+    }
     const button = clickEvent.target.closest("button[data-emoji]");
     if (!button) return;
-    insertEmoji(button);
+    selectEmoji(button);
+    if (copyMode) return;
+    restoreSelectionRange();
+    insertHtml(selectedEmoji);
   });
   const search = picker.querySelector(".emoji-search");
   search.addEventListener("input", () => {
@@ -1231,16 +1247,25 @@ function showEmojiPicker(event) {
   search.addEventListener("keydown", (keyEvent) => {
     if (keyEvent.key !== "Enter") return;
     keyEvent.preventDefault();
-    const match = picker.querySelector("button[data-emoji]:not([hidden])");
-    if (match) insertEmoji(match);
+    const match = picker.querySelector(".emoji-library button[data-emoji]:not([hidden])") || picker.querySelector("button[data-emoji]:not([hidden])");
+    if (match) {
+      selectEmoji(match);
+      if (copyMode) copySelectedEmoji();
+      else {
+        restoreSelectionRange();
+        insertHtml(selectedEmoji);
+      }
+    }
   });
   document.body.append(picker);
   const rect = event.currentTarget.getBoundingClientRect();
-  picker.style.left = `${Math.max(8, Math.min(rect.left, window.innerWidth - 560))}px`;
-  picker.style.top = `${Math.min(rect.bottom + 8, window.innerHeight - 600)}px`;
+  picker.style.left = `${Math.max(8, Math.min(rect.left, window.innerWidth - 600))}px`;
+  picker.style.top = `${Math.min(rect.bottom + 8, window.innerHeight - 680)}px`;
+  const firstFavorite = picker.querySelector(".emoji-favorites button[data-emoji]");
+  if (firstFavorite) selectEmoji(firstFavorite);
   search.focus();
-  setTimeout(() => document.addEventListener("pointerdown", closeEmojiPickerOnOutside, { once: true }), 0);
 }
+
 
 function closeEmojiPickerOnOutside(event) {
   if (!event.target.closest?.(".emoji-picker") && event.target !== els.emojiButton) document.querySelector(".emoji-picker")?.remove();
@@ -1312,26 +1337,28 @@ function handleSettingsMenuClick(event) {
 }
 
 function handleSettingsCardToggle(event) {
-  const heading = event.target.closest(".settings-section > .designer-heading-row, .settings-section > .designer-heading-row h3");
-  if (!heading) return;
-  if (event.target.closest("button, input, select, textarea") && !event.target.closest(".settings-section > .designer-heading-row h3")) return;
-  const section = heading.closest(".settings-section");
-  if (!section) return;
-  section.classList.toggle("is-collapsed");
+  // Settings cards are controlled by the top settings tab buttons.
+  // Keep this intentionally empty so clicking a displayed card title does not hide its contents.
 }
+
 
 function showSettingsSection(sectionName) {
   els.settingsMenu.querySelectorAll("button[data-settings-tab]").forEach((button) => {
-    button.setAttribute("aria-pressed", String(button.dataset.settingsTab === sectionName));
+    const isActiveButton = button.dataset.settingsTab === sectionName;
+    button.setAttribute("aria-pressed", String(isActiveButton));
   });
   els.settingsSections.forEach((section) => {
     const isActive = section.dataset.settingsSection === sectionName;
     section.hidden = !isActive;
     section.classList.toggle("is-active-settings-card", isActive);
-    section.classList.remove("is-collapsed");
   });
   const active = [...els.settingsSections].find((section) => section.dataset.settingsSection === sectionName);
-  if (active) requestAnimationFrame(() => active.scrollIntoView({ block: "nearest" }));
+  if (active && els.settingsPanel) {
+    requestAnimationFrame(() => {
+      active.scrollTop = 0;
+      els.settingsPanel.scrollTop = 0;
+    });
+  }
 }
 
 function openFilingCabinetSettingsMode() {
@@ -2041,8 +2068,8 @@ function applyWritingRoomPanelLayout() {
   try {
     const layout = JSON.parse(localStorage.getItem(WRITING_ROOM_LAYOUT_KEY) || "null");
     if (!layout) return;
-    if (layout.width) els.writingRoomPanel.style.width = `${Math.max(300, Math.min(window.innerWidth - 24, layout.width))}px`;
-    if (layout.height) els.writingRoomPanel.style.height = `${Math.max(320, Math.min(window.innerHeight - 24, layout.height))}px`;
+    if (layout.width) els.writingRoomPanel.style.width = `${Math.max(220, Math.min(window.innerWidth - 24, layout.width))}px`;
+    if (layout.height) els.writingRoomPanel.style.height = `${Math.max(220, Math.min(window.innerHeight - 24, layout.height))}px`;
     if (Number.isFinite(layout.left)) els.writingRoomPanel.style.left = `${Math.max(8, Math.min(window.innerWidth - 80, layout.left))}px`;
     if (Number.isFinite(layout.top)) els.writingRoomPanel.style.top = `${Math.max(8, Math.min(window.innerHeight - 80, layout.top))}px`;
     els.writingRoomPanel.style.right = "auto";

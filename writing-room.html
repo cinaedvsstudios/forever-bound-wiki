@@ -23,13 +23,13 @@
 <main aria-label="Forever Bound writing editor" class="writer-shell" id="editorApp">
 <header aria-label="Capsanoto command bar" class="writer-header toolbar">
 <div class="document-controls">
-<strong class="app-name"><img alt="Capsanoto icon" src="https://raw.githubusercontent.com/cinaedvsstudios/forever-bound-wiki/refs/heads/main/iconcapsanoto.png"/><span class="brand-word">Capsanoto</span><span class="app-version">v2.1</span></strong>
-<button aria-controls="writingRoomPanel" aria-expanded="false" class="writing-room-button" id="writingRoomButton" type="button"><span class="command-glyph">📚</span><span class="command-label">Writing Room</span></button>
+<strong class="app-name"><img alt="Capsanoto icon" src="https://raw.githubusercontent.com/cinaedvsstudios/forever-bound-wiki/refs/heads/main/iconcapsanoto.png"/><span class="brand-word">Capsanoto</span><span class="app-version">v2.2</span></strong>
 <label class="sr-only" for="documentSelect">Current document</label>
 <select hidden="" id="documentSelect" title="Document Switcher"></select>
 </div>
-<div aria-live="polite" class="context-status" id="contextStatus" role="status">Cursor: Writing Room ready</div>
 <nav aria-label="Writing Room controls" class="top-command-menus icon-command-bar">
+<button aria-controls="writingRoomPanel" aria-expanded="false" class="writing-room-button command-icon direct-command" id="writingRoomButton" type="button"><span class="command-glyph">📚</span><span class="command-label">Writing Room</span></button>
+<div aria-live="polite" class="context-status command-status" id="contextStatus" role="status">Cursor: Writing Room ready</div>
 <div class="tool-menu has-panel" data-menu-kind="format">
 <button aria-haspopup="true" aria-label="Format" class="tool-menu-trigger command-icon" data-tool-name="Format tools" title="Format" type="button"><span class="command-glyph">🪶</span><span class="command-label">Format</span></button>
 <div class="tool-menu-panel">
@@ -575,7 +575,7 @@
 <p><strong>Capsanoto v1 — May 8, 2026:</strong> local-first Writing Room preview with Filing Cabinet organization, files, TCards, Link Anchors, Link Pills, right-click context tools, table tools, Emoji Spark, emphasis boxes, local autosave, design settings, Help, and Download builder.</p>
 <p><strong>Current preview note:</strong> Subnoto, context search, slash commands, timeline blocks, hover names, speech profiles, paragraph-level deprecation, and PDF/DOCX clean export are planned or experimental.</p>
 </section>
-<section><h3>v2.1 interface update</h3><p>Updated Settings into a tabbed card viewer, added the Import File placeholder layout, improved Emoji Spark favorites/library behavior, added Specnoto naming, and refined Writing Room edit/save behavior.</p></section></aside>
+<section><h3>v2.2 interface update</h3><p>Unified the top command bar, corrected the Settings card viewer so only one card displays at a time, fixed Settings save/emoji actions, restored Filing Cabinet resizing, and refined Emoji Spark selection/copy behavior.</p></section></aside>
 <aside aria-label="TCards" class="block-panel" hidden="" id="blockPanel">
 <header>
 <div>

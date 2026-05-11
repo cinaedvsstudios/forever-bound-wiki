@@ -3155,3 +3155,237 @@ button {
   .context-status, .icon-command-bar.top-command-menus { justify-self: stretch !important; width: 100% !important; }
   .import-placeholder-grid { grid-template-columns: 1fr; }
 }
+
+/* v2.2 fix: unified top command bar, one-card settings viewer, emoji picker, and Filing Cabinet resizing */
+.writer-header.toolbar {
+  grid-template-columns: auto minmax(320px, 1fr) !important;
+  align-items: center !important;
+  gap: 0.85rem !important;
+  overflow: visible !important;
+}
+.writer-header.toolbar > .document-controls {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.35rem !important;
+  min-width: 0 !important;
+}
+.writer-header.toolbar > .document-controls .writing-room-button,
+.writer-header.toolbar > .context-status { display: none !important; }
+.writer-header.toolbar > .save-status { display: none !important; }
+.icon-command-bar.top-command-menus.unified-command-bar,
+.icon-command-bar.top-command-menus {
+  position: relative !important;
+  justify-self: stretch !important;
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  display: grid !important;
+  grid-template-columns: minmax(5rem, 0.42fr) minmax(16rem, 2.2fr) repeat(6, minmax(4.2rem, 0.45fr)) !important;
+  align-items: stretch !important;
+  gap: 0 !important;
+  padding: 0 !important;
+  border: 1px solid var(--command-bar-border, #e88f69) !important;
+  border-radius: 999px !important;
+  background: var(--command-bar-bg, #28133f) !important;
+  overflow: visible !important;
+}
+.icon-command-bar > .writing-room-button,
+.icon-command-bar > .context-status,
+.icon-command-bar > .tool-menu,
+.icon-command-bar > .direct-command {
+  min-width: 0 !important;
+  width: auto !important;
+  min-height: 2.55rem !important;
+  border: 0 !important;
+  border-right: 1px solid color-mix(in srgb, var(--command-bar-border, #e88f69) 55%, transparent) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  color: var(--command-bar-text, #fbf4d6) !important;
+}
+.icon-command-bar > .writing-room-button {
+  border-radius: 999px 0 0 999px !important;
+  display: inline-grid !important;
+  grid-template-rows: 1fr auto !important;
+  place-items: center !important;
+  gap: 0.08rem !important;
+  padding: 0.18rem 0.45rem !important;
+}
+.icon-command-bar > .context-status,
+.icon-command-bar > .command-status {
+  display: grid !important;
+  place-items: center !important;
+  align-self: stretch !important;
+  padding: 0.2rem 0.7rem !important;
+  text-align: center !important;
+  font-size: var(--status-text-size, 0.86rem) !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  background: color-mix(in srgb, var(--status-bg, #000000) 45%, transparent) !important;
+  border-inline: 1px solid color-mix(in srgb, var(--status-border, #a97b38) 55%, transparent) !important;
+}
+.icon-command-bar > :last-child { border-right: 0 !important; border-radius: 0 999px 999px 0 !important; }
+.icon-command-bar .tool-menu { position: static !important; }
+.icon-command-bar .tool-menu-trigger,
+.icon-command-bar .direct-command {
+  display: inline-grid !important;
+  grid-template-rows: 1fr auto !important;
+  place-items: center !important;
+  gap: 0.08rem !important;
+  height: 100% !important;
+  min-height: 2.55rem !important;
+  padding: 0.18rem 0.35rem !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+.icon-command-bar .tool-menu-trigger:hover,
+.icon-command-bar .direct-command:hover,
+.icon-command-bar .tool-menu:hover .tool-menu-trigger,
+.icon-command-bar .tool-menu:focus-within .tool-menu-trigger {
+  color: var(--accent, #e88f69) !important;
+  background: rgba(255,255,255,0.06) !important;
+  transform: none !important;
+}
+.icon-command-bar .command-glyph { font-size: var(--command-icon-size, 1rem) !important; line-height: 1 !important; }
+.icon-command-bar .command-label { font-size: var(--command-label-size, 0.54rem) !important; line-height: 1 !important; text-transform: uppercase !important; letter-spacing: 0.08em !important; }
+.icon-command-bar .tool-menu-panel {
+  position: absolute !important;
+  top: calc(100% + 0.45rem) !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  display: none !important;
+  grid-template-columns: repeat(3, minmax(9rem, 1fr)) !important;
+  gap: 0.45rem !important;
+  padding: 0.6rem !important;
+  border: 1px solid var(--command-bar-border, #e88f69) !important;
+  border-radius: 0 0 18px 18px !important;
+  background: var(--command-bar-bg, #28133f) !important;
+  box-shadow: 0 18px 48px rgba(0,0,0,0.42) !important;
+  z-index: 100 !important;
+}
+.icon-command-bar .tool-menu.has-panel:hover > .tool-menu-panel,
+.icon-command-bar .tool-menu.has-panel:focus-within > .tool-menu-panel { display: grid !important; }
+.icon-command-bar .tool-menu-panel button {
+  min-width: 0 !important;
+  justify-content: center !important;
+  text-align: center !important;
+}
+
+.settings-panel {
+  border: var(--settings-outer-border-width, 3px) solid var(--settings-viewer-border, #e88f69) !important;
+  border-radius: 24px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.65rem !important;
+}
+#settingsPanel[hidden] { display: none !important; }
+.settings-panel > header { flex: 0 0 auto !important; border-bottom: 1px solid var(--line) !important; padding-bottom: 0.65rem !important; }
+.settings-panel > .settings-menu {
+  flex: 0 0 auto !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 6 !important;
+  display: flex !important;
+  gap: 0.45rem !important;
+  padding: 0.35rem 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  overflow-x: auto !important;
+}
+.settings-panel > .settings-menu button {
+  flex: 0 0 auto !important;
+  min-width: 7rem !important;
+}
+.settings-panel > .settings-menu button[aria-pressed="true"] {
+  color: #000 !important;
+  background: var(--accent, #e88f69) !important;
+  border-color: var(--accent, #e88f69) !important;
+}
+.settings-panel .settings-section.settings-card {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow: auto !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 20px !important;
+  padding: 1rem !important;
+  background: linear-gradient(180deg, rgba(255,255,255,0.045), rgba(0,0,0,0.16)) !important;
+}
+.settings-panel .settings-section[hidden] { display: none !important; }
+.settings-panel .settings-section.settings-card.is-active-settings-card { display: block !important; }
+.settings-panel .settings-section.is-collapsed > :not(h3):not(.designer-heading-row) { display: revert !important; }
+.settings-panel .settings-section h3::before,
+.settings-panel .settings-section.is-collapsed h3::before,
+.settings-panel .settings-section .designer-heading-row h3::before { content: none !important; transform: none !important; }
+.settings-panel .settings-section > h3,
+.settings-panel .settings-section > .designer-heading-row,
+.settings-panel .settings-section > .designer-heading-row h3 { cursor: default !important; }
+
+.writing-room-panel {
+  resize: both !important;
+  overflow: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  width: min(var(--writing-room-width, 520px), calc(100vw - 1.5rem)) !important;
+  height: min(var(--writing-room-height, 640px), calc(100vh - 1.5rem)) !important;
+  min-width: var(--writing-room-min-width, 220px) !important;
+  min-height: var(--writing-room-min-height, 220px) !important;
+  max-width: min(var(--writing-room-max-width, 1100px), calc(100vw - 1.5rem)) !important;
+  max-height: min(var(--writing-room-max-height, 900px), calc(100vh - 1.5rem)) !important;
+}
+.writing-room-panel > header { flex: 0 0 auto !important; }
+.writing-room-cards { flex: 1 1 auto !important; min-height: 0 !important; max-height: none !important; overflow: auto !important; }
+
+.emoji-picker {
+  width: min(36rem, calc(100vw - 1rem)) !important;
+  max-height: min(680px, 82vh) !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  resize: both !important;
+}
+.emoji-search-row {
+  display: grid !important;
+  grid-template-columns: auto 1fr !important;
+  gap: 0.45rem !important;
+  align-items: center !important;
+  margin: 0.55rem 0 !important;
+}
+.emoji-copy { min-height: 2.25rem !important; padding: 0.35rem 0.65rem !important; }
+.emoji-grid { grid-template-columns: repeat(12, 2rem) !important; justify-content: start !important; }
+.emoji-picker button[data-emoji] {
+  width: 2rem !important;
+  height: 2rem !important;
+  min-width: 2rem !important;
+  min-height: 2rem !important;
+  padding: 0 !important;
+  border: 1px solid transparent !important;
+  border-radius: 8px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+.emoji-picker button[data-emoji]:hover,
+.emoji-picker button[data-emoji].is-selected {
+  border-color: var(--accent, #e88f69) !important;
+  background: rgba(232,143,105,0.13) !important;
+}
+.emoji-section.emoji-favorites {
+  padding: 0.5rem !important;
+  border: 1px solid var(--accent) !important;
+  border-radius: 14px !important;
+  background: rgba(232, 143, 105, 0.16) !important;
+}
+.emoji-section.emoji-favorites .emoji-grid {
+  grid-auto-rows: 2rem !important;
+  max-height: calc((2rem * 3) + (0.35rem * 2)) !important;
+  overflow: hidden !important;
+}
+@media (max-width: 900px) {
+  .writer-header.toolbar { grid-template-columns: 1fr !important; }
+  .icon-command-bar.top-command-menus { grid-template-columns: minmax(5rem, 0.5fr) minmax(10rem, 1.5fr) repeat(6, minmax(3.8rem, 1fr)) !important; overflow-x: auto !important; }
+  .icon-command-bar .tool-menu-panel { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+}
