@@ -183,6 +183,14 @@ const els = {
   activeColorHex: document.querySelector("#activeColorHex"),
   currentColorBox: document.querySelector("#currentColorBox"),
   favoriteColors: document.querySelector("#favoriteColors"),
+  importColorImageButton: document.querySelector("#importColorImageButton"),
+  colorImageInput: document.querySelector("#colorImageInput"),
+  colorImagePopup: document.querySelector("#colorImagePopup"),
+  colorImagePreview: document.querySelector("#colorImagePreview"),
+  closeColorImagePopup: document.querySelector("#closeColorImagePopup"),
+  settingsSearchInput: document.querySelector("#settingsSearchInput"),
+  settingsSearchPrev: document.querySelector("#settingsSearchPrev"),
+  settingsSearchNext: document.querySelector("#settingsSearchNext"),
   expandDesignerCards: document.querySelector("#expandDesignerCards"),
   collapseDesignerCards: document.querySelector("#collapseDesignerCards"),
   settingsMenu: document.querySelector(".settings-menu"),
@@ -508,6 +516,12 @@ function bindEditorEvents() {
   els.closeSettingsPanel.addEventListener("click", () => toggleSettingsPanel(false));
   els.settingsMenu.addEventListener("click", handleSettingsMenuClick);
   els.settingsPanel.addEventListener("click", handleSettingsCardToggle);
+  els.settingsSearchInput?.addEventListener("input", handleSettingsSearchInput);
+  els.settingsSearchNext?.addEventListener("click", () => moveSettingsSearch(1));
+  els.settingsSearchPrev?.addEventListener("click", () => moveSettingsSearch(-1));
+  els.importColorImageButton?.addEventListener("click", () => els.colorImageInput?.click());
+  els.colorImageInput?.addEventListener("change", showColorReferenceImage);
+  els.closeColorImagePopup?.addEventListener("click", () => { if (els.colorImagePopup) els.colorImagePopup.hidden = true; });
   els.writingRoomButton.addEventListener("click", () => toggleWritingRoomPanel());
   els.closeWritingRoomPanel.addEventListener("click", () => toggleWritingRoomPanel(false));
   els.editWritingRoomButton.addEventListener("click", toggleFilingEditMode);
@@ -535,6 +549,7 @@ function bindEditorEvents() {
   document.addEventListener("keydown", (event) => { if (event.key === "Escape") { toggleHelpPanel(false); toggleSettingsPanel(false); toggleWritingRoomPanel(false); } });
   bindDesignColorTools();
   bindInheritanceToggles();
+  bindElementDesignerCardScroll();
   els.expandDesignerCards?.addEventListener("click", () => setElementDesignerCards(true));
   els.collapseDesignerCards?.addEventListener("click", () => setElementDesignerCards(false));
   bindDesignToggle(els.designBoldToggle, els.designBold);
@@ -1908,7 +1923,7 @@ function applyWritingRoomPanelLayout() {
   try {
     const layout = JSON.parse(localStorage.getItem(WRITING_ROOM_LAYOUT_KEY) || "null");
     if (!layout) return;
-    if (layout.width) els.writingRoomPanel.style.width = `${Math.max(360, Math.min(window.innerWidth - 24, layout.width))}px`;
+    if (layout.width) els.writingRoomPanel.style.width = `${Math.max(300, Math.min(window.innerWidth - 24, layout.width))}px`;
     if (layout.height) els.writingRoomPanel.style.height = `${Math.max(320, Math.min(window.innerHeight - 24, layout.height))}px`;
     if (Number.isFinite(layout.left)) els.writingRoomPanel.style.left = `${Math.max(8, Math.min(window.innerWidth - 80, layout.left))}px`;
     if (Number.isFinite(layout.top)) els.writingRoomPanel.style.top = `${Math.max(8, Math.min(window.innerHeight - 80, layout.top))}px`;
@@ -2343,6 +2358,59 @@ function bindDesignColorTools() {
 
 function setElementDesignerCards(open) {
   document.querySelectorAll(".element-designer-card").forEach((card) => { card.open = open; });
+}
+
+function bindElementDesignerCardScroll() {
+  document.querySelectorAll(".element-designer-card").forEach((card) => {
+    card.addEventListener("toggle", () => {
+      if (!card.open) return;
+      setTimeout(() => card.scrollIntoView({ block: "start", behavior: "smooth" }), 40);
+    });
+  });
+}
+
+function showColorReferenceImage(event) {
+  const file = event.target.files?.[0];
+  if (!file || !els.colorImagePreview || !els.colorImagePopup) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    els.colorImagePreview.src = String(reader.result || "");
+    els.colorImagePopup.hidden = false;
+  };
+  reader.readAsDataURL(file);
+  event.target.value = "";
+}
+
+let settingsSearchMatches = [];
+let settingsSearchIndex = -1;
+
+function handleSettingsSearchInput() {
+  const query = (els.settingsSearchInput?.value || "").trim().toLowerCase();
+  clearSettingsSearchMarks();
+  settingsSearchMatches = [];
+  settingsSearchIndex = -1;
+  if (!query) return;
+  const candidates = Array.from(els.settingsPanel.querySelectorAll("summary, label, h3, h4, p, button"))
+    .filter((node) => node.offsetParent !== null && node.textContent.toLowerCase().includes(query));
+  settingsSearchMatches = candidates;
+  candidates.forEach((node) => node.classList.add("setting-search-match"));
+  moveSettingsSearch(1);
+}
+
+function clearSettingsSearchMarks() {
+  els.settingsPanel?.querySelectorAll(".setting-search-match, .setting-search-current").forEach((node) => {
+    node.classList.remove("setting-search-match", "setting-search-current");
+  });
+}
+
+function moveSettingsSearch(direction) {
+  if (!settingsSearchMatches.length) return;
+  settingsSearchMatches.forEach((node) => node.classList.remove("setting-search-current"));
+  settingsSearchIndex = (settingsSearchIndex + direction + settingsSearchMatches.length) % settingsSearchMatches.length;
+  const node = settingsSearchMatches[settingsSearchIndex];
+  node.classList.add("setting-search-current");
+  node.closest("details")?.setAttribute("open", "");
+  node.scrollIntoView({ block: "center", behavior: "smooth" });
 }
 
 function renderFavoriteColors() {

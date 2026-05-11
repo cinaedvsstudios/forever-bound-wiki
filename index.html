@@ -23,15 +23,15 @@
   <main id="editorApp" class="writer-shell" aria-label="Forever Bound writing editor">
     <header class="writer-header toolbar" aria-label="Capsanoto command bar">
       <div class="document-controls">
-        <strong class="app-name"><img src="https://raw.githubusercontent.com/cinaedvsstudios/forever-bound-wiki/refs/heads/main/iconcapsanoto.png" alt="Capsanoto icon">Capsanoto</strong>
+        <strong class="app-name"><img src="https://raw.githubusercontent.com/cinaedvsstudios/forever-bound-wiki/refs/heads/main/iconcapsanoto.png" alt="Capsanoto icon"><span class="brand-word">Capsanoto</span></strong>
         <button id="writingRoomButton" class="writing-room-button" type="button" aria-expanded="false" aria-controls="writingRoomPanel">Writing Room</button>
         <label for="documentSelect" class="sr-only">Current document</label>
         <select id="documentSelect" title="Document Switcher" hidden></select>
       </div>
       <div id="contextStatus" class="context-status" role="status" aria-live="polite">Cursor: Writing Room ready</div>
-      <nav class="top-command-menus" aria-label="Writing Room controls">
-        <div class="tool-menu">
-          <button class="tool-menu-trigger" type="button" aria-haspopup="true">Format</button>
+      <nav class="top-command-menus icon-command-bar" aria-label="Writing Room controls">
+        <div class="tool-menu has-panel" data-menu-kind="format">
+          <button class="tool-menu-trigger command-icon" type="button" aria-haspopup="true" title="Format" aria-label="Format" data-tool-name="Format tools">🪶</button>
           <div class="tool-menu-panel">
             <button data-command="bold" type="button" title="Bold" aria-label="Bold" data-tool-name="Bold Mark"><strong>B</strong> Bold</button>
             <button data-command="italic" type="button" title="Italic" aria-label="Italic" data-tool-name="Italic Mark"><em>I</em> Italic</button>
@@ -41,19 +41,10 @@
             <button data-command="insertUnorderedList" type="button" title="Bullet List" aria-label="Bullet List" data-tool-name="Lore List">☰ List</button>
           </div>
         </div>
-        <div class="tool-menu">
-          <button class="tool-menu-trigger" type="button" aria-haspopup="false" data-tool-name="Subnoto">Subnoto</button>
-          <div class="tool-menu-panel">
-            <button id="subnotoButton" type="button" title="Subnoto" aria-label="Subnoto" data-tool-name="Subnoto">🧩 Subnoto</button>
-            <button id="linkButton" type="button" title="Create Link" aria-label="Create Link" data-tool-name="Path Link" hidden>🔗 Path Link</button>
-            <button id="editLinkButton" type="button" title="Edit Link" aria-label="Edit Link" data-tool-name="Link Editor" hidden>🛠️ Link Editor</button>
-            <button id="pillLinkButton" type="button" title="Convert Selection to Pill" aria-label="Convert Selection to Pill" data-tool-name="Link Pill" hidden>💊 Link Pill</button>
-            <button id="removeLinkButton" type="button" title="Remove Link" aria-label="Remove Link" data-tool-name="Link Breaker" hidden>❌ Link Breaker</button>
-            <button id="bookmarkButton" type="button" title="Bookmark" aria-label="Bookmark" data-tool-name="Link Anchor" hidden>⚓ Link Anchor</button>
-          </div>
-        </div>
-        <div class="tool-menu">
-          <button class="tool-menu-trigger" type="button" aria-haspopup="true">Insert</button>
+        <button id="subnotoButton" class="tool-menu-trigger command-icon direct-command" type="button" title="Subnoto" aria-label="Subnoto" data-tool-name="Subnoto clipboard">📜</button>
+        <button id="searchButton" class="tool-menu-trigger command-icon direct-command" type="button" title="Search" aria-label="Search" data-tool-name="Specnoto search preview">🕯️</button>
+        <div class="tool-menu has-panel" data-menu-kind="insert">
+          <button class="tool-menu-trigger command-icon" type="button" aria-haspopup="true" title="Insert" aria-label="Insert" data-tool-name="Insert tools">🗡️</button>
           <div class="tool-menu-panel">
             <button id="tableButton" type="button" title="Table" aria-label="Table" data-tool-name="Lore Table">▦ Lore Table</button>
             <button data-command="insertHorizontalRule" type="button" title="Horizontal Rule" aria-label="Horizontal Rule" data-tool-name="Divider Rule">— Rule</button>
@@ -63,13 +54,12 @@
             <button id="emphasisButton" type="button" title="Emphasis Box" aria-label="Emphasis Box">ε Emphasis</button>
           </div>
         </div>
+        <button id="topHelpButton" class="tool-menu-trigger command-icon direct-command" type="button" title="Help / Guidebook" aria-label="Help / Guidebook" data-tool-name="Help / Guidebook">🗿</button>
+        <button id="settingsButton" class="tool-menu-trigger command-icon direct-command" type="button" title="Settings" aria-label="Settings" data-tool-name="Capsanoto Settings">🗝️</button>
       </nav>
-      <div class="save-controls">
-        <span id="saveStatus" class="save-status"></span>
-        <button id="searchButton" class="icon-button" type="button" title="Search" aria-label="Search" data-tool-name="Search preview">🔍</button><button id="topHelpButton" class="icon-button" type="button" title="Help" aria-label="Help">?</button>
-        <button id="settingsButton" class="icon-button" type="button" title="Settings" aria-label="Settings" data-tool-name="Capsanoto Settings">⚙️</button>
-      </div>
+      <span id="saveStatus" class="save-status"></span>
       <input id="imageInput" type="file" accept="image/*" hidden>
+      <span id="linkButton" hidden></span><span id="editLinkButton" hidden></span><span id="pillLinkButton" hidden></span><span id="removeLinkButton" hidden></span><span id="bookmarkButton" hidden></span>
     </header>
 
     <menu id="selectionMenu" class="selection-menu" hidden>
@@ -117,11 +107,20 @@
 
     <section id="documentEndBar" class="document-end-bar" aria-label="End of document controls"></section>
 
+    <div id="colorImagePopup" class="color-image-popup" hidden>
+      <button id="closeColorImagePopup" class="icon-button" type="button" aria-label="Close color reference image">×</button>
+      <img id="colorImagePreview" alt="Imported color reference">
+    </div>
+
     <aside id="settingsPanel" class="settings-panel" aria-label="Capsanoto settings" hidden>
       <header>
-        <div>
-          <p class="eyebrow">Writing Room</p>
+        <div class="settings-title-row">
           <h2>Settings</h2>
+          <div class="settings-search-tools" role="search">
+            <input id="settingsSearchInput" type="search" placeholder="Search settings…" aria-label="Search settings">
+            <button id="settingsSearchPrev" type="button" title="Previous setting">‹</button>
+            <button id="settingsSearchNext" type="button" title="Next setting">›</button>
+          </div>
         </div>
         <button id="closeSettingsPanel" class="icon-button" type="button" aria-label="Close settings">×</button>
       </header>
@@ -234,36 +233,64 @@
             <details class="element-designer-card" data-designer-card="writing-room">
               <summary>Writing Room / Filing Cabinet</summary>
               <label class="inherit-row"><input type="checkbox" data-inherit-section="writing-room"> Use System Defaults</label>
-              <p class="design-section-note">Filing Cabinet window, folders, tabs, document cards, metadata pills, trash, and jump rail.</p>
-              <label>Window BG <input id="panelBgColor" type="color" value="#211812"></label>
-              <label>Window Border <input id="panelBorderColor" type="color" value="#724837"></label>
-              <label>Window Shadow <input data-design-key="writingRoomShadow" data-css-var="--writing-room-shadow-color" type="color" value="#000000"></label>
+              <p class="design-section-note">Filing Cabinet window, folders, tabs, document cards, metadata pills, trash, resize behavior, and jump rail.</p>
+
+              <h4>Window</h4>
+              <label>Writing Room Window BG <input id="panelBgColor" type="color" value="#211812"></label>
+              <label>Writing Room Window Border <input id="panelBorderColor" type="color" value="#724837"></label>
+              <label>Writing Room Window Shadow <input data-design-key="writingRoomShadow" data-css-var="--writing-room-shadow-color" type="color" value="#000000"></label>
+              <label>Writing Room Width <input data-design-key="writingRoomWidth" data-css-var="--writing-room-width" data-suffix="px" type="number" min="280" max="1600" value="520"></label>
+              <label>Writing Room Height <input data-design-key="writingRoomHeight" data-css-var="--writing-room-height" data-suffix="px" type="number" min="280" max="1200" value="640"></label>
+              <label>Writing Room Min Width <input data-design-key="writingRoomMinWidth" data-css-var="--writing-room-min-width" data-suffix="px" type="number" min="240" max="900" value="300"></label>
+              <label>Writing Room Min Height <input data-design-key="writingRoomMinHeight" data-css-var="--writing-room-min-height" data-suffix="px" type="number" min="220" max="900" value="280"></label>
+              <label>Writing Room Max Width <input data-design-key="writingRoomMaxWidth" data-css-var="--writing-room-max-width" data-suffix="px" type="number" min="360" max="1800" value="980"></label>
+              <label>Writing Room Max Height <input data-design-key="writingRoomMaxHeight" data-css-var="--writing-room-max-height" data-suffix="px" type="number" min="360" max="1400" value="720"></label>
               <label>Title Color <input data-design-key="writingRoomTitleColor" data-css-var="--writing-room-title-color" type="color" value="#e88f69"></label>
-              <label>Title Size <input data-design-key="writingRoomTitleSize" data-css-var="--writing-room-title-size" data-suffix="rem" type="number" min="0.8" max="2" step="0.05" value="1.05"></label>
+              <label>Title Text Size <input data-design-key="writingRoomTitleSize" data-css-var="--writing-room-title-size" data-suffix="rem" type="number" min="0.8" max="2" step="0.05" value="1.05"></label>
+
+              <h4>Icons</h4>
               <label>Header Icon Size <input data-design-key="writingRoomHeaderIconSize" data-css-var="--writing-room-header-icon-size" data-suffix="rem" type="number" min="0.8" max="2.2" step="0.05" value="1"></label>
               <label>Folder Icon Size <input data-design-key="folderIconSize" data-css-var="--folder-icon-size" data-suffix="rem" type="number" min="0.8" max="2" step="0.05" value="1"></label>
               <label>Tab Icon Size <input data-design-key="tabIconSize" data-css-var="--tab-icon-size" data-suffix="rem" type="number" min="0.8" max="2" step="0.05" value="1"></label>
               <label>Document Icon Size <input data-design-key="docIconSize" data-css-var="--doc-icon-size" data-suffix="rem" type="number" min="0.8" max="2" step="0.05" value="1"></label>
-              <label>Folder Row BG <input data-design-key="folderRowBg" data-css-var="--folder-row-bg" type="color" value="#2c2c2c"></label>
+              <label>Rail / Jump Icon Size <input data-design-key="railIconSize" data-css-var="--rail-icon-size" data-suffix="rem" type="number" min="0.65" max="1.8" step="0.05" value="0.9"></label>
+
+              <h4>Folders</h4>
+              <label>Folder Row Background <input data-design-key="folderRowBg" data-css-var="--folder-row-bg" type="color" value="#2c2c2c"></label>
               <label>Folder Row Border <input data-design-key="folderRowBorder" data-css-var="--folder-row-border" type="color" value="#724837"></label>
-              <label>Folder Text <input data-design-key="folderTextColor" data-css-var="--folder-text-color" type="color" value="#fbf4d6"></label>
+              <label>Folder Text Color <input data-design-key="folderTextColor" data-css-var="--folder-text-color" type="color" value="#fbf4d6"></label>
               <label>Folder Text Size <input data-design-key="folderTextSize" data-css-var="--folder-text-size" data-suffix="rem" type="number" min="0.7" max="1.6" step="0.05" value="0.95"></label>
-              <label>Tab Row BG <input data-design-key="tabRowBg" data-css-var="--tab-row-bg" type="color" value="#28133f"></label>
+
+              <h4>Tabs</h4>
+              <label>Tab Row Background <input data-design-key="tabRowBg" data-css-var="--tab-row-bg" type="color" value="#28133f"></label>
               <label>Tab Row Border <input data-design-key="tabRowBorder" data-css-var="--tab-row-border" type="color" value="#563485"></label>
-              <label>Tab Text <input data-design-key="tabTextColor" data-css-var="--tab-text-color" type="color" value="#e7a2ff"></label>
+              <label>Tab Text Color <input data-design-key="tabTextColor" data-css-var="--tab-text-color" type="color" value="#e7a2ff"></label>
               <label>Tab Text Size <input data-design-key="tabTextSize" data-css-var="--tab-text-size" data-suffix="rem" type="number" min="0.7" max="1.5" step="0.05" value="0.9"></label>
-              <label>Document Row BG <input data-design-key="docRowBg" data-css-var="--doc-row-bg" type="color" value="#2c2c2c"></label>
+
+              <h4>Documents</h4>
+              <label>Document Row Background <input data-design-key="docRowBg" data-css-var="--doc-row-bg" type="color" value="#2c2c2c"></label>
               <label>Document Row Border <input data-design-key="docRowBorder" data-css-var="--doc-row-border" type="color" value="#724837"></label>
-              <label>Document Text <input data-design-key="docTextColor" data-css-var="--doc-text-color" type="color" value="#fbf4d6"></label>
+              <label>Document Text Color <input data-design-key="docTextColor" data-css-var="--doc-text-color" type="color" value="#fbf4d6"></label>
               <label>Document Text Size <input data-design-key="docTextSize" data-css-var="--doc-text-size" data-suffix="rem" type="number" min="0.65" max="1.4" step="0.05" value="0.9"></label>
-              <label>Metadata Pill BG <input data-design-key="metadataPillBg" data-css-var="--metadata-pill-bg" type="color" value="#563485"></label>
+              <label>Expanded Document Text Color <input data-design-key="expandedDocTextColor" data-css-var="--expanded-doc-text-color" type="color" value="#b88b65"></label>
+              <label>Expanded Document Text Size <input data-design-key="expandedDocTextSize" data-css-var="--expanded-doc-text-size" data-suffix="rem" type="number" min="0.6" max="1.3" step="0.05" value="0.82"></label>
+
+              <h4>Metadata / Trash</h4>
+              <label>Metadata Pill Background <input data-design-key="metadataPillBg" data-css-var="--metadata-pill-bg" type="color" value="#563485"></label>
               <label>Metadata Pill Border <input data-design-key="metadataPillBorder" data-css-var="--metadata-pill-border" type="color" value="#724837"></label>
-              <label>Trash BG <input data-design-key="trashBg" data-css-var="--trash-bg" type="color" value="#28133f"></label>
-              <label>Jump Rail Line <input data-design-key="jumpRailLine" data-css-var="--jump-rail-line" type="color" value="#69635f"></label>
-              <label>Jump Rail Button BG <input data-design-key="jumpRailButtonBg" data-css-var="--jump-rail-button-bg" type="color" value="#2c2c2c"></label>
+              <label>Metadata Pill Text Color <input data-design-key="metadataPillTextColor" data-css-var="--metadata-pill-text-color" type="color" value="#fbf4d6"></label>
+              <label>Metadata Pill Text Size <input data-design-key="metadataPillTextSize" data-css-var="--metadata-pill-text-size" data-suffix="rem" type="number" min="0.6" max="1.3" step="0.05" value="0.78"></label>
+              <label>Trash Section Background <input data-design-key="trashBg" data-css-var="--trash-bg" type="color" value="#28133f"></label>
+              <label>Trash Section Border <input data-design-key="trashBorder" data-css-var="--trash-border" type="color" value="#563485"></label>
+
+              <h4>Jump Rail</h4>
+              <label>Scrollbar / Jump Rail Line Color <input data-design-key="jumpRailLine" data-css-var="--jump-rail-line" type="color" value="#69635f"></label>
+              <label>Jump Rail Button Background <input data-design-key="jumpRailButtonBg" data-css-var="--jump-rail-button-bg" type="color" value="#2c2c2c"></label>
+              <label>Jump Rail Button Border <input data-design-key="jumpRailButtonBorder" data-css-var="--jump-rail-button-border" type="color" value="#724837"></label>
+              <label>Jump Rail Icon Color <input data-design-key="jumpRailIconColor" data-css-var="--jump-rail-icon-color" type="color" value="#fbf4d6"></label>
             </details>
 
-            <details class="element-designer-card" data-designer-card="subnoto">
+            <details class="element-designer-card" data-designer-card="subnoto">            <details class="element-designer-card" data-designer-card="subnoto">
               <summary>Subnoto</summary>
               <p class="placeholder-card">Reserved for the future Subnoto clipboard workspace.</p>
             </details>
@@ -321,6 +348,13 @@
               <label>Help Heading Color <input data-design-key="helpHeadingColor" data-css-var="--help-heading-color" type="color" value="#fbf4d6"></label>
               <label>Help Heading Size <input data-design-key="helpHeadingSize" data-css-var="--help-heading-size" data-suffix="rem" type="number" min="0.9" max="2" step="0.05" value="1.15"></label>
               <label>Help Rule Color <input data-design-key="helpRuleColor" data-css-var="--help-rule-color" type="color" value="#724837"></label>
+              <h4>Window Size</h4>
+              <label>Help Width <input data-design-key="helpWidth" data-css-var="--help-width" data-suffix="px" type="number" min="360" max="1600" value="760"></label>
+              <label>Help Height <input data-design-key="helpHeight" data-css-var="--help-height" data-suffix="px" type="number" min="300" max="1200" value="720"></label>
+              <label>Help Min Width <input data-design-key="helpMinWidth" data-css-var="--help-min-width" data-suffix="px" type="number" min="260" max="900" value="360"></label>
+              <label>Help Min Height <input data-design-key="helpMinHeight" data-css-var="--help-min-height" data-suffix="px" type="number" min="220" max="900" value="280"></label>
+              <label>Help Max Width <input data-design-key="helpMaxWidth" data-css-var="--help-max-width" data-suffix="px" type="number" min="420" max="1800" value="980"></label>
+              <label>Help Max Height <input data-design-key="helpMaxHeight" data-css-var="--help-max-height" data-suffix="px" type="number" min="360" max="1400" value="900"></label>
             </details>
 
             <details class="element-designer-card" data-designer-card="settings">
@@ -338,6 +372,13 @@
               <label>Settings Input BG <input data-design-key="settingsInputBg" data-css-var="--settings-input-bg" type="color" value="#000000"></label>
               <label>Settings Input Text <input data-design-key="settingsInputText" data-css-var="--settings-input-text" type="color" value="#fbf4d6"></label>
               <label>Element Designer Font Size <input data-design-key="elementDesignerTextSize" data-css-var="--element-designer-text-size" data-suffix="rem" type="number" min="0.65" max="1.4" step="0.05" value="0.88"></label>
+              <h4>Window Size</h4>
+              <label>Settings Width <input data-design-key="settingsWidth" data-css-var="--settings-width" data-suffix="px" type="number" min="420" max="1800" value="1100"></label>
+              <label>Settings Height <input data-design-key="settingsHeight" data-css-var="--settings-height" data-suffix="px" type="number" min="320" max="1200" value="760"></label>
+              <label>Settings Min Width <input data-design-key="settingsMinWidth" data-css-var="--settings-min-width" data-suffix="px" type="number" min="320" max="900" value="560"></label>
+              <label>Settings Min Height <input data-design-key="settingsMinHeight" data-css-var="--settings-min-height" data-suffix="px" type="number" min="240" max="900" value="320"></label>
+              <label>Settings Max Width <input data-design-key="settingsMaxWidth" data-css-var="--settings-max-width" data-suffix="px" type="number" min="520" max="2200" value="1400"></label>
+              <label>Settings Max Height <input data-design-key="settingsMaxHeight" data-css-var="--settings-max-height" data-suffix="px" type="number" min="420" max="1400" value="980"></label>
             </details>
 
             <details class="element-designer-card" data-designer-card="tcards">
@@ -353,21 +394,32 @@
               <label>TCard Panel Border <input data-design-key="tcardPanelBorder" data-css-var="--tcard-panel-border" type="color" value="#724837"></label>
               <label>TCard Input BG <input data-design-key="tcardInputBg" data-css-var="--tcard-input-bg" type="color" value="#28133f"></label>
               <label>TCard Input Text <input data-design-key="tcardInputText" data-css-var="--tcard-input-text" type="color" value="#fbf4d6"></label>
+              <h4>Window Size</h4>
+              <label>TCard Panel Width <input data-design-key="tcardPanelWidth" data-css-var="--tcard-panel-width" data-suffix="px" type="number" min="320" max="1200" value="430"></label>
+              <label>TCard Panel Height <input data-design-key="tcardPanelHeight" data-css-var="--tcard-panel-height" data-suffix="px" type="number" min="280" max="1200" value="720"></label>
+              <label>TCard Panel Min Width <input data-design-key="tcardPanelMinWidth" data-css-var="--tcard-panel-min-width" data-suffix="px" type="number" min="260" max="900" value="320"></label>
+              <label>TCard Panel Min Height <input data-design-key="tcardPanelMinHeight" data-css-var="--tcard-panel-min-height" data-suffix="px" type="number" min="220" max="900" value="280"></label>
+              <label>TCard Panel Max Width <input data-design-key="tcardPanelMaxWidth" data-css-var="--tcard-panel-max-width" data-suffix="px" type="number" min="360" max="1600" value="760"></label>
+              <label>TCard Panel Max Height <input data-design-key="tcardPanelMaxHeight" data-css-var="--tcard-panel-max-height" data-suffix="px" type="number" min="360" max="1400" value="900"></label>
+              <h4>Delete / Dialog Window Size</h4>
+              <label>Dialog Width <input data-design-key="dialogWindowWidth" data-css-var="--dialog-window-width" data-suffix="px" type="number" min="280" max="1100" value="500"></label>
+              <label>Dialog Height <input data-design-key="dialogWindowHeight" data-css-var="--dialog-window-height" data-suffix="px" type="number" min="180" max="900" value="360"></label>
+              <label>Dialog Min Width <input data-design-key="dialogWindowMinWidth" data-css-var="--dialog-window-min-width" data-suffix="px" type="number" min="240" max="800" value="300"></label>
+              <label>Dialog Max Width <input data-design-key="dialogWindowMaxWidth" data-css-var="--dialog-window-max-width" data-suffix="px" type="number" min="320" max="1400" value="640"></label>
             </details>
           </div>
 
           <aside class="design-preview-column" aria-label="Design preview and colors">
             <div class="design-preview">
               <article>
-                <h4>Preview Title</h4>
+                <div class="preview-title-row"><h4>Preview Title</h4><span><a href="#">Normal link</a> <a class="pill-link" href="#">Link Pill</a></span></div>
                 <p>This preview shows sample dynamic text inside a bordered panel/card.</p>
                 <div class="preview-card"><strong>Sample Card</strong><span>Panel text and section border preview.</span></div>
-                <p><a href="#">Normal link</a> <a class="pill-link" href="#">Link Pill</a></p>
                 <button type="button">Preview Button</button>
               </article>
             </div>
             <div class="current-color-box" id="currentColorBox" draggable="true" aria-label="Current color">#e88f69</div>
-            <label class="hex-control">Hex Code <input id="activeColorHex" type="text" value="#e88f69" maxlength="7" placeholder="#e88f69"></label>
+            <div class="hex-image-row"><label class="hex-control">Hex Code <input id="activeColorHex" type="text" value="#e88f69" maxlength="7" placeholder="#e88f69"></label><button id="importColorImageButton" type="button">Import Image</button><input id="colorImageInput" type="file" accept="image/*" hidden></div>
             <div id="favoriteColors" class="favorite-colors" aria-label="Favorite colors"><button type="button" data-favorite-color="#000000">#000000</button><button type="button" data-favorite-color="#28133f">#28133f</button><button type="button" data-favorite-color="#211812">#211812</button><button type="button" data-favorite-color="#563485">#563485</button><button type="button" data-favorite-color="#724837">#724837</button><button type="button" data-favorite-color="#a97b38">#a97b38</button><button type="button" data-favorite-color="#c55222">#c55222</button><button type="button" data-favorite-color="#e88f69">#e88f69</button><button type="button" data-favorite-color="#2f251c">#2f251c</button><button type="button" data-favorite-color="#2c2c2c">#2c2c2c</button><button type="button" data-favorite-color="#fbf4d6">#fbf4d6</button><button type="button" data-favorite-color="#ffffff">#ffffff</button><button type="button" data-favorite-color="#4b2b1f">#4b2b1f</button><button type="button" data-favorite-color="#8f5cff">#8f5cff</button><button type="button" data-favorite-color="#d7a56d">#d7a56d</button><button type="button" data-favorite-color="#101010">#101010</button></div>
             <div class="export-actions">
               <button id="applyDesignButton" type="button">Apply</button>
