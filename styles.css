@@ -3081,12 +3081,12 @@ button {
 .writing-room-panel {
   resize: both !important;
   overflow: auto !important;
-  width: min(var(--writing-room-width, 520px), calc(100vw - 1.5rem)) !important;
-  height: min(var(--writing-room-height, 640px), calc(100vh - 1.5rem)) !important;
-  min-width: var(--writing-room-min-width, 240px) !important;
-  min-height: var(--writing-room-min-height, 240px) !important;
-  max-width: min(var(--writing-room-max-width, 1100px), calc(100vw - 1.5rem)) !important;
-  max-height: min(var(--writing-room-max-height, 900px), calc(100vh - 1.5rem)) !important;
+  width: min(var(--writing-room-width, 520px), calc(100vw - 1.5rem));
+  height: min(var(--writing-room-height, 640px), calc(100vh - 1.5rem));
+  min-width: var(--writing-room-min-width, 240px);
+  min-height: var(--writing-room-min-height, 240px);
+  max-width: min(var(--writing-room-max-width, 1100px), calc(100vw - 1.5rem));
+  max-height: min(var(--writing-room-max-height, 900px), calc(100vh - 1.5rem));
 }
 .writing-room-cards { height: auto !important; max-height: none !important; overflow: auto !important; }
 
@@ -3330,12 +3330,12 @@ button {
   overflow: auto !important;
   display: flex !important;
   flex-direction: column !important;
-  width: min(var(--writing-room-width, 520px), calc(100vw - 1.5rem)) !important;
-  height: min(var(--writing-room-height, 640px), calc(100vh - 1.5rem)) !important;
-  min-width: var(--writing-room-min-width, 220px) !important;
-  min-height: var(--writing-room-min-height, 220px) !important;
-  max-width: min(var(--writing-room-max-width, 1100px), calc(100vw - 1.5rem)) !important;
-  max-height: min(var(--writing-room-max-height, 900px), calc(100vh - 1.5rem)) !important;
+  width: min(var(--writing-room-width, 520px), calc(100vw - 1.5rem));
+  height: min(var(--writing-room-height, 640px), calc(100vh - 1.5rem));
+  min-width: var(--writing-room-min-width, 220px);
+  min-height: var(--writing-room-min-height, 220px);
+  max-width: min(var(--writing-room-max-width, 1100px), calc(100vw - 1.5rem));
+  max-height: min(var(--writing-room-max-height, 900px), calc(100vh - 1.5rem));
 }
 .writing-room-panel > header { flex: 0 0 auto !important; }
 .writing-room-cards { flex: 1 1 auto !important; min-height: 0 !important; max-height: none !important; overflow: auto !important; }
@@ -3388,4 +3388,191 @@ button {
   .writer-header.toolbar { grid-template-columns: 1fr !important; }
   .icon-command-bar.top-command-menus { grid-template-columns: minmax(5rem, 0.5fr) minmax(10rem, 1.5fr) repeat(6, minmax(3.8rem, 1fr)) !important; overflow-x: auto !important; }
   .icon-command-bar .tool-menu-panel { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+}
+
+
+/* v2.3 fix: stable command bar, restored Filing Cabinet resize/close, Emoji custom icons, and Writing Area placement */
+.app-version { font-size: 0.55em !important; vertical-align: middle !important; }
+.writer-header.toolbar {
+  grid-template-columns: auto minmax(58rem, 62rem) !important;
+  justify-content: center !important;
+  column-gap: 1rem !important;
+}
+.icon-command-bar.top-command-menus.unified-command-bar,
+.icon-command-bar.top-command-menus {
+  justify-self: center !important;
+  width: min(62rem, calc(100vw - 18rem)) !important;
+  max-width: 62rem !important;
+  min-width: 52rem !important;
+  grid-template-columns: 5.8rem 24rem repeat(6, 5.35rem) !important;
+  overflow: visible !important;
+}
+.icon-command-bar > .context-status,
+.icon-command-bar > .command-status {
+  width: 24rem !important;
+  min-width: 24rem !important;
+  max-width: 24rem !important;
+  background: color-mix(in srgb, var(--status-bg, #000000) 72%, #28133f 28%) !important;
+  border-inline: 1px solid color-mix(in srgb, var(--status-border, #724837) 70%, transparent) !important;
+}
+.icon-command-bar .tool-menu-trigger,
+.icon-command-bar .direct-command,
+.icon-command-bar > .writing-room-button {
+  padding-inline: 0.25rem !important;
+}
+.icon-command-bar .tool-menu-panel {
+  grid-template-columns: repeat(3, minmax(8rem, 1fr)) !important;
+}
+#writingRoomPanel[hidden] { display: none !important; }
+.writing-room-panel {
+  resize: both !important;
+  overflow: auto !important;
+  width: var(--writing-room-width, 520px);
+  height: var(--writing-room-height, 640px);
+  min-width: var(--writing-room-min-width, 220px);
+  min-height: var(--writing-room-min-height, 220px);
+  max-width: min(var(--writing-room-max-width, 1100px), calc(100vw - 1.5rem));
+  max-height: min(var(--writing-room-max-height, 900px), calc(100vh - 1.5rem));
+}
+
+/* Settings viewer should behave as one-card-at-a-time. */
+.settings-panel > .settings-menu {
+  border: 0 !important;
+  background: transparent !important;
+}
+.settings-panel .settings-section[hidden] { display: none !important; }
+.settings-panel .settings-section.settings-card:not(.is-active-settings-card) { display: none !important; }
+.settings-panel .settings-section.settings-card.is-active-settings-card { display: block !important; }
+.element-designer-card[data-designer-card="subnoto"] { margin-top: 0.45rem !important; }
+
+/* Icon text inputs get a live preview box, including custom URL icons. */
+.icon-text-input {
+  min-width: 10rem !important;
+}
+.icon-input-preview {
+  display: inline-grid;
+  place-items: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  margin-left: 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(0,0,0,0.26);
+  vertical-align: middle;
+  font-size: 1.1rem;
+}
+.custom-inline-icon,
+.icon-input-preview img,
+.folder-icon img,
+.card-icon img,
+.filing-jump-rail img {
+  width: 1.15em;
+  height: 1.15em;
+  object-fit: contain;
+  vertical-align: -0.16em;
+}
+
+/* Writing surface alignment */
+.title-strip,
+.editor,
+.document-end-bar {
+  transition: margin 0.18s ease, transform 0.18s ease;
+}
+body[data-writing-surface-layout="center"] .title-strip,
+body[data-writing-surface-layout="center"] .editor,
+body[data-writing-surface-layout="center"] .document-end-bar {
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+body[data-writing-surface-layout="left"] .title-strip,
+body[data-writing-surface-layout="left"] .editor,
+body[data-writing-surface-layout="left"] .document-end-bar {
+  margin-left: clamp(1rem, 4vw, 4rem) !important;
+  margin-right: auto !important;
+}
+body[data-writing-surface-layout="right"] .title-strip,
+body[data-writing-surface-layout="right"] .editor,
+body[data-writing-surface-layout="right"] .document-end-bar {
+  margin-left: auto !important;
+  margin-right: clamp(1rem, 4vw, 4rem) !important;
+}
+body[data-writing-surface-layout="floating"] .title-strip,
+body[data-writing-surface-layout="floating"] .editor,
+body[data-writing-surface-layout="floating"] .document-end-bar {
+  margin-left: var(--writing-surface-floating-left, 50%) !important;
+  margin-right: auto !important;
+  transform: translateY(var(--writing-surface-floating-top, 0px));
+}
+
+/* Emoji Spark v2.3 */
+.emoji-picker {
+  width: min(44rem, calc(100vw - 1rem)) !important;
+  min-width: 32rem !important;
+  max-height: min(740px, 86vh) !important;
+  resize: both !important;
+  overflow: auto !important;
+}
+.emoji-picker-header {
+  cursor: grab !important;
+  user-select: none !important;
+}
+.emoji-picker-header:active { cursor: grabbing !important; }
+.emoji-search-row {
+  grid-template-columns: auto auto auto minmax(14rem, 1fr) !important;
+}
+.emoji-copy,
+.emoji-upload,
+.emoji-clear {
+  min-width: 4.2rem !important;
+  padding: 0.35rem 0.55rem !important;
+  white-space: nowrap !important;
+}
+.emoji-search { min-width: 0 !important; }
+.emoji-grid {
+  grid-template-columns: repeat(14, 2rem) !important;
+  gap: 0.42rem !important;
+}
+.emoji-picker button[data-emoji] {
+  border: 1px solid transparent !important;
+  transition: transform 0.12s ease, border-color 0.12s ease, background 0.12s ease !important;
+}
+.emoji-picker button[data-emoji]:hover {
+  transform: scale(1.25) !important;
+  z-index: 2 !important;
+}
+.emoji-picker button[data-emoji].is-selected {
+  border-color: var(--accent, #e88f69) !important;
+  background: rgba(232,143,105,0.16) !important;
+}
+.emoji-section.emoji-favorites {
+  background: color-mix(in srgb, var(--accent, #e88f69) 18%, var(--command-bar-bg, #28133f) 82%) !important;
+}
+.emoji-section.emoji-favorites .emoji-grid {
+  grid-auto-rows: 2rem !important;
+  max-height: calc((2rem * 3) + (0.42rem * 2)) !important;
+  overflow: hidden !important;
+}
+.emoji-section.emoji-custom {
+  padding: 0.5rem !important;
+  border: 1px dashed color-mix(in srgb, var(--accent, #e88f69) 55%, transparent) !important;
+  border-radius: 14px !important;
+  background: rgba(0,0,0,0.18) !important;
+}
+.emoji-section.emoji-custom .emoji-grid {
+  grid-template-columns: repeat(12, 2rem) !important;
+}
+.custom-emoji-slot img {
+  width: 1.35rem;
+  height: 1.35rem;
+  object-fit: contain;
+  pointer-events: none;
+}
+.custom-emoji-slot.is-empty {
+  opacity: 0.55;
+  border: 1px dashed var(--line) !important;
+}
+
+@media (max-width: 1100px) {
+  .writer-header.toolbar { grid-template-columns: 1fr !important; }
+  .icon-command-bar.top-command-menus { width: 100% !important; min-width: 44rem !important; overflow-x: auto !important; }
 }

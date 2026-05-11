@@ -8,6 +8,7 @@ const DESIGN_KEY = "capsanoto-design-settings-v1";
 const HELP_KEY = "capsanoto-help-html-v1";
 const WRITING_ROOM_LAYOUT_KEY = "capsanoto-writing-room-layout-v1";
 const FAVORITE_EMOJI_KEY = "capsanoto-favorite-emojis-v1";
+const CUSTOM_EMOJI_KEY = "capsanoto-custom-emojis-v1";
 
 const CAPSANOTO_PALETTE = {
   black: "#000000",
@@ -106,6 +107,8 @@ const state = {
   lastColorInput: null,
   favoriteColors: [...DEFAULT_FAVORITE_COLORS],
   favoriteEmojis: [],
+  customEmojis: [],
+  emojiDrag: null,
   settingsDirty: false,
   contextStatusLocked: false,
   contextStatusTimer: null,
@@ -530,6 +533,9 @@ function bindEditorEvents() {
   document.addEventListener("pointerup", handleGlobalSettingsCloseClick, true);
   els.settingsMenu.addEventListener("click", handleSettingsMenuClick);
   els.settingsPanel.addEventListener("click", handleSettingsCardToggle);
+  els.settingsPanel.addEventListener("input", markSettingsDirtyFromEvent);
+  els.settingsPanel.addEventListener("change", markSettingsDirtyFromEvent);
+  els.settingsPanel.addEventListener("input", (event) => { if (event.target.matches?.(".icon-text-input")) refreshIconInputPreviews(); });
   els.settingsSearchInput?.addEventListener("input", handleSettingsSearchInput);
   els.settingsSearchNext?.addEventListener("click", () => moveSettingsSearch(1));
   els.settingsSearchPrev?.addEventListener("click", () => moveSettingsSearch(-1));
@@ -1184,43 +1190,114 @@ function saveFavoriteEmojisFromSettings() {
 }
 
 function emojiButtonHtml(emoji, name = "favorite emoji") {
-  return `<button type="button" data-emoji="${emoji}" data-emoji-name="${escapeAttr(name)}" title="${escapeAttr(name)}">${emoji}</button>`;
+  return `<button type="button" data-emoji="${escapeAttr(emoji)}" data-emoji-name="${escapeAttr(name)}" title="${escapeAttr(name)}">${escapeHtml(emoji)}</button>`;
+}
+
+function customIconCode(slot) {
+  return `{{icon:custom-${slot + 1}}}`;
+}
+
+function customIconSlotFromCode(value) {
+  const match = String(value || "").trim().match(/^\{\{icon:custom-(\d+)\}\}$/i);
+  if (!match) return -1;
+  const slot = Number(match[1]) - 1;
+  return Number.isInteger(slot) && slot >= 0 && slot < 12 ? slot : -1;
+}
+
+function loadCustomEmojis() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(CUSTOM_EMOJI_KEY) || "null");
+    state.customEmojis = Array.isArray(saved) ? saved.slice(0, 12).map((value) => String(value || "")) : [];
+  } catch {
+    state.customEmojis = [];
+  }
+  while (state.customEmojis.length < 12) state.customEmojis.push("");
+}
+
+function saveCustomEmojis() {
+  localStorage.setItem(CUSTOM_EMOJI_KEY, JSON.stringify(state.customEmojis.slice(0, 12)));
+}
+
+function customIconUrlForCode(value) {
+  if (!state.customEmojis.length) loadCustomEmojis();
+  const slot = customIconSlotFromCode(value);
+  return slot >= 0 ? state.customEmojis[slot] || "" : "";
+}
+
+function iconMarkupFromValue(value, fallback = "") {
+  const raw = String(value || fallback || "").trim();
+  const url = customIconUrlForCode(raw);
+  if (url) return `<img class="custom-inline-icon" src="${escapeAttr(url)}" alt="${escapeAttr(raw)}">`;
+  return escapeHtml(raw || fallback);
+}
+
+function customEmojiButtonHtml(url, index) {
+  const code = customIconCode(index);
+  if (!url) {
+    return `<button type="button" class="custom-emoji-slot is-empty" data-custom-slot="${index}" data-emoji="${escapeAttr(code)}" data-emoji-name="empty custom icon slot" title="Empty custom icon slot">＋</button>`;
+  }
+  return `<button type="button" class="custom-emoji-slot" data-custom-slot="${index}" data-custom-icon="true" data-emoji="${escapeAttr(code)}" data-emoji-name="custom icon ${index + 1}" title="Custom icon ${index + 1}: ${escapeAttr(code)}"><img src="${escapeAttr(url)}" alt="${escapeAttr(code)}"></button>`;
+}
+
+async function uploadCustomEmoji(picker) {
+  loadCustomEmojis();
+  const firstEmpty = state.customEmojis.findIndex((value) => !value);
+  const targetSlot = firstEmpty >= 0 ? firstEmpty : 0;
+  const result = await openCapsDialog("Upload Custom Emoji/Icon URL", [
+    { name: "url", label: "Image / icon URL", value: "", placeholder: "https://example.com/icon.png" },
+  ]);
+  const url = result?.url?.trim();
+  if (!url) return;
+  state.customEmojis[targetSlot] = url;
+  saveCustomEmojis();
+  refreshEmojiPicker(picker);
+  setContextStatus(`Custom icon saved as ${customIconCode(targetSlot)}`, "saved");
+}
+
+function refreshEmojiPicker(picker) {
+  if (!picker) return;
+  const customGrid = picker.querySelector(".emoji-custom .emoji-grid");
+  if (customGrid) customGrid.innerHTML = state.customEmojis.slice(0, 12).map(customEmojiButtonHtml).join("");
 }
 
 function showEmojiPicker(event) {
   saveSelectionRange();
   document.querySelector(".emoji-picker")?.remove();
   loadFavoriteEmojis();
+  loadCustomEmojis();
   const picker = document.createElement("div");
   picker.className = "emoji-picker";
   picker.setAttribute("role", "dialog");
   picker.setAttribute("aria-label", "Emoji Spark");
   const favoriteButtons = favoriteEmojiList().map((emoji) => emojiButtonHtml(emoji, "favorite emoji")).join("");
+  const customButtons = state.customEmojis.slice(0, 12).map(customEmojiButtonHtml).join("");
   const libraryButtons = EMOJI_LIBRARY.map(([emoji, name]) => emojiButtonHtml(emoji, name)).join("");
   picker.innerHTML = `
     <div class="emoji-picker-header"><strong>Emoji Spark</strong><button type="button" class="emoji-close" aria-label="Close emoji picker">×</button></div>
-    <div class="emoji-search-row"><button type="button" class="emoji-copy" aria-label="Copy selected emoji">Copy</button><input class="emoji-search" type="search" placeholder="Search emoji: smiley, sword, magic…" aria-label="Search emoji"></div>
+    <div class="emoji-search-row"><button type="button" class="emoji-copy" aria-label="Copy selected emoji">Copy</button><button type="button" class="emoji-upload" aria-label="Upload custom emoji URL">Upload</button><button type="button" class="emoji-clear" aria-label="Clear emoji search">Clear</button><input class="emoji-search" type="search" placeholder="Search: smiley, sword, magic…" aria-label="Search emoji"></div>
     <section class="emoji-section emoji-favorites"><h4>Favorites</h4><div class="emoji-grid">${favoriteButtons}</div></section>
+    <section class="emoji-section emoji-custom"><h4>Custom</h4><div class="emoji-grid">${customButtons}</div></section>
     <section class="emoji-section emoji-library"><h4>Library</h4><div class="emoji-grid">${libraryButtons}</div></section>`;
   const copyMode = event?.currentTarget?.id === "settingsEmojiLibraryButton";
   let selectedEmoji = "";
-  const selectEmoji = (button) => {
+  const selectEmoji = (button, { copyCustom = false } = {}) => {
     picker.querySelectorAll("button[data-emoji]").forEach((item) => item.classList.remove("is-selected"));
     button.classList.add("is-selected");
     selectedEmoji = button.dataset.emoji || "";
     picker.dataset.selectedEmoji = selectedEmoji;
-    setContextStatus(`Selected emoji ${selectedEmoji}`, "saved");
+    setContextStatus(`Selected ${button.dataset.customIcon ? "custom icon code" : "emoji"} ${selectedEmoji}`, "saved");
+    if (button.dataset.customIcon && copyCustom) copySelectedEmoji();
   };
   const copySelectedEmoji = () => {
     if (!selectedEmoji) {
-      const first = picker.querySelector("button[data-emoji]:not([hidden])");
+      const first = picker.querySelector("button[data-emoji]:not([hidden]):not(.is-empty)") || picker.querySelector("button[data-emoji]:not([hidden])");
       if (first) selectEmoji(first);
     }
     if (!selectedEmoji) return;
     navigator.clipboard?.writeText(selectedEmoji).catch(() => {});
-    setContextStatus(`Copied emoji ${selectedEmoji}. Paste it into a settings field.`, "saved");
+    setContextStatus(`Copied ${selectedEmoji}. Paste it into a settings field.`, "saved");
   };
-  picker.addEventListener("click", (clickEvent) => {
+  picker.addEventListener("click", async (clickEvent) => {
     if (clickEvent.target.closest(".emoji-close")) {
       picker.remove();
       return;
@@ -1229,47 +1306,80 @@ function showEmojiPicker(event) {
       copySelectedEmoji();
       return;
     }
+    if (clickEvent.target.closest(".emoji-clear")) {
+      const search = picker.querySelector(".emoji-search");
+      search.value = "";
+      filterEmojiPicker(picker, "");
+      search.focus();
+      return;
+    }
+    if (clickEvent.target.closest(".emoji-upload")) {
+      await uploadCustomEmoji(picker);
+      return;
+    }
     const button = clickEvent.target.closest("button[data-emoji]");
     if (!button) return;
-    selectEmoji(button);
-    if (copyMode) return;
+    if (button.classList.contains("is-empty")) {
+      await uploadCustomEmoji(picker);
+      return;
+    }
+    selectEmoji(button, { copyCustom: true });
+    if (copyMode || button.dataset.customIcon) return;
     restoreSelectionRange();
     insertHtml(selectedEmoji);
   });
   const search = picker.querySelector(".emoji-search");
-  search.addEventListener("input", () => {
-    const term = search.value.trim().toLowerCase();
-    picker.querySelectorAll(".emoji-library button[data-emoji]").forEach((button) => {
-      const haystack = `${button.dataset.emojiName || ""} ${button.dataset.emoji || ""}`.toLowerCase();
-      button.hidden = Boolean(term) && !haystack.includes(term);
-    });
-  });
+  search.addEventListener("input", () => filterEmojiPicker(picker, search.value));
   search.addEventListener("keydown", (keyEvent) => {
     if (keyEvent.key !== "Enter") return;
     keyEvent.preventDefault();
-    const match = picker.querySelector(".emoji-library button[data-emoji]:not([hidden])") || picker.querySelector("button[data-emoji]:not([hidden])");
+    const match = picker.querySelector(".emoji-library button[data-emoji]:not([hidden])") || picker.querySelector("button[data-emoji]:not([hidden]):not(.is-empty)");
     if (match) {
       selectEmoji(match);
-      if (copyMode) copySelectedEmoji();
+      if (copyMode || match.dataset.customIcon) copySelectedEmoji();
       else {
         restoreSelectionRange();
         insertHtml(selectedEmoji);
       }
     }
   });
+  const header = picker.querySelector(".emoji-picker-header");
+  header.addEventListener("pointerdown", (dragEvent) => startEmojiPickerDrag(dragEvent, picker));
   document.body.append(picker);
   const rect = event.currentTarget.getBoundingClientRect();
-  picker.style.left = `${Math.max(8, Math.min(rect.left, window.innerWidth - 600))}px`;
-  picker.style.top = `${Math.min(rect.bottom + 8, window.innerHeight - 680)}px`;
+  picker.style.left = `${Math.max(8, Math.min(rect.left, window.innerWidth - 720))}px`;
+  picker.style.top = `${Math.min(rect.bottom + 8, window.innerHeight - 720)}px`;
   const firstFavorite = picker.querySelector(".emoji-favorites button[data-emoji]");
   if (firstFavorite) selectEmoji(firstFavorite);
   search.focus();
 }
 
+function filterEmojiPicker(picker, value) {
+  const term = String(value || "").trim().toLowerCase();
+  picker.querySelectorAll(".emoji-library button[data-emoji]").forEach((button) => {
+    const haystack = `${button.dataset.emojiName || ""} ${button.dataset.emoji || ""}`.toLowerCase();
+    button.hidden = Boolean(term) && !haystack.includes(term);
+  });
+}
+
+function startEmojiPickerDrag(event, picker) {
+  if (event.target.closest("button, input")) return;
+  const rect = picker.getBoundingClientRect();
+  state.emojiDrag = { picker, offsetX: event.clientX - rect.left, offsetY: event.clientY - rect.top };
+  picker.querySelector(".emoji-picker-header")?.setPointerCapture?.(event.pointerId);
+}
+
+document.addEventListener("pointermove", (event) => {
+  if (!state.emojiDrag?.picker) return;
+  const { picker, offsetX, offsetY } = state.emojiDrag;
+  picker.style.left = `${Math.max(8, Math.min(window.innerWidth - 80, event.clientX - offsetX))}px`;
+  picker.style.top = `${Math.max(8, Math.min(window.innerHeight - 80, event.clientY - offsetY))}px`;
+});
+
+document.addEventListener("pointerup", () => { state.emojiDrag = null; });
 
 function closeEmojiPickerOnOutside(event) {
-  if (!event.target.closest?.(".emoji-picker") && event.target !== els.emojiButton) document.querySelector(".emoji-picker")?.remove();
-  else document.addEventListener("pointerdown", closeEmojiPickerOnOutside, { once: true });
+  // Emoji Spark now stays open until the X button is clicked.
 }
 
 function insertHtml(html) {
@@ -1325,6 +1435,8 @@ function toggleSettingsPanel(show) {
   renderExportQueue();
   loadDesignForm();
   loadFavoriteEmojiSettings();
+  loadCustomEmojis();
+  refreshIconInputPreviews();
   setElementDesignerCards(false);
   showSettingsSection("design");
   state.settingsDirty = false;
@@ -1589,9 +1701,9 @@ function writingRoomGroupLabel(doc) {
 function designIconSetting(key, fallback) {
   try {
     const settings = JSON.parse(localStorage.getItem(DESIGN_KEY) || "{}");
-    return settings[key] || fallback;
+    return iconMarkupFromValue(settings[key] || fallback, fallback);
   } catch {
-    return fallback;
+    return iconMarkupFromValue(fallback, fallback);
   }
 }
 
@@ -2613,6 +2725,18 @@ function extraDesignInputs() {
   return Array.from(document.querySelectorAll("[data-design-key]"));
 }
 
+function refreshIconInputPreviews() {
+  document.querySelectorAll(".icon-text-input").forEach((input) => {
+    let preview = input.parentElement?.querySelector(".icon-input-preview");
+    if (!preview) {
+      preview = document.createElement("span");
+      preview.className = "icon-input-preview";
+      input.insertAdjacentElement("afterend", preview);
+    }
+    preview.innerHTML = iconMarkupFromValue(input.value || "□", "□");
+  });
+}
+
 function extraDesignDefaults() {
   const defaults = {};
   extraDesignInputs().forEach((input) => {
@@ -2645,6 +2769,8 @@ function applyExtraDesignSettings(settings) {
       root.style.setProperty(input.dataset.cssVar, cssValue);
     }
   });
+  document.body.dataset.writingSurfaceLayout = settings.writingSurfaceLayout || "center";
+  refreshIconInputPreviews();
   document.querySelectorAll("[data-inherit-section]").forEach((input) => {
     input.checked = Boolean(settings[`inherit_${input.dataset.inheritSection}`]);
     updateInheritedDesignerSection(input);
