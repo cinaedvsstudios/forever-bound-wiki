@@ -498,7 +498,7 @@ function bindEditorEvents() {
     syncEditorToDocument();
     renderBookmarks();
     updateContextStatus();
-    markDirty("Autosaving locally…");
+    markDirty("Saving locally");
   });
   els.editor.addEventListener("keyup", updateContextStatus);
   els.editor.addEventListener("mouseup", updateContextStatus);
@@ -522,7 +522,7 @@ function bindEditorEvents() {
   els.imageButton.addEventListener("click", () => els.imageInput.click());
   els.imageInput.addEventListener("change", embedSelectedImage);
   els.emojiButton.addEventListener("click", showEmojiPicker);
-  els.searchButton?.addEventListener("click", () => setContextStatus("Specnoto search/find workspace will be built next", "saved"));
+  els.searchButton?.addEventListener("click", () => setContextStatus("Specnoto search/find placeholder will be built later", "saved"));
   els.subnotoButton?.addEventListener("click", () => openSubnotoWindow());
   document.querySelector('.tool-menu-trigger[data-tool-name="Subnoto"]')?.addEventListener("click", openSubnotoWindow);
   els.emphasisButton.addEventListener("click", insertEmphasisBox);
@@ -2574,15 +2574,16 @@ function syncAndSave(message) {
   markDirty(message);
 }
 
-function markDirty(message) {
-  setStatus(message, "dirty");
+function markDirty(message = "Saving locally") {
+  const safeMessage = message && message.trim() ? message : "Saving locally";
+  setStatus(safeMessage, "dirty");
   clearTimeout(state.saveTimer);
   state.saveTimer = setTimeout(() => persistNow("Autosaved locally"), AUTOSAVE_DELAY);
 }
 
-function persistNow(message) {
+function persistNow(message = "Autosaved locally") {
   localStorage.setItem(STORAGE_KEY, serializedWorkspace());
-  setStatus(message, "saved");
+  setStatus(message || "Autosaved locally", "saved");
 }
 
 
@@ -2608,7 +2609,7 @@ function renderExportQueue() {
   els.exportQueue.innerHTML = state.exportItems.length ? state.exportItems.map((item, index) => {
     const label = item.type === "block" ? item.id : (state.documents.find((doc) => doc.id === item.id)?.title || item.id);
     return `<div class="export-pill" draggable="true" data-export-index="${index}"><span>${escapeHtml(item.type === "block" ? "▣" : "📄")} ${escapeHtml(label)}</span><button type="button" data-remove-export="${index}" aria-label="Remove ${escapeAttr(label)}">×</button></div>`;
-  }).join("") : `<p class="panel-help">No export pieces selected yet.</p>`;
+  }).join("") : `<p class="panel-help">No download pieces selected yet.</p>`;
 }
 
 function handleExportDragStart(event) {
@@ -2651,7 +2652,7 @@ function exportSmartBundle(format) {
     const html = `<!doctype html><html><head><meta charset="utf-8"><title>${escapeHtml(baseName)}</title></head><body>${pieces.map((piece) => `<section data-caps-type="${piece.type}" data-caps-id="${escapeAttr(piece.id)}"><h1>${escapeHtml(piece.title)}</h1>${piece.html}</section>`).join("\n")}</body></html>`;
     downloadFile(`${baseName}.${format === "doc" ? "doc" : "html"}`, html, format === "doc" ? "application/msword" : "text/html");
   }
-  setStatus(`Exported ${format.toUpperCase()}`, "saved");
+  setStatus(`Downloaded ${format.toUpperCase()}`, "saved");
 }
 
 function resolveExportPiece(item) {
@@ -3083,7 +3084,7 @@ function resetLocalWorkspace() {
 }
 
 function exportWorkspace() {
-  persistNow("Export prepared");
+  persistNow("Download prepared");
   const blob = new Blob([serializedWorkspace()], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");

@@ -3683,3 +3683,41 @@ body[data-writing-surface-layout="floating"] .document-end-bar {
   border: 1px solid #6f6258 !important;
   box-shadow: none !important;
 }
+
+
+/* v2.5 safe cleanup: Guidebook rewrite, Command Layout placeholder, local save audit, and final top-bar stability */
+.writer-header.toolbar {
+  grid-template-columns: minmax(12rem, 1fr) minmax(50rem, 62rem) minmax(12rem, 1fr) !important;
+  justify-content: stretch !important;
+}
+.writer-header.toolbar > .document-controls {
+  justify-self: start !important;
+}
+.icon-command-bar.top-command-menus.unified-command-bar,
+.icon-command-bar.top-command-menus {
+  justify-self: center !important;
+}
+.icon-command-bar > .context-status,
+.icon-command-bar > .command-status {
+  width: 24rem !important;
+  min-width: 24rem !important;
+  max-width: 24rem !important;
+}
+.command-layout-placeholder ul {
+  margin: 0.35rem 0 0.7rem 1.15rem;
+  padding: 0;
+  display: grid;
+  gap: 0.25rem;
+}
+.command-layout-placeholder h4 {
+  margin: 0.7rem 0 0.3rem;
+  color: var(--accent-2);
+}
+.help-panel section + section {
+  border-top: 1px solid color-mix(in srgb, var(--help-rule-color, #724837) 70%, transparent);
+  padding-top: 0.9rem;
+}
+@media (max-width: 980px) {
+  .writer-header.toolbar { grid-template-columns: 1fr !important; }
+  .icon-command-bar.top-command-menus { width: 100% !important; min-width: 44rem !important; overflow-x: auto !important; }
+}
