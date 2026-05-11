@@ -3721,3 +3721,127 @@ body[data-writing-surface-layout="floating"] .document-end-bar {
   .writer-header.toolbar { grid-template-columns: 1fr !important; }
   .icon-command-bar.top-command-menus { width: 100% !important; min-width: 44rem !important; overflow-x: auto !important; }
 }
+
+
+/* v2.6 Group 2: design-system wiring, writing area/panel controls, Emoji Spark and TCard styling */
+:root {
+  --status-box-width: 420px;
+  --writing-panel-bg-image: none;
+  --writing-surface-bg-image: none;
+  --writing-title-bg-image: none;
+  --editor-text-weight: 400;
+  --h1-font-weight: 800;
+  --h2-font-weight: 800;
+  --h3-font-weight: 800;
+  --link-font-weight: 500;
+  --link-text-decoration: underline;
+  --link-pill-font-weight: 500;
+  --link-pill-text-decoration: none;
+  --table-head-text-size: 0.95rem;
+  --table-head-font-weight: 800;
+  --table-body-text: var(--ink);
+  --table-body-text-size: 0.95rem;
+  --bottom-bar-bg: var(--panel-bg);
+  --bottom-bar-border: var(--panel-border);
+  --bottom-bar-text: var(--ink);
+  --bottom-bar-text-size: 0.88rem;
+  --bottom-bar-font-weight: 500;
+  --bottom-bar-icon-spacing: 0.5rem;
+  --bottom-bar-icon-size: 1rem;
+  --bottom-bar-title-size: 1rem;
+  --emphasis-font-weight: 500;
+  --help-shadow-color: #000000;
+  --help-scrollbar-track: var(--scrollbar-track);
+  --help-scrollbar-thumb: var(--scrollbar-thumb);
+  --help-edit-button-bg: var(--button);
+  --help-edit-button-border: var(--line);
+  --help-edit-button-text: var(--ink);
+  --help-edit-button-size: 1rem;
+  --settings-shadow-color: #000000;
+  --settings-card-title-color: var(--accent);
+  --settings-card-title-size: 1.1rem;
+  --settings-input-border: var(--line);
+  --settings-input-text-size: 0.88rem;
+  --settings-scrollbar-track: var(--scrollbar-track);
+  --settings-scrollbar-thumb: var(--scrollbar-thumb);
+  --settings-header-button-bg: var(--button);
+  --settings-header-button-border: var(--line);
+  --settings-header-button-text: var(--ink);
+  --settings-save-button-bg: var(--success);
+  --settings-close-button-bg: var(--button);
+  --tcard-heading-size: 0.78rem;
+  --tcard-edit-button-bg: var(--button);
+  --tcard-edit-button-border: var(--line);
+  --tcard-edit-button-text: var(--ink);
+  --tcard-button-bg: var(--button);
+  --tcard-button-border: var(--line);
+  --tcard-button-text: var(--ink);
+  --emoji-window-bg: #28133f;
+  --emoji-window-border: #e88f69;
+  --emoji-header-bg: #211812;
+  --emoji-title-text: #fbf4d6;
+  --emoji-section-bg: #211812;
+  --emoji-favorite-accent: #e88f69;
+  --emoji-custom-bg: #2f251c;
+  --emoji-library-bg: #211812;
+  --emoji-search-bg: #000000;
+  --emoji-search-border: #724837;
+  --emoji-search-text: #fbf4d6;
+  --emoji-button-bg: #2c2c2c;
+  --emoji-button-border: #6f6258;
+  --emoji-button-text: #fbf4d6;
+  --emoji-scrollbar-track: #211812;
+  --emoji-scrollbar-thumb: #e88f69;
+}
+.writer-header.toolbar .context-status,
+.icon-command-bar > .context-status,
+.icon-command-bar > .command-status { width: var(--status-box-width) !important; flex: 0 0 var(--status-box-width) !important; }
+body, button, input, select, textarea, summary, .editor, .help-panel, .settings-panel, .block-panel, .writing-room-panel, .selection-menu, .emoji-picker { font-family: var(--app-font-family, Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif) !important; }
+code, pre, .editor code { font-family: "Courier New", Courier, monospace !important; }
+.writer-shell { background-image: linear-gradient(rgba(0,0,0,0.82), rgba(33,24,18,0.95)), var(--writing-panel-bg-image), var(--app-bg-image) !important; }
+.title-strip { background-image: var(--writing-title-bg-image) !important; background-size: cover; background-position: center; border-radius: 18px; }
+.editor { background-image: linear-gradient(rgba(33,24,18, var(--writing-overlay-opacity, 0.62)), rgba(33,24,18, var(--writing-overlay-opacity, 0.62))), var(--writing-surface-bg-image) !important; background-size: cover; background-position: center; font-weight: var(--editor-text-weight) !important; }
+.title-input { color: var(--doc-title-color) !important; font-size: var(--doc-title-size) !important; }
+.editor h1 { color: var(--h1-color, var(--ink)) !important; font-size: var(--h1-size, 18pt) !important; font-weight: var(--h1-font-weight) !important; }
+.editor h2 { color: var(--h2-color, var(--ink)) !important; font-size: var(--h2-size, 16pt) !important; font-weight: var(--h2-font-weight) !important; }
+.editor h3 { color: var(--h3-color, var(--ink)) !important; font-size: var(--h3-size, 14pt) !important; font-weight: var(--h3-font-weight) !important; }
+.editor a { font-weight: var(--link-font-weight) !important; text-decoration-line: var(--link-text-decoration) !important; }
+.editor .pill-link, .pill-link { font-weight: var(--link-pill-font-weight) !important; text-decoration-line: var(--link-pill-text-decoration) !important; }
+.editor .emphasis-box { font-weight: var(--emphasis-font-weight) !important; }
+.editor th { font-size: var(--table-head-text-size) !important; font-weight: var(--table-head-font-weight) !important; }
+.editor td { color: var(--table-body-text) !important; font-size: var(--table-body-text-size) !important; }
+.document-end-bar { background: var(--bottom-bar-bg) !important; border-color: var(--bottom-bar-border) !important; color: var(--bottom-bar-text) !important; font-size: var(--bottom-bar-text-size) !important; font-weight: var(--bottom-bar-font-weight) !important; gap: var(--bottom-bar-icon-spacing) !important; }
+.document-end-bar button { font-size: var(--bottom-bar-icon-size) !important; }
+.document-end-bar .end-doc-title { font-size: var(--bottom-bar-title-size) !important; }
+.help-panel { box-shadow: -24px 0 80px color-mix(in srgb, var(--help-shadow-color) 58%, transparent) !important; }
+.help-panel::-webkit-scrollbar { width: 10px; }
+.help-panel::-webkit-scrollbar-track { background: var(--help-scrollbar-track); }
+.help-panel::-webkit-scrollbar-thumb { background: var(--help-scrollbar-thumb); border-radius: 999px; }
+#helpEditButton { background: var(--help-edit-button-bg) !important; border-color: var(--help-edit-button-border) !important; color: var(--help-edit-button-text) !important; font-size: var(--help-edit-button-size) !important; }
+.settings-panel { box-shadow: -24px 0 80px color-mix(in srgb, var(--settings-shadow-color) 58%, transparent) !important; }
+.settings-panel .settings-card > h3, .settings-panel .element-designer-card > summary { color: var(--settings-card-title-color) !important; font-size: var(--settings-card-title-size) !important; }
+.settings-panel input, .settings-panel select, .settings-panel textarea { border-color: var(--settings-input-border) !important; font-size: var(--settings-input-text-size) !important; }
+.settings-panel::-webkit-scrollbar, .design-controls::-webkit-scrollbar { width: 10px; }
+.settings-panel::-webkit-scrollbar-track, .design-controls::-webkit-scrollbar-track { background: var(--settings-scrollbar-track); }
+.settings-panel::-webkit-scrollbar-thumb, .design-controls::-webkit-scrollbar-thumb { background: var(--settings-scrollbar-thumb); border-radius: 999px; }
+.settings-panel > header .icon-button { background: var(--settings-header-button-bg) !important; border-color: var(--settings-header-button-border) !important; color: var(--settings-header-button-text) !important; }
+#saveSettingsPanelButton { background: var(--settings-save-button-bg) !important; }
+#closeSettingsPanel { background: var(--settings-close-button-bg) !important; }
+.transclusion-ref > span { font-size: var(--tcard-heading-size) !important; }
+.transclusion-ref .tcard-edit-button { background: var(--tcard-edit-button-bg) !important; border-color: var(--tcard-edit-button-border) !important; color: var(--tcard-edit-button-text) !important; }
+.block-actions button, .block-panel button { background: var(--tcard-button-bg) !important; border-color: var(--tcard-button-border) !important; color: var(--tcard-button-text) !important; }
+.emoji-picker { background: var(--emoji-window-bg) !important; border-color: var(--emoji-window-border) !important; }
+.emoji-picker-header { background: var(--emoji-header-bg) !important; color: var(--emoji-title-text) !important; }
+.emoji-section { background: var(--emoji-section-bg) !important; }
+.emoji-section.is-favorites, .emoji-favorites { outline: 1px solid var(--emoji-favorite-accent) !important; }
+.emoji-section.is-custom, .emoji-custom { background: var(--emoji-custom-bg) !important; }
+.emoji-section.is-library, .emoji-library { background: var(--emoji-library-bg) !important; }
+.emoji-search, .emoji-picker input[type="search"] { background: var(--emoji-search-bg) !important; border-color: var(--emoji-search-border) !important; color: var(--emoji-search-text) !important; }
+.emoji-picker button { background: var(--emoji-button-bg) !important; border: 1px solid var(--emoji-button-border) !important; color: var(--emoji-button-text) !important; }
+.emoji-picker::-webkit-scrollbar { width: 10px; }
+.emoji-picker::-webkit-scrollbar-track { background: var(--emoji-scrollbar-track); }
+.emoji-picker::-webkit-scrollbar-thumb { background: var(--emoji-scrollbar-thumb); border-radius: 999px; }
+.design-controls input[type="color"], .favorite-colors button, .current-color-box, .color-token { border: 1px solid #6f6258 !important; outline: none !important; box-shadow: none !important; }
+.current-color-box, .favorite-colors button { color: #fbf4d6; text-shadow: 0 1px 3px #000; }
+.toggle-label { display: flex !important; grid-template-columns: none !important; align-items: center; gap: 0.5rem; }
+.toggle-label input[type="checkbox"] { width: auto; }

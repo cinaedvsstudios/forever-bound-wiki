@@ -533,6 +533,7 @@ function bindEditorEvents() {
   els.closeSettingsPanel.addEventListener("click", (event) => { event.preventDefault(); event.stopPropagation(); toggleSettingsPanel(false); });
   els.saveSettingsPanelButton?.addEventListener("click", (event) => { event.preventDefault(); event.stopPropagation(); saveSettingsAndClose(); });
   els.settingsEmojiLibraryButton?.addEventListener("click", (event) => { event.preventDefault(); event.stopPropagation(); showEmojiPicker(event); });
+  document.querySelectorAll("#openTcardPanelButton").forEach((button) => button.addEventListener("click", (event) => { event.preventDefault(); saveSelectionRange(); toggleBlockPanel(true); }));
   document.addEventListener("click", handleGlobalSettingsCloseClick, true);
   document.addEventListener("pointerup", handleGlobalSettingsCloseClick, true);
   els.settingsMenu.addEventListener("click", handleSettingsMenuClick);
@@ -2876,7 +2877,9 @@ function applyExtraDesignSettings(settings) {
     if (input.dataset.cssVar && value !== undefined && value !== "") {
       const suffix = input.dataset.suffix || "";
       let cssValue = String(value);
-      if (input.dataset.cssVar === "--top-bar-image-url") {
+      if (input.type === "checkbox" && (input.dataset.trueValue || input.dataset.falseValue)) {
+        cssValue = input.checked ? (input.dataset.trueValue || "1") : (input.dataset.falseValue || "0");
+      } else if (input.dataset.cssUrl === "true" || input.dataset.cssVar === "--top-bar-image-url") {
         cssValue = value ? `url("${escapeCssUrl(value)}")` : "none";
       } else if (input.dataset.cssVar === "--writing-overlay-opacity") {
         const pct = Math.max(0, Math.min(100, Number(value) || 0));
