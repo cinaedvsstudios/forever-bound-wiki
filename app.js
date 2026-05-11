@@ -97,6 +97,7 @@ const state = {
   filingTabs: [],
   trash: [],
   deprecated: [],
+  deprecatedParagraphs: [],
   draggedDocId: "",
   draggedTabId: "",
   draggedEditorNode: null,
@@ -235,6 +236,7 @@ const els = {
   tagsInput: document.querySelector("#tagsInput"),
   editor: document.querySelector("#editor"),
   documentEndBar: document.querySelector("#documentEndBar"),
+  writingAssistRail: document.querySelector("#writingAssistRail"),
   blockPanel: document.querySelector("#blockPanel"),
   closeBlockPanel: document.querySelector("#closeBlockPanel"),
   blockIdInput: document.querySelector("#blockIdInput"),
@@ -411,6 +413,7 @@ async function loadWorkspace() {
       state.filingTabs = Array.isArray(payload.filingTabs) ? payload.filingTabs : [];
       state.trash = Array.isArray(payload.trash) ? payload.trash : [];
       state.deprecated = Array.isArray(payload.deprecated) ? payload.deprecated : [];
+      state.deprecatedParagraphs = Array.isArray(payload.deprecatedParagraphs) ? payload.deprecatedParagraphs : [];
     } catch (error) {
       console.warn("Ignoring unreadable local Capsanoto Writing Room", error);
       localStorage.removeItem(STORAGE_KEY);
@@ -428,6 +431,7 @@ async function loadWorkspace() {
     state.filingTabs = Array.isArray(payload.filingTabs) ? payload.filingTabs : [];
     state.trash = Array.isArray(payload.trash) ? payload.trash : [];
     state.deprecated = Array.isArray(payload.deprecated) ? payload.deprecated : [];
+    state.deprecatedParagraphs = Array.isArray(payload.deprecatedParagraphs) ? payload.deprecatedParagraphs : [];
     persistNow("Loaded starter Writing Room");
   }
 
@@ -708,6 +712,7 @@ function renderAll() {
   renderExportQueue();
   renderWritingRoomCards();
   renderDocumentEndBar();
+  renderWritingAssistRail();
 }
 
 
@@ -909,6 +914,89 @@ async function handleSelectionMenuClick(event) {
   if (action === "pill") await createPillLink();
   if (action === "edit-link") await editSelectedLink();
   if (action === "pill-color") await changeSelectedPillColor();
+  if (action === "deprecate-paragraph") await deprecateSelectedParagraph();
+}
+
+function renderWritingAssistRail() {
+  if (!els.writingAssistRail) return;
+  const doc = activeDocument();
+  const deprecatedCount = (state.deprecatedParagraphs || []).filter((item) => item.documentId === doc.id).length;
+  const markers = [
+    { type: "deprecated", icon: "🕰️", title: deprecatedCount ? `${deprecatedCount} deprecated paragraph history ${deprecatedCount === 1 ? "record" : "records"} in this file` : "Deprecated paragraph markers will appear here", count: deprecatedCount },
+    { type: "tcard", icon: "𝞃", title: "Future TCard markers" },
+    { type: "note", icon: "✎", title: "Future comment/note markers" },
+    { type: "anchor", icon: "⚓", title: "Future Link Anchor markers" },
+    { type: "timeline", icon: "🧭", title: "Future timeline markers" },
+    { type: "warning", icon: "⚠️", title: "Future continuity warning markers" },
+  ];
+  els.writingAssistRail.innerHTML = markers.map((marker) => `
+    <span class="assist-rail-marker ${marker.count ? "has-count" : ""}" data-marker-type="${escapeAttr(marker.type)}" title="${escapeAttr(marker.title)}">
+      ${marker.icon}<small>${marker.count ? escapeHtml(marker.count) : ""}</small>
+    </span>`).join("");
+}
+
+async function deprecateSelectedParagraph() {
+  restoreSelectionRange();
+  const selection = window.getSelection();
+  if (!selection?.rangeCount || selection.isCollapsed || !els.editor.contains(selection.getRangeAt(0).commonAncestorContainer)) {
+    setStatus("Select paragraph text before using Deprecate Paragraph", "dirty");
+    return;
+  }
+  const range = selection.getRangeAt(0).cloneRange();
+  const originalHtml = selectedHtmlFromRange(range);
+  const originalText = selection.toString().trim();
+  const result = await openCapsDialog("Deprecate Paragraph", [
+    { html: `<p><strong>Deprecate Paragraph will save a history copy of this selected text while leaving the live document unchanged.</strong></p><p>No text will be removed, replaced, moved, or turned into a separate deprecated document.</p><p><strong>Selected text preview:</strong><br>${escapeHtml(originalText).slice(0, 420)}${originalText.length > 420 ? "…" : ""}</p>` },
+  ]);
+  if (!result) return;
+  const doc = activeDocument();
+  const record = {
+    id: `deprecated-paragraph-${Date.now()}`,
+    documentId: doc.id,
+    createdAt: new Date().toISOString(),
+    originalHtml,
+    originalText,
+    nearbyHeading: nearbyHeadingForRange(range),
+    note: "Placeholder paragraph history record. Comparison/restore view will be built later.",
+    approximateReference: approximateSelectionReference(range),
+  };
+  state.deprecatedParagraphs = Array.isArray(state.deprecatedParagraphs) ? state.deprecatedParagraphs : [];
+  state.deprecatedParagraphs.unshift(record);
+  renderWritingAssistRail();
+  markDirty("Deprecated paragraph history saved locally");
+}
+
+function selectedHtmlFromRange(range) {
+  const container = document.createElement("div");
+  container.appendChild(range.cloneContents());
+  return container.innerHTML.trim();
+}
+
+function nearbyHeadingForRange(range) {
+  const headings = Array.from(els.editor.querySelectorAll("h1, h2, h3, h4, h5, h6"));
+  let nearby = "";
+  for (const heading of headings) {
+    const headingRange = document.createRange();
+    headingRange.selectNodeContents(heading);
+    headingRange.collapse(false);
+    try {
+      if (range.compareBoundaryPoints(Range.START_TO_START, headingRange) >= 0) nearby = heading.textContent.trim();
+    } catch {
+      // Ignore detached/invalid ranges and keep the last safe heading.
+    }
+  }
+  return nearby;
+}
+
+function approximateSelectionReference(range) {
+  let node = range.startContainer;
+  if (node?.nodeType === Node.TEXT_NODE) node = node.parentElement;
+  const block = node?.closest?.("p, li, td, th, blockquote, h1, h2, h3, h4, h5, h6, div") || null;
+  if (!block || !els.editor.contains(block)) return "";
+  if (block.id) return `#${block.id}`;
+  const candidates = Array.from(els.editor.querySelectorAll("p, li, td, th, blockquote, h1, h2, h3, h4, h5, h6, div"));
+  const index = candidates.indexOf(block);
+  return index >= 0 ? `block-index:${index}` : "";
 }
 
 async function createTransclusionFromSelection() {
@@ -3108,6 +3196,7 @@ function serializedWorkspace() {
     filingTabs: state.filingTabs,
     trash: state.trash,
     deprecated: state.deprecated,
+    deprecatedParagraphs: state.deprecatedParagraphs || [],
   }, null, 2);
 }
 

@@ -23,7 +23,7 @@
 <main aria-label="Forever Bound writing editor" class="writer-shell" id="editorApp">
 <header aria-label="Capsanoto command bar" class="writer-header toolbar">
 <div class="document-controls">
-<strong class="app-name"><img alt="Capsanoto icon" src="https://raw.githubusercontent.com/cinaedvsstudios/forever-bound-wiki/refs/heads/main/iconcapsanoto.png"/><span class="brand-word">Capsanoto</span><span class="app-version">v2.6</span></strong>
+<strong class="app-name"><img alt="Capsanoto icon" src="https://raw.githubusercontent.com/cinaedvsstudios/forever-bound-wiki/refs/heads/main/iconcapsanoto.png"/><span class="brand-word">Capsanoto</span><span class="app-version">v2.7</span></strong>
 <label class="sr-only" for="documentSelect">Current document</label>
 <select hidden="" id="documentSelect" title="Document Switcher"></select>
 </div>
@@ -71,6 +71,7 @@
 <li><button data-context-action="pill" type="button"><span>💊</span><strong>Link Pill</strong><small>Make a rounded reference card.</small></button></li>
 <li><button data-context-action="edit-link" type="button"><span>🛠️</span><strong>Edit Link</strong><small>Edit an existing link or pill.</small></button></li>
 <li><button data-context-action="pill-color" type="button"><span>🎨</span><strong>Pill Color</strong><small>Change selected pill color.</small></button></li>
+<li><button data-context-action="deprecate-paragraph" type="button"><span>🕰️</span><strong>Deprecate Paragraph</strong><small>Save a history copy without changing the live text.</small></button></li>
 </menu>
 <div class="dialog-overlay" hidden="" id="dialogOverlay">
 <form class="caps-dialog" id="dialogBox">
@@ -99,6 +100,14 @@
 <input aria-label="Document title" class="title-input" id="titleInput"/>
 <input aria-label="Document tags" class="tags-input" hidden="" id="tagsInput" placeholder="tags: character, location, episode"/>
 </section>
+<aside aria-label="Writing Assist Rail" class="writing-assist-rail" id="writingAssistRail">
+<span class="assist-rail-marker" data-marker-type="deprecated" title="Deprecated paragraph markers will appear here">🕰️</span>
+<span class="assist-rail-marker" data-marker-type="tcard" title="TCard markers will appear here">𝞃</span>
+<span class="assist-rail-marker" data-marker-type="note" title="Comment/note markers will appear here">✎</span>
+<span class="assist-rail-marker" data-marker-type="anchor" title="Link Anchor markers will appear here">⚓</span>
+<span class="assist-rail-marker" data-marker-type="timeline" title="Timeline markers will appear here">🧭</span>
+<span class="assist-rail-marker" data-marker-type="warning" title="Continuity warning markers will appear here">⚠️</span>
+</aside>
 <article aria-label="Writing area" class="editor" contenteditable="true" id="editor" spellcheck="true"></article>
 <section aria-label="End of document controls" class="document-end-bar" id="documentEndBar"></section>
 <div class="color-image-popup" hidden="" id="colorImagePopup">
@@ -568,7 +577,7 @@
 <dt>Main app file</dt><dd><code>app.js</code> handles state, events, local autosave, routing, TCards, links, downloads, dialogs, Filing Cabinet behaviour, table tools, Emoji Spark, and design settings.</dd>
 <dt>Styles</dt><dd><code>styles.css</code> controls the theme, layouts, panels, typography, and CSS variables.</dd>
 <dt>Starter files</dt><dd><code>content/documents.json</code> seeds first-run content. <code>config/auth.json</code> remains for future preview auth work.</dd>
-<dt>Local storage keys</dt><dd><code>forever-bound-writing-room-v2</code> stores files/TCards, <code>capsanoto-design-settings-v1</code> stores design settings, <code>capsanoto-help-html-v1</code> stores edited Help text, and <code>capsanoto-writing-room-layout-v1</code> stores Filing Cabinet position/size.</dd>
+<dt>Local storage keys</dt><dd><code>forever-bound-writing-room-v2</code> stores files/TCards, <code>capsanoto-design-settings-v1</code> stores design settings, <code>capsanoto-help-html-v1</code> stores edited Help text, and <code>capsanoto-writing-room-layout-v1</code> stores Filing Cabinet position/size, and selected deprecated paragraph history is stored inside the Writing Room data.</dd>
 <dt>Save audit</dt><dd>Current save behaviour is local-first. File edits, TCard edits, Filing Cabinet changes, and design settings save to browser localStorage. A durable GitHub sync system is not currently present in the app code.</dd>
 <dt>Versioning rule</dt><dd>Use <code>v1</code> as the first version, then <code>v1.1</code>, <code>v1.2</code>, and so on for future updates.</dd>
 </dl>
@@ -581,7 +590,8 @@
 <p><strong>Capsanoto v1.3:</strong> unified the command bar, improved Settings card viewing, restored Filing Cabinet resizing, and expanded Emoji Spark behaviour.</p>
 <p><strong>Capsanoto v1.4:</strong> added Top Bar Height, cleaned Format and Insert menus, improved table tools, added editable top-bar icon fields, and refined Transclusion Cards actions.</p>
 <p><strong>Capsanoto v1.5:</strong> rewrote the Guidebook, added the Command Layout Editor placeholder, clarified Subnoto/Specnoto placeholders, cleaned terminology, improved Download wording, and documented the local-only save audit.</p>
-<p><strong>Capsanoto v1.6:</strong> cleaned the Element Designer structure, added missing writing-area and panel styling controls, improved design-setting wiring, added Emoji Spark appearance controls, and refined TCard panel styling controls.</p></section></aside>
+<p><strong>Capsanoto v1.6:</strong> cleaned the Element Designer structure, added missing writing-area and panel styling controls, improved design-setting wiring, added Emoji Spark appearance controls, and refined TCard panel styling controls.</p>
+<p><strong>Capsanoto v1.7:</strong> added the Writing Assist Rail placeholder and the Deprecate Paragraph right-click action, with safe background history records that do not change the live document text.</p></section></aside>
 <aside aria-label="Transclusion Cards" class="block-panel" hidden="" id="blockPanel">
 <header>
 <div>
