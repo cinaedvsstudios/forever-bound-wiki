@@ -778,7 +778,9 @@ input, textarea, select, .panel-help, .help-panel p, .help-panel dd, .document-c
   display: block !important;
   margin-top: 0.75rem;
 }
-.settings-panel .settings-section[hidden] { display: block !important; }
+.settings-panel .settings-section[hidden],
+.settings-panel[hidden],
+#settingsPanel[hidden] { display: none !important; }
 .settings-panel .settings-section h3::before {
   content: "›";
   display: inline-block;
@@ -2870,3 +2872,12 @@ button {
   z-index: 20;
   pointer-events: auto;
 }
+
+
+/* Emergency settings-panel behaviour fixes */
+#settingsPanel[hidden] { display: none !important; visibility: hidden !important; pointer-events: none !important; }
+.settings-panel .settings-section.is-collapsed > :not(h3):not(.designer-heading-row) { display: none !important; }
+.settings-panel .settings-section.is-collapsed > .designer-heading-row + * { display: none !important; }
+.settings-panel .settings-section.is-collapsed .designer-heading-row ~ * { display: none !important; }
+.settings-panel .settings-section > h3,
+.settings-panel .settings-section > .designer-heading-row { cursor: pointer; }

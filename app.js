@@ -513,9 +513,10 @@ function bindEditorEvents() {
   els.emphasisButton.addEventListener("click", insertEmphasisBox);
   els.topHelpButton.addEventListener("click", () => toggleHelpPanel(true));
   els.settingsButton.addEventListener("click", () => toggleSettingsPanel(true));
-  els.closeSettingsPanel.addEventListener("pointerdown", (event) => event.stopPropagation());
-  els.closeSettingsPanel.addEventListener("pointerup", (event) => { event.preventDefault(); event.stopPropagation(); toggleSettingsPanel(false); });
-  els.closeSettingsPanel.addEventListener("click", (event) => { event.preventDefault(); event.stopPropagation(); toggleSettingsPanel(false); });
+  els.closeSettingsPanel.addEventListener("pointerdown", (event) => { event.preventDefault(); event.stopPropagation(); if (typeof event.stopImmediatePropagation === "function") event.stopImmediatePropagation(); closeSettingsPanelNow(); }, true);
+  els.closeSettingsPanel.addEventListener("pointerup", handleGlobalSettingsCloseClick, true);
+  els.closeSettingsPanel.addEventListener("click", handleGlobalSettingsCloseClick, true);
+  document.addEventListener("pointerdown", handleGlobalSettingsCloseClick, true);
   document.addEventListener("click", handleGlobalSettingsCloseClick, true);
   document.addEventListener("pointerup", handleGlobalSettingsCloseClick, true);
   els.settingsMenu.addEventListener("click", handleSettingsMenuClick);
@@ -550,7 +551,7 @@ function bindEditorEvents() {
   els.helpPanel.querySelector("header")?.addEventListener("pointerdown", (event) => startPanelDrag(event, els.helpPanel));
   window.addEventListener("pointermove", movePanelDrag);
   window.addEventListener("pointerup", stopPanelDrag);
-  document.addEventListener("keydown", (event) => { if (event.key === "Escape") { toggleHelpPanel(false); toggleSettingsPanel(false); toggleWritingRoomPanel(false); } });
+  document.addEventListener("keydown", (event) => { if (event.key === "Escape") { toggleHelpPanel(false); closeSettingsPanelNow(); toggleWritingRoomPanel(false); } });
   bindDesignColorTools();
   bindInheritanceToggles();
   bindElementDesignerCardScroll();
@@ -1201,21 +1202,35 @@ function handleGlobalSettingsCloseClick(event) {
   event.preventDefault();
   event.stopPropagation();
   if (typeof event.stopImmediatePropagation === "function") event.stopImmediatePropagation();
-  toggleSettingsPanel(false);
+  closeSettingsPanelNow();
+}
+
+function closeSettingsPanelNow() {
+  state.panelDrag = null;
+  if (!els.settingsPanel) return;
+  els.settingsPanel.hidden = true;
+  els.settingsPanel.setAttribute("hidden", "");
+  els.settingsPanel.style.display = "none";
+  els.settingsButton?.setAttribute("aria-expanded", "false");
 }
 
 function toggleSettingsPanel(show) {
-  els.settingsPanel.hidden = !show;
-  if (show) {
-    els.settingsSections.forEach((section) => {
-      section.hidden = false;
-      section.classList.add("is-collapsed");
-    });
-    renderExportSourceSelect();
-    renderExportQueue();
-    loadDesignForm();
-    setElementDesignerCards(false);
+  if (!els.settingsPanel) return;
+  if (!show) {
+    closeSettingsPanelNow();
+    return;
   }
+  els.settingsPanel.style.display = "";
+  els.settingsPanel.hidden = false;
+  els.settingsPanel.removeAttribute("hidden");
+  els.settingsButton?.setAttribute("aria-expanded", "true");
+  els.settingsSections.forEach((section) => {
+    section.classList.add("is-collapsed");
+  });
+  renderExportSourceSelect();
+  renderExportQueue();
+  loadDesignForm();
+  setElementDesignerCards(false);
 }
 
 function handleSettingsMenuClick(event) {
@@ -1227,8 +1242,9 @@ function handleSettingsMenuClick(event) {
 function handleSettingsCardToggle(event) {
   const heading = event.target.closest(".settings-section > h3, .settings-section > .designer-heading-row");
   if (!heading) return;
-  if (event.target.closest("button, input, select, textarea")) return;
+  if (event.target.closest("button, input, select, textarea") && !event.target.closest(".settings-section > h3")) return;
   const section = heading.closest(".settings-section");
+  if (!section) return;
   section.classList.toggle("is-collapsed");
   if (!section.classList.contains("is-collapsed")) {
     requestAnimationFrame(() => section.scrollIntoView({ block: "start", behavior: "smooth" }));
