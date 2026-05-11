@@ -1950,3 +1950,420 @@ h1, h2, h3, h4,
 .settings-panel .settings-links.is-collapsed > :not(h3) {
   display: none !important;
 }
+
+
+/* Final Element Designer design-system cleanup */
+:root {
+  --button-text-color: var(--ink);
+  --button-text-size: var(--button-font-size);
+  --window-bg: var(--panel-bg);
+  --window-border: var(--panel-border);
+  --window-shadow-color: #000000;
+  --top-bar-bg: #211812;
+  --top-bar-border: #724837;
+  --top-bar-image-url: none;
+  --title-color: #563485;
+  --title-text-size: 1rem;
+  --writing-room-button-bg: #e88f69;
+  --writing-room-button-border: #724837;
+  --writing-room-button-text: #000000;
+  --writing-room-button-text-size: 1rem;
+  --status-text-size: 0.86rem;
+  --command-bar-bg: #28133f;
+  --command-bar-border: #e88f69;
+  --command-bar-text: #fbf4d6;
+  --command-bar-text-size: 0.95rem;
+  --dropdown-button-bg: #2c2c2c;
+  --dropdown-button-border: #724837;
+  --dropdown-button-text: #fbf4d6;
+  --dropdown-button-text-size: 0.9rem;
+  --right-icon-button-bg: #2c2c2c;
+  --right-icon-button-border: #724837;
+  --right-icon-size: 1rem;
+  --writing-room-shadow-color: #000000;
+  --writing-room-title-color: #e88f69;
+  --writing-room-title-size: 1.05rem;
+  --writing-room-header-icon-size: 1rem;
+  --folder-icon-size: 1rem;
+  --tab-icon-size: 1rem;
+  --doc-icon-size: 1rem;
+  --folder-row-bg: #2c2c2c;
+  --folder-row-border: #724837;
+  --folder-text-color: #fbf4d6;
+  --folder-text-size: 0.95rem;
+  --tab-row-bg: #28133f;
+  --tab-row-border: #563485;
+  --tab-text-color: #e7a2ff;
+  --tab-text-size: 0.9rem;
+  --doc-row-bg: #2c2c2c;
+  --doc-row-border: #724837;
+  --doc-text-color: #fbf4d6;
+  --doc-text-size: 0.9rem;
+  --metadata-pill-bg: #563485;
+  --metadata-pill-border: #724837;
+  --trash-bg: #28133f;
+  --jump-rail-line: #69635f;
+  --jump-rail-button-bg: #2c2c2c;
+  --writing-surface-bg: #211812;
+  --writing-overlay-opacity: 0.92;
+  --writing-surface-border: #724837;
+  --doc-title-color: #fbf4d6;
+  --doc-title-size: 2.1rem;
+  --editor-text-color: #fbf4d6;
+  --editor-text-size: 1rem;
+  --h1-color: #fbf4d6;
+  --h1-size: 1.65rem;
+  --h2-color: #fbf4d6;
+  --h2-size: 1.35rem;
+  --h3-color: #fbf4d6;
+  --h3-size: 1.15rem;
+  --link-color: #e88f69;
+  --link-size: 1rem;
+  --link-pill-bg: #e88f69;
+  --link-pill-border: #724837;
+  --link-pill-text: #000000;
+  --link-pill-text-size: 0.9rem;
+  --emphasis-text-size: 1rem;
+  --table-bg: #211812;
+  --table-border: #724837;
+  --table-head-bg: #2f251c;
+  --table-head-text: #fbf4d6;
+  --table-text-size: 0.95rem;
+  --help-bg: #211812;
+  --help-border: #724837;
+  --help-logo-size: 2.2rem;
+  --help-title-color: #e88f69;
+  --help-title-size: 1.4rem;
+  --help-text-color: #fbf4d6;
+  --help-text-size: 1rem;
+  --help-heading-color: #fbf4d6;
+  --help-heading-size: 1.15rem;
+  --help-rule-color: #724837;
+  --settings-bg: #211812;
+  --settings-border: #724837;
+  --settings-title-color: #e88f69;
+  --settings-title-size: 1.5rem;
+  --settings-card-bg: #211812;
+  --settings-card-border: #724837;
+  --settings-label-color: #563485;
+  --settings-label-size: 0.82rem;
+  --settings-input-bg: #000000;
+  --settings-input-text: #fbf4d6;
+  --element-designer-text-size: 0.88rem;
+  --tcard-bg: #28133f;
+  --tcard-border: #e88f69;
+  --tcard-text: #fbf4d6;
+  --tcard-text-size: 0.95rem;
+  --tcard-heading: #e88f69;
+  --tcard-panel-bg: #211812;
+  --tcard-panel-border: #724837;
+  --tcard-input-bg: #28133f;
+  --tcard-input-text: #fbf4d6;
+}
+
+/* Make the Settings/Element Designer resize downwards properly */
+.settings-panel {
+  max-height: calc(100vh - 1.5rem) !important;
+  height: min(86vh, 860px);
+  min-height: 320px;
+  resize: both !important;
+  overflow: auto !important;
+  background: var(--settings-bg) !important;
+  border-color: var(--settings-border) !important;
+  color: var(--ink);
+}
+.settings-panel h2 {
+  color: var(--settings-title-color) !important;
+  font-size: var(--settings-title-size) !important;
+}
+
+/* Element Designer should be one left column plus one preview column, not two left columns */
+.design-section.settings-card {
+  display: block !important;
+}
+.design-section.settings-card .designer-heading-row {
+  display: flex !important;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.design-editor-grid {
+  display: grid !important;
+  grid-template-columns: minmax(20rem, 1fr) minmax(18rem, 0.72fr) !important;
+  gap: 1rem;
+  align-items: start;
+  min-height: 0;
+}
+.design-section .design-controls,
+.design-controls {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  grid-auto-flow: row !important;
+  gap: 0.65rem !important;
+  max-height: min(66vh, 680px) !important;
+  overflow: auto !important;
+  padding-right: 0.45rem !important;
+}
+.design-section .design-preview-column,
+.design-preview-column {
+  position: sticky !important;
+  top: 0.7rem !important;
+  align-self: start !important;
+  display: grid !important;
+  gap: 0.7rem !important;
+  max-height: min(80vh, 760px);
+  overflow: auto;
+}
+.element-designer-card {
+  background: var(--settings-card-bg) !important;
+  border: 1px solid var(--settings-card-border) !important;
+  font-size: var(--element-designer-text-size) !important;
+}
+.element-designer-card > summary {
+  color: var(--settings-label-color) !important;
+  font-size: calc(var(--element-designer-text-size) + 0.06rem) !important;
+}
+.element-designer-card label {
+  display: grid !important;
+  grid-template-columns: minmax(9rem, 0.95fr) minmax(9rem, 1fr) !important;
+  gap: 0.55rem !important;
+  color: var(--settings-label-color) !important;
+  font-size: var(--settings-label-size) !important;
+}
+.element-designer-card input,
+.element-designer-card select {
+  background: var(--settings-input-bg) !important;
+  color: var(--settings-input-text) !important;
+  border-color: var(--settings-card-border) !important;
+}
+.element-designer-card input[type="color"] {
+  min-height: 2rem !important;
+  border: 1px solid #6b5b50 !important;
+}
+.inherit-row {
+  display: flex !important;
+  grid-template-columns: none !important;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.55rem;
+  padding: 0.45rem 0.65rem;
+  border: 1px dashed color-mix(in srgb, var(--settings-card-border) 75%, transparent);
+  border-radius: 999px;
+  color: var(--dynamic-text) !important;
+}
+.inherit-row input {
+  width: auto !important;
+}
+.element-designer-card.uses-system-defaults label:not(.inherit-row),
+.element-designer-card.uses-system-defaults .toggle-pill,
+.element-designer-card.uses-system-defaults .placeholder-card {
+  opacity: 0.42;
+}
+.favorite-colors {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 0.45rem !important;
+}
+.current-color-box,
+.favorite-colors button {
+  background: var(--current-color, var(--favorite-color, #e88f69)) !important;
+  border: 1px solid #6b5b50 !important;
+  border-radius: 999px !important;
+  min-height: 2.15rem !important;
+  color: #fff !important;
+  font-size: 0.72rem !important;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.9) !important;
+}
+.design-preview {
+  border-color: var(--settings-card-border) !important;
+  background: color-mix(in srgb, var(--settings-card-bg) 88%, #000000) !important;
+}
+.design-preview article {
+  width: 100%;
+}
+.design-preview .preview-card {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0.8rem 0;
+  padding: 0.75rem;
+  border: 1px solid var(--settings-card-border);
+  border-radius: 14px;
+  background: rgba(0,0,0,0.18);
+}
+@media (max-width: 900px) {
+  .design-editor-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .design-section .design-preview-column,
+  .design-preview-column {
+    position: static !important;
+  }
+}
+
+/* Apply design-system variables across visible UI */
+html, body, button, input, select, textarea, .writer-shell, .settings-panel, .help-panel, .writing-room-panel, .block-panel, .caps-dialog, .selection-menu {
+  font-family: var(--app-font-family) !important;
+}
+button {
+  color: var(--button-text-color);
+  font-size: var(--button-text-size);
+}
+.writer-header {
+  background-color: var(--top-bar-bg) !important;
+  border-color: var(--top-bar-border) !important;
+  background-image: var(--top-bar-image-url), none !important;
+}
+.brand-word {
+  color: var(--title-color) !important;
+  font-size: var(--title-text-size) !important;
+}
+.writing-room-button {
+  background: var(--writing-room-button-bg) !important;
+  border-color: var(--writing-room-button-border) !important;
+  color: var(--writing-room-button-text) !important;
+  font-size: var(--writing-room-button-text-size) !important;
+}
+.context-status {
+  background: var(--status-bg) !important;
+  border-color: var(--status-border) !important;
+  color: var(--status-text) !important;
+  font-size: var(--status-text-size) !important;
+}
+.top-command-menus {
+  background: var(--command-bar-bg) !important;
+  border-color: var(--command-bar-border) !important;
+}
+.tool-menu-trigger {
+  color: var(--command-bar-text) !important;
+  font-size: var(--command-bar-text-size) !important;
+}
+.tool-menu-panel button {
+  background: var(--dropdown-button-bg) !important;
+  border-color: var(--dropdown-button-border) !important;
+  color: var(--dropdown-button-text) !important;
+  font-size: var(--dropdown-button-text-size) !important;
+}
+.save-controls button {
+  background: var(--right-icon-button-bg) !important;
+  border-color: var(--right-icon-button-border) !important;
+  font-size: var(--right-icon-size) !important;
+}
+.writing-room-panel {
+  background: var(--panel-bg) !important;
+  border-color: var(--panel-border) !important;
+  box-shadow: 0 24px 90px color-mix(in srgb, var(--writing-room-shadow-color) 70%, transparent) !important;
+}
+.writing-room-panel h2,
+#writingRoomTitle {
+  color: var(--writing-room-title-color) !important;
+  font-size: var(--writing-room-title-size) !important;
+}
+.writing-room-panel header button {
+  font-size: var(--writing-room-header-icon-size) !important;
+}
+.writing-room-group > summary {
+  background: var(--folder-row-bg) !important;
+  border: 1px solid var(--folder-row-border) !important;
+  color: var(--folder-text-color) !important;
+  font-size: var(--folder-text-size) !important;
+}
+.filing-tab {
+  background: color-mix(in srgb, var(--tab-row-bg) 42%, transparent) !important;
+  border-color: var(--tab-row-border) !important;
+}
+.filing-tab > summary {
+  color: var(--tab-text-color) !important;
+  font-size: var(--tab-text-size) !important;
+}
+.writing-room-card > summary {
+  background: var(--doc-row-bg) !important;
+  border: 1px solid var(--doc-row-border) !important;
+  color: var(--doc-text-color) !important;
+  font-size: var(--doc-text-size) !important;
+}
+.group-icon { font-size: var(--folder-icon-size) !important; }
+.tab-icon { font-size: var(--tab-icon-size) !important; }
+.doc-icon { font-size: var(--doc-icon-size) !important; }
+.metadata-pill {
+  background: var(--metadata-pill-bg) !important;
+  border-color: var(--metadata-pill-border) !important;
+}
+.trash-section > summary {
+  background: var(--trash-bg) !important;
+}
+.filing-jump-rail::before {
+  background: var(--jump-rail-line) !important;
+}
+.filing-jump-rail button {
+  background: var(--jump-rail-button-bg) !important;
+}
+.title-input {
+  color: var(--doc-title-color) !important;
+  font-size: var(--doc-title-size) !important;
+}
+.editor {
+  color: var(--editor-text-color) !important;
+  font-size: var(--editor-text-size) !important;
+  border-color: var(--writing-surface-border) !important;
+}
+.editor::before {
+  opacity: var(--writing-overlay-opacity);
+}
+.editor h1 { color: var(--h1-color) !important; font-size: var(--h1-size) !important; }
+.editor h2 { color: var(--h2-color) !important; font-size: var(--h2-size) !important; }
+.editor h3 { color: var(--h3-color) !important; font-size: var(--h3-size) !important; }
+.editor a:not(.pill-link) {
+  color: var(--link-color) !important;
+  font-size: var(--link-size) !important;
+}
+.editor .pill-link,
+.design-preview .pill-link {
+  background: var(--link-pill-bg) !important;
+  border-color: var(--link-pill-border) !important;
+  color: var(--link-pill-text) !important;
+  font-size: var(--link-pill-text-size) !important;
+}
+.emphasis-box {
+  font-size: var(--emphasis-text-size) !important;
+}
+.editor table {
+  background: var(--table-bg) !important;
+  border-color: var(--table-border) !important;
+  font-size: var(--table-text-size) !important;
+}
+.editor th {
+  background: var(--table-head-bg) !important;
+  color: var(--table-head-text) !important;
+}
+.help-panel {
+  background: var(--help-bg) !important;
+  border-color: var(--help-border) !important;
+  color: var(--help-text-color) !important;
+  font-size: var(--help-text-size) !important;
+}
+.help-panel .brand-icon { width: var(--help-logo-size) !important; height: var(--help-logo-size) !important; }
+.help-panel h2 { color: var(--help-title-color) !important; font-size: var(--help-title-size) !important; }
+.help-panel h3,
+.help-panel h4 { color: var(--help-heading-color) !important; font-size: var(--help-heading-size) !important; }
+.help-panel hr { border-color: var(--help-rule-color) !important; }
+.block-panel {
+  background: var(--tcard-panel-bg) !important;
+  border-color: var(--tcard-panel-border) !important;
+}
+.block-panel input,
+.block-panel textarea {
+  background: var(--tcard-input-bg) !important;
+  color: var(--tcard-input-text) !important;
+}
+.transclusion-block {
+  background: var(--tcard-bg) !important;
+  border-color: var(--tcard-border) !important;
+  color: var(--tcard-text) !important;
+  font-size: var(--tcard-text-size) !important;
+}
+.transclusion-block strong,
+.transclusion-block h1,
+.transclusion-block h2,
+.transclusion-block h3 {
+  color: var(--tcard-heading) !important;
+}

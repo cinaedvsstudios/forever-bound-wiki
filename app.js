@@ -534,6 +534,7 @@ function bindEditorEvents() {
   window.addEventListener("pointerup", stopPanelDrag);
   document.addEventListener("keydown", (event) => { if (event.key === "Escape") { toggleHelpPanel(false); toggleSettingsPanel(false); toggleWritingRoomPanel(false); } });
   bindDesignColorTools();
+  bindInheritanceToggles();
   els.expandDesignerCards?.addEventListener("click", () => setElementDesignerCards(true));
   els.collapseDesignerCards?.addEventListener("click", () => setElementDesignerCards(false));
   bindDesignToggle(els.designBoldToggle, els.designBold);
@@ -2394,6 +2395,78 @@ function normalizeHexColor(value) {
   return "";
 }
 
+
+function extraDesignInputs() {
+  return Array.from(document.querySelectorAll("[data-design-key]"));
+}
+
+function extraDesignDefaults() {
+  const defaults = {};
+  extraDesignInputs().forEach((input) => {
+    defaults[input.dataset.designKey] = input.type === "checkbox" ? input.checked : input.value;
+  });
+  document.querySelectorAll("[data-inherit-section]").forEach((input) => {
+    defaults[`inherit_${input.dataset.inheritSection}`] = input.checked;
+  });
+  return defaults;
+}
+
+function applyExtraDesignSettings(settings) {
+  const root = document.documentElement;
+  extraDesignInputs().forEach((input) => {
+    const key = input.dataset.designKey;
+    const value = settings[key] ?? input.value;
+    if (input.type === "checkbox") input.checked = Boolean(value);
+    else input.value = value;
+    if (input.dataset.cssVar && value !== undefined && value !== "") {
+      const suffix = input.dataset.suffix || "";
+      let cssValue = String(value);
+      if (input.dataset.cssVar === "--top-bar-image-url") {
+        cssValue = value ? `url("${escapeCssUrl(value)}")` : "none";
+      } else if (input.dataset.cssVar === "--writing-overlay-opacity") {
+        const pct = Math.max(0, Math.min(100, Number(value) || 0));
+        cssValue = String(pct / 100);
+      } else if (suffix && !String(value).endsWith(suffix)) {
+        cssValue = `${value}${suffix}`;
+      }
+      root.style.setProperty(input.dataset.cssVar, cssValue);
+    }
+  });
+  document.querySelectorAll("[data-inherit-section]").forEach((input) => {
+    input.checked = Boolean(settings[`inherit_${input.dataset.inheritSection}`]);
+    updateInheritedDesignerSection(input);
+  });
+}
+
+function collectExtraDesignSettings(settings) {
+  extraDesignInputs().forEach((input) => {
+    settings[input.dataset.designKey] = input.type === "checkbox" ? input.checked : input.value;
+  });
+  document.querySelectorAll("[data-inherit-section]").forEach((input) => {
+    settings[`inherit_${input.dataset.inheritSection}`] = input.checked;
+  });
+  return settings;
+}
+
+function updateInheritedDesignerSection(toggle) {
+  const card = toggle.closest(".element-designer-card");
+  if (!card) return;
+  const inherited = toggle.checked;
+  card.classList.toggle("uses-system-defaults", inherited);
+  card.querySelectorAll("input, select, textarea, button").forEach((control) => {
+    if (control === toggle || control.closest("summary") || control.id === "expandDesignerCards" || control.id === "collapseDesignerCards") return;
+    if (control.matches("[data-inherit-section]")) return;
+    control.disabled = inherited;
+  });
+}
+
+function bindInheritanceToggles() {
+  document.querySelectorAll("[data-inherit-section]").forEach((toggle) => {
+    toggle.addEventListener("change", () => updateInheritedDesignerSection(toggle));
+    updateInheritedDesignerSection(toggle);
+  });
+}
+
 function loadDesignForm() {
   const settings = currentDesignSettings();
   state.favoriteColors = validFavoriteColors(settings.favoriteColors);
@@ -2430,6 +2503,7 @@ function loadDesignForm() {
   els.panelBorderColor.value = settings.panelBorder;
   els.designBoldToggle?.setAttribute("aria-pressed", String(settings.bold));
   els.dialogBoldToggle?.setAttribute("aria-pressed", String(settings.dialogBold));
+  applyExtraDesignSettings(settings);
   syncActiveColorInput(els.designBorderColor);
 }
 
@@ -2440,7 +2514,7 @@ function validFavoriteColors(colors) {
 
 function currentDesignSettings() {
   try {
-    return { ...defaultDesignSettings(), ...(JSON.parse(localStorage.getItem(DESIGN_KEY) || "null") || {}) };
+    return { ...defaultDesignSettings(), ...extraDesignDefaults(), ...(JSON.parse(localStorage.getItem(DESIGN_KEY) || "null") || {}) };
   } catch (error) {
     console.warn("Ignoring unreadable Capsanoto design settings", error);
     localStorage.removeItem(DESIGN_KEY);
@@ -2486,7 +2560,7 @@ function defaultDesignSettings() {
 }
 
 function saveDesignSettings() {
-  const settings = { buttonBg: els.designButtonBg.value, borderColor: els.designBorderColor.value, textColor: els.designTextColor.value, fontSize: els.designFontSize.value || "14", fontFamily: els.designFontFamily?.value || "Inter, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif", titleIconScale: els.titleIconScale?.value || "143", bold: els.designBold.checked, bgImage: els.designBgImage.value.trim(), dialogBg: els.dialogBgColor.value, dialogBorder: els.dialogBorderColor.value, dialogShadow: els.dialogShadowColor.value, dialogText: els.dialogTextColor.value, dialogFontSize: els.dialogFontSize.value || "14", dialogBold: els.dialogBold.checked, dialogButtonBg: els.dialogButtonBg.value, dialogButtonBorder: els.dialogButtonBorder.value, dialogButtonText: els.dialogButtonText.value, dialogButtonShadow: els.dialogButtonShadow.value, labelText: els.labelTextColor.value, dynamicText: els.dynamicTextColor.value, scrollbarTrack: els.scrollbarTrackColor.value, scrollbarThumb: els.scrollbarThumbColor.value, statusBg: els.statusBgColor.value, statusBorder: els.statusBorderColor.value, statusText: els.statusTextColor.value, emphasisBg: els.emphasisBgColor.value, emphasisBorder: els.emphasisBorderColor.value, emphasisText: els.emphasisTextColor.value, panelBg: els.panelBgColor.value, panelBorder: els.panelBorderColor.value, favoriteColors: [...state.favoriteColors] };
+  const settings = collectExtraDesignSettings({ buttonBg: els.designButtonBg.value, borderColor: els.designBorderColor.value, textColor: els.designTextColor.value, fontSize: els.designFontSize.value || "14", fontFamily: els.designFontFamily?.value || "Inter, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif", titleIconScale: els.titleIconScale?.value || "143", bold: els.designBold.checked, bgImage: els.designBgImage.value.trim(), dialogBg: els.dialogBgColor.value, dialogBorder: els.dialogBorderColor.value, dialogShadow: els.dialogShadowColor.value, dialogText: els.dialogTextColor.value, dialogFontSize: els.dialogFontSize.value || "14", dialogBold: els.dialogBold.checked, dialogButtonBg: els.dialogButtonBg.value, dialogButtonBorder: els.dialogButtonBorder.value, dialogButtonText: els.dialogButtonText.value, dialogButtonShadow: els.dialogButtonShadow.value, labelText: els.labelTextColor.value, dynamicText: els.dynamicTextColor.value, scrollbarTrack: els.scrollbarTrackColor.value, scrollbarThumb: els.scrollbarThumbColor.value, statusBg: els.statusBgColor.value, statusBorder: els.statusBorderColor.value, statusText: els.statusTextColor.value, emphasisBg: els.emphasisBgColor.value, emphasisBorder: els.emphasisBorderColor.value, emphasisText: els.emphasisTextColor.value, panelBg: els.panelBgColor.value, panelBorder: els.panelBorderColor.value, favoriteColors: [...state.favoriteColors] });
   localStorage.setItem(DESIGN_KEY, JSON.stringify(settings));
   applyDesignSettings(settings);
   setStatus("Design applied", "saved");
@@ -2537,6 +2611,7 @@ function applyDesignSettings(settings) {
   root.style.setProperty("--emphasis-text", settings.emphasisText);
   root.style.setProperty("--panel-bg", settings.panelBg);
   root.style.setProperty("--panel-border", settings.panelBorder);
+  applyExtraDesignSettings(settings);
 }
 
 function resetLocalWorkspace() {

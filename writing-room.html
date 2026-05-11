@@ -160,86 +160,220 @@
             <button id="collapseDesignerCards" type="button">Collapse All</button>
           </div>
         </div>
-        <div class="design-controls">
-          <details class="element-designer-card" data-designer-card="system" open>
-            <summary>System</summary>
-            <p class="design-section-note">Default font, text, buttons, windows, scrollbars, global backgrounds, and dialogue windows.</p>
-            <label>System Font <select id="designFontFamily"><option value="Inter, system-ui, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif">Inter (recommended)</option><option value="Arial, Helvetica, sans-serif">Arial</option><option value="system-ui, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif">System UI</option><option value="Aptos, Calibri, Arial, sans-serif">Aptos / Calibri</option><option value="Courier New, Courier, monospace">Courier New</option><option value="Verdana, Geneva, sans-serif">Verdana</option><option value="Georgia, serif">Georgia</option><option value="Tahoma, Geneva, sans-serif">Tahoma</option><option value="Trebuchet MS, Arial, sans-serif">Trebuchet MS</option><option value="Times New Roman, Times, serif">Times New Roman</option></select></label>
-            <label>Default Text Size <input id="designFontSize" type="number" min="10" max="32" value="14"></label>
-            <label>Default Text Color <input id="designTextColor" type="color" value="#fbf4d6"></label>
-            <label>Default Button BG <input id="designButtonBg" type="color" value="#2c2c2c"></label>
-            <label>Default Button Border <input id="designBorderColor" type="color" value="#e88f69"></label>
-            <button id="designBoldToggle" class="toggle-pill" type="button" aria-pressed="true">Default Bold</button><input id="designBold" type="checkbox" checked hidden>
-            <label>Global Background Image URL <input id="designBgImage" type="text" placeholder="wallpapersm.jpg or https://..."></label>
-            <label>Default Label Text <input id="labelTextColor" type="color" value="#a97b38"></label>
-            <label>Default Dynamic Text <input id="dynamicTextColor" type="color" value="#e88f69"></label>
-            <label>Default Scrollbar Track <input id="scrollbarTrackColor" type="color" value="#211812"></label>
-            <label>Default Scrollbar Thumb <input id="scrollbarThumbColor" type="color" value="#e88f69"></label>
-            <h4>Global Dialogue Window</h4>
-            <label>Dialog BG <input id="dialogBgColor" type="color" value="#211812"></label>
-            <label>Dialog Border <input id="dialogBorderColor" type="color" value="#e88f69"></label>
-            <label>Dialog Shadow <input id="dialogShadowColor" type="color" value="#000000"></label>
-            <label>Dialog Text <input id="dialogTextColor" type="color" value="#fbf4d6"></label>
-            <label>Dialog Text Size <input id="dialogFontSize" type="number" min="10" max="28" value="14"></label>
-            <button id="dialogBoldToggle" class="toggle-pill" type="button" aria-pressed="true">Dialog Bold</button><input id="dialogBold" type="checkbox" checked hidden>
-            <label>Dialog Button BG <input id="dialogButtonBg" type="color" value="#2c2c2c"></label>
-            <label>Dialog Button Border <input id="dialogButtonBorder" type="color" value="#e88f69"></label>
-            <label>Dialog Button Text <input id="dialogButtonText" type="color" value="#fbf4d6"></label>
-            <label>Dialog Button Shadow <input id="dialogButtonShadow" type="color" value="#000000"></label>
-          </details>
 
-          <details class="element-designer-card" data-designer-card="top-menu">
-            <summary>Top Menu Bar</summary>
-            <p class="design-section-note">Capsanoto logo/title, Writing Room button, status box, command bar, dropdown buttons, and right-side icon buttons.</p>
-            <label>Capsanoto Logo Size % <input id="titleIconScale" type="number" min="50" max="250" value="143"></label>
-            <label>Status BG <input id="statusBgColor" type="color" value="#000000"></label>
-            <label>Status Border <input id="statusBorderColor" type="color" value="#a97b38"></label>
-            <label>Status Text <input id="statusTextColor" type="color" value="#fbf4d6"></label>
-            <div class="placeholder-card">Menu ordering and custom blank buttons will be added later.</div>
-          </details>
+        <div class="design-editor-grid">
+          <div class="design-controls">
 
-          <details class="element-designer-card" data-designer-card="writing-room">
-            <summary>Writing Room / Filing Cabinet</summary>
-            <p class="design-section-note">Filing Cabinet window, folders, tabs, document cards, metadata pills, trash, and jump rail.</p>
-            <label>Panel BG <input id="panelBgColor" type="color" value="#211812"></label>
-            <label>Panel Border <input id="panelBorderColor" type="color" value="#724837"></label>
-          </details>
+            <details class="element-designer-card" data-designer-card="system" open>
+              <summary>System</summary>
+              <p class="design-section-note">Defaults for the whole app unless a section below overrides them.</p>
 
-          <details class="element-designer-card" data-designer-card="subnoto"><summary>Subnoto</summary><p class="placeholder-card">Reserved for the future Subnoto clipboard workspace.</p></details>
-          <details class="element-designer-card" data-designer-card="specnoto"><summary>Specnoto</summary><p class="placeholder-card">Reserved for the future Specnoto search/find workspace.</p></details>
+              <label>System Font <select id="designFontFamily"><option value="Inter, system-ui, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif">Inter (recommended)</option><option value="Arial, Helvetica, sans-serif">Arial</option><option value="system-ui, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif">System UI</option><option value="Aptos, Calibri, Arial, sans-serif">Aptos / Calibri</option><option value="Courier New, Courier, monospace">Courier New</option><option value="Verdana, Geneva, sans-serif">Verdana</option><option value="Georgia, serif">Georgia</option><option value="Tahoma, Geneva, sans-serif">Tahoma</option><option value="Trebuchet MS, Arial, sans-serif">Trebuchet MS</option><option value="Times New Roman, Times, serif">Times New Roman</option></select></label>
+              <label>Default Text Size <input id="designFontSize" type="number" min="8" max="48" value="14"></label>
+              <label>Default Text Color <input id="designTextColor" type="color" value="#fbf4d6"></label>
+              <label>Default Label Color <input id="labelTextColor" type="color" value="#a97b38"></label>
+              <label>Default Dynamic Text <input id="dynamicTextColor" type="color" value="#e88f69"></label>
+              <label>Default Button BG <input id="designButtonBg" type="color" value="#2c2c2c"></label>
+              <label>Default Button Border <input id="designBorderColor" type="color" value="#e88f69"></label>
+              <label>Default Button Text <input data-design-key="buttonTextColor" data-css-var="--button-text-color" type="color" value="#fbf4d6"></label>
+              <label>Default Button Text Size <input data-design-key="buttonTextSize" data-css-var="--button-text-size" data-suffix="px" type="number" min="8" max="32" value="14"></label>
+              <button id="designBoldToggle" class="toggle-pill" type="button" aria-pressed="true">Default Button Bold</button><input id="designBold" type="checkbox" checked hidden>
+              <label>Default Window BG <input data-design-key="windowBg" data-css-var="--window-bg" type="color" value="#211812"></label>
+              <label>Default Window Border <input data-design-key="windowBorder" data-css-var="--window-border" type="color" value="#724837"></label>
+              <label>Default Window Shadow <input data-design-key="windowShadow" data-css-var="--window-shadow-color" type="color" value="#000000"></label>
+              <label>Default Scrollbar Track <input id="scrollbarTrackColor" type="color" value="#211812"></label>
+              <label>Default Scrollbar Thumb <input id="scrollbarThumbColor" type="color" value="#e88f69"></label>
+              <label>Global Background Image URL <input id="designBgImage" type="text" placeholder="wallpapersm.jpg or https://..."></label>
+              <label>Top Title-Bar Image URL <input data-design-key="topBarImage" data-css-var="--top-bar-image-url" type="text" placeholder="optional image URL"></label>
 
-          <details class="element-designer-card" data-designer-card="writing-area">
-            <summary>Writing Area</summary>
-            <p class="design-section-note">Main editor, titles, headings, links, Link Pills, emphasis boxes, tables, and the bottom details bar.</p>
-            <label>Emphasis BG <input id="emphasisBgColor" type="color" value="#2f251c"></label>
-            <label>Emphasis Border <input id="emphasisBorderColor" type="color" value="#563485"></label>
-            <label>Emphasis Text <input id="emphasisTextColor" type="color" value="#fbf4d6"></label>
-          </details>
+              <h4>Dialogue Windows</h4>
+              <label>Dialogue BG <input id="dialogBgColor" type="color" value="#211812"></label>
+              <label>Dialogue Border <input id="dialogBorderColor" type="color" value="#e88f69"></label>
+              <label>Dialogue Shadow <input id="dialogShadowColor" type="color" value="#000000"></label>
+              <label>Dialogue Text <input id="dialogTextColor" type="color" value="#fbf4d6"></label>
+              <label>Dialogue Text Size <input id="dialogFontSize" type="number" min="8" max="32" value="14"></label>
+              <button id="dialogBoldToggle" class="toggle-pill" type="button" aria-pressed="true">Dialogue Bold</button><input id="dialogBold" type="checkbox" checked hidden>
+              <label>Dialogue Button BG <input id="dialogButtonBg" type="color" value="#2c2c2c"></label>
+              <label>Dialogue Button Border <input id="dialogButtonBorder" type="color" value="#e88f69"></label>
+              <label>Dialogue Button Text <input id="dialogButtonText" type="color" value="#fbf4d6"></label>
+              <label>Dialogue Button Text Size <input data-design-key="dialogButtonTextSize" data-css-var="--dialog-button-text-size" data-suffix="px" type="number" min="8" max="32" value="14"></label>
+              <label>Dialogue Button Shadow <input id="dialogButtonShadow" type="color" value="#000000"></label>
+            </details>
 
-          <details class="element-designer-card" data-designer-card="help">
-            <summary>Help / Guidebook</summary>
-            <p class="design-section-note">Help panel surface, logo, title, headings, guide text, rules, and scrollbars.</p>
-          </details>
+            <details class="element-designer-card" data-designer-card="top-menu">
+              <summary>Top Menu Bar</summary>
+              <label class="inherit-row"><input type="checkbox" data-inherit-section="top-menu"> Use System Defaults</label>
+              <p class="design-section-note">Capsanoto logo/title, Writing Room button, status box, command bar, dropdowns, and right-side icon buttons.</p>
+              <label>Capsanoto Logo Size % <input id="titleIconScale" type="number" min="50" max="250" value="143"></label>
+              <label>Capsanoto Title Color <input data-design-key="titleColor" data-css-var="--title-color" type="color" value="#563485"></label>
+              <label>Capsanoto Title Size <input data-design-key="titleSize" data-css-var="--title-text-size" data-suffix="rem" type="number" min="0.7" max="3" step="0.05" value="1"></label>
+              <label>Top Bar BG <input data-design-key="topBarBg" data-css-var="--top-bar-bg" type="color" value="#211812"></label>
+              <label>Top Bar Border <input data-design-key="topBarBorder" data-css-var="--top-bar-border" type="color" value="#724837"></label>
+              <label>Writing Room Button BG <input data-design-key="writingRoomButtonBg" data-css-var="--writing-room-button-bg" type="color" value="#e88f69"></label>
+              <label>Writing Room Button Border <input data-design-key="writingRoomButtonBorder" data-css-var="--writing-room-button-border" type="color" value="#724837"></label>
+              <label>Writing Room Button Text <input data-design-key="writingRoomButtonText" data-css-var="--writing-room-button-text" type="color" value="#000000"></label>
+              <label>Writing Room Button Text Size <input data-design-key="writingRoomButtonTextSize" data-css-var="--writing-room-button-text-size" data-suffix="rem" type="number" min="0.7" max="2" step="0.05" value="1"></label>
+              <label>Status Box BG <input id="statusBgColor" type="color" value="#000000"></label>
+              <label>Status Box Border <input id="statusBorderColor" type="color" value="#a97b38"></label>
+              <label>Status Box Text <input id="statusTextColor" type="color" value="#fbf4d6"></label>
+              <label>Status Box Text Size <input data-design-key="statusTextSize" data-css-var="--status-text-size" data-suffix="rem" type="number" min="0.65" max="1.5" step="0.05" value="0.86"></label>
+              <label>Menu Bar BG <input data-design-key="commandBarBg" data-css-var="--command-bar-bg" type="color" value="#28133f"></label>
+              <label>Menu Bar Border <input data-design-key="commandBarBorder" data-css-var="--command-bar-border" type="color" value="#e88f69"></label>
+              <label>Menu Text <input data-design-key="commandBarText" data-css-var="--command-bar-text" type="color" value="#fbf4d6"></label>
+              <label>Menu Text Size <input data-design-key="commandBarTextSize" data-css-var="--command-bar-text-size" data-suffix="rem" type="number" min="0.7" max="1.7" step="0.05" value="0.95"></label>
+              <label>Dropdown Button BG <input data-design-key="dropdownButtonBg" data-css-var="--dropdown-button-bg" type="color" value="#2c2c2c"></label>
+              <label>Dropdown Button Border <input data-design-key="dropdownButtonBorder" data-css-var="--dropdown-button-border" type="color" value="#724837"></label>
+              <label>Dropdown Button Text <input data-design-key="dropdownButtonText" data-css-var="--dropdown-button-text" type="color" value="#fbf4d6"></label>
+              <label>Dropdown Button Text Size <input data-design-key="dropdownButtonTextSize" data-css-var="--dropdown-button-text-size" data-suffix="rem" type="number" min="0.65" max="1.5" step="0.05" value="0.9"></label>
+              <label>Right Icon Button BG <input data-design-key="rightIconButtonBg" data-css-var="--right-icon-button-bg" type="color" value="#2c2c2c"></label>
+              <label>Right Icon Button Border <input data-design-key="rightIconButtonBorder" data-css-var="--right-icon-button-border" type="color" value="#724837"></label>
+              <label>Right Icon Size <input data-design-key="rightIconSize" data-css-var="--right-icon-size" data-suffix="rem" type="number" min="0.7" max="2" step="0.05" value="1"></label>
+              <div class="placeholder-card">Menu button ordering and custom blank buttons will be added later.</div>
+            </details>
 
-          <details class="element-designer-card" data-designer-card="settings">
-            <summary>Settings Window</summary>
-            <p class="design-section-note">Settings panel, settings cards, labels, inputs, and scrollbars.</p>
-          </details>
+            <details class="element-designer-card" data-designer-card="writing-room">
+              <summary>Writing Room / Filing Cabinet</summary>
+              <label class="inherit-row"><input type="checkbox" data-inherit-section="writing-room"> Use System Defaults</label>
+              <p class="design-section-note">Filing Cabinet window, folders, tabs, document cards, metadata pills, trash, and jump rail.</p>
+              <label>Window BG <input id="panelBgColor" type="color" value="#211812"></label>
+              <label>Window Border <input id="panelBorderColor" type="color" value="#724837"></label>
+              <label>Window Shadow <input data-design-key="writingRoomShadow" data-css-var="--writing-room-shadow-color" type="color" value="#000000"></label>
+              <label>Title Color <input data-design-key="writingRoomTitleColor" data-css-var="--writing-room-title-color" type="color" value="#e88f69"></label>
+              <label>Title Size <input data-design-key="writingRoomTitleSize" data-css-var="--writing-room-title-size" data-suffix="rem" type="number" min="0.8" max="2" step="0.05" value="1.05"></label>
+              <label>Header Icon Size <input data-design-key="writingRoomHeaderIconSize" data-css-var="--writing-room-header-icon-size" data-suffix="rem" type="number" min="0.8" max="2.2" step="0.05" value="1"></label>
+              <label>Folder Icon Size <input data-design-key="folderIconSize" data-css-var="--folder-icon-size" data-suffix="rem" type="number" min="0.8" max="2" step="0.05" value="1"></label>
+              <label>Tab Icon Size <input data-design-key="tabIconSize" data-css-var="--tab-icon-size" data-suffix="rem" type="number" min="0.8" max="2" step="0.05" value="1"></label>
+              <label>Document Icon Size <input data-design-key="docIconSize" data-css-var="--doc-icon-size" data-suffix="rem" type="number" min="0.8" max="2" step="0.05" value="1"></label>
+              <label>Folder Row BG <input data-design-key="folderRowBg" data-css-var="--folder-row-bg" type="color" value="#2c2c2c"></label>
+              <label>Folder Row Border <input data-design-key="folderRowBorder" data-css-var="--folder-row-border" type="color" value="#724837"></label>
+              <label>Folder Text <input data-design-key="folderTextColor" data-css-var="--folder-text-color" type="color" value="#fbf4d6"></label>
+              <label>Folder Text Size <input data-design-key="folderTextSize" data-css-var="--folder-text-size" data-suffix="rem" type="number" min="0.7" max="1.6" step="0.05" value="0.95"></label>
+              <label>Tab Row BG <input data-design-key="tabRowBg" data-css-var="--tab-row-bg" type="color" value="#28133f"></label>
+              <label>Tab Row Border <input data-design-key="tabRowBorder" data-css-var="--tab-row-border" type="color" value="#563485"></label>
+              <label>Tab Text <input data-design-key="tabTextColor" data-css-var="--tab-text-color" type="color" value="#e7a2ff"></label>
+              <label>Tab Text Size <input data-design-key="tabTextSize" data-css-var="--tab-text-size" data-suffix="rem" type="number" min="0.7" max="1.5" step="0.05" value="0.9"></label>
+              <label>Document Row BG <input data-design-key="docRowBg" data-css-var="--doc-row-bg" type="color" value="#2c2c2c"></label>
+              <label>Document Row Border <input data-design-key="docRowBorder" data-css-var="--doc-row-border" type="color" value="#724837"></label>
+              <label>Document Text <input data-design-key="docTextColor" data-css-var="--doc-text-color" type="color" value="#fbf4d6"></label>
+              <label>Document Text Size <input data-design-key="docTextSize" data-css-var="--doc-text-size" data-suffix="rem" type="number" min="0.65" max="1.4" step="0.05" value="0.9"></label>
+              <label>Metadata Pill BG <input data-design-key="metadataPillBg" data-css-var="--metadata-pill-bg" type="color" value="#563485"></label>
+              <label>Metadata Pill Border <input data-design-key="metadataPillBorder" data-css-var="--metadata-pill-border" type="color" value="#724837"></label>
+              <label>Trash BG <input data-design-key="trashBg" data-css-var="--trash-bg" type="color" value="#28133f"></label>
+              <label>Jump Rail Line <input data-design-key="jumpRailLine" data-css-var="--jump-rail-line" type="color" value="#69635f"></label>
+              <label>Jump Rail Button BG <input data-design-key="jumpRailButtonBg" data-css-var="--jump-rail-button-bg" type="color" value="#2c2c2c"></label>
+            </details>
 
-          <details class="element-designer-card" data-designer-card="tcards">
-            <summary>Transclusion Cards</summary>
-            <p class="design-section-note">Default TCard colors and TCard panel styling. Detailed TCard styles can also be changed in the Transclusion Cards panel.</p>
-          </details>
-        </div>
-        <div class="design-preview-column">
-          <div class="design-preview"><article><h4>Preview Title</h4><p>This preview shows sample dynamic text inside a bordered panel/card.</p><p><a href="#">Normal link</a> <a class="pill-link" href="#">Link Pill</a></p><button type="button">Preview Button</button></article></div>
-          <div class="current-color-box" id="currentColorBox" draggable="true" aria-label="Current color">#e88f69</div>
-          <label class="hex-control">Hex Code <input id="activeColorHex" type="text" value="#e88f69" maxlength="7" placeholder="#e88f69"></label>
-          <div id="favoriteColors" class="favorite-colors" aria-label="Favorite colors"><button type="button" data-favorite-color="#000000">#000000</button><button type="button" data-favorite-color="#28133f">#28133f</button><button type="button" data-favorite-color="#211812">#211812</button><button type="button" data-favorite-color="#563485">#563485</button><button type="button" data-favorite-color="#724837">#724837</button><button type="button" data-favorite-color="#a97b38">#a97b38</button><button type="button" data-favorite-color="#c55222">#c55222</button><button type="button" data-favorite-color="#e88f69">#e88f69</button><button type="button" data-favorite-color="#2f251c">#2f251c</button><button type="button" data-favorite-color="#2c2c2c">#2c2c2c</button><button type="button" data-favorite-color="#fbf4d6">#fbf4d6</button><button type="button" data-favorite-color="#ffffff">#ffffff</button><button type="button" data-favorite-color="#4b2b1f">#4b2b1f</button><button type="button" data-favorite-color="#8f5cff">#8f5cff</button><button type="button" data-favorite-color="#d7a56d">#d7a56d</button><button type="button" data-favorite-color="#101010">#101010</button></div>
-          <div class="export-actions">
-            <button id="applyDesignButton" type="button">Apply</button>
-            <button id="resetDesignButton" type="button">Reset</button>
+            <details class="element-designer-card" data-designer-card="subnoto">
+              <summary>Subnoto</summary>
+              <p class="placeholder-card">Reserved for the future Subnoto clipboard workspace.</p>
+            </details>
+
+            <details class="element-designer-card" data-designer-card="specnoto">
+              <summary>Specnoto</summary>
+              <p class="placeholder-card">Reserved for the future Specnoto search/find workspace.</p>
+            </details>
+
+            <details class="element-designer-card" data-designer-card="writing-area">
+              <summary>Writing Area</summary>
+              <label class="inherit-row"><input type="checkbox" data-inherit-section="writing-area"> Use System Defaults</label>
+              <p class="design-section-note">Main editor, titles, headings, links, Link Pills, emphasis boxes, tables, and the bottom details bar.</p>
+              <label>Writing Surface BG <input data-design-key="writingSurfaceBg" data-css-var="--writing-surface-bg" type="color" value="#211812"></label>
+              <label>Overlay Transparency % <input data-design-key="writingOverlayOpacity" data-css-var="--writing-overlay-opacity" type="number" min="0" max="100" value="92"></label>
+              <label>Writing Surface Border <input data-design-key="writingSurfaceBorder" data-css-var="--writing-surface-border" type="color" value="#724837"></label>
+              <label>Document Title Color <input data-design-key="docTitleColor" data-css-var="--doc-title-color" type="color" value="#fbf4d6"></label>
+              <label>Document Title Size <input data-design-key="docTitleSize" data-css-var="--doc-title-size" data-suffix="rem" type="number" min="1" max="4" step="0.05" value="2.1"></label>
+              <label>Normal Text Color <input data-design-key="editorTextColor" data-css-var="--editor-text-color" type="color" value="#fbf4d6"></label>
+              <label>Normal Text Size <input data-design-key="editorTextSize" data-css-var="--editor-text-size" data-suffix="rem" type="number" min="0.7" max="1.5" step="0.05" value="1"></label>
+              <label>H1 Color <input data-design-key="h1Color" data-css-var="--h1-color" type="color" value="#fbf4d6"></label>
+              <label>H1 Size <input data-design-key="h1Size" data-css-var="--h1-size" data-suffix="rem" type="number" min="1" max="3" step="0.05" value="1.65"></label>
+              <label>H2 Color <input data-design-key="h2Color" data-css-var="--h2-color" type="color" value="#fbf4d6"></label>
+              <label>H2 Size <input data-design-key="h2Size" data-css-var="--h2-size" data-suffix="rem" type="number" min="0.9" max="2.5" step="0.05" value="1.35"></label>
+              <label>H3 Color <input data-design-key="h3Color" data-css-var="--h3-color" type="color" value="#fbf4d6"></label>
+              <label>H3 Size <input data-design-key="h3Size" data-css-var="--h3-size" data-suffix="rem" type="number" min="0.85" max="2" step="0.05" value="1.15"></label>
+              <label>Normal Link Color <input data-design-key="linkColor" data-css-var="--link-color" type="color" value="#e88f69"></label>
+              <label>Normal Link Size <input data-design-key="linkSize" data-css-var="--link-size" data-suffix="rem" type="number" min="0.7" max="1.5" step="0.05" value="1"></label>
+              <label>Link Pill BG <input data-design-key="linkPillBg" data-css-var="--link-pill-bg" type="color" value="#e88f69"></label>
+              <label>Link Pill Border <input data-design-key="linkPillBorder" data-css-var="--link-pill-border" type="color" value="#724837"></label>
+              <label>Link Pill Text <input data-design-key="linkPillText" data-css-var="--link-pill-text" type="color" value="#000000"></label>
+              <label>Link Pill Text Size <input data-design-key="linkPillTextSize" data-css-var="--link-pill-text-size" data-suffix="rem" type="number" min="0.65" max="1.5" step="0.05" value="0.9"></label>
+              <label>Emphasis BG <input id="emphasisBgColor" type="color" value="#2f251c"></label>
+              <label>Emphasis Border <input id="emphasisBorderColor" type="color" value="#563485"></label>
+              <label>Emphasis Text <input id="emphasisTextColor" type="color" value="#fbf4d6"></label>
+              <label>Emphasis Text Size <input data-design-key="emphasisTextSize" data-css-var="--emphasis-text-size" data-suffix="rem" type="number" min="0.7" max="1.5" step="0.05" value="1"></label>
+              <label>Table BG <input data-design-key="tableBg" data-css-var="--table-bg" type="color" value="#211812"></label>
+              <label>Table Border <input data-design-key="tableBorder" data-css-var="--table-border" type="color" value="#724837"></label>
+              <label>Table Heading BG <input data-design-key="tableHeadBg" data-css-var="--table-head-bg" type="color" value="#2f251c"></label>
+              <label>Table Heading Text <input data-design-key="tableHeadText" data-css-var="--table-head-text" type="color" value="#fbf4d6"></label>
+              <label>Table Text Size <input data-design-key="tableTextSize" data-css-var="--table-text-size" data-suffix="rem" type="number" min="0.65" max="1.4" step="0.05" value="0.95"></label>
+            </details>
+
+            <details class="element-designer-card" data-designer-card="help">
+              <summary>Help / Guidebook</summary>
+              <label class="inherit-row"><input type="checkbox" data-inherit-section="help"> Use System Defaults</label>
+              <p class="design-section-note">Help panel surface, logo, title, headings, guide text, rules, and scrollbars.</p>
+              <label>Help Window BG <input data-design-key="helpBg" data-css-var="--help-bg" type="color" value="#211812"></label>
+              <label>Help Window Border <input data-design-key="helpBorder" data-css-var="--help-border" type="color" value="#724837"></label>
+              <label>Help Logo Size <input data-design-key="helpLogoSize" data-css-var="--help-logo-size" data-suffix="rem" type="number" min="1" max="5" step="0.1" value="2.2"></label>
+              <label>Help Title Color <input data-design-key="helpTitleColor" data-css-var="--help-title-color" type="color" value="#e88f69"></label>
+              <label>Help Title Size <input data-design-key="helpTitleSize" data-css-var="--help-title-size" data-suffix="rem" type="number" min="1" max="3" step="0.05" value="1.4"></label>
+              <label>Help Text Color <input data-design-key="helpTextColor" data-css-var="--help-text-color" type="color" value="#fbf4d6"></label>
+              <label>Help Text Size <input data-design-key="helpTextSize" data-css-var="--help-text-size" data-suffix="rem" type="number" min="0.7" max="1.5" step="0.05" value="1"></label>
+              <label>Help Heading Color <input data-design-key="helpHeadingColor" data-css-var="--help-heading-color" type="color" value="#fbf4d6"></label>
+              <label>Help Heading Size <input data-design-key="helpHeadingSize" data-css-var="--help-heading-size" data-suffix="rem" type="number" min="0.9" max="2" step="0.05" value="1.15"></label>
+              <label>Help Rule Color <input data-design-key="helpRuleColor" data-css-var="--help-rule-color" type="color" value="#724837"></label>
+            </details>
+
+            <details class="element-designer-card" data-designer-card="settings">
+              <summary>Settings Window</summary>
+              <label class="inherit-row"><input type="checkbox" data-inherit-section="settings"> Use System Defaults</label>
+              <p class="design-section-note">Settings panel, cards, labels, inputs, scrollbars, and this Element Designer.</p>
+              <label>Settings Window BG <input data-design-key="settingsBg" data-css-var="--settings-bg" type="color" value="#211812"></label>
+              <label>Settings Window Border <input data-design-key="settingsBorder" data-css-var="--settings-border" type="color" value="#724837"></label>
+              <label>Settings Title Color <input data-design-key="settingsTitleColor" data-css-var="--settings-title-color" type="color" value="#e88f69"></label>
+              <label>Settings Title Size <input data-design-key="settingsTitleSize" data-css-var="--settings-title-size" data-suffix="rem" type="number" min="1" max="3" step="0.05" value="1.5"></label>
+              <label>Settings Card BG <input data-design-key="settingsCardBg" data-css-var="--settings-card-bg" type="color" value="#211812"></label>
+              <label>Settings Card Border <input data-design-key="settingsCardBorder" data-css-var="--settings-card-border" type="color" value="#724837"></label>
+              <label>Settings Label Color <input data-design-key="settingsLabelColor" data-css-var="--settings-label-color" type="color" value="#563485"></label>
+              <label>Settings Label Size <input data-design-key="settingsLabelSize" data-css-var="--settings-label-size" data-suffix="rem" type="number" min="0.65" max="1.4" step="0.05" value="0.82"></label>
+              <label>Settings Input BG <input data-design-key="settingsInputBg" data-css-var="--settings-input-bg" type="color" value="#000000"></label>
+              <label>Settings Input Text <input data-design-key="settingsInputText" data-css-var="--settings-input-text" type="color" value="#fbf4d6"></label>
+              <label>Element Designer Font Size <input data-design-key="elementDesignerTextSize" data-css-var="--element-designer-text-size" data-suffix="rem" type="number" min="0.65" max="1.4" step="0.05" value="0.88"></label>
+            </details>
+
+            <details class="element-designer-card" data-designer-card="tcards">
+              <summary>Transclusion Cards</summary>
+              <label class="inherit-row"><input type="checkbox" data-inherit-section="tcards"> Use System Defaults</label>
+              <p class="design-section-note">Default TCard styling and the Transclusion Cards side panel.</p>
+              <label>TCard Default BG <input data-design-key="tcardBg" data-css-var="--tcard-bg" type="color" value="#28133f"></label>
+              <label>TCard Default Border <input data-design-key="tcardBorder" data-css-var="--tcard-border" type="color" value="#e88f69"></label>
+              <label>TCard Text <input data-design-key="tcardText" data-css-var="--tcard-text" type="color" value="#fbf4d6"></label>
+              <label>TCard Text Size <input data-design-key="tcardTextSize" data-css-var="--tcard-text-size" data-suffix="rem" type="number" min="0.65" max="1.5" step="0.05" value="0.95"></label>
+              <label>TCard Heading <input data-design-key="tcardHeading" data-css-var="--tcard-heading" type="color" value="#e88f69"></label>
+              <label>TCard Panel BG <input data-design-key="tcardPanelBg" data-css-var="--tcard-panel-bg" type="color" value="#211812"></label>
+              <label>TCard Panel Border <input data-design-key="tcardPanelBorder" data-css-var="--tcard-panel-border" type="color" value="#724837"></label>
+              <label>TCard Input BG <input data-design-key="tcardInputBg" data-css-var="--tcard-input-bg" type="color" value="#28133f"></label>
+              <label>TCard Input Text <input data-design-key="tcardInputText" data-css-var="--tcard-input-text" type="color" value="#fbf4d6"></label>
+            </details>
           </div>
+
+          <aside class="design-preview-column" aria-label="Design preview and colors">
+            <div class="design-preview">
+              <article>
+                <h4>Preview Title</h4>
+                <p>This preview shows sample dynamic text inside a bordered panel/card.</p>
+                <div class="preview-card"><strong>Sample Card</strong><span>Panel text and section border preview.</span></div>
+                <p><a href="#">Normal link</a> <a class="pill-link" href="#">Link Pill</a></p>
+                <button type="button">Preview Button</button>
+              </article>
+            </div>
+            <div class="current-color-box" id="currentColorBox" draggable="true" aria-label="Current color">#e88f69</div>
+            <label class="hex-control">Hex Code <input id="activeColorHex" type="text" value="#e88f69" maxlength="7" placeholder="#e88f69"></label>
+            <div id="favoriteColors" class="favorite-colors" aria-label="Favorite colors"><button type="button" data-favorite-color="#000000">#000000</button><button type="button" data-favorite-color="#28133f">#28133f</button><button type="button" data-favorite-color="#211812">#211812</button><button type="button" data-favorite-color="#563485">#563485</button><button type="button" data-favorite-color="#724837">#724837</button><button type="button" data-favorite-color="#a97b38">#a97b38</button><button type="button" data-favorite-color="#c55222">#c55222</button><button type="button" data-favorite-color="#e88f69">#e88f69</button><button type="button" data-favorite-color="#2f251c">#2f251c</button><button type="button" data-favorite-color="#2c2c2c">#2c2c2c</button><button type="button" data-favorite-color="#fbf4d6">#fbf4d6</button><button type="button" data-favorite-color="#ffffff">#ffffff</button><button type="button" data-favorite-color="#4b2b1f">#4b2b1f</button><button type="button" data-favorite-color="#8f5cff">#8f5cff</button><button type="button" data-favorite-color="#d7a56d">#d7a56d</button><button type="button" data-favorite-color="#101010">#101010</button></div>
+            <div class="export-actions">
+              <button id="applyDesignButton" type="button">Apply</button>
+              <button id="resetDesignButton" type="button">Reset</button>
+            </div>
+          </aside>
         </div>
       </section>
 
