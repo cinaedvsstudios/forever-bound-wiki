@@ -3847,7 +3847,7 @@ code, pre, .editor code { font-family: "Courier New", Courier, monospace !import
 .toggle-label input[type="checkbox"] { width: auto; }
 
 
-/* v2.8 Assist Rail QA: locked to writing surface, active markers only, icon field alignment */
+/* v2.9 Assist Rail / background image QA (based on v2.8): locked to writing surface, active markers only, icon field alignment */
 :root {
   --assist-rail-bg: color-mix(in srgb, var(--panel-bg, #211812) 72%, transparent);
   --assist-rail-border: color-mix(in srgb, var(--line, #724837) 65%, transparent);
@@ -3964,4 +3964,118 @@ body[data-writing-surface-layout] .writing-assist-rail { left: 0; right: auto; t
   max-width: 1.25em;
   max-height: 1.25em;
   object-fit: contain;
+}
+
+
+/* v2.9 Assist Rail, background image scaling, search highlight, and settings button polish */
+:root {
+  --app-bg-size: 100%;
+  --writing-desk-glow-opacity: 0.82;
+  --top-bar-image-size: 100%;
+  --top-bar-bg-size: 100%;
+  --command-bar-bg-size: 100%;
+  --writing-room-bg-size: 100%;
+  --writing-panel-bg-size: 100%;
+  --writing-surface-bg-size: 100%;
+  --writing-title-bg-size: 100%;
+  --settings-bg-size: 100%;
+  --help-bg-size: 100%;
+  --tcard-panel-bg-size: 100%;
+  --emoji-window-bg-size: 100%;
+  --settings-search-highlight: #28133f;
+  --settings-search-highlight-border: #563485;
+}
+.writer-shell {
+  background-image: linear-gradient(rgb(0 0 0 / var(--writing-desk-glow-opacity)), rgb(33 24 18 / var(--writing-desk-glow-opacity))), var(--app-bg-image) !important;
+  background-size: cover, var(--app-bg-size) !important;
+  background-position: center, center !important;
+  background-attachment: fixed, fixed !important;
+}
+.writer-header.toolbar {
+  background-image: var(--top-bar-bg-image), linear-gradient(90deg, var(--top-bar-bg), var(--top-bar-bg)) !important;
+  background-size: var(--top-bar-bg-size), cover !important;
+  background-position: center !important;
+}
+.icon-command-bar.top-command-menus,
+.top-command-menus {
+  background-image: var(--command-bar-bg-image), linear-gradient(90deg, var(--command-bar-bg), var(--command-bar-bg)) !important;
+  background-size: var(--command-bar-bg-size), cover !important;
+  background-position: center !important;
+}
+.writing-room-panel {
+  background-image: var(--writing-room-bg-image), linear-gradient(var(--panel-bg), var(--panel-bg)) !important;
+  background-size: var(--writing-room-bg-size), cover !important;
+  background-position: center !important;
+}
+.title-strip {
+  background-image: var(--writing-title-bg-image) !important;
+  background-size: var(--writing-title-bg-size) !important;
+  background-position: center !important;
+}
+.editor {
+  background-image: var(--writing-surface-bg-image), linear-gradient(rgb(33 24 18 / var(--writing-overlay-opacity)), rgb(33 24 18 / var(--writing-overlay-opacity))) !important;
+  background-size: var(--writing-surface-bg-size), cover !important;
+  background-position: center !important;
+}
+.settings-panel {
+  background-image: var(--settings-bg-image), linear-gradient(var(--settings-bg), var(--settings-bg)) !important;
+  background-size: var(--settings-bg-size), cover !important;
+  background-position: center !important;
+}
+.help-panel {
+  background-image: var(--help-bg-image), linear-gradient(var(--help-bg), var(--help-bg)) !important;
+  background-size: var(--help-bg-size), cover !important;
+  background-position: center !important;
+}
+.block-panel {
+  background-image: var(--tcard-panel-bg-image), linear-gradient(var(--tcard-panel-bg), var(--tcard-panel-bg)) !important;
+  background-size: var(--tcard-panel-bg-size), cover !important;
+  background-position: center !important;
+}
+.emoji-picker {
+  background-image: var(--emoji-window-bg-image), linear-gradient(var(--emoji-window-bg), var(--emoji-window-bg)) !important;
+  background-size: var(--emoji-window-bg-size), cover !important;
+  background-position: center !important;
+}
+.setting-search-match {
+  outline: 1px dashed var(--settings-search-highlight-border) !important;
+  background: color-mix(in srgb, var(--settings-search-highlight) 18%, transparent) !important;
+}
+.setting-search-current {
+  background: color-mix(in srgb, var(--settings-search-highlight) 46%, transparent) !important;
+  outline-color: var(--settings-search-highlight-border) !important;
+}
+.settings-save-button {
+  color: var(--settings-header-button-text, var(--settings-input-text, #fbf4d6)) !important;
+  -webkit-text-fill-color: var(--settings-header-button-text, var(--settings-input-text, #fbf4d6)) !important;
+}
+.writing-assist-rail {
+  z-index: 4 !important;
+  position: absolute !important;
+  border-radius: 999px !important;
+  padding: 0 !important;
+}
+.assist-rail-marker {
+  position: absolute !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  opacity: 1 !important;
+  filter: none !important;
+  background: rgba(0,0,0,0.28) !important;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 60%, transparent) !important;
+}
+.assist-rail-marker[data-marker-type="emphasis"] { color: var(--emphasis-border, var(--assist-rail-active)); }
+.assist-rail-marker[data-marker-type="deprecated"] { color: var(--dynamic-text, var(--assist-rail-active)); }
+.design-controls label:has(input[data-css-url="true"]),
+.design-controls label:has(input[data-design-key$="Image"]),
+.design-controls label:has(input[data-design-key$="ImageSize"]),
+.design-controls label:has(input[data-design-key$="BgSize"]) {
+  align-items: center !important;
+}
+.element-designer-card input[type="color"],
+.favorite-color-box,
+.current-color-box,
+#favoriteColors button {
+  border: 1px solid #6b5b50 !important;
+  box-shadow: none !important;
 }

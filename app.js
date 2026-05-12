@@ -576,7 +576,7 @@ function bindEditorEvents() {
   els.helpPanel.querySelector("header")?.addEventListener("pointerdown", (event) => startPanelDrag(event, els.helpPanel));
   window.addEventListener("pointermove", movePanelDrag);
   window.addEventListener("pointerup", stopPanelDrag);
-  window.addEventListener("resize", updateWritingAssistRailPosition);
+  window.addEventListener("resize", renderWritingAssistRail);
   window.addEventListener("scroll", updateWritingAssistRailPosition, { passive: true });
   document.addEventListener("keydown", (event) => { if (event.key === "Escape") { toggleHelpPanel(false); toggleSettingsPanel(false); toggleWritingRoomPanel(false); } });
   bindDesignColorTools();
@@ -922,21 +922,51 @@ async function handleSelectionMenuClick(event) {
 function renderWritingAssistRail() {
   if (!els.writingAssistRail || !els.editor) return;
   const doc = activeDocument();
-  const deprecatedCount = (state.deprecatedParagraphs || []).filter((item) => item.documentId === doc.id).length;
-  const tcardCount = els.editor.querySelectorAll(".transclusion-ref[data-block-id]").length;
-  const linkCount = els.editor.querySelectorAll("a[href]").length;
-  const bookmarkCount = getBookmarks().length;
-  const markers = [];
-  if (deprecatedCount) markers.push({ type: "deprecated", icon: "🕰️", title: `${deprecatedCount} deprecated paragraph history ${deprecatedCount === 1 ? "record" : "records"} in this file`, count: deprecatedCount });
-  if (tcardCount) markers.push({ type: "tcard", icon: "𝞃", title: `${tcardCount} TCard ${tcardCount === 1 ? "reference" : "references"} in this file`, count: tcardCount });
-  if (linkCount) markers.push({ type: "link", icon: "🔗", title: `${linkCount} link ${linkCount === 1 ? "reference" : "references"} in this file`, count: linkCount });
-  if (bookmarkCount) markers.push({ type: "anchor", icon: "⚓", title: `${bookmarkCount} Link Anchor ${bookmarkCount === 1 ? "bookmark" : "bookmarks"} in this file`, count: bookmarkCount });
-  els.writingAssistRail.classList.toggle("is-empty", !markers.length);
-  els.writingAssistRail.innerHTML = markers.map((marker) => `
-    <span class="assist-rail-marker has-count" data-marker-type="${escapeAttr(marker.type)}" title="${escapeAttr(marker.title)}">
-      ${marker.icon}<small>${escapeHtml(marker.count)}</small>
-    </span>`).join("");
+  const targets = [];
+
+  els.editor.querySelectorAll(".transclusion-ref[data-block-id]").forEach((node) => {
+    targets.push({ node, type: "tcard", icon: "𝞃", title: `TCard: ${node.dataset.blockId || "Transclusion Card"}` });
+  });
+  els.editor.querySelectorAll(".emphasis-box").forEach((node) => {
+    targets.push({ node, type: "emphasis", icon: "ε", title: "Emphasis box" });
+  });
+  els.editor.querySelectorAll("a[href]").forEach((node) => {
+    targets.push({ node, type: "link", icon: "🔗", title: `Link: ${node.getAttribute("href") || "reference"}` });
+  });
+  els.editor.querySelectorAll("[data-bookmark='true'][id]").forEach((node) => {
+    targets.push({ node, type: "anchor", icon: "⚓", title: `Link Anchor: ${node.id}` });
+  });
+  (state.deprecatedParagraphs || [])
+    .filter((item) => item.documentId === doc.id)
+    .forEach((item) => {
+      const node = elementForDeprecatedRecord(item);
+      if (node) targets.push({ node, type: "deprecated", icon: "🕰️", title: `Deprecated paragraph saved ${formatDateTime(item.createdAt)}` });
+    });
+
+  els.writingAssistRail.classList.toggle("is-empty", !targets.length);
+  els.writingAssistRail.innerHTML = "";
+  targets.forEach((target, index) => {
+    const marker = document.createElement("span");
+    marker.className = "assist-rail-marker";
+    marker.dataset.markerType = target.type;
+    marker.dataset.assistTargetIndex = String(index);
+    marker.title = target.title;
+    marker.textContent = target.icon;
+    marker._assistTarget = target.node;
+    els.writingAssistRail.appendChild(marker);
+  });
   updateWritingAssistRailPosition();
+}
+
+function elementForDeprecatedRecord(record) {
+  if (!record?.approximateReference) return null;
+  if (record.approximateReference.startsWith("#")) {
+    try { return els.editor.querySelector(`#${CSS.escape(record.approximateReference.slice(1))}`); } catch { return null; }
+  }
+  const match = record.approximateReference.match(/^block-index:(\d+)$/);
+  if (!match) return null;
+  const candidates = Array.from(els.editor.querySelectorAll("p, li, td, th, blockquote, h1, h2, h3, h4, h5, h6, div, aside"));
+  return candidates[Number(match[1])] || null;
 }
 
 function updateWritingAssistRailPosition() {
@@ -945,11 +975,29 @@ function updateWritingAssistRailPosition() {
   const shell = els.editorApp || document.querySelector(".writer-shell");
   const editorRect = els.editor.getBoundingClientRect();
   const shellRect = shell?.getBoundingClientRect?.() || { left: 0, top: 0 };
+  const headerRect = document.querySelector(".writer-header")?.getBoundingClientRect?.();
   const left = Math.max(8, editorRect.left - shellRect.left - 40);
-  const top = Math.max(0, editorRect.top - shellRect.top);
+  const rawTop = editorRect.top - shellRect.top;
+  const headerSafeTop = headerRect ? Math.max(rawTop, headerRect.bottom - shellRect.top + 8) : rawTop;
   els.writingAssistRail.style.left = `${left}px`;
-  els.writingAssistRail.style.top = `${top}px`;
+  els.writingAssistRail.style.top = `${Math.max(0, headerSafeTop)}px`;
   els.writingAssistRail.style.minHeight = `${Math.max(120, els.editor.offsetHeight)}px`;
+  positionWritingAssistRailMarkers(editorRect, Number(els.writingAssistRail.style.top.replace("px", "")) || 0, rawTop);
+}
+
+function positionWritingAssistRailMarkers(editorRect, railTop, editorTopRelativeToShell) {
+  if (!els.writingAssistRail) return;
+  const railShift = railTop - Math.max(0, editorTopRelativeToShell);
+  els.writingAssistRail.querySelectorAll(".assist-rail-marker").forEach((marker) => {
+    const target = marker._assistTarget;
+    if (!target || !document.body.contains(target)) {
+      marker.hidden = true;
+      return;
+    }
+    const rect = target.getBoundingClientRect();
+    const top = rect.top - editorRect.top + rect.height / 2 - 11 - railShift;
+    marker.style.top = `${Math.max(6, top)}px`;
+  });
 }
 
 async function deprecateSelectedParagraph() {
@@ -2934,6 +2982,7 @@ function extraDesignInputs() {
 }
 
 function applyTopCommandIconSettings(settings) {
+  loadCustomEmojis();
   const defaults = {
     topIconWritingRoom: "📚",
     topIconFormat: "🪶",
@@ -2950,6 +2999,7 @@ function applyTopCommandIconSettings(settings) {
 }
 
 function refreshIconInputPreviews() {
+  loadCustomEmojis();
   document.querySelectorAll(".icon-text-input").forEach((input) => {
     let preview = input.parentElement?.querySelector(".icon-input-preview");
     if (!preview) {
@@ -2986,7 +3036,7 @@ function applyExtraDesignSettings(settings) {
         cssValue = input.checked ? (input.dataset.trueValue || "1") : (input.dataset.falseValue || "0");
       } else if (input.dataset.cssUrl === "true" || input.dataset.cssVar === "--top-bar-image-url") {
         cssValue = value ? `url("${escapeCssUrl(value)}")` : "none";
-      } else if (input.dataset.cssVar === "--writing-overlay-opacity") {
+      } else if (input.dataset.cssVar === "--writing-overlay-opacity" || input.dataset.cssVar === "--writing-desk-glow-opacity") {
         const pct = Math.max(0, Math.min(100, Number(value) || 0));
         cssValue = String(pct / 100);
       } else if (suffix && !String(value).endsWith(suffix)) {
@@ -3325,6 +3375,11 @@ function findBookmarkId(value) {
 
 function cssString(value) {
   return String(value).replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+}
+
+function formatDateTime(value) {
+  if (!value) return "unknown time";
+  try { return new Date(value).toLocaleString(); } catch { return String(value); }
 }
 
 function escapeCssUrl(value) {
