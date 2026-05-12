@@ -204,6 +204,7 @@ const els = {
   settingsSearchInput: document.querySelector("#settingsSearchInput"),
   settingsSearchPrev: document.querySelector("#settingsSearchPrev"),
   settingsSearchNext: document.querySelector("#settingsSearchNext"),
+  settingsSearchCount: document.querySelector("#settingsSearchCount"),
   expandDesignerCards: document.querySelector("#expandDesignerCards"),
   collapseDesignerCards: document.querySelector("#collapseDesignerCards"),
   settingsMenu: document.querySelector(".settings-menu"),
@@ -979,9 +980,9 @@ function updateWritingAssistRailPosition() {
   const left = Math.max(8, editorRect.left - shellRect.left - 40);
   const rawTop = editorRect.top - shellRect.top;
   const headerSafeTop = headerRect ? Math.max(rawTop, headerRect.bottom - shellRect.top + 8) : rawTop;
-  els.writingAssistRail.style.left = `${left}px`;
-  els.writingAssistRail.style.top = `${Math.max(0, headerSafeTop)}px`;
-  els.writingAssistRail.style.minHeight = `${Math.max(120, els.editor.offsetHeight)}px`;
+  els.writingAssistRail.style.setProperty("left", `${left}px`, "important");
+  els.writingAssistRail.style.setProperty("top", `${Math.max(0, headerSafeTop)}px`, "important");
+  els.writingAssistRail.style.setProperty("min-height", `${Math.max(120, els.editor.offsetHeight)}px`, "important");
   positionWritingAssistRailMarkers(editorRect, Number(els.writingAssistRail.style.top.replace("px", "")) || 0, rawTop);
 }
 
@@ -3009,28 +3010,44 @@ function handleSettingsSearchInput() {
   clearSettingsSearchMarks();
   settingsSearchMatches = [];
   settingsSearchIndex = -1;
-  if (!query) return;
+  if (!query) {
+    updateSettingsSearchCount();
+    return;
+  }
   const candidates = Array.from(els.settingsPanel.querySelectorAll("summary, label, h3, h4, p, button"))
     .filter((node) => node.offsetParent !== null && node.textContent.toLowerCase().includes(query));
   settingsSearchMatches = candidates;
   candidates.forEach((node) => node.classList.add("setting-search-match"));
-  moveSettingsSearch(1);
+  if (settingsSearchMatches.length) moveSettingsSearch(1);
+  else updateSettingsSearchCount();
 }
 
 function clearSettingsSearchMarks() {
   els.settingsPanel?.querySelectorAll(".setting-search-match, .setting-search-current").forEach((node) => {
     node.classList.remove("setting-search-match", "setting-search-current");
   });
+  updateSettingsSearchCount();
+}
+
+function updateSettingsSearchCount() {
+  if (!els.settingsSearchCount) return;
+  const total = settingsSearchMatches.length;
+  const current = total ? settingsSearchIndex + 1 : 0;
+  els.settingsSearchCount.textContent = `${current} / ${total}`;
 }
 
 function moveSettingsSearch(direction) {
-  if (!settingsSearchMatches.length) return;
+  if (!settingsSearchMatches.length) {
+    updateSettingsSearchCount();
+    return;
+  }
   settingsSearchMatches.forEach((node) => node.classList.remove("setting-search-current"));
   settingsSearchIndex = (settingsSearchIndex + direction + settingsSearchMatches.length) % settingsSearchMatches.length;
   const node = settingsSearchMatches[settingsSearchIndex];
   node.classList.add("setting-search-current");
   node.closest("details")?.setAttribute("open", "");
   node.scrollIntoView({ block: "center", behavior: "smooth" });
+  updateSettingsSearchCount();
 }
 
 function renderFavoriteColors() {
@@ -3143,7 +3160,7 @@ function applyExtraDesignSettings(settings) {
         cssValue = input.checked ? (input.dataset.trueValue || "1") : (input.dataset.falseValue || "0");
       } else if (input.dataset.cssUrl === "true" || input.dataset.cssVar === "--top-bar-image-url") {
         cssValue = value ? `url("${escapeCssUrl(value)}")` : "none";
-      } else if (input.dataset.cssVar === "--writing-overlay-opacity" || input.dataset.cssVar === "--writing-desk-glow-opacity") {
+      } else if (input.dataset.cssVar && input.dataset.cssVar.toLowerCase().includes("opacity")) {
         const pct = Math.max(0, Math.min(100, Number(value) || 0));
         cssValue = String(pct / 100);
       } else if (suffix && !String(value).endsWith(suffix)) {
@@ -3153,6 +3170,8 @@ function applyExtraDesignSettings(settings) {
     }
   });
   document.body.dataset.writingSurfaceLayout = settings.writingSurfaceLayout || "center";
+  document.body.dataset.deskGlowFlip = settings.writingDeskGlowFlip ? "true" : "false";
+  requestAnimationFrame(updateWritingAssistRailPosition);
   refreshIconInputPreviews();
   applyTopCommandIconSettings(settings);
   document.querySelectorAll("[data-inherit-section]").forEach((input) => {

@@ -4214,3 +4214,59 @@ body[data-writing-surface-layout] .writing-assist-rail { left: 0; right: auto; t
   border-radius: 6px;
   padding: 0 0.25rem;
 }
+
+/* v3.1 rail positioning, desk glow flip, shadows, and settings search counter */
+:root {
+  --top-bar-shadow-color: #000000;
+  --top-bar-shadow-opacity: 0.38;
+  --top-bar-shadow-blur: 18px;
+  --top-bar-shadow-offset: 7px;
+  --writing-surface-shadow-color: #000000;
+  --writing-surface-shadow-opacity: 0.38;
+  --writing-surface-shadow-blur: 28px;
+  --writing-surface-shadow-offset: 12px;
+}
+html,
+body {
+  min-height: 100%;
+  background-color: var(--espresso, #211812);
+}
+.writer-shell {
+  min-height: 100vh !important;
+  min-height: 100dvh !important;
+  background-repeat: no-repeat, repeat !important;
+  background-attachment: fixed, fixed !important;
+  background-clip: border-box !important;
+}
+body[data-desk-glow-flip="true"] .writer-shell {
+  background-image: linear-gradient(rgb(33 24 18 / var(--writing-desk-glow-opacity)), rgb(0 0 0 / var(--writing-desk-glow-opacity))), var(--app-bg-image) !important;
+}
+.writer-header.toolbar {
+  box-shadow: 0 var(--top-bar-shadow-offset) var(--top-bar-shadow-blur) rgb(from var(--top-bar-shadow-color) r g b / var(--top-bar-shadow-opacity)) !important;
+}
+.editor {
+  box-shadow: 0 var(--writing-surface-shadow-offset) var(--writing-surface-shadow-blur) rgb(from var(--writing-surface-shadow-color) r g b / var(--writing-surface-shadow-opacity)) !important;
+}
+.writing-assist-rail {
+  z-index: 3 !important;
+  will-change: left, top, min-height;
+}
+body[data-writing-surface-layout] .writing-assist-rail {
+  right: auto !important;
+  transform: none !important;
+}
+.settings-search-tools {
+  gap: 0.45rem !important;
+  align-items: center !important;
+}
+.settings-search-count {
+  min-width: 3.35rem;
+  padding: 0.35rem 0.55rem;
+  border: 1px solid var(--settings-input-border, var(--line, #724837));
+  border-radius: 999px;
+  background: var(--settings-input-bg, #000000);
+  color: var(--settings-input-text, #fbf4d6);
+  font-size: 0.78rem;
+  text-align: center;
+  white-space: nowrap;
+}
