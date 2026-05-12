@@ -4270,3 +4270,80 @@ body[data-writing-surface-layout] .writing-assist-rail {
   text-align: center;
   white-space: nowrap;
 }
+
+/* v3.2 Element Designer organization + writing desk/title background fixes */
+:root {
+  --app-bg-color: #211812;
+  --writing-desk-bg-color: #211812;
+  --writing-desk-glow-color: #000000;
+  --doc-title-bg: #000000;
+  --doc-title-bg-opacity: 0.24;
+  --doc-title-border: #724837;
+}
+html,
+body {
+  background: var(--app-bg-color, #211812) !important;
+  min-height: 100%;
+}
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background: var(--writing-desk-bg-color, var(--app-bg-color, #211812));
+  pointer-events: none;
+}
+.writer-shell {
+  background-color: var(--writing-desk-bg-color, var(--app-bg-color, #211812)) !important;
+  background-image:
+    linear-gradient(
+      rgb(from var(--writing-desk-glow-color, #000000) r g b / var(--writing-desk-glow-opacity, 0.82)),
+      rgb(from var(--writing-desk-bg-color, #211812) r g b / var(--writing-desk-glow-opacity, 0.82))
+    ),
+    var(--writing-panel-bg-image),
+    var(--app-bg-image) !important;
+  background-size: cover, var(--writing-panel-bg-size, 100%), var(--app-bg-size, 100%) !important;
+  background-position: center, center, center !important;
+  background-repeat: no-repeat, repeat, repeat !important;
+  min-height: 100vh !important;
+  min-height: 100dvh !important;
+}
+body[data-desk-glow-flip="true"] .writer-shell {
+  background-image:
+    linear-gradient(
+      rgb(from var(--writing-desk-bg-color, #211812) r g b / var(--writing-desk-glow-opacity, 0.82)),
+      rgb(from var(--writing-desk-glow-color, #000000) r g b / var(--writing-desk-glow-opacity, 0.82))
+    ),
+    var(--writing-panel-bg-image),
+    var(--app-bg-image) !important;
+}
+.title-strip {
+  background-color: transparent !important;
+  background-image:
+    linear-gradient(
+      rgb(from var(--doc-title-bg, #000000) r g b / var(--doc-title-bg-opacity, 0.24)),
+      rgb(from var(--doc-title-bg, #000000) r g b / var(--doc-title-bg-opacity, 0.24))
+    ),
+    var(--writing-title-bg-image) !important;
+  background-size: cover, var(--writing-title-bg-size, 100%) !important;
+  background-position: center, center !important;
+  background-repeat: no-repeat, repeat !important;
+  border: 1px solid color-mix(in srgb, var(--doc-title-border, #724837) 70%, transparent) !important;
+  border-radius: 18px !important;
+  box-sizing: border-box !important;
+}
+.title-strip:has(.title-input:placeholder-shown),
+.title-strip:empty {
+  border-color: transparent !important;
+}
+.title-strip .title-input {
+  background: transparent !important;
+}
+.design-controls .element-designer-card[data-designer-card="writing-area"] h4,
+.design-controls .element-designer-card[data-designer-card="settings"] h4,
+.design-controls .element-designer-card[data-designer-card="top-menu"] h4,
+.design-controls .element-designer-card[data-designer-card="writing-room"] h4 {
+  margin-top: 1rem;
+  padding-top: 0.65rem;
+  border-top: 1px solid color-mix(in srgb, var(--panel-border, #724837) 70%, transparent);
+}
