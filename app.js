@@ -793,7 +793,9 @@ function renderTransclusions(html) {
     const block = state.blocks[id];
     const content = block ? block.content : "Missing TCard";
     const style = blockStyleAttr(block?.style);
-    return `<aside class="transclusion-ref" contenteditable="false" draggable="true" data-block-id="${escapeAttr(id)}"${style}><button type="button" class="floating-edit-button tcard-edit-button" data-edit-tcard="${escapeAttr(id)}" title="Edit TCard">✎</button><span>${escapeHtml(id)}</span><div>${sanitizeBlockContent(content)}</div></aside>`;
+    const isInlineEditing = state.inlineTCardEditId === id;
+    const classes = `transclusion-ref${isInlineEditing ? " is-inline-editing" : ""}`;
+    return `<aside class="${classes}" contenteditable="false" draggable="${isInlineEditing ? "false" : "true"}" data-block-id="${escapeAttr(id)}"${style}><button type="button" class="floating-edit-button tcard-edit-button" data-edit-tcard="${escapeAttr(id)}" title="${isInlineEditing ? "Finish editing TCard" : "Edit TCard"}">${isInlineEditing ? "✓" : "✎"}</button><span>${escapeHtml(id)}</span><div class="tcard-content" data-inline-tcard-content="${escapeAttr(id)}" contenteditable="${isInlineEditing ? "true" : "false"}" spellcheck="true">${sanitizeBlockContent(content)}</div></aside>`;
   });
 }
 
@@ -1247,7 +1249,13 @@ function handleEditorClick(event) {
   const cell = event.target.closest("th, td");
   if (cell && els.editor.contains(cell)) { state.activeTableCell = cell; highlightActiveTableCell(cell.closest("table")); }
   const tcardButton = event.target.closest("[data-edit-tcard]");
-  if (tcardButton) { toggleBlockPanel(true); selectBlock(tcardButton.dataset.editTcard); return; }
+  if (tcardButton) {
+    const id = tcardButton.dataset.editTcard;
+    toggleBlockPanel(true);
+    selectBlock(id);
+    if (state.inlineTCardEditId === id) commitInlineTCardEdit(id);
+    return;
+  }
   const tableButton = event.target.closest(".table-edit-button");
   if (tableButton) return;
   hideSelectionContextMenu();
@@ -2403,7 +2411,10 @@ function prepareEditorInteractiveBlocks() {
     table.classList.add("editable-table");
     table.setAttribute("draggable", "true");
   });
-  els.editor.querySelectorAll(".emphasis-box, .transclusion-ref").forEach((node) => node.setAttribute("draggable", "true"));
+  els.editor.querySelectorAll(".emphasis-box").forEach((node) => node.setAttribute("draggable", "true"));
+  els.editor.querySelectorAll(".transclusion-ref").forEach((node) => {
+    node.setAttribute("draggable", node.classList.contains("is-inline-editing") ? "false" : "true");
+  });
 }
 
 function handleEditorHover(event) {
@@ -2810,13 +2821,99 @@ function escapeRegExp(value) {
 }
 
 function toggleInlineTCardEditMode() {
+  const existingId = state.inlineTCardEditId;
+  if (existingId) {
+    commitInlineTCardEdit(existingId);
+    return;
+  }
+
   const id = els.blockIdInput.value.trim();
-  if (!id || !state.blocks[id]) { setStatus("Select a TCard first", "dirty"); return; }
-  state.inlineTCardEditId = state.inlineTCardEditId === id ? "" : id;
-  els.editBlockInlineButton.textContent = state.inlineTCardEditId ? "Change" : "Edit TCard";
-  els.editBlockInlineButton.classList.toggle("is-flashing", Boolean(state.inlineTCardEditId));
-  if (!state.inlineTCardEditId) { saveBlock(); }
-  setStatus(state.inlineTCardEditId ? "Edit the TCard content, then click Change" : "TCard changed everywhere", "saved");
+  if (!id || !state.blocks[id]) {
+    setStatus("Select a TCard first", "dirty");
+    return;
+  }
+
+  if (!activeDocument().content.includes(`{{${id}}}`)) {
+    setStatus("Open a file that contains this TCard before inline editing", "dirty");
+    return;
+  }
+
+  state.inlineTCardEditId = id;
+  updateInlineTCardButtonState();
+  renderActiveDocument();
+  renderBookmarks();
+  const editable = els.editor.querySelector(`.transclusion-ref[data-block-id="${cssEscape(id)}"] .tcard-content`);
+  if (!editable) {
+    state.inlineTCardEditId = "";
+    updateInlineTCardButtonState();
+    renderActiveDocument();
+    setStatus("Could not find this TCard in the visible file", "dirty");
+    return;
+  }
+  editable.focus();
+  placeCursorAtEnd(editable);
+  setStatus("Edit the TCard in the writing surface, then click Change", "saved");
+}
+
+function commitInlineTCardEdit(id = state.inlineTCardEditId) {
+  if (!id || !state.blocks[id]) {
+    state.inlineTCardEditId = "";
+    updateInlineTCardButtonState();
+    return;
+  }
+
+  const selector = `.transclusion-ref.is-inline-editing[data-block-id="${cssEscape(id)}"] .tcard-content`;
+  const activeEditable = document.activeElement?.closest?.(selector);
+  const editable = activeEditable || els.editor.querySelector(selector);
+  if (!editable) {
+    state.inlineTCardEditId = "";
+    updateInlineTCardButtonState();
+    renderActiveDocument();
+    setStatus("Inline TCard edit cancelled", "dirty");
+    return;
+  }
+
+  const nextContent = inlineTCardContentToText(editable);
+  state.blocks[id] = {
+    ...state.blocks[id],
+    content: nextContent,
+    updatedAt: new Date().toISOString(),
+  };
+  if (els.blockIdInput.value.trim() === id) els.blockContentInput.value = nextContent;
+  state.inlineTCardEditId = "";
+  updateInlineTCardButtonState();
+  renderBlockList();
+  renderActiveDocument();
+  renderBookmarks();
+  renderExportSourceSelect();
+  markDirty("TCard changed everywhere");
+  setStatus("TCard changed everywhere", "saved");
+}
+
+function updateInlineTCardButtonState() {
+  if (!els.editBlockInlineButton) return;
+  const isEditing = Boolean(state.inlineTCardEditId);
+  els.editBlockInlineButton.textContent = isEditing ? "Change" : "Edit TCard";
+  els.editBlockInlineButton.classList.toggle("is-flashing", isEditing);
+  els.editBlockInlineButton.setAttribute("aria-pressed", String(isEditing));
+}
+
+function inlineTCardContentToText(node) {
+  const clone = node.cloneNode(true);
+  clone.querySelectorAll("br").forEach((br) => br.replaceWith(document.createTextNode("\n")));
+  clone.querySelectorAll("div, p").forEach((element) => {
+    if (element !== clone) element.after(document.createTextNode("\n"));
+  });
+  return clone.textContent.replace(/\u00a0/g, " ").replace(/\n{3,}/g, "\n\n").trim();
+}
+
+function placeCursorAtEnd(node) {
+  const range = document.createRange();
+  range.selectNodeContents(node);
+  range.collapse(false);
+  const selection = window.getSelection();
+  selection.removeAllRanges();
+  selection.addRange(range);
 }
 
 function selectBlock(id) {
@@ -2829,6 +2926,7 @@ function selectBlock(id) {
   els.blockTextInput.value = normalizeHexColor(block.style?.text) || CAPSANOTO_PALETTE.parchment;
   els.blockHeadingInput.value = normalizeHexColor(block.style?.heading) || CAPSANOTO_PALETTE.peach;
   els.blockTextSizeInput.value = block.style?.size || "14";
+  updateInlineTCardButtonState();
 }
 
 function syncAndSave(message) {
@@ -3501,6 +3599,12 @@ function findBookmarkId(value) {
 
 function cssString(value) {
   return String(value).replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+}
+
+
+function cssEscape(value) {
+  if (window.CSS?.escape) return CSS.escape(String(value));
+  return String(value).replace(/(["\\.#:[\],>+~*^$()])/g, "\\$1");
 }
 
 function formatDateTime(value) {
