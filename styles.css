@@ -4079,3 +4079,138 @@ body[data-writing-surface-layout] .writing-assist-rail { left: 0; right: auto; t
   border: 1px solid #6b5b50 !important;
   box-shadow: none !important;
 }
+
+/* v3.0 Group 3B/3C: custom Emoji Spark icon layer + advanced TCard delete/use dialogs */
+.dialog-overlay.is-top-layer {
+  z-index: 9000 !important;
+}
+.emoji-picker {
+  z-index: 3200 !important;
+}
+.emoji-custom .emoji-grid {
+  min-height: 2.6rem;
+}
+.custom-emoji-slot img,
+.custom-inline-icon {
+  width: 1.35em;
+  height: 1.35em;
+  object-fit: contain;
+  vertical-align: -0.2em;
+  display: inline-block;
+}
+.command-glyph .custom-inline-icon,
+.folder-icon .custom-inline-icon,
+.tab-icon .custom-inline-icon,
+.card-icon .custom-inline-icon,
+.icon-input-preview .custom-inline-icon {
+  width: 1.45em;
+  height: 1.45em;
+}
+.tcard-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9100;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(0,0,0,0.62);
+}
+.tcard-modal {
+  width: min(96vw, 760px);
+  max-height: min(88vh, 760px);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 0.85rem;
+  overflow: hidden;
+  color: var(--dialog-text, #fbf4d6);
+  background: var(--dialog-bg, #211812);
+  border: 2px solid var(--dialog-border, #e88f69);
+  border-radius: 22px;
+  box-shadow: 0 24px 70px var(--dialog-shadow, #000);
+  padding: 1rem;
+}
+.tcard-modal header,
+.tcard-modal footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.tcard-modal h2,
+.tcard-modal h3 {
+  margin: 0;
+  color: var(--dialog-text, #fbf4d6);
+}
+.tcard-modal-body {
+  display: grid;
+  gap: 0.65rem;
+  overflow: auto;
+}
+.tcard-delete-id {
+  border: 1px solid var(--dialog-border, #e88f69);
+  background: rgba(0,0,0,0.22);
+  border-radius: 14px;
+  padding: 0.75rem;
+}
+.tcard-modal button {
+  color: var(--dialog-button-text, #fbf4d6);
+  background: var(--dialog-button-bg, #2c2c2c);
+  border: 1px solid var(--dialog-button-border, #e88f69);
+  border-radius: 999px;
+  padding: 0.55rem 0.9rem;
+  box-shadow: 0 4px 12px var(--dialog-button-shadow, #000);
+}
+.tcard-modal button.danger-button {
+  border-color: #ff8f8f;
+  color: #fff;
+}
+.tcard-usage-dialog {
+  width: min(96vw, 980px);
+}
+.tcard-usage-grid {
+  min-height: 360px;
+  display: grid;
+  grid-template-columns: minmax(210px, 0.8fr) minmax(320px, 1.5fr);
+  gap: 0.85rem;
+  overflow: hidden;
+}
+.tcard-usage-list,
+.tcard-usage-preview {
+  min-height: 0;
+  overflow: auto;
+  border: 1px solid var(--dialog-border, #e88f69);
+  border-radius: 16px;
+  background: rgba(0,0,0,0.22);
+  padding: 0.75rem;
+}
+.tcard-usage-list {
+  display: grid;
+  align-content: start;
+  gap: 0.45rem;
+}
+.tcard-usage-list button {
+  border-radius: 14px;
+  text-align: left;
+  display: grid;
+  gap: 0.2rem;
+}
+.tcard-usage-list button.is-active {
+  background: var(--purple, #28133f);
+  border-color: var(--accent, #e88f69);
+}
+.tcard-usage-meta {
+  color: var(--dynamic-text, #e88f69);
+  margin-top: 0.35rem;
+}
+.tcard-usage-snippet {
+  white-space: pre-wrap;
+  line-height: 1.55;
+  margin-top: 0.8rem;
+}
+.tcard-usage-snippet mark {
+  background: var(--purple, #28133f);
+  color: var(--cream, #fbf4d6);
+  border: 1px solid var(--accent, #e88f69);
+  border-radius: 6px;
+  padding: 0 0.25rem;
+}

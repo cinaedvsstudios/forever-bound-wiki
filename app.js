@@ -1087,7 +1087,10 @@ async function createTransclusionFromSelection() {
 
 function openCapsDialog(title, fields) {
   els.dialogTitle.textContent = title;
-  els.dialogBox.classList.toggle("delete-confirm-dialog", title.toLowerCase().includes("delete") || title.toLowerCase().includes("not empty"));
+  const normalizedTitle = title.toLowerCase();
+  const isHighPriorityDialog = normalizedTitle.includes("upload") || normalizedTitle.includes("delete") || normalizedTitle.includes("use") || normalizedTitle.includes("not empty");
+  els.dialogOverlay.classList.toggle("is-top-layer", isHighPriorityDialog);
+  els.dialogBox.classList.toggle("delete-confirm-dialog", normalizedTitle.includes("delete") || normalizedTitle.includes("not empty"));
   els.dialogFields.innerHTML = fields.map(renderDialogField).join("");
   const footer = els.dialogBox.querySelector("footer");
   footer.querySelectorAll(".dialog-footer-field").forEach((item) => item.remove());
@@ -1126,6 +1129,7 @@ function cancelDialog() {
 
 function closeCapsDialog(value) {
   els.dialogOverlay.hidden = true;
+  els.dialogOverlay.classList.remove("is-top-layer");
   const resolve = state.dialogResolver;
   state.dialogResolver = null;
   if (resolve) resolve(value);
@@ -2682,19 +2686,122 @@ function getBlockUsage(id) {
 
 async function confirmDeleteBlock(id) {
   const usage = getBlockUsage(id);
-  const useText = usage.length ? usage.map(({ doc, count }) => `${doc.title}: ${count}`).join("\n") : "No file currently references this TCard.";
-  const result = await openCapsDialog("Delete Transclusion Card", [
-    { html: `<p><strong>Warning:</strong> this Transclusion Card is being used ${usage.reduce((sum, item) => sum + item.count, 0)} times in ${usage.length} documents. Deleting it removes the TCard from the system and removes its references from files.</p>`, compact: true },
-    { name: "uses", label: "Current use", value: useText, multiline: true, readonly: true },
-    { name: "confirm", label: "Type DELETE to confirm", value: "" },
-  ]);
-  if (result?.confirm !== "DELETE") return;
+  const decision = await openBlockDeleteDialog(id, usage);
+  if (decision === "show-use") {
+    await showBlockUsageDialog(id, usage);
+    return;
+  }
+  if (decision !== "yes") return;
+  deleteBlockEverywhere(id);
+}
+
+function deleteBlockEverywhere(id) {
   delete state.blocks[id];
-  state.documents.forEach((doc) => { doc.content = doc.content.replace(new RegExp(escapeRegExp(`{{${id}}}`), "g"), ""); });
+  state.documents.forEach((doc) => {
+    doc.content = doc.content.replace(new RegExp(escapeRegExp(`{{${id}}}`), "g"), "");
+  });
+  state.blockDeleteMode = false;
+  els.deleteBlockButton?.classList.remove("is-active");
   renderActiveDocument();
   renderBlockList();
   renderExportSourceSelect();
   markDirty("TCard deleted everywhere");
+  setContextStatus(`Deleted TCard ${id} everywhere`, "saved");
+}
+
+function blockUsageSummary(usage) {
+  const total = usage.reduce((sum, item) => sum + item.count, 0);
+  return { total, documents: usage.length };
+}
+
+function openBlockDeleteDialog(id, usage) {
+  const { total, documents } = blockUsageSummary(usage);
+  return new Promise((resolve) => {
+    const overlay = document.createElement("div");
+    overlay.className = "tcard-modal-overlay tcard-delete-modal";
+    overlay.innerHTML = `
+      <section class="tcard-modal" role="dialog" aria-modal="true" aria-label="Delete Transclusion Card">
+        <header><h2>Delete Transclusion Card</h2><button type="button" data-tcard-delete-choice="no" aria-label="Close">×</button></header>
+        <div class="tcard-modal-body">
+          <p><strong>Warning:</strong> this Transclusion Card is being used <strong>${total}</strong> times in <strong>${documents}</strong> files.</p>
+          <p>Deleting it removes the TCard from the system and removes its references everywhere.</p>
+          <p class="tcard-delete-id"><strong>${escapeHtml(id)}</strong></p>
+        </div>
+        <footer>
+          <button type="button" data-tcard-delete-choice="show-use">Show Use</button>
+          <button type="button" data-tcard-delete-choice="no">No</button>
+          <button type="button" class="danger-button" data-tcard-delete-choice="yes">Yes, delete everywhere</button>
+        </footer>
+      </section>`;
+    const close = (choice) => {
+      overlay.remove();
+      resolve(choice);
+    };
+    overlay.addEventListener("click", (event) => {
+      if (event.target === overlay) close("no");
+      const button = event.target.closest("[data-tcard-delete-choice]");
+      if (button) close(button.dataset.tcardDeleteChoice);
+    });
+    document.body.append(overlay);
+    overlay.querySelector("[data-tcard-delete-choice='no']")?.focus();
+  });
+}
+
+function showBlockUsageDialog(id, usage) {
+  return new Promise((resolve) => {
+    const overlay = document.createElement("div");
+    overlay.className = "tcard-modal-overlay tcard-usage-modal";
+    const list = usage.length ? usage.map(({ doc, count }, index) => `
+      <button type="button" data-usage-index="${index}" class="${index === 0 ? "is-active" : ""}">
+        <strong>${escapeHtml(doc.title || "Untitled File")}</strong>
+        <span>${count} use${count === 1 ? "" : "s"}</span>
+      </button>`).join("") : `<p class="panel-help">No files currently reference this TCard.</p>`;
+    overlay.innerHTML = `
+      <section class="tcard-modal tcard-usage-dialog" role="dialog" aria-modal="true" aria-label="TCard usage">
+        <header><h2>TCard Use: ${escapeHtml(id)}</h2><button type="button" data-close-usage aria-label="Close">×</button></header>
+        <div class="tcard-usage-grid">
+          <aside class="tcard-usage-list">${list}</aside>
+          <article class="tcard-usage-preview" tabindex="0"></article>
+        </div>
+        <footer><button type="button" data-close-usage>Close</button></footer>
+      </section>`;
+    const preview = overlay.querySelector(".tcard-usage-preview");
+    const renderPreview = (index = 0) => {
+      const item = usage[index];
+      if (!item) {
+        preview.innerHTML = `<p>No preview available.</p>`;
+        return;
+      }
+      preview.innerHTML = blockUsagePreviewHtml(id, item.doc, item.count);
+      overlay.querySelectorAll("[data-usage-index]").forEach((button) => button.classList.toggle("is-active", Number(button.dataset.usageIndex) === index));
+    };
+    overlay.addEventListener("click", (event) => {
+      if (event.target === overlay || event.target.closest("[data-close-usage]")) {
+        overlay.remove();
+        resolve(null);
+        return;
+      }
+      const itemButton = event.target.closest("[data-usage-index]");
+      if (itemButton) renderPreview(Number(itemButton.dataset.usageIndex));
+    });
+    document.body.append(overlay);
+    renderPreview(0);
+    overlay.querySelector("[data-close-usage]")?.focus();
+  });
+}
+
+function blockUsagePreviewHtml(id, doc, count) {
+  const token = `{{${id}}}`;
+  const text = textFromHtml(doc.content || "");
+  const index = text.indexOf(token);
+  const start = Math.max(0, index >= 0 ? index - 400 : 0);
+  const end = Math.min(text.length, index >= 0 ? index + token.length + 400 : 800);
+  let snippet = text.slice(start, end).trim() || "This file contains the TCard reference, but no readable preview text was found.";
+  snippet = escapeHtml(snippet).replace(new RegExp(escapeRegExp(escapeHtml(token)), "g"), `<mark>${escapeHtml(token)}</mark>`);
+  return `
+    <h3>${escapeHtml(doc.title || "Untitled File")}</h3>
+    <p class="tcard-usage-meta">${count} use${count === 1 ? "" : "s"} · File ID: ${escapeHtml(doc.id)}</p>
+    <div class="tcard-usage-snippet">${snippet}</div>`;
 }
 
 function escapeRegExp(value) {
