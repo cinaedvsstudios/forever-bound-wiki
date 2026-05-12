@@ -576,6 +576,8 @@ function bindEditorEvents() {
   els.helpPanel.querySelector("header")?.addEventListener("pointerdown", (event) => startPanelDrag(event, els.helpPanel));
   window.addEventListener("pointermove", movePanelDrag);
   window.addEventListener("pointerup", stopPanelDrag);
+  window.addEventListener("resize", updateWritingAssistRailPosition);
+  window.addEventListener("scroll", updateWritingAssistRailPosition, { passive: true });
   document.addEventListener("keydown", (event) => { if (event.key === "Escape") { toggleHelpPanel(false); toggleSettingsPanel(false); toggleWritingRoomPanel(false); } });
   bindDesignColorTools();
   bindInheritanceToggles();
@@ -918,21 +920,36 @@ async function handleSelectionMenuClick(event) {
 }
 
 function renderWritingAssistRail() {
-  if (!els.writingAssistRail) return;
+  if (!els.writingAssistRail || !els.editor) return;
   const doc = activeDocument();
   const deprecatedCount = (state.deprecatedParagraphs || []).filter((item) => item.documentId === doc.id).length;
-  const markers = [
-    { type: "deprecated", icon: "🕰️", title: deprecatedCount ? `${deprecatedCount} deprecated paragraph history ${deprecatedCount === 1 ? "record" : "records"} in this file` : "Deprecated paragraph markers will appear here", count: deprecatedCount },
-    { type: "tcard", icon: "𝞃", title: "Future TCard markers" },
-    { type: "note", icon: "✎", title: "Future comment/note markers" },
-    { type: "anchor", icon: "⚓", title: "Future Link Anchor markers" },
-    { type: "timeline", icon: "🧭", title: "Future timeline markers" },
-    { type: "warning", icon: "⚠️", title: "Future continuity warning markers" },
-  ];
+  const tcardCount = els.editor.querySelectorAll(".transclusion-ref[data-block-id]").length;
+  const linkCount = els.editor.querySelectorAll("a[href]").length;
+  const bookmarkCount = getBookmarks().length;
+  const markers = [];
+  if (deprecatedCount) markers.push({ type: "deprecated", icon: "🕰️", title: `${deprecatedCount} deprecated paragraph history ${deprecatedCount === 1 ? "record" : "records"} in this file`, count: deprecatedCount });
+  if (tcardCount) markers.push({ type: "tcard", icon: "𝞃", title: `${tcardCount} TCard ${tcardCount === 1 ? "reference" : "references"} in this file`, count: tcardCount });
+  if (linkCount) markers.push({ type: "link", icon: "🔗", title: `${linkCount} link ${linkCount === 1 ? "reference" : "references"} in this file`, count: linkCount });
+  if (bookmarkCount) markers.push({ type: "anchor", icon: "⚓", title: `${bookmarkCount} Link Anchor ${bookmarkCount === 1 ? "bookmark" : "bookmarks"} in this file`, count: bookmarkCount });
+  els.writingAssistRail.classList.toggle("is-empty", !markers.length);
   els.writingAssistRail.innerHTML = markers.map((marker) => `
-    <span class="assist-rail-marker ${marker.count ? "has-count" : ""}" data-marker-type="${escapeAttr(marker.type)}" title="${escapeAttr(marker.title)}">
-      ${marker.icon}<small>${marker.count ? escapeHtml(marker.count) : ""}</small>
+    <span class="assist-rail-marker has-count" data-marker-type="${escapeAttr(marker.type)}" title="${escapeAttr(marker.title)}">
+      ${marker.icon}<small>${escapeHtml(marker.count)}</small>
     </span>`).join("");
+  updateWritingAssistRailPosition();
+}
+
+function updateWritingAssistRailPosition() {
+  if (!els.writingAssistRail || !els.editor) return;
+  if (els.writingAssistRail.classList.contains("is-empty")) return;
+  const shell = els.editorApp || document.querySelector(".writer-shell");
+  const editorRect = els.editor.getBoundingClientRect();
+  const shellRect = shell?.getBoundingClientRect?.() || { left: 0, top: 0 };
+  const left = Math.max(8, editorRect.left - shellRect.left - 40);
+  const top = Math.max(0, editorRect.top - shellRect.top);
+  els.writingAssistRail.style.left = `${left}px`;
+  els.writingAssistRail.style.top = `${top}px`;
+  els.writingAssistRail.style.minHeight = `${Math.max(120, els.editor.offsetHeight)}px`;
 }
 
 async function deprecateSelectedParagraph() {
@@ -1727,7 +1744,7 @@ function inlineEditAttrs(kind, id, field) {
 
 function renderFilingTab(tab) {
   return `<details class="filing-tab" data-tab-id="${escapeAttr(tab.id)}" draggable="${state.filingEditMode}" ${tab.locked ? "open" : ""}>
-    <summary><span class="card-arrow">›</span><span class="tab-icon">▱</span><strong ${inlineEditAttrs("tab", tab.id, "label")}>${escapeHtml(tab.label)}</strong><button type="button" class="lock-button" title="Keep tab expanded" data-tab-action="lock" data-tab-id="${escapeAttr(tab.id)}">${tab.locked ? "🔒" : "🔓"}</button>${state.filingEditMode ? `<span class="filing-group-actions"><button type="button" title="Delete tab" aria-label="Delete tab" data-tab-action="delete" data-tab-id="${escapeAttr(tab.id)}">❌</button></span>` : ""}</summary>
+    <summary><span class="card-arrow">›</span><span class="tab-icon">${designIconSetting("tabIconText", "▱")}</span><strong ${inlineEditAttrs("tab", tab.id, "label")}>${escapeHtml(tab.label)}</strong><button type="button" class="lock-button" title="Keep tab expanded" data-tab-action="lock" data-tab-id="${escapeAttr(tab.id)}">${tab.locked ? "🔒" : "🔓"}</button>${state.filingEditMode ? `<span class="filing-group-actions"><button type="button" title="Delete tab" aria-label="Delete tab" data-tab-action="delete" data-tab-id="${escapeAttr(tab.id)}">❌</button></span>` : ""}</summary>
     <div class="writing-room-card-stack filing-tab-documents" data-drop-tab="${escapeAttr(tab.id)}">
       ${tab.documents.map((doc) => renderWritingRoomCard(doc, 0)).join("")}
       ${state.filingEditMode && !tab.documents.length ? '<p class="panel-help">Drop documents into this tab.</p>' : ''}
@@ -1839,7 +1856,7 @@ function groupIcon(group) {
   if (label.includes("character")) return designIconSetting("charactersIconText", "🧑");
   if (label.includes("episode")) return designIconSetting("episodesIconText", "🎬");
   if (label.includes("core") || label.includes("world")) return designIconSetting("coreIconText", "💗");
-  return group.icon || designIconSetting("folderIconText", "📁");
+  return group.icon ? iconMarkupFromValue(group.icon, "📁") : designIconSetting("folderIconText", "📁");
 }
 
 function documentFileType(doc) {
