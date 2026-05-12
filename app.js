@@ -620,6 +620,10 @@ function bindEditorEvents() {
   els.blockButton.addEventListener("click", () => { saveSelectionRange(); toggleBlockPanel(true); });
   els.closeBlockPanel.addEventListener("click", () => toggleBlockPanel(false));
   els.saveBlockButton.addEventListener("click", saveBlock);
+  [els.blockBgInput, els.blockBorderInput, els.blockTextInput, els.blockHeadingInput, els.blockTextSizeInput].forEach((input) => {
+    input?.addEventListener("input", updateSelectedTCardStyleFromPanel);
+    input?.addEventListener("change", updateSelectedTCardStyleFromPanel);
+  });
   els.insertBlockRefButton.addEventListener("click", insertBlockReference);
   els.deleteBlockButton?.addEventListener("click", toggleBlockDeleteMode);
   els.editBlockInlineButton?.addEventListener("click", toggleInlineTCardEditMode);
@@ -2655,13 +2659,36 @@ function saveBlock() {
   state.blocks[id] = {
     id,
     content: els.blockContentInput.value,
-    style: { bg: els.blockBgInput.value, border: els.blockBorderInput.value, text: els.blockTextInput.value, heading: els.blockHeadingInput.value, size: els.blockTextSizeInput.value || "14" },
+    style: currentTCardStyleFromPanel(),
     updatedAt: new Date().toISOString(),
   };
   renderBlockList();
   renderActiveDocument();
   renderBookmarks();
   markDirty("TCard updated everywhere");
+}
+
+function currentTCardStyleFromPanel() {
+  return {
+    bg: els.blockBgInput.value,
+    border: els.blockBorderInput.value,
+    text: els.blockTextInput.value,
+    heading: els.blockHeadingInput.value,
+    size: els.blockTextSizeInput.value || "14",
+  };
+}
+
+function updateSelectedTCardStyleFromPanel() {
+  const id = els.blockIdInput.value.trim();
+  const block = state.blocks[id];
+  if (!block) return;
+  block.style = { ...(block.style || {}), ...currentTCardStyleFromPanel() };
+  block.updatedAt = new Date().toISOString();
+  renderActiveDocument();
+  renderBookmarks();
+  renderBlockList();
+  setContextStatus(`TCard style updated for ${id}`, "dirty");
+  markDirty("TCard style updated");
 }
 
 function insertBlockReference() {
@@ -3345,7 +3372,7 @@ function loadDesignForm() {
   els.emphasisBgColor.value = settings.emphasisBg;
   els.emphasisBorderColor.value = settings.emphasisBorder;
   els.emphasisTextColor.value = settings.emphasisText;
-  els.panelBgColor.value = settings.panelBg;
+  els.panelBgColor.value = settings.writingRoomBg || settings.panelBg;
   els.panelBorderColor.value = settings.panelBorder;
   els.designBoldToggle?.setAttribute("aria-pressed", String(settings.bold));
   els.dialogBoldToggle?.setAttribute("aria-pressed", String(settings.dialogBold));
@@ -3406,7 +3433,7 @@ function defaultDesignSettings() {
 }
 
 function saveDesignSettings() {
-  const settings = collectExtraDesignSettings({ buttonBg: els.designButtonBg.value, borderColor: els.designBorderColor.value, textColor: els.designTextColor.value, fontSize: els.designFontSize.value || "14", fontFamily: els.designFontFamily?.value || "Inter, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif", titleIconScale: els.titleIconScale?.value || "143", bold: els.designBold.checked, bgImage: els.designBgImage.value.trim(), dialogBg: els.dialogBgColor.value, dialogBorder: els.dialogBorderColor.value, dialogShadow: els.dialogShadowColor.value, dialogText: els.dialogTextColor.value, dialogFontSize: els.dialogFontSize.value || "14", dialogBold: els.dialogBold.checked, dialogButtonBg: els.dialogButtonBg.value, dialogButtonBorder: els.dialogButtonBorder.value, dialogButtonText: els.dialogButtonText.value, dialogButtonShadow: els.dialogButtonShadow.value, labelText: els.labelTextColor.value, dynamicText: els.dynamicTextColor.value, scrollbarTrack: els.scrollbarTrackColor.value, scrollbarThumb: els.scrollbarThumbColor.value, statusBg: els.statusBgColor.value, statusBorder: els.statusBorderColor.value, statusText: els.statusTextColor.value, emphasisBg: els.emphasisBgColor.value, emphasisBorder: els.emphasisBorderColor.value, emphasisText: els.emphasisTextColor.value, panelBg: els.panelBgColor.value, panelBorder: els.panelBorderColor.value, favoriteColors: [...state.favoriteColors] });
+  const settings = collectExtraDesignSettings({ buttonBg: els.designButtonBg.value, borderColor: els.designBorderColor.value, textColor: els.designTextColor.value, fontSize: els.designFontSize.value || "14", fontFamily: els.designFontFamily?.value || "Inter, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif", titleIconScale: els.titleIconScale?.value || "143", bold: els.designBold.checked, bgImage: els.designBgImage.value.trim(), dialogBg: els.dialogBgColor.value, dialogBorder: els.dialogBorderColor.value, dialogShadow: els.dialogShadowColor.value, dialogText: els.dialogTextColor.value, dialogFontSize: els.dialogFontSize.value || "14", dialogBold: els.dialogBold.checked, dialogButtonBg: els.dialogButtonBg.value, dialogButtonBorder: els.dialogButtonBorder.value, dialogButtonText: els.dialogButtonText.value, dialogButtonShadow: els.dialogButtonShadow.value, labelText: els.labelTextColor.value, dynamicText: els.dynamicTextColor.value, scrollbarTrack: els.scrollbarTrackColor.value, scrollbarThumb: els.scrollbarThumbColor.value, statusBg: els.statusBgColor.value, statusBorder: els.statusBorderColor.value, statusText: els.statusTextColor.value, emphasisBg: els.emphasisBgColor.value, emphasisBorder: els.emphasisBorderColor.value, emphasisText: els.emphasisTextColor.value, panelBg: currentDesignSettings().panelBg || defaultDesignSettings().panelBg, panelBorder: els.panelBorderColor.value, favoriteColors: [...state.favoriteColors] });
   localStorage.setItem(DESIGN_KEY, JSON.stringify(settings));
   applyDesignSettings(settings);
   setStatus("Design applied", "saved");
@@ -3457,6 +3484,7 @@ function applyDesignSettings(settings) {
   root.style.setProperty("--emphasis-text", settings.emphasisText);
   root.style.setProperty("--panel-bg", settings.panelBg);
   root.style.setProperty("--panel-border", settings.panelBorder);
+  root.style.setProperty("--writing-room-bg", settings.writingRoomBg || settings.panelBg || CAPSANOTO_PALETTE.espresso);
   applyExtraDesignSettings(settings);
 }
 

@@ -4371,3 +4371,76 @@ body[data-desk-glow-flip="true"] .writer-shell {
   opacity: 1 !important;
   animation: tcardFlash 0.9s ease-in-out infinite alternate;
 }
+
+/* v3.4 TCard panel wiring, command icons, and separate Writing Room header styling */
+:root {
+  --top-bar-bg-image: none;
+  --command-bar-bg-image: none;
+  --writing-room-bg: #211812;
+  --writing-room-bg-image: none;
+  --writing-room-bg-size: 100%;
+  --writing-room-header-bg: #211812;
+  --writing-room-header-bg-image: none;
+  --writing-room-header-bg-size: 100%;
+  --writing-room-header-opacity: 0.94;
+  --writing-room-header-border: #724837;
+}
+.writer-header.toolbar {
+  background-color: var(--top-bar-bg, #211812) !important;
+  background-image: var(--top-bar-bg-image), linear-gradient(90deg, var(--top-bar-bg, #211812), var(--top-bar-bg, #211812)) !important;
+  background-size: var(--top-bar-bg-size, 100%), cover !important;
+  background-position: center, center !important;
+  background-repeat: repeat, no-repeat !important;
+}
+.icon-command-bar.top-command-menus,
+.top-command-menus {
+  background-color: var(--command-bar-bg, #28133f) !important;
+  background-image: var(--command-bar-bg-image), linear-gradient(90deg, var(--command-bar-bg, #28133f), var(--command-bar-bg, #28133f)) !important;
+  background-size: var(--command-bar-bg-size, 100%), cover !important;
+  background-position: center, center !important;
+  background-repeat: repeat, no-repeat !important;
+}
+.writing-room-panel {
+  background-color: var(--writing-room-bg, #211812) !important;
+  background-image: var(--writing-room-bg-image), linear-gradient(var(--writing-room-bg, #211812), var(--writing-room-bg, #211812)) !important;
+  background-size: var(--writing-room-bg-size, 100%), cover !important;
+  background-position: center, center !important;
+  background-repeat: repeat, no-repeat !important;
+}
+.writing-room-panel > header {
+  background-color: var(--writing-room-header-bg, #211812) !important;
+  background-image:
+    linear-gradient(
+      rgb(from var(--writing-room-header-bg, #211812) r g b / var(--writing-room-header-opacity, 0.94)),
+      rgb(from var(--writing-room-header-bg, #211812) r g b / var(--writing-room-header-opacity, 0.94))
+    ),
+    var(--writing-room-header-bg-image) !important;
+  background-size: cover, var(--writing-room-header-bg-size, 100%) !important;
+  background-position: center, center !important;
+  background-repeat: no-repeat, repeat !important;
+  border-bottom: 1px solid var(--writing-room-header-border, #724837) !important;
+}
+.settings-panel > header {
+  background: var(--settings-header-bg, var(--settings-bg, #211812)) !important;
+}
+.block-panel {
+  top: var(--top-bar-height, 64px) !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  left: auto !important;
+  height: auto !important;
+  max-height: none !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  resize: horizontal !important;
+}
+.block-panel .tcard-style-grid input,
+.block-panel #blockTextSizeInput {
+  cursor: pointer;
+}
+.block-list-row button strong {
+  color: var(--tcard-heading, #e88f69);
+}
+.block-list-row button span {
+  color: var(--tcard-text, #fbf4d6);
+}
