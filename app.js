@@ -307,6 +307,8 @@ const els = {
   titleInput: document.querySelector("#titleInput"),
   tagsInput: document.querySelector("#tagsInput"),
   editor: document.querySelector("#editor"),
+  writingSurfaceShell: document.querySelector("#writingSurfaceShell"),
+  writingSurfaceGrip: document.querySelector("#writingSurfaceGrip"),
   documentEndBar: document.querySelector("#documentEndBar"),
   writingAssistRail: document.querySelector("#writingAssistRail"),
   blockPanel: document.querySelector("#blockPanel"),
@@ -675,6 +677,12 @@ function bindEditorEvents() {
   window.addEventListener("pointermove", moveCabinetScrollDrag);
   window.addEventListener("pointerup", stopCabinetScrollDrag);
   els.documentEndBar?.addEventListener("click", handleDocumentEndBarClick);
+  els.writingSurfaceGrip?.addEventListener("pointerdown", startWritingSurfaceResize);
+  window.addEventListener("pointermove", moveWritingSurfaceResize);
+  window.addEventListener("pointerup", stopWritingSurfaceResize);
+  if (window.ResizeObserver && els.writingSurfaceShell) {
+    new ResizeObserver(updateWritingSurfaceMetrics).observe(els.writingSurfaceShell);
+  }
   els.writingRoomPanelHeader.addEventListener("pointerdown", startWritingRoomDrag);
   window.addEventListener("pointermove", moveWritingRoomPanel);
   window.addEventListener("pointerup", stopWritingRoomDrag);
@@ -1034,6 +1042,56 @@ async function handleSelectionMenuClick(event) {
   if (action === "edit-link") await editSelectedLink();
   if (action === "pill-color") await changeSelectedPillColor();
   if (action === "deprecate-paragraph") await deprecateSelectedParagraph();
+}
+
+
+function updateWritingSurfaceMetrics() {
+  if (!els.writingSurfaceShell) return;
+  const rect = els.writingSurfaceShell.getBoundingClientRect();
+  if (rect.width) document.documentElement.style.setProperty("--writing-shell-width", `${Math.round(rect.width)}px`);
+  if (rect.height) document.documentElement.style.setProperty("--writing-shell-height", `${Math.round(rect.height)}px`);
+  if (els.documentEndBar) {
+    els.documentEndBar.style.width = `${Math.round(rect.width)}px`;
+    els.documentEndBar.style.maxWidth = "calc(100vw - 2rem)";
+  }
+  renderWritingAssistRail();
+}
+
+function startWritingSurfaceResize(event) {
+  if (!els.writingSurfaceShell) return;
+  event.preventDefault();
+  event.stopPropagation();
+  const rect = els.writingSurfaceShell.getBoundingClientRect();
+  writingSurfaceResizeState = {
+    pointerId: event.pointerId,
+    startX: event.clientX,
+    startY: event.clientY,
+    startWidth: rect.width,
+    startHeight: rect.height,
+  };
+  els.writingSurfaceGrip?.setPointerCapture?.(event.pointerId);
+  document.body.classList.add("is-resizing-writing-surface");
+}
+
+function moveWritingSurfaceResize(event) {
+  if (!writingSurfaceResizeState || !els.writingSurfaceShell) return;
+  event.preventDefault();
+  const maxWidth = Math.max(520, window.innerWidth - 32);
+  const maxHeight = Math.max(360, window.innerHeight - 96);
+  const nextWidth = Math.min(maxWidth, Math.max(520, writingSurfaceResizeState.startWidth + event.clientX - writingSurfaceResizeState.startX));
+  const nextHeight = Math.min(maxHeight, Math.max(420, writingSurfaceResizeState.startHeight + event.clientY - writingSurfaceResizeState.startY));
+  els.writingSurfaceShell.style.width = `${Math.round(nextWidth)}px`;
+  els.writingSurfaceShell.style.height = `${Math.round(nextHeight)}px`;
+  updateWritingSurfaceMetrics();
+}
+
+function stopWritingSurfaceResize(event) {
+  if (!writingSurfaceResizeState) return;
+  try { els.writingSurfaceGrip?.releasePointerCapture?.(writingSurfaceResizeState.pointerId); } catch {}
+  writingSurfaceResizeState = null;
+  document.body.classList.remove("is-resizing-writing-surface");
+  updateWritingSurfaceMetrics();
+  queueLocalSave?.();
 }
 
 function renderWritingAssistRail() {
