@@ -4821,3 +4821,61 @@ code, pre, .editor code {
   .emoji-search-row { grid-template-columns: repeat(3, auto) !important; }
   .emoji-search { grid-column: 1 / -1 !important; }
 }
+
+
+/* v4.8 connected writing surface: title strip and assist rail attach to the writing box */
+:root {
+  --attached-title-bg: #2f251c;
+  --attached-rail-bg: #28133f;
+  --attached-rail-width: 34px;
+}
+
+.title-strip {
+  width: min(100%, 880px) !important;
+  margin: 2.25rem auto 0 !important;
+  padding: 0.9rem 1.2rem !important;
+  box-sizing: border-box !important;
+  background-color: var(--doc-title-attached-bg, var(--attached-title-bg)) !important;
+  background-image: none !important;
+  border: 0 !important;
+  border-radius: 20px 20px 0 0 !important;
+  box-shadow: 0 var(--writing-surface-shadow-offset, 12px) var(--writing-surface-shadow-blur, 28px) rgb(from var(--writing-surface-shadow-color, #000000) r g b / var(--writing-surface-shadow-opacity, 0.38)) !important;
+}
+
+.title-strip .title-input {
+  display: block !important;
+  width: 100% !important;
+  color: var(--document-title-color, var(--ink, #fbf4d6)) !important;
+  font-size: clamp(1.7rem, 3vw, 2.35rem) !important;
+  font-weight: 400 !important;
+  line-height: 1.15 !important;
+  letter-spacing: -0.035em !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+.title-strip:has(.title-input:placeholder-shown),
+.title-strip:empty {
+  border: 0 !important;
+}
+
+.editor {
+  margin-top: 0 !important;
+  border-top: 0 !important;
+  border-radius: 0 20px 20px 0 !important;
+}
+
+.writing-assist-rail {
+  width: var(--attached-rail-width, 34px) !important;
+  background: var(--assist-rail-attached-bg, var(--attached-rail-bg)) !important;
+  border: 0 !important;
+  border-radius: 20px 0 0 20px !important;
+  box-shadow: 0 var(--writing-surface-shadow-offset, 12px) var(--writing-surface-shadow-blur, 28px) rgb(from var(--writing-surface-shadow-color, #000000) r g b / var(--writing-surface-shadow-opacity, 0.38)) !important;
+  overflow: visible !important;
+}
+
+.assist-rail-marker {
+  background: color-mix(in srgb, var(--assist-rail-attached-bg, var(--attached-rail-bg)) 72%, #000000 28%) !important;
+}

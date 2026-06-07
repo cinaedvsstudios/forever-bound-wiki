@@ -1092,12 +1092,11 @@ function updateWritingAssistRailPosition() {
   const shell = els.editorApp || document.querySelector(".writer-shell");
   const editorRect = els.editor.getBoundingClientRect();
   const shellRect = shell?.getBoundingClientRect?.() || { left: 0, top: 0 };
-  const headerRect = document.querySelector(".writer-header")?.getBoundingClientRect?.();
-  const left = Math.max(8, editorRect.left - shellRect.left - 40);
+  const railWidth = Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--attached-rail-width")) || 34;
+  const left = Math.max(0, editorRect.left - shellRect.left - railWidth);
   const rawTop = editorRect.top - shellRect.top;
-  const headerSafeTop = headerRect ? Math.max(rawTop, headerRect.bottom - shellRect.top + 8) : rawTop;
   els.writingAssistRail.style.setProperty("left", `${left}px`, "important");
-  els.writingAssistRail.style.setProperty("top", `${Math.max(0, headerSafeTop)}px`, "important");
+  els.writingAssistRail.style.setProperty("top", `${Math.max(0, rawTop)}px`, "important");
   els.writingAssistRail.style.setProperty("min-height", `${Math.max(120, els.editor.offsetHeight)}px`, "important");
   positionWritingAssistRailMarkers(editorRect, Number(els.writingAssistRail.style.top.replace("px", "")) || 0, rawTop);
 }
