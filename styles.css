@@ -4499,3 +4499,59 @@ body[data-desk-glow-flip="true"] .writer-shell {
   border-radius: 999px;
   padding: 0.45rem 0.75rem;
 }
+
+
+/* v3.7 Project Settings + Google Drive connection shell */
+.project-settings-panel {
+  position: fixed;
+  z-index: 34;
+  top: 5.25rem;
+  right: 2rem;
+  width: min(780px, calc(100vw - 2rem));
+  max-height: calc(100dvh - 6.5rem);
+  overflow: auto;
+  resize: both;
+  padding: 1rem;
+  color: var(--ink);
+  background: var(--settings-bg, rgba(33,24,18,0.98));
+  border: 2px solid var(--settings-border, var(--accent));
+  border-radius: 24px;
+  box-shadow: 0 26px 90px rgba(0,0,0,0.55);
+}
+.project-settings-panel > header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.7rem;
+  border-bottom: 1px solid var(--line);
+  cursor: grab;
+}
+.project-settings-panel > header:active { cursor: grabbing; }
+.project-settings-panel h2 { margin: 0.15rem 0 0; color: var(--accent); }
+.project-settings-panel h3 { margin: 0 0 0.55rem; color: var(--ink); }
+.project-settings-section {
+  margin-top: 0.9rem;
+  padding: 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(0,0,0,0.16);
+}
+.project-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin: 0.6rem 0;
+}
+.project-action-row button { min-width: 150px; }
+.project-status-card {
+  margin-top: 0.65rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid rgba(232,143,105,0.32);
+  border-radius: 14px;
+  color: var(--muted);
+  background: rgba(0,0,0,0.22);
+  line-height: 1.55;
+}
+.project-status-card strong { color: var(--ink); }
+.writing-room-panel #projectSettingsButton { color: var(--accent); }

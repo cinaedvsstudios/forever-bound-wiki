@@ -14,6 +14,10 @@ const FOLDER_MODE_STORE = "handles";
 const FOLDER_MODE_HANDLE_KEY = "activeWritingRoomFolder";
 const FOLDER_MODE_PREF_KEY = "capsanoto-folder-mode-prefs-v1";
 const FOLDER_MODE_CHECK_INTERVAL = 10 * 60 * 1000;
+const GOOGLE_DRIVE_CLIENT_ID = "914452234615-eqsti2er404bhih80jnjemsfc68boso5.apps.googleusercontent.com";
+const GOOGLE_DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.file";
+const GOOGLE_IDENTITY_SCRIPT = "https://accounts.google.com/gsi/client";
+const GOOGLE_DRIVE_STORAGE_KEY = "capsanoto-google-drive-storage-v1";
 
 const CAPSANOTO_PALETTE = {
   black: "#000000",
@@ -130,6 +134,16 @@ const state = {
     reminderOpen: false,
     writeInProgress: false,
   },
+  googleDrive: {
+    tokenClient: null,
+    accessToken: "",
+    connected: false,
+    connectedAt: "",
+    expiresAt: "",
+    accountLabel: "",
+    lastStatus: "Not connected",
+    initError: "",
+  },
 };
 
 const els = {
@@ -146,6 +160,26 @@ const els = {
   saveStatus: document.querySelector("#saveStatus"),
   settingsButton: document.querySelector("#settingsButton"),
   settingsPanel: document.querySelector("#settingsPanel"),
+  projectSettingsPanel: document.querySelector("#projectSettingsPanel"),
+  projectSettingsButton: document.querySelector("#projectSettingsButton"),
+  closeProjectSettingsPanel: document.querySelector("#closeProjectSettingsPanel"),
+  projectInfoStatus: document.querySelector("#projectInfoStatus"),
+  googleDriveStatus: document.querySelector("#googleDriveStatus"),
+  connectGoogleDriveButton: document.querySelector("#connectGoogleDriveButton"),
+  switchGoogleDriveButton: document.querySelector("#switchGoogleDriveButton"),
+  disconnectGoogleDriveButton: document.querySelector("#disconnectGoogleDriveButton"),
+  createOnlineProjectButton: document.querySelector("#createOnlineProjectButton"),
+  openOnlineProjectButton: document.querySelector("#openOnlineProjectButton"),
+  syncOnlineProjectButton: document.querySelector("#syncOnlineProjectButton"),
+  projectFolderModeStatus: document.querySelector("#projectFolderModeStatus"),
+  projectCreateBackupFolderButton: document.querySelector("#projectCreateBackupFolderButton"),
+  projectOpenBackupFolderButton: document.querySelector("#projectOpenBackupFolderButton"),
+  projectSaveBackupButton: document.querySelector("#projectSaveBackupButton"),
+  projectResetBackupReminderButton: document.querySelector("#projectResetBackupReminderButton"),
+  newProjectPlaceholderButton: document.querySelector("#newProjectPlaceholderButton"),
+  openProjectPlaceholderButton: document.querySelector("#openProjectPlaceholderButton"),
+  duplicateProjectPlaceholderButton: document.querySelector("#duplicateProjectPlaceholderButton"),
+  downloadProjectBackupButton: document.querySelector("#downloadProjectBackupButton"),
   closeSettingsPanel: document.querySelector("#closeSettingsPanel"),
   saveSettingsPanelButton: document.querySelector("#saveSettingsPanelButton"),
   settingsEmojiLibraryButton: document.querySelector("#settingsEmojiLibraryButton"),
@@ -372,6 +406,7 @@ async function startEditor() {
   await loadWorkspace();
   applySavedDesignSettings();
   await restoreFolderModeHandle();
+  loadGoogleDriveStorageState();
   loadFavoriteEmojis();
   hydrateIconButtons();
   bindEditorEvents();
@@ -557,6 +592,22 @@ function bindEditorEvents() {
   els.emphasisButton.addEventListener("click", insertEmphasisBox);
   els.topHelpButton.addEventListener("click", () => toggleHelpPanel(true));
   els.settingsButton.addEventListener("click", () => toggleSettingsPanel(true));
+  els.projectSettingsButton?.addEventListener("click", () => toggleProjectSettingsPanel(true));
+  els.closeProjectSettingsPanel?.addEventListener("click", () => toggleProjectSettingsPanel(false));
+  els.connectGoogleDriveButton?.addEventListener("click", () => connectGoogleDriveAccount(false));
+  els.switchGoogleDriveButton?.addEventListener("click", () => connectGoogleDriveAccount(true));
+  els.disconnectGoogleDriveButton?.addEventListener("click", disconnectGoogleDriveAccount);
+  els.createOnlineProjectButton?.addEventListener("click", () => projectStoragePlaceholder("Create Online Project will build the Drive project folder in the next sync phase."));
+  els.openOnlineProjectButton?.addEventListener("click", () => projectStoragePlaceholder("Open Online Project will list Drive projects in the next sync phase."));
+  els.syncOnlineProjectButton?.addEventListener("click", () => projectStoragePlaceholder("Sync Now will upload/download project files in the next sync phase."));
+  els.projectCreateBackupFolderButton?.addEventListener("click", createNewWritingRoomFolder);
+  els.projectOpenBackupFolderButton?.addEventListener("click", openWritingRoomFolder);
+  els.projectSaveBackupButton?.addEventListener("click", () => saveFolderModeSnapshot("Backed up active file to disk", { force: true }));
+  els.projectResetBackupReminderButton?.addEventListener("click", resetFolderModeReminderPreference);
+  els.newProjectPlaceholderButton?.addEventListener("click", () => projectStoragePlaceholder("New Project will create a new Google Drive primary project in the next phase."));
+  els.openProjectPlaceholderButton?.addEventListener("click", () => projectStoragePlaceholder("Open / Switch Project will open the online project picker in the next phase."));
+  els.duplicateProjectPlaceholderButton?.addEventListener("click", () => projectStoragePlaceholder("Duplicate Project will clone project files after Drive sync is implemented."));
+  els.downloadProjectBackupButton?.addEventListener("click", () => exportSmartBundle("caps"));
   els.closeSettingsPanel.addEventListener("pointerdown", (event) => event.stopPropagation());
   els.closeSettingsPanel.addEventListener("pointerup", (event) => { event.preventDefault(); event.stopPropagation(); toggleSettingsPanel(false); });
   els.closeSettingsPanel.addEventListener("click", (event) => { event.preventDefault(); event.stopPropagation(); toggleSettingsPanel(false); });
@@ -603,11 +654,12 @@ function bindEditorEvents() {
   window.addEventListener("pointerup", stopWritingRoomDrag);
   els.settingsPanel.querySelector("header")?.addEventListener("pointerdown", (event) => startPanelDrag(event, els.settingsPanel));
   els.helpPanel.querySelector("header")?.addEventListener("pointerdown", (event) => startPanelDrag(event, els.helpPanel));
+  els.projectSettingsPanel?.querySelector("header")?.addEventListener("pointerdown", (event) => startPanelDrag(event, els.projectSettingsPanel));
   window.addEventListener("pointermove", movePanelDrag);
   window.addEventListener("pointerup", stopPanelDrag);
   window.addEventListener("resize", renderWritingAssistRail);
   window.addEventListener("scroll", updateWritingAssistRailPosition, { passive: true });
-  document.addEventListener("keydown", (event) => { if (event.key === "Escape") { toggleHelpPanel(false); toggleSettingsPanel(false); toggleWritingRoomPanel(false); } });
+  document.addEventListener("keydown", (event) => { if (event.key === "Escape") { toggleHelpPanel(false); toggleSettingsPanel(false); toggleProjectSettingsPanel(false); toggleWritingRoomPanel(false); } });
   bindDesignColorTools();
   bindInheritanceToggles();
   bindElementDesignerCardScroll();
@@ -3024,6 +3076,151 @@ function persistNow(message = "Autosaved locally") {
 
 
 
+
+/* Project Settings + Google Drive account shell. */
+function loadGoogleDriveStorageState() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(GOOGLE_DRIVE_STORAGE_KEY) || "{}");
+    state.googleDrive.connected = Boolean(saved.connected);
+    state.googleDrive.connectedAt = saved.connectedAt || "";
+    state.googleDrive.expiresAt = saved.expiresAt || "";
+    state.googleDrive.accountLabel = saved.accountLabel || "";
+    state.googleDrive.lastStatus = saved.lastStatus || (saved.connected ? "Connected previously; sign in again if token expired" : "Not connected");
+  } catch {
+    state.googleDrive.lastStatus = "Google Drive connection state could not be read";
+  }
+  updateProjectSettingsStatus();
+}
+
+function saveGoogleDriveStorageState() {
+  const payload = {
+    connected: state.googleDrive.connected,
+    connectedAt: state.googleDrive.connectedAt,
+    expiresAt: state.googleDrive.expiresAt,
+    accountLabel: state.googleDrive.accountLabel,
+    lastStatus: state.googleDrive.lastStatus,
+  };
+  localStorage.setItem(GOOGLE_DRIVE_STORAGE_KEY, JSON.stringify(payload));
+}
+
+function toggleProjectSettingsPanel(show = null) {
+  if (!els.projectSettingsPanel) return;
+  const shouldShow = show === null ? els.projectSettingsPanel.hidden : Boolean(show);
+  els.projectSettingsPanel.hidden = !shouldShow;
+  if (shouldShow) {
+    toggleSettingsPanel(false);
+    updateProjectSettingsStatus();
+    setContextStatus("Project Settings: Google Drive primary, HDD backup, local emergency draft", "saved");
+  }
+}
+
+function updateProjectSettingsStatus(message = "") {
+  const active = activeDocument?.();
+  const storageMode = state.googleDrive.connected ? "Google Drive primary · HDD backup optional · localStorage emergency draft" : "Google Drive not connected · HDD backup/local draft available";
+  if (els.projectInfoStatus) {
+    const disk = state.folderMode.lastDiskSaveAt ? new Date(state.folderMode.lastDiskSaveAt).toLocaleString() : "never";
+    const online = state.googleDrive.connectedAt ? new Date(state.googleDrive.connectedAt).toLocaleString() : "not connected";
+    els.projectInfoStatus.innerHTML = `<strong>${escapeHtml(state.writingRoomName || "Writing Room")}</strong><br>Active file: ${escapeHtml(active?.title || "No active file")}<br>Storage: ${escapeHtml(storageMode)}<br>Last online connection: ${escapeHtml(online)}<br>Last HDD backup: ${escapeHtml(disk)}`;
+  }
+  if (els.googleDriveStatus) {
+    const expires = state.googleDrive.expiresAt ? new Date(state.googleDrive.expiresAt).toLocaleString() : "not available";
+    const connected = state.googleDrive.connected ? "Connected" : "Not connected";
+    const label = state.googleDrive.accountLabel ? ` · ${escapeHtml(state.googleDrive.accountLabel)}` : "";
+    els.googleDriveStatus.innerHTML = `<strong>${connected}${label}</strong><br>${escapeHtml(state.googleDrive.lastStatus || "Google Drive is not connected.")}<br>Token expiry: ${escapeHtml(expires)}${message ? `<br>${escapeHtml(message)}` : ""}`;
+  }
+  if (els.projectFolderModeStatus) {
+    const local = state.folderMode.enabled ? `Backup folder active: ${state.folderMode.projectName || "selected folder"}` : "No backup folder selected";
+    const disk = state.folderMode.lastDiskSaveAt ? `Last HDD backup: ${new Date(state.folderMode.lastDiskSaveAt).toLocaleString()}` : "Last HDD backup: never";
+    els.projectFolderModeStatus.innerHTML = `<strong>${escapeHtml(local)}</strong><br>${escapeHtml(disk)}`;
+  }
+}
+
+function loadGoogleIdentityScript() {
+  if (window.google?.accounts?.oauth2) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    const existing = document.querySelector(`script[src="${GOOGLE_IDENTITY_SCRIPT}"]`);
+    if (existing) {
+      existing.addEventListener("load", () => resolve(), { once: true });
+      existing.addEventListener("error", () => reject(new Error("Google Identity script failed to load")), { once: true });
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = GOOGLE_IDENTITY_SCRIPT;
+    script.async = true;
+    script.defer = true;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error("Google Identity script failed to load"));
+    document.head.appendChild(script);
+  });
+}
+
+async function connectGoogleDriveAccount(forceAccountChoice = false) {
+  try {
+    setStatus("Connecting Google Drive", "dirty");
+    await loadGoogleIdentityScript();
+    if (!window.google?.accounts?.oauth2) throw new Error("Google Identity Services is unavailable.");
+    state.googleDrive.tokenClient = window.google.accounts.oauth2.initTokenClient({
+      client_id: GOOGLE_DRIVE_CLIENT_ID,
+      scope: GOOGLE_DRIVE_SCOPE,
+      prompt: forceAccountChoice ? "select_account consent" : "consent",
+      callback: (response) => handleGoogleDriveTokenResponse(response, forceAccountChoice),
+      error_callback: (error) => handleGoogleDriveTokenError(error),
+    });
+    state.googleDrive.tokenClient.requestAccessToken({ prompt: forceAccountChoice ? "select_account consent" : "consent" });
+  } catch (error) {
+    state.googleDrive.connected = false;
+    state.googleDrive.initError = error.message;
+    state.googleDrive.lastStatus = `Google Drive connection failed: ${error.message}`;
+    saveGoogleDriveStorageState();
+    setStatus("Google Drive connection failed", "dirty");
+    updateProjectSettingsStatus(error.message);
+  }
+}
+
+function handleGoogleDriveTokenResponse(response) {
+  if (response?.error) return handleGoogleDriveTokenError(response);
+  state.googleDrive.accessToken = response.access_token || "";
+  state.googleDrive.connected = Boolean(state.googleDrive.accessToken);
+  const now = Date.now();
+  state.googleDrive.connectedAt = new Date(now).toISOString();
+  state.googleDrive.expiresAt = response.expires_in ? new Date(now + Number(response.expires_in) * 1000).toISOString() : "";
+  state.googleDrive.accountLabel = "Connected Google account";
+  state.googleDrive.lastStatus = "Google Drive token received. Online project creation/sync comes in the next phase.";
+  saveGoogleDriveStorageState();
+  setStatus("Google Drive connected", "saved");
+  updateProjectSettingsStatus("Google Drive connected");
+}
+
+function handleGoogleDriveTokenError(error) {
+  const message = error?.message || error?.type || error?.error || "Google sign-in was cancelled or failed.";
+  state.googleDrive.connected = false;
+  state.googleDrive.accessToken = "";
+  state.googleDrive.lastStatus = message;
+  saveGoogleDriveStorageState();
+  setStatus("Google Drive not connected", "dirty");
+  updateProjectSettingsStatus(message);
+}
+
+function disconnectGoogleDriveAccount() {
+  if (state.googleDrive.accessToken && window.google?.accounts?.oauth2?.revoke) {
+    try { window.google.accounts.oauth2.revoke(state.googleDrive.accessToken); } catch {}
+  }
+  state.googleDrive.accessToken = "";
+  state.googleDrive.connected = false;
+  state.googleDrive.connectedAt = "";
+  state.googleDrive.expiresAt = "";
+  state.googleDrive.accountLabel = "";
+  state.googleDrive.lastStatus = "Disconnected. Local backup and emergency drafts are still available.";
+  saveGoogleDriveStorageState();
+  setStatus("Google Drive disconnected", "saved");
+  updateProjectSettingsStatus();
+}
+
+function projectStoragePlaceholder(message) {
+  setContextStatus(message, "saved", 2500);
+  updateProjectSettingsStatus(message);
+}
+
 /* Folder Mode: local HDD Writing Room storage using the File System Access API. */
 function folderModeSupported() {
   return Boolean(window.showDirectoryPicker);
@@ -3059,6 +3256,7 @@ function updateFolderModeStatus(message = "") {
   const disk = state.folderMode.lastDiskSaveAt ? `Last disk save: ${new Date(state.folderMode.lastDiskSaveAt).toLocaleString()}` : "Last disk save: none yet";
   els.folderModeStatus.innerHTML = `<strong>${mode}</strong><br>${support}<br>${disk}${message ? `<br><span>${escapeHtml(message)}</span>` : ""}`;
   if (els.folderModeStructure) els.folderModeStructure.textContent = folderModeStructureText();
+  updateProjectSettingsStatus();
 }
 
 function folderModeStructureText() {
@@ -4262,6 +4460,7 @@ function updateHoverStatus(event) {
   else if (interactive === els.newDocumentButton) setContextStatus("Create a new Writing Room document");
   else if (els.documentSettingsButton && interactive === els.documentSettingsButton) setContextStatus("Open Filing Cabinet settings for folders, tabs, and documents");
   else if (interactive === els.writingRoomButton) setContextStatus("Open Writing Room filing cabinet tabs");
+  else if (interactive === els.projectSettingsButton) setContextStatus("Open Project Settings: online storage, backup folder, and sync controls");
   else if (interactive === els.settingsButton) setContextStatus("Open Writing Room settings");
   else if (interactive === els.topHelpButton || interactive === els.helpButton) setContextStatus("Open Help and release notes");
   else if (interactive === els.emphasisButton) setContextStatus("Wrap highlighted text in an emphasis box");
