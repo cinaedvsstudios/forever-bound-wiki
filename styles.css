@@ -5142,3 +5142,12 @@ body.is-resizing-writing-surface {
 .document-end-bar {
   width: var(--writing-shell-width, min(100%, 880px)) !important;
 }
+
+
+/* v5.3 resize grip fix: allow pointer dragging and keep JS-set important dimensions active over shell defaults. */
+.writing-surface-grip {
+  touch-action: none !important;
+}
+body.is-resizing-writing-surface .writing-surface-shell {
+  transition: none !important;
+}

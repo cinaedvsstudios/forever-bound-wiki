@@ -87,6 +87,8 @@ const DEFAULT_WORKSPACE = {
   },
 };
 
+let writingSurfaceResizeState = null;
+
 const state = {
   documents: [],
   blocks: {},
@@ -1080,8 +1082,10 @@ function moveWritingSurfaceResize(event) {
   const maxHeight = Math.max(360, window.innerHeight - 96);
   const nextWidth = Math.min(maxWidth, Math.max(520, writingSurfaceResizeState.startWidth + event.clientX - writingSurfaceResizeState.startX));
   const nextHeight = Math.min(maxHeight, Math.max(420, writingSurfaceResizeState.startHeight + event.clientY - writingSurfaceResizeState.startY));
-  els.writingSurfaceShell.style.width = `${Math.round(nextWidth)}px`;
-  els.writingSurfaceShell.style.height = `${Math.round(nextHeight)}px`;
+  els.writingSurfaceShell.style.setProperty("width", `${Math.round(nextWidth)}px`, "important");
+  els.writingSurfaceShell.style.setProperty("height", `${Math.round(nextHeight)}px`, "important");
+  els.writingSurfaceShell.style.setProperty("max-width", "calc(100vw - 2rem)", "important");
+  els.writingSurfaceShell.style.setProperty("max-height", "calc(100vh - var(--top-bar-height, 64px) - 3rem)", "important");
   updateWritingSurfaceMetrics();
 }
 
