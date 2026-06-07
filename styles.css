@@ -5003,3 +5003,101 @@ body[data-writing-surface-layout] .writing-surface-shell .writing-assist-rail {
   grid-column: 2 !important;
   grid-row: 2 !important;
 }
+
+/* v5.1 shell repair: keep title + rail attached, but restore scroll/resize and leave the bottom controls outside. */
+.writing-surface-shell {
+  width: min(100%, 880px) !important;
+  min-width: min(560px, calc(100vw - 2rem)) !important;
+  max-width: calc(100vw - 2rem) !important;
+  height: min(72vh, 820px) !important;
+  min-height: 520px !important;
+  max-height: calc(100vh - var(--top-bar-height, 64px) - 3rem) !important;
+  margin: 2.25rem auto 1.25rem !important;
+  display: grid !important;
+  grid-template-columns: var(--attached-rail-width, 34px) minmax(0, 1fr) !important;
+  grid-template-rows: auto minmax(0, 1fr) !important;
+  position: relative !important;
+  resize: both !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+}
+
+.writing-surface-shell .title-strip {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  width: 100% !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 18px 18px 0 0 !important;
+  box-sizing: border-box !important;
+}
+
+.writing-surface-shell .writing-assist-rail {
+  grid-column: 1 !important;
+  grid-row: 2 !important;
+  position: relative !important;
+  left: auto !important;
+  top: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  transform: none !important;
+  width: var(--attached-rail-width, 34px) !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 18px 0 0 18px !important;
+  align-self: stretch !important;
+  justify-self: stretch !important;
+  box-sizing: border-box !important;
+}
+
+.writing-surface-shell .editor {
+  grid-column: 2 !important;
+  grid-row: 2 !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  max-width: none !important;
+  margin: 0 !important;
+  resize: none !important;
+  overflow: auto !important;
+  border-radius: 0 0 18px 0 !important;
+  box-sizing: border-box !important;
+}
+
+.document-end-bar {
+  width: min(100%, 880px) !important;
+  margin: 0 auto 7rem !important;
+  position: relative !important;
+  z-index: 2 !important;
+}
+
+body[data-writing-surface-layout="center"] .document-end-bar {
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+body[data-writing-surface-layout="left"] .document-end-bar {
+  margin-left: clamp(1rem, 4vw, 4rem) !important;
+  margin-right: auto !important;
+}
+body[data-writing-surface-layout="right"] .document-end-bar {
+  margin-left: auto !important;
+  margin-right: clamp(1rem, 4vw, 4rem) !important;
+}
+body[data-writing-surface-layout="floating"] .document-end-bar {
+  margin-left: var(--writing-surface-floating-left, 50%) !important;
+  margin-right: auto !important;
+  transform: translateY(var(--writing-surface-floating-top, 0px)) !important;
+}
+
+@media (max-width: 980px) {
+  .writing-surface-shell {
+    grid-template-columns: 0 minmax(0, 1fr) !important;
+    width: calc(100vw - 1rem) !important;
+    min-width: 0 !important;
+    resize: vertical !important;
+  }
+  .writing-surface-shell .writing-assist-rail { display: none !important; }
+}
