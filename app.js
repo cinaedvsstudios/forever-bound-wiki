@@ -1716,6 +1716,14 @@ document.addEventListener("pointermove", (event) => {
 });
 
 document.addEventListener("pointerup", () => { state.emojiDrag = null; });
+window.addEventListener("scroll", () => {
+  const toolbar = document.querySelector(".table-edit-toolbar");
+  if (toolbar && state.activeTable) positionTableEditToolbar(toolbar, state.activeTable);
+}, true);
+window.addEventListener("resize", () => {
+  const toolbar = document.querySelector(".table-edit-toolbar");
+  if (toolbar && state.activeTable) positionTableEditToolbar(toolbar, state.activeTable);
+});
 
 function closeEmojiPickerOnOutside(event) {
   // Emoji Spark now stays open until the X button is clicked.
@@ -2563,25 +2571,42 @@ function handleEditorHover(event) {
 function handleEditorMouseOut(event) {
   if (!event.relatedTarget?.closest?.(".table-edit-toolbar") && !event.relatedTarget?.closest?.("table")) {
     clearTimeout(state.tableEditTimer);
-    const toolbar = els.editor.querySelector(".table-edit-toolbar:not(.is-open)");
+    const toolbar = document.querySelector(".table-edit-toolbar:not(.is-open)");
     toolbar?.remove();
   }
 }
 
 function showTableEditButton(table, open = false) {
-  const existing = table.previousElementSibling;
-  if (existing?.classList.contains("table-edit-toolbar")) {
+  const existing = document.querySelector(".table-edit-toolbar");
+  if (existing && state.activeTable === table) {
     if (open) existing.classList.add("is-open");
+    positionTableEditToolbar(existing, table);
     return;
   }
   removeFloatingEditorButtons(".table-edit-toolbar");
+  state.activeTable = table;
   const toolbar = document.createElement("span");
-  toolbar.className = "table-edit-toolbar";
+  toolbar.className = "table-edit-toolbar is-floating";
+  toolbar.dataset.tableToolsFor = table.dataset.tableId || (table.dataset.tableId = `table-${Date.now()}-${Math.floor(Math.random() * 1000)}`);
   if (open) toolbar.classList.add("is-open");
-  toolbar.innerHTML = `<button type="button" class="table-edit-button" data-table-tool="toggle" title="Edit table">✎</button><span class="table-tool-row"><button type="button" data-table-tool="add-row" title="Add row below selected cell">＋R</button><button type="button" data-table-tool="add-col" title="Add column right of selected cell">＋C</button><button type="button" data-table-tool="delete-row" title="Delete selected row">−R</button><button type="button" data-table-tool="delete-col" title="Delete selected column">−C</button><button type="button" data-table-tool="equalize" title="Equalize column widths">⇔</button><button type="button" data-table-tool="wider" title="Widen selected column">↔</button><button type="button" data-table-tool="align" title="Cycle selected cell text alignment">≡</button><input type="color" data-table-tool="header-bg" title="Header/title background" value="#28133f"><input type="color" data-table-tool="cell-bg" title="Selected cell background" value="#211812"><input type="color" data-table-tool="line" title="Inner line color" value="#563485"><input type="color" data-table-tool="outer-border" title="Outer table border" value="#e88f69"></span>`;
+  toolbar.innerHTML = `<button type="button" class="table-edit-button" data-table-tool="toggle" title="Edit table">✎</button><span class="table-tool-row"><button type="button" data-table-tool="equalize" title="Equalise column widths">⇔</button><button type="button" data-table-tool="wider" title="Widen selected column">↔</button><button type="button" data-table-tool="add-row" title="Add row below selected cell">＋R</button><button type="button" data-table-tool="add-col" title="Add column right of selected cell">＋C</button><button type="button" data-table-tool="delete-row" title="Delete selected row">−R</button><button type="button" data-table-tool="delete-col" title="Delete selected column">−C</button><button type="button" data-table-tool="align" title="Cycle selected cell text alignment">≡</button><input type="color" data-table-tool="header-bg" title="Header/title background" value="#28133f"><input type="color" data-table-tool="cell-bg" title="Selected cell background" value="#211812"><input type="color" data-table-tool="line" title="Inner line color" value="#563485"><input type="color" data-table-tool="outer-border" title="Outer table border" value="#e88f69"></span>`;
   toolbar.addEventListener("click", (event) => handleTableToolAction(event, table, toolbar));
   toolbar.addEventListener("input", (event) => handleTableToolAction(event, table, toolbar));
-  table.parentElement?.insertBefore(toolbar, table);
+  toolbar.addEventListener("mouseleave", () => {
+    if (!toolbar.classList.contains("is-open") && !table.matches(":hover")) toolbar.remove();
+  });
+  document.body.append(toolbar);
+  positionTableEditToolbar(toolbar, table);
+}
+
+function positionTableEditToolbar(toolbar, table) {
+  if (!toolbar || !table?.isConnected) return;
+  const rect = table.getBoundingClientRect();
+  const width = toolbar.offsetWidth || 44;
+  const left = Math.max(8, Math.min(window.innerWidth - width - 8, rect.right - width - 8));
+  const top = Math.max(8, Math.min(window.innerHeight - 44, rect.top + 8));
+  toolbar.style.left = `${left}px`;
+  toolbar.style.top = `${top}px`;
 }
 
 function highlightActiveTableCell(table) {
@@ -2614,6 +2639,7 @@ function handleTableToolAction(event, table, toolbar) {
 
 function removeFloatingEditorButtons(selector) {
   els.editor.querySelectorAll(selector).forEach((button) => button.remove());
+  document.querySelectorAll(selector).forEach((button) => button.remove());
 }
 
 async function openTableEditor(table) {
