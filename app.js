@@ -18,6 +18,10 @@ const GOOGLE_DRIVE_CLIENT_ID = "914452234615-eqsti2er404bhih80jnjemsfc68boso5.ap
 const GOOGLE_DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.file";
 const GOOGLE_IDENTITY_SCRIPT = "https://accounts.google.com/gsi/client";
 const GOOGLE_DRIVE_STORAGE_KEY = "capsanoto-google-drive-storage-v1";
+const GOOGLE_DRIVE_API_ROOT = "https://www.googleapis.com/drive/v3";
+const GOOGLE_DRIVE_UPLOAD_ROOT = "https://www.googleapis.com/upload/drive/v3";
+const GOOGLE_DRIVE_ROOT_FOLDER_NAME = "Capsanoto";
+const GOOGLE_DRIVE_FOLDER_MIME = "application/vnd.google-apps.folder";
 
 const CAPSANOTO_PALETTE = {
   black: "#000000",
@@ -144,6 +148,10 @@ const state = {
     accountLabel: "",
     lastStatus: "Not connected",
     initError: "",
+    rootFolderId: "",
+    projectFolderId: "",
+    projectName: "",
+    lastSyncAt: "",
   },
 };
 
@@ -600,15 +608,15 @@ function bindEditorEvents() {
   els.connectGoogleDriveButton?.addEventListener("click", () => connectGoogleDriveAccount(false));
   els.switchGoogleDriveButton?.addEventListener("click", () => connectGoogleDriveAccount(true));
   els.disconnectGoogleDriveButton?.addEventListener("click", disconnectGoogleDriveAccount);
-  els.createOnlineProjectButton?.addEventListener("click", () => projectStoragePlaceholder("Create Online Project will build the Drive project folder in the next sync phase."));
-  els.openOnlineProjectButton?.addEventListener("click", () => projectStoragePlaceholder("Open Online Project will list Drive projects in the next sync phase."));
-  els.syncOnlineProjectButton?.addEventListener("click", () => projectStoragePlaceholder("Sync Now will upload/download project files in the next sync phase."));
+  els.createOnlineProjectButton?.addEventListener("click", createGoogleDriveOnlineProject);
+  els.openOnlineProjectButton?.addEventListener("click", openGoogleDriveOnlineProject);
+  els.syncOnlineProjectButton?.addEventListener("click", syncGoogleDriveProject);
   els.projectCreateBackupFolderButton?.addEventListener("click", createNewWritingRoomFolder);
   els.projectOpenBackupFolderButton?.addEventListener("click", openWritingRoomFolder);
   els.projectSaveBackupButton?.addEventListener("click", () => saveFolderModeSnapshot("Backed up active file to disk", { force: true }));
   els.projectResetBackupReminderButton?.addEventListener("click", resetFolderModeReminderPreference);
-  els.newProjectPlaceholderButton?.addEventListener("click", () => projectStoragePlaceholder("New Project will create a new Google Drive primary project in the next phase."));
-  els.openProjectPlaceholderButton?.addEventListener("click", () => projectStoragePlaceholder("Open / Switch Project will open the online project picker in the next phase."));
+  els.newProjectPlaceholderButton?.addEventListener("click", createGoogleDriveOnlineProject);
+  els.openProjectPlaceholderButton?.addEventListener("click", openGoogleDriveOnlineProject);
   els.duplicateProjectPlaceholderButton?.addEventListener("click", () => projectStoragePlaceholder("Duplicate Project will clone project files after Drive sync is implemented."));
   els.downloadProjectBackupButton?.addEventListener("click", () => exportSmartBundle("caps"));
   els.closeSettingsPanel.addEventListener("pointerdown", (event) => event.stopPropagation());
@@ -3088,6 +3096,10 @@ function loadGoogleDriveStorageState() {
     state.googleDrive.connectedAt = saved.connectedAt || "";
     state.googleDrive.expiresAt = saved.expiresAt || "";
     state.googleDrive.accountLabel = saved.accountLabel || "";
+    state.googleDrive.rootFolderId = saved.rootFolderId || "";
+    state.googleDrive.projectFolderId = saved.projectFolderId || "";
+    state.googleDrive.projectName = saved.projectName || "";
+    state.googleDrive.lastSyncAt = saved.lastSyncAt || "";
     state.googleDrive.lastStatus = saved.lastStatus || (saved.connected ? "Connected previously; sign in again if token expired" : "Not connected");
   } catch {
     state.googleDrive.lastStatus = "Google Drive connection state could not be read";
@@ -3102,6 +3114,10 @@ function saveGoogleDriveStorageState() {
     expiresAt: state.googleDrive.expiresAt,
     accountLabel: state.googleDrive.accountLabel,
     lastStatus: state.googleDrive.lastStatus,
+    rootFolderId: state.googleDrive.rootFolderId,
+    projectFolderId: state.googleDrive.projectFolderId,
+    projectName: state.googleDrive.projectName,
+    lastSyncAt: state.googleDrive.lastSyncAt,
   };
   localStorage.setItem(GOOGLE_DRIVE_STORAGE_KEY, JSON.stringify(payload));
 }
@@ -3122,15 +3138,18 @@ function updateProjectSettingsStatus(message = "") {
   const storageMode = state.googleDrive.connected ? "Google Drive primary · HDD backup optional · localStorage emergency draft" : "Google Drive not connected · HDD backup/local draft available";
   if (els.projectInfoStatus) {
     const disk = state.folderMode.lastDiskSaveAt ? new Date(state.folderMode.lastDiskSaveAt).toLocaleString() : "never";
-    const online = state.googleDrive.connectedAt ? new Date(state.googleDrive.connectedAt).toLocaleString() : "not connected";
+    const online = state.googleDrive.lastSyncAt ? new Date(state.googleDrive.lastSyncAt).toLocaleString() : (state.googleDrive.connectedAt ? `connected ${new Date(state.googleDrive.connectedAt).toLocaleString()}` : "not connected");
     const design = state.designSettings && Object.keys(state.designSettings).length ? "Writing Room theme active" : "Default theme";
-    els.projectInfoStatus.innerHTML = `<strong>${escapeHtml(state.writingRoomName || "Writing Room")}</strong><br>Active file: ${escapeHtml(active?.title || "No active file")}<br>Storage: ${escapeHtml(storageMode)}<br>Design: ${escapeHtml(design)}<br>Last online connection: ${escapeHtml(online)}<br>Last HDD backup: ${escapeHtml(disk)}`;
+    const onlineProject = state.googleDrive.projectName ? `Google project: ${state.googleDrive.projectName}` : "Google project: none selected";
+    els.projectInfoStatus.innerHTML = `<strong>${escapeHtml(state.writingRoomName || "Writing Room")}</strong><br>Active file: ${escapeHtml(active?.title || "No active file")}<br>Storage: ${escapeHtml(storageMode)}<br>${escapeHtml(onlineProject)}<br>Design: ${escapeHtml(design)}<br>Last online sync: ${escapeHtml(online)}<br>Last HDD backup: ${escapeHtml(disk)}`;
   }
   if (els.googleDriveStatus) {
     const expires = state.googleDrive.expiresAt ? new Date(state.googleDrive.expiresAt).toLocaleString() : "not available";
     const connected = state.googleDrive.connected ? "Connected" : "Not connected";
     const label = state.googleDrive.accountLabel ? ` · ${escapeHtml(state.googleDrive.accountLabel)}` : "";
-    els.googleDriveStatus.innerHTML = `<strong>${connected}${label}</strong><br>${escapeHtml(state.googleDrive.lastStatus || "Google Drive is not connected.")}<br>Token expiry: ${escapeHtml(expires)}${message ? `<br>${escapeHtml(message)}` : ""}`;
+    const project = state.googleDrive.projectName ? `<br>Online project: ${escapeHtml(state.googleDrive.projectName)}` : "";
+    const sync = state.googleDrive.lastSyncAt ? `<br>Last online sync: ${escapeHtml(new Date(state.googleDrive.lastSyncAt).toLocaleString())}` : "";
+    els.googleDriveStatus.innerHTML = `<strong>${connected}${label}</strong><br>${escapeHtml(state.googleDrive.lastStatus || "Google Drive is not connected.")}<br>Token expiry: ${escapeHtml(expires)}${project}${sync}${message ? `<br>${escapeHtml(message)}` : ""}`;
   }
   if (els.projectFolderModeStatus) {
     const local = state.folderMode.enabled ? `Backup folder active: ${state.folderMode.projectName || "selected folder"}` : "No backup folder selected";
@@ -3189,7 +3208,7 @@ function handleGoogleDriveTokenResponse(response) {
   state.googleDrive.connectedAt = new Date(now).toISOString();
   state.googleDrive.expiresAt = response.expires_in ? new Date(now + Number(response.expires_in) * 1000).toISOString() : "";
   state.googleDrive.accountLabel = "Connected Google account";
-  state.googleDrive.lastStatus = "Google Drive token received. Online project creation/sync comes in the next phase.";
+  state.googleDrive.lastStatus = "Google Drive token received. Create Online Project or Sync Now can now write project files to Drive.";
   saveGoogleDriveStorageState();
   setStatus("Google Drive connected", "saved");
   updateProjectSettingsStatus("Google Drive connected");
@@ -3214,10 +3233,335 @@ function disconnectGoogleDriveAccount() {
   state.googleDrive.connectedAt = "";
   state.googleDrive.expiresAt = "";
   state.googleDrive.accountLabel = "";
+  state.googleDrive.rootFolderId = "";
+  state.googleDrive.projectFolderId = "";
+  state.googleDrive.projectName = "";
+  state.googleDrive.lastSyncAt = "";
   state.googleDrive.lastStatus = "Disconnected. Local backup and emergency drafts are still available.";
   saveGoogleDriveStorageState();
   setStatus("Google Drive disconnected", "saved");
   updateProjectSettingsStatus();
+}
+
+
+async function ensureGoogleDriveAccess(action = "use Google Drive") {
+  if (!state.googleDrive.accessToken) {
+    state.googleDrive.lastStatus = `Connect Google Account before you ${action}.`;
+    saveGoogleDriveStorageState();
+    updateProjectSettingsStatus(state.googleDrive.lastStatus);
+    setStatus("Google Drive connection needed", "dirty");
+    return false;
+  }
+  const expiresAt = Date.parse(state.googleDrive.expiresAt || "");
+  if (Number.isFinite(expiresAt) && expiresAt < Date.now() + 30000) {
+    state.googleDrive.lastStatus = "Google Drive token expired. Click Connect or Switch Google Account again.";
+    state.googleDrive.accessToken = "";
+    saveGoogleDriveStorageState();
+    updateProjectSettingsStatus(state.googleDrive.lastStatus);
+    setStatus("Google Drive token expired", "dirty");
+    return false;
+  }
+  return true;
+}
+
+function googleDriveHeaders(extra = {}) {
+  return { Authorization: `Bearer ${state.googleDrive.accessToken}`, ...extra };
+}
+
+async function googleDriveRequest(url, options = {}) {
+  const response = await fetch(url, {
+    ...options,
+    headers: googleDriveHeaders(options.headers || {}),
+  });
+  const text = await response.text();
+  const payload = text ? JSON.parse(text) : null;
+  if (!response.ok) {
+    const message = payload?.error?.message || response.statusText || "Google Drive request failed";
+    throw new Error(message);
+  }
+  return payload;
+}
+
+function driveQueryEscape(value) {
+  return String(value || "").replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+}
+
+async function listGoogleDriveFiles(query, fields = "files(id,name,mimeType,modifiedTime,parents)") {
+  const params = new URLSearchParams({ q: query, fields, pageSize: "100" });
+  const payload = await googleDriveRequest(`${GOOGLE_DRIVE_API_ROOT}/files?${params.toString()}`);
+  return payload?.files || [];
+}
+
+async function findGoogleDriveItem(name, parentId = "", mimeType = "") {
+  const clauses = [`name = '${driveQueryEscape(name)}'`, "trashed = false"];
+  if (parentId) clauses.push(`'${driveQueryEscape(parentId)}' in parents`);
+  if (mimeType) clauses.push(`mimeType = '${driveQueryEscape(mimeType)}'`);
+  const files = await listGoogleDriveFiles(clauses.join(" and "), "files(id,name,mimeType,modifiedTime,parents)");
+  return files[0] || null;
+}
+
+async function createGoogleDriveFolder(name, parentId = "") {
+  const metadata = { name, mimeType: GOOGLE_DRIVE_FOLDER_MIME };
+  if (parentId) metadata.parents = [parentId];
+  return googleDriveRequest(`${GOOGLE_DRIVE_API_ROOT}/files?fields=id,name,mimeType,parents`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(metadata),
+  });
+}
+
+async function ensureGoogleDriveFolder(name, parentId = "") {
+  const existing = await findGoogleDriveItem(name, parentId, GOOGLE_DRIVE_FOLDER_MIME);
+  if (existing?.id) return existing;
+  return createGoogleDriveFolder(name, parentId);
+}
+
+async function ensureGoogleDriveFolderPath(parts, parentId = "") {
+  let currentParent = parentId;
+  let current = null;
+  for (const part of parts.filter(Boolean)) {
+    current = await ensureGoogleDriveFolder(part, currentParent);
+    currentParent = current.id;
+  }
+  return current;
+}
+
+async function getGoogleDriveFolderPath(parts, parentId = "") {
+  let currentParent = parentId;
+  let current = null;
+  for (const part of parts.filter(Boolean)) {
+    current = await findGoogleDriveItem(part, currentParent, GOOGLE_DRIVE_FOLDER_MIME);
+    if (!current?.id) throw new Error(`Missing Google Drive folder: ${part}`);
+    currentParent = current.id;
+  }
+  return current;
+}
+
+async function ensureGoogleDriveProject(projectName = "") {
+  if (!(await ensureGoogleDriveAccess("create or sync an online project"))) return null;
+  const safeName = safePathPart(projectName || state.googleDrive.projectName || state.writingRoomName || "Writing Room");
+  setStatus("Preparing Google Drive project…", "dirty");
+  const root = await ensureGoogleDriveFolder(GOOGLE_DRIVE_ROOT_FOLDER_NAME);
+  const project = await ensureGoogleDriveFolder(safeName, root.id);
+  await ensureGoogleDriveFolder("assets", project.id);
+  state.googleDrive.rootFolderId = root.id;
+  state.googleDrive.projectFolderId = project.id;
+  state.googleDrive.projectName = project.name || safeName;
+  state.googleDrive.lastStatus = `Online project ready: ${state.googleDrive.projectName}`;
+  saveGoogleDriveStorageState();
+  updateProjectSettingsStatus(state.googleDrive.lastStatus);
+  return project;
+}
+
+function onlineProjectPayload() {
+  const payload = folderModeProjectPayload();
+  payload.storageMode = "google-drive-primary";
+  payload.googleDrive = {
+    rootFolderName: GOOGLE_DRIVE_ROOT_FOLDER_NAME,
+    rootFolderId: state.googleDrive.rootFolderId || "",
+    projectFolderId: state.googleDrive.projectFolderId || "",
+    projectName: state.googleDrive.projectName || state.writingRoomName || "Writing Room",
+    lastSyncAt: new Date().toISOString(),
+  };
+  return payload;
+}
+
+async function upsertGoogleDriveTextFile(parentId, name, content, mimeType = "text/plain") {
+  const existing = await findGoogleDriveItem(name, parentId, "");
+  if (existing?.id) {
+    await googleDriveRequest(`${GOOGLE_DRIVE_UPLOAD_ROOT}/files/${encodeURIComponent(existing.id)}?uploadType=media&fields=id,name,modifiedTime`, {
+      method: "PATCH",
+      headers: { "Content-Type": mimeType },
+      body: content,
+    });
+    return existing;
+  }
+  const boundary = `capsanoto_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+  const metadata = { name, parents: [parentId], mimeType };
+  const body = [
+    `--${boundary}`,
+    "Content-Type: application/json; charset=UTF-8",
+    "",
+    JSON.stringify(metadata),
+    `--${boundary}`,
+    `Content-Type: ${mimeType}; charset=UTF-8`,
+    "",
+    content,
+    `--${boundary}--`,
+    "",
+  ].join("\r\n");
+  return googleDriveRequest(`${GOOGLE_DRIVE_UPLOAD_ROOT}/files?uploadType=multipart&fields=id,name,modifiedTime`, {
+    method: "POST",
+    headers: { "Content-Type": `multipart/related; boundary=${boundary}` },
+    body,
+  });
+}
+
+async function uploadGoogleDriveTextAtPath(projectFolderId, path, content, mimeType = "text/plain") {
+  const parts = path.split("/").filter(Boolean);
+  const fileName = parts.pop();
+  const folder = parts.length ? await ensureGoogleDriveFolderPath(parts, projectFolderId) : { id: projectFolderId };
+  return upsertGoogleDriveTextFile(folder.id, fileName, content, mimeType);
+}
+
+async function readGoogleDriveTextFile(parentId, name) {
+  const file = await findGoogleDriveItem(name, parentId, "");
+  if (!file?.id) throw new Error(`Missing Google Drive file: ${name}`);
+  const response = await fetch(`${GOOGLE_DRIVE_API_ROOT}/files/${encodeURIComponent(file.id)}?alt=media`, {
+    headers: googleDriveHeaders(),
+  });
+  if (!response.ok) throw new Error(`Could not read ${name} from Google Drive.`);
+  return response.text();
+}
+
+async function readGoogleDriveTextAtPath(projectFolderId, path) {
+  const parts = path.split("/").filter(Boolean);
+  const fileName = parts.pop();
+  const folder = parts.length ? await getGoogleDriveFolderPath(parts, projectFolderId) : { id: projectFolderId };
+  return readGoogleDriveTextFile(folder.id, fileName);
+}
+
+async function createGoogleDriveOnlineProject() {
+  try {
+    if (!(await ensureGoogleDriveAccess("create an online project"))) return;
+    const result = await openCapsDialog("Create Online Project", [
+      { name: "projectName", label: "Online project folder name", value: state.googleDrive.projectName || state.writingRoomName || "Writing Room", placeholder: "Forever Bound" },
+      { html: "<p>This creates/updates a visible Google Drive folder at <strong>Capsanoto / Project Name</strong>, then uploads the project JSON, TCard library, and Markdown files.</p>" },
+    ]);
+    if (!result?.projectName) return;
+    await ensureGoogleDriveProject(result.projectName.trim());
+    await syncGoogleDriveProject({ writeAll: true, silentEnsure: true });
+  } catch (error) {
+    console.error(error);
+    state.googleDrive.lastStatus = `Create Online Project failed: ${error.message}`;
+    saveGoogleDriveStorageState();
+    updateProjectSettingsStatus(state.googleDrive.lastStatus);
+    setStatus("Google Drive project failed", "dirty");
+  }
+}
+
+async function syncGoogleDriveProject(options = {}) {
+  try {
+    if (!(await ensureGoogleDriveAccess("sync the online project"))) return;
+    const project = options.silentEnsure && state.googleDrive.projectFolderId
+      ? { id: state.googleDrive.projectFolderId, name: state.googleDrive.projectName || state.writingRoomName }
+      : await ensureGoogleDriveProject(state.googleDrive.projectName || state.writingRoomName);
+    if (!project?.id) return;
+    syncEditorToDocument();
+    await prepareDocumentsForFolderMode();
+    setStatus("Syncing to Google Drive…", "dirty");
+    const now = new Date().toISOString();
+    const projectPayload = onlineProjectPayload();
+    await upsertGoogleDriveTextFile(project.id, "capsanoto.project.json", JSON.stringify(projectPayload, null, 2), "application/json");
+    await upsertGoogleDriveTextFile(project.id, "tcards.json", JSON.stringify({ schemaVersion: 1, updatedAt: now, blocks: state.blocks }, null, 2), "application/json");
+    await ensureGoogleDriveFolder("assets", project.id);
+    const docsToWrite = options.activeOnly ? [activeDocument()].filter(Boolean) : state.documents;
+    for (const doc of docsToWrite) {
+      await uploadGoogleDriveTextAtPath(project.id, doc.diskPath || suggestedMarkdownPath(doc), documentToCapsMarkdown(doc), "text/markdown");
+      doc.onlineSavedAt = now;
+    }
+    state.googleDrive.projectFolderId = project.id;
+    state.googleDrive.projectName = project.name || state.googleDrive.projectName || state.writingRoomName;
+    state.googleDrive.lastSyncAt = now;
+    state.googleDrive.lastStatus = `Synced ${docsToWrite.length} file${docsToWrite.length === 1 ? "" : "s"} to Google Drive.`;
+    saveGoogleDriveStorageState();
+    localStorage.setItem(STORAGE_KEY, serializedWorkspace());
+    updateProjectSettingsStatus(state.googleDrive.lastStatus);
+    setStatus("Synced to Google Drive", "saved");
+  } catch (error) {
+    console.error(error);
+    state.googleDrive.lastStatus = `Sync failed: ${error.message}`;
+    saveGoogleDriveStorageState();
+    updateProjectSettingsStatus(state.googleDrive.lastStatus);
+    setStatus("Sync failed — saved locally", "dirty");
+  }
+}
+
+async function listGoogleDriveProjects() {
+  if (!(await ensureGoogleDriveAccess("open an online project"))) return [];
+  const root = await ensureGoogleDriveFolder(GOOGLE_DRIVE_ROOT_FOLDER_NAME);
+  state.googleDrive.rootFolderId = root.id;
+  saveGoogleDriveStorageState();
+  return listGoogleDriveFiles(`'${driveQueryEscape(root.id)}' in parents and mimeType = '${GOOGLE_DRIVE_FOLDER_MIME}' and trashed = false`, "files(id,name,mimeType,modifiedTime)");
+}
+
+async function openGoogleDriveOnlineProject() {
+  try {
+    const projects = await listGoogleDriveProjects();
+    if (!projects.length) {
+      state.googleDrive.lastStatus = "No Capsanoto online projects found in this Google Drive account.";
+      updateProjectSettingsStatus(state.googleDrive.lastStatus);
+      setStatus("No online projects found", "dirty");
+      return;
+    }
+    const listHtml = `<p>Available projects:</p><ul>${projects.map((item) => `<li>${escapeHtml(item.name)} <small>${escapeHtml(item.modifiedTime ? new Date(item.modifiedTime).toLocaleString() : "")}</small></li>`).join("")}</ul>`;
+    const result = await openCapsDialog("Open Online Project", [
+      { html: listHtml },
+      { name: "projectName", label: "Project folder name to open", value: state.googleDrive.projectName || projects[0].name, placeholder: projects[0].name },
+    ]);
+    if (!result?.projectName) return;
+    const selected = projects.find((item) => item.name === result.projectName.trim()) || await findGoogleDriveItem(result.projectName.trim(), state.googleDrive.rootFolderId, GOOGLE_DRIVE_FOLDER_MIME);
+    if (!selected?.id) throw new Error("Selected project folder was not found.");
+    await loadGoogleDriveProject(selected);
+  } catch (error) {
+    console.error(error);
+    state.googleDrive.lastStatus = `Open Online Project failed: ${error.message}`;
+    saveGoogleDriveStorageState();
+    updateProjectSettingsStatus(state.googleDrive.lastStatus);
+    setStatus("Open online project failed", "dirty");
+  }
+}
+
+async function loadGoogleDriveProject(projectFolder) {
+  setStatus("Opening Google Drive project…", "dirty");
+  const projectText = await readGoogleDriveTextFile(projectFolder.id, "capsanoto.project.json");
+  const project = JSON.parse(projectText);
+  state.writingRoomName = project.writingRoomName || project.googleDrive?.projectName || projectFolder.name || "Writing Room";
+  state.filingGroups = Array.isArray(project.filingGroups) ? project.filingGroups : defaultFilingGroups();
+  state.filingTabs = Array.isArray(project.filingTabs) ? project.filingTabs : [];
+  state.trash = Array.isArray(project.trash) ? project.trash : [];
+  state.deprecated = Array.isArray(project.deprecated) ? project.deprecated : [];
+  state.deprecatedParagraphs = Array.isArray(project.deprecatedParagraphs) ? project.deprecatedParagraphs : [];
+  if (project.designSettings && typeof project.designSettings === "object") {
+    setProjectDesignSettings(project.designSettings, { persistLocal: true });
+    applySavedDesignSettings();
+    loadDesignForm();
+  }
+  const tcardText = await readGoogleDriveTextFile(projectFolder.id, "tcards.json").catch(() => "");
+  if (tcardText) {
+    const payload = JSON.parse(tcardText);
+    state.blocks = payload?.blocks && typeof payload.blocks === "object" ? payload.blocks : (project.blocks || {});
+  } else {
+    state.blocks = project.blocks || {};
+  }
+  state.documents = [];
+  for (const docMeta of project.documents || []) {
+    const doc = { ...docMeta };
+    if (doc.diskPath) {
+      try {
+        const markdown = await readGoogleDriveTextAtPath(projectFolder.id, doc.diskPath);
+        Object.assign(doc, capsMarkdownToDocument(markdown, doc));
+        doc.onlineSavedAt = new Date().toISOString();
+      } catch (error) {
+        console.warn(`Could not read ${doc.diskPath} from Google Drive`, error);
+        doc.content = doc.content || `<h1>${escapeHtml(doc.title || "Missing File")}</h1><p>Capsanoto could not read this Markdown file from Google Drive.</p>`;
+      }
+    }
+    state.documents.push(doc);
+  }
+  ensureFilingTabs();
+  if (!state.documents.length) createDocument();
+  state.activeId = project.activeId && state.documents.some((doc) => doc.id === project.activeId) ? project.activeId : state.documents[0].id;
+  state.googleDrive.projectFolderId = projectFolder.id;
+  state.googleDrive.projectName = projectFolder.name || state.writingRoomName;
+  state.googleDrive.lastSyncAt = project.updatedAt || new Date().toISOString();
+  state.googleDrive.lastStatus = `Opened online project: ${state.googleDrive.projectName}`;
+  saveGoogleDriveStorageState();
+  localStorage.setItem(STORAGE_KEY, serializedWorkspace());
+  renderAll();
+  updateUrl();
+  updateProjectSettingsStatus(state.googleDrive.lastStatus);
+  setStatus("Opened Google Drive project", "saved");
 }
 
 function projectStoragePlaceholder(message) {
