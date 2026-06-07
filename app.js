@@ -1629,6 +1629,13 @@ function showEmojiPicker(event) {
     navigator.clipboard?.writeText(selectedEmoji).catch(() => {});
     setContextStatus(`Copied ${selectedEmoji}. Paste it into a settings field.`, "saved");
   };
+  picker.addEventListener("contextmenu", (contextEvent) => {
+    const button = contextEvent.target.closest("button[data-emoji]");
+    if (!button || button.classList.contains("is-empty")) return;
+    contextEvent.preventDefault();
+    selectEmoji(button);
+    copySelectedEmoji();
+  });
   picker.addEventListener("click", async (clickEvent) => {
     if (clickEvent.target.closest(".emoji-close")) {
       picker.remove();
@@ -4986,7 +4993,7 @@ function defaultDesignSettings() {
     borderColor: palette.peach,
     textColor: palette.parchment,
     fontSize: "14",
-    fontFamily: "Inter, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+    fontFamily: "Arial, Helvetica, sans-serif",
     titleIconScale: "143",
     bold: true,
     bgImage: "wallpapersm.jpg",
@@ -5017,7 +5024,7 @@ function defaultDesignSettings() {
 }
 
 function saveDesignSettings() {
-  const settings = collectExtraDesignSettings({ buttonBg: els.designButtonBg.value, borderColor: els.designBorderColor.value, textColor: els.designTextColor.value, fontSize: els.designFontSize.value || "14", fontFamily: els.designFontFamily?.value || "Inter, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif", titleIconScale: els.titleIconScale?.value || "143", bold: els.designBold.checked, bgImage: els.designBgImage.value.trim(), dialogBg: els.dialogBgColor.value, dialogBorder: els.dialogBorderColor.value, dialogShadow: els.dialogShadowColor.value, dialogText: els.dialogTextColor.value, dialogFontSize: els.dialogFontSize.value || "14", dialogBold: els.dialogBold.checked, dialogButtonBg: els.dialogButtonBg.value, dialogButtonBorder: els.dialogButtonBorder.value, dialogButtonText: els.dialogButtonText.value, dialogButtonShadow: els.dialogButtonShadow.value, labelText: els.labelTextColor.value, dynamicText: els.dynamicTextColor.value, scrollbarTrack: els.scrollbarTrackColor.value, scrollbarThumb: els.scrollbarThumbColor.value, statusBg: els.statusBgColor.value, statusBorder: els.statusBorderColor.value, statusText: els.statusTextColor.value, emphasisBg: els.emphasisBgColor.value, emphasisBorder: els.emphasisBorderColor.value, emphasisText: els.emphasisTextColor.value, panelBg: currentDesignSettings().panelBg || defaultDesignSettings().panelBg, panelBorder: els.panelBorderColor.value, favoriteColors: [...state.favoriteColors] });
+  const settings = collectExtraDesignSettings({ buttonBg: els.designButtonBg.value, borderColor: els.designBorderColor.value, textColor: els.designTextColor.value, fontSize: els.designFontSize.value || "14", fontFamily: els.designFontFamily?.value || "Arial, Helvetica, sans-serif", titleIconScale: els.titleIconScale?.value || "143", bold: els.designBold.checked, bgImage: els.designBgImage.value.trim(), dialogBg: els.dialogBgColor.value, dialogBorder: els.dialogBorderColor.value, dialogShadow: els.dialogShadowColor.value, dialogText: els.dialogTextColor.value, dialogFontSize: els.dialogFontSize.value || "14", dialogBold: els.dialogBold.checked, dialogButtonBg: els.dialogButtonBg.value, dialogButtonBorder: els.dialogButtonBorder.value, dialogButtonText: els.dialogButtonText.value, dialogButtonShadow: els.dialogButtonShadow.value, labelText: els.labelTextColor.value, dynamicText: els.dynamicTextColor.value, scrollbarTrack: els.scrollbarTrackColor.value, scrollbarThumb: els.scrollbarThumbColor.value, statusBg: els.statusBgColor.value, statusBorder: els.statusBorderColor.value, statusText: els.statusTextColor.value, emphasisBg: els.emphasisBgColor.value, emphasisBorder: els.emphasisBorderColor.value, emphasisText: els.emphasisTextColor.value, panelBg: currentDesignSettings().panelBg || defaultDesignSettings().panelBg, panelBorder: els.panelBorderColor.value, favoriteColors: [...state.favoriteColors] });
   localStorage.setItem(DESIGN_KEY, JSON.stringify(settings));
   applyDesignSettings(settings);
   setStatus("Design applied", "saved");
@@ -5063,7 +5070,7 @@ function applyDesignSettings(settings) {
   root.style.setProperty("--line", settings.borderColor);
   root.style.setProperty("--ink", settings.textColor);
   root.style.setProperty("--button-font-size", `${settings.fontSize}px`);
-  root.style.setProperty("--app-font-family", settings.fontFamily || "Inter, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif");
+  root.style.setProperty("--app-font-family", settings.fontFamily || "Arial, Helvetica, sans-serif");
   const iconScale = Math.max(50, Math.min(250, Number(settings.titleIconScale) || 143));
   root.style.setProperty("--title-icon-scale", `${iconScale}%`);
   root.style.setProperty("--title-icon-size", `${(1.65 * iconScale / 100).toFixed(2)}rem`);

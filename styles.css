@@ -27,7 +27,7 @@
   --success: var(--theme-success);
   --warning: var(--theme-warning);
   --danger: var(--theme-danger);
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 * { box-sizing: border-box; }
@@ -1362,10 +1362,10 @@ input, textarea, select, .panel-help, .help-panel p, .help-panel dd, .document-c
 
 /* Feedback pass: typography, icon title, compact designer, table/emoji/pill polish */
 :root {
-  font-family: var(--app-font-family, Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif) !important;
+  font-family: var(--app-font-family, Arial, Helvetica, sans-serif) !important;
 }
 body, button, input, select, textarea, summary, .editor, .help-panel, .settings-panel, .block-panel {
-  font-family: var(--app-font-family, Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif) !important;
+  font-family: var(--app-font-family, Arial, Helvetica, sans-serif) !important;
 }
 code, pre, .editor code {
   font-family: "Courier New", Courier, monospace !important;
@@ -1542,7 +1542,7 @@ code, pre, .editor code {
 }
 .help-panel,
 .help-panel *:not(code):not(pre) {
-  font-family: var(--app-font-family, Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif) !important;
+  font-family: var(--app-font-family, Arial, Helvetica, sans-serif) !important;
 }
 .help-panel code,
 .help-panel pre {
@@ -1569,7 +1569,7 @@ body, button, input, select, textarea, summary, .editor, .help-panel, .settings-
 }
 h1, h2, h3, h4, .settings-section h3, .help-panel h3, .block-panel h2, .writing-room-panel h2,
 .writing-room-card summary strong, .filing-tab summary strong, .writing-room-group summary strong {
-  font-family: var(--app-font-family, Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif) !important;
+  font-family: var(--app-font-family, Arial, Helvetica, sans-serif) !important;
   font-weight: 700 !important;
 }
 .settings-section h3, .help-panel h3, .writing-room-card summary strong, .filing-tab summary strong, .writing-room-group summary strong {
@@ -1599,7 +1599,7 @@ h1, h2, h3, h4, .settings-section h3, .help-panel h3, .block-panel h2, .writing-
   line-height: 1.55;
 }
 .editor h1, .editor h2, .editor h3 {
-  font-family: var(--app-font-family, Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif) !important;
+  font-family: var(--app-font-family, Arial, Helvetica, sans-serif) !important;
   font-weight: 700 !important;
   letter-spacing: normal !important;
 }
@@ -1704,7 +1704,7 @@ h1, h2, h3, h4, .settings-section h3, .help-panel h3, .block-panel h2, .writing-
 
 /* Feedback pass: title icon sizing, global font control, and true 1px gray color inputs */
 :root {
-  --app-font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --app-font-family: Arial, Helvetica, sans-serif;
   --title-icon-scale: 143%;
 }
 body, button, input, select, textarea, summary, .editor, .help-panel, .settings-panel, .block-panel, .writing-room-panel,
@@ -1785,7 +1785,7 @@ button, summary, input, select, textarea, .context-status, .document-end-bar, .w
 
 /* Guidebook terminology update and Inter-first font stack */
 :root {
-  --app-font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --app-font-family: Arial, Helvetica, sans-serif;
 }
 .help-panel,
 .help-panel *:not(code):not(pre),
@@ -3810,7 +3810,7 @@ body[data-writing-surface-layout="floating"] .document-end-bar {
 .writer-header.toolbar .context-status,
 .icon-command-bar > .context-status,
 .icon-command-bar > .command-status { width: var(--status-box-width) !important; flex: 0 0 var(--status-box-width) !important; }
-body, button, input, select, textarea, summary, .editor, .help-panel, .settings-panel, .block-panel, .writing-room-panel, .selection-menu, .emoji-picker { font-family: var(--app-font-family, Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif) !important; }
+body, button, input, select, textarea, summary, .editor, .help-panel, .settings-panel, .block-panel, .writing-room-panel, .selection-menu, .emoji-picker { font-family: var(--app-font-family, Arial, Helvetica, sans-serif) !important; }
 code, pre, .editor code { font-family: "Courier New", Courier, monospace !important; }
 .writer-shell { background-image: linear-gradient(rgba(0,0,0,0.82), rgba(33,24,18,0.95)), var(--writing-panel-bg-image), var(--app-bg-image) !important; }
 .title-strip { background-image: var(--writing-title-bg-image) !important; background-size: cover; background-position: center; border-radius: 18px; }
@@ -4579,4 +4579,96 @@ body[data-desk-glow-flip="true"] .writer-shell {
 .project-theme-note code {
   font-family: Courier New, Courier, monospace;
   color: var(--ink);
+}
+
+
+/* v4.5 visual polish: Arial/Courier font system, compact designer, TCard spacing, Emoji Spark copy support */
+:root {
+  --app-font-family: Arial, Helvetica, sans-serif;
+}
+body, button, input, select, textarea, summary, .editor, .help-panel, .settings-panel, .block-panel, .writing-room-panel, .selection-menu, .emoji-picker {
+  font-family: Arial, Helvetica, sans-serif !important;
+}
+code, pre, .editor code {
+  font-family: "Courier New", Courier, monospace !important;
+}
+.app-name img {
+  width: 1.35em;
+  height: 1.35em;
+  object-fit: contain;
+  flex: 0 0 auto;
+}
+.design-controls .element-designer-card,
+.settings-card,
+.project-settings-section,
+.block-panel,
+.help-panel,
+.writing-room-panel {
+  border-width: 1px !important;
+}
+.design-controls .element-designer-card[open] {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(210px, 1fr));
+  gap: 0.42rem 0.65rem;
+  align-items: start;
+}
+.design-controls .element-designer-card[open] > summary,
+.design-controls .element-designer-card[open] > .design-section-note,
+.design-controls .element-designer-card[open] > .project-theme-note,
+.design-controls .element-designer-card[open] > .inherit-controls,
+.design-controls .element-designer-card[open] > h4 {
+  grid-column: 1 / -1;
+}
+.design-controls .element-designer-card label,
+.design-controls .element-designer-card .toggle-label,
+.design-controls .element-designer-card .toggle-pill {
+  min-width: 0;
+  border: 1px solid rgba(114, 72, 55, 0.7) !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+}
+.design-controls input[type="color"],
+.favorite-colors button,
+.current-color-box,
+.color-token,
+.table-tool-row input[type="color"],
+.tcard-style-grid input[type="color"] {
+  border: 1px solid #6f6258 !important;
+  outline: none !important;
+  box-shadow: none !important;
+  border-radius: 999px !important;
+}
+.block-panel {
+  font-size: 0.88rem !important;
+}
+.block-panel .panel-help {
+  font-size: 0.78rem !important;
+  line-height: 1.35;
+}
+.block-panel label {
+  gap: 0.25rem !important;
+  margin-bottom: 0.4rem !important;
+}
+.block-panel input,
+.block-panel textarea {
+  font-size: 0.86rem !important;
+}
+.tcard-style-grid {
+  grid-template-columns: repeat(5, minmax(64px, 1fr)) !important;
+  gap: 0.35rem !important;
+  align-items: end;
+}
+.tcard-style-grid label {
+  font-size: 0.72rem !important;
+  gap: 0.18rem !important;
+}
+.block-actions {
+  gap: 0.35rem !important;
+}
+.emoji-picker button[data-emoji] {
+  border: 0 !important;
+}
+.emoji-picker button[data-emoji].is-selected,
+.emoji-picker button[data-emoji]:hover {
+  border: 1px solid var(--theme-accent, #e88f69) !important;
 }
