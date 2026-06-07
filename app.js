@@ -1089,8 +1089,20 @@ function elementForDeprecatedRecord(record) {
 function updateWritingAssistRailPosition() {
   if (!els.writingAssistRail || !els.editor) return;
   if (els.writingAssistRail.classList.contains("is-empty")) return;
-  const shell = els.editorApp || document.querySelector(".writer-shell");
+
   const editorRect = els.editor.getBoundingClientRect();
+  const connectedShell = els.writingAssistRail.closest?.(".writing-surface-shell");
+
+  if (connectedShell) {
+    els.writingAssistRail.style.setProperty("left", "0px", "important");
+    els.writingAssistRail.style.setProperty("top", "0px", "important");
+    els.writingAssistRail.style.setProperty("min-height", `${Math.max(120, els.editor.offsetHeight)}px`, "important");
+    els.writingAssistRail.style.setProperty("height", `${Math.max(120, els.editor.offsetHeight)}px`, "important");
+    positionWritingAssistRailMarkers(editorRect, 0, 0);
+    return;
+  }
+
+  const shell = els.editorApp || document.querySelector(".writer-shell");
   const shellRect = shell?.getBoundingClientRect?.() || { left: 0, top: 0 };
   const railWidth = Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--attached-rail-width")) || 34;
   const left = Math.max(0, editorRect.left - shellRect.left - railWidth);

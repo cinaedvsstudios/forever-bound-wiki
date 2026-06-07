@@ -4990,3 +4990,16 @@ body[data-writing-surface-layout] .writing-surface-shell .writing-assist-rail {
   }
   .writing-surface-shell .writing-assist-rail { display: none !important; }
 }
+
+
+/* v5.0 rail position repair: prevent JS/legacy offsets from pushing the attached rail into the editor. */
+.writing-surface-shell .writing-assist-rail {
+  left: 0 !important;
+  top: 0 !important;
+  grid-column: 1 !important;
+  grid-row: 2 !important;
+}
+.writing-surface-shell .editor {
+  grid-column: 2 !important;
+  grid-row: 2 !important;
+}
