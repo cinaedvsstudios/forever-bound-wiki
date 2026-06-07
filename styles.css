@@ -4444,3 +4444,58 @@ body[data-desk-glow-flip="true"] .writer-shell {
 .block-list-row button span {
   color: var(--tcard-text, #fbf4d6);
 }
+
+/* v3.6 Folder Mode Phase 1 */
+.folder-mode-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(160px, 1fr));
+  gap: 0.55rem;
+  margin: 0.75rem 0;
+}
+.folder-mode-actions button {
+  min-height: 2.2rem;
+}
+.folder-mode-status {
+  border: 1px solid var(--settings-card-border, #724837);
+  background: color-mix(in srgb, var(--settings-card-bg, #211812) 82%, #000000);
+  color: var(--settings-input-text-color, #fbf4d6);
+  border-radius: 12px;
+  padding: 0.75rem;
+  margin: 0.75rem 0;
+  line-height: 1.45;
+}
+.folder-mode-status span { color: var(--accent, #e88f69); }
+.folder-mode-structure {
+  white-space: pre-wrap;
+  margin: 0.75rem 0;
+  padding: 0.75rem;
+  border-radius: 12px;
+  border: 1px dashed var(--settings-card-border, #724837);
+  background: color-mix(in srgb, var(--settings-card-bg, #211812) 70%, #000000);
+  color: var(--muted, #b88b65);
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.82rem;
+}
+.folder-mode-toast {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 100000;
+  width: min(420px, calc(100vw - 2rem));
+  padding: 1rem;
+  border-radius: 16px;
+  border: 2px solid var(--accent, #e88f69);
+  background: color-mix(in srgb, var(--panel-bg, #211812) 92%, #000000);
+  color: var(--text, #fbf4d6);
+  box-shadow: 0 18px 44px rgba(0,0,0,.55);
+}
+.folder-mode-toast p { margin: 0.45rem 0; }
+.folder-mode-toast small { color: var(--muted, #b88b65); }
+.folder-mode-toast div { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-top: 0.75rem; }
+.folder-mode-toast button {
+  border: 1px solid var(--button-border, #e88f69);
+  background: var(--button-bg, #2c2c2c);
+  color: var(--button-text-color, #fbf4d6);
+  border-radius: 999px;
+  padding: 0.45rem 0.75rem;
+}

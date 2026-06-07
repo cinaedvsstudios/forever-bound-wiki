@@ -23,7 +23,7 @@
 <main aria-label="Forever Bound writing editor" class="writer-shell" id="editorApp">
 <header aria-label="Capsanoto command bar" class="writer-header toolbar">
 <div class="document-controls">
-<strong class="app-name"><img alt="Capsanoto icon" src="https://raw.githubusercontent.com/cinaedvsstudios/forever-bound-wiki/refs/heads/main/iconcapsanoto.png"/><span class="brand-word">Capsanoto</span><span class="app-version">v3.4</span></strong>
+<strong class="app-name"><img alt="Capsanoto icon" src="https://raw.githubusercontent.com/cinaedvsstudios/forever-bound-wiki/refs/heads/main/iconcapsanoto.png"/><span class="brand-word">Capsanoto</span><span class="app-version">v3.6</span></strong>
 <label class="sr-only" for="documentSelect">Current document</label>
 <select hidden="" id="documentSelect" title="Document Switcher"></select>
 </div>
@@ -126,6 +126,7 @@
 <button aria-pressed="false" data-settings-tab="import" type="button">Import File</button>
 <button aria-pressed="false" data-settings-tab="emoji" type="button">Emoji</button>
 <button aria-pressed="false" data-settings-tab="command-layout" type="button">Command Layout</button>
+<button aria-pressed="false" data-settings-tab="folder-mode" type="button">Folder Mode</button>
 </nav>
 <section class="settings-section settings-card" data-settings-section="export" hidden="">
 <h3>Smart Download Builder</h3>
@@ -217,12 +218,19 @@
 <label>Command Label Size <input data-css-var="--command-label-size" data-design-key="commandLabelSize" data-suffix="rem" max="1" min="0.35" step="0.01" type="number" value="0.48"/></label>
 <h4>Command Bar Icons</h4>
 <label>Writing Room Icon <input class="icon-text-input" data-design-key="topIconWritingRoom" maxlength="96" type="text" value="📚"/></label>
+<label>Writing Room Label <input data-design-key="topLabelWritingRoom" maxlength="32" type="text" value="Writing Room"/></label>
 <label>Format Icon <input class="icon-text-input" data-design-key="topIconFormat" maxlength="96" type="text" value="🪶"/></label>
+<label>Format Label <input data-design-key="topLabelFormat" maxlength="32" type="text" value="Format"/></label>
 <label>Insert Icon <input class="icon-text-input" data-design-key="topIconInsert" maxlength="96" type="text" value="🗡️"/></label>
+<label>Insert Label <input data-design-key="topLabelInsert" maxlength="32" type="text" value="Insert"/></label>
 <label>Subnoto Icon <input class="icon-text-input" data-design-key="topIconSubnoto" maxlength="96" type="text" value="📜"/></label>
+<label>Subnoto Label <input data-design-key="topLabelSubnoto" maxlength="32" type="text" value="Subnoto"/></label>
 <label>Specnoto Icon <input class="icon-text-input" data-design-key="topIconSpecnoto" maxlength="96" type="text" value="🕯️"/></label>
+<label>Specnoto Label <input data-design-key="topLabelSpecnoto" maxlength="32" type="text" value="Specnoto"/></label>
 <label>Help Icon <input class="icon-text-input" data-design-key="topIconHelp" maxlength="96" type="text" value="🗿"/></label>
+<label>Help Label <input data-design-key="topLabelHelp" maxlength="32" type="text" value="Help"/></label>
 <label>Settings Icon <input class="icon-text-input" data-design-key="topIconSettings" maxlength="96" type="text" value="🗝️"/></label>
+<label>Settings Label <input data-design-key="topLabelSettings" maxlength="32" type="text" value="Settings"/></label>
 <label>Dropdown Button BG <input data-css-var="--dropdown-button-bg" data-design-key="dropdownButtonBg" type="color" value="#2c2c2c"/></label>
 <label>Dropdown Button Border <input data-css-var="--dropdown-button-border" data-design-key="dropdownButtonBorder" type="color" value="#724837"/></label>
 <label>Dropdown Button Text <input data-css-var="--dropdown-button-text" data-design-key="dropdownButtonText" type="color" value="#fbf4d6"/></label>
@@ -427,6 +435,27 @@
 <p class="panel-help">This is not active yet. It is a planning placeholder so the interface has a home for the feature later.</p>
 </div>
 </section>
+
+<section class="settings-section settings-card" data-settings-section="folder-mode" hidden="">
+<h3>Folder Mode</h3>
+<p class="panel-help">Folder Mode makes one Writing Room equal one folder on your hard drive. The HDD Markdown files become the main files; browser localStorage remains the emergency draft backup while editing.</p>
+<div class="folder-mode-actions">
+<button id="createFolderProjectButton" type="button">Create New Writing Room Folder</button>
+<button id="openFolderProjectButton" type="button">Open Writing Room Folder</button>
+<button id="saveFolderProjectButton" type="button">Save Active File to Disk</button>
+<button id="resetFolderReminderButton" type="button">Reset 10-Minute Save Reminder</button>
+</div>
+<div class="folder-mode-status" id="folderModeStatus">Folder Mode inactive.</div>
+<pre class="folder-mode-structure" id="folderModeStructure">Selected Writing Room folder/
+  capsanoto.project.json
+  tcards.json
+  assets/
+  Folder Name/
+    Tab Name/
+      File Title.md</pre>
+<p class="panel-help">Capsanoto uses normal folders and Markdown files where possible. The project JSON stores order, IDs, settings, custom icons, TCards, and UI metadata that Markdown cannot safely store by itself.</p>
+</section>
+
 <section class="settings-section settings-card settings-links" data-settings-section="support" hidden="">
 <h3>Help / Guidebook</h3>
 <button id="helpButton" type="button">❔ Help / Release Notes</button>
@@ -598,7 +627,7 @@
 <p><strong>Capsanoto v1.4:</strong> added Top Bar Height, cleaned Format and Insert menus, improved table tools, added editable top-bar icon fields, and refined Transclusion Cards actions.</p>
 <p><strong>Capsanoto v1.5:</strong> rewrote the Guidebook, added the Command Layout Editor placeholder, clarified Subnoto/Specnoto placeholders, cleaned terminology, improved Download wording, and documented the local-only save audit.</p>
 <p><strong>Capsanoto v1.6:</strong> cleaned the Element Designer structure, added missing writing-area and panel styling controls, improved design-setting wiring, added Emoji Spark appearance controls, and refined TCard panel styling controls.</p>
-<p><strong>Capsanoto v1.7:</strong> added the Writing Assist Rail placeholder and the Deprecate Paragraph right-click action, with safe background history records that do not change the live document text.</p><p><strong>Capsanoto v1.8:</strong> locked the Writing Assist Rail to the writing surface, changed it to show only active structural markers, improved custom icon rendering for Filing Cabinet icons, and tidied icon-setting alignment.</p><p><strong>Capsanoto v1.9:</strong> aligned Writing Assist Rail markers to their matching document elements, added more background image scale controls, added writing-desk glow opacity, fixed Settings search highlight styling, and tightened custom icon rendering.</p><p><strong>Capsanoto v2.0:</strong> completed the custom Emoji Spark icon slots and added the advanced Transclusion Card delete workflow with usage counts, Show Use, and scrollable document previews.</p><p><strong>Capsanoto v2.1:</strong> fixed Writing Assist Rail horizontal locking for floating writing surfaces, added a Settings search result counter, added desk glow flip control, and added top bar / writing surface shadow controls.</p><p><strong>Capsanoto v2.2:</strong> added writing desk background and glow color controls, document title strip background controls, and reorganized the Writing Area controls so background and title settings are easier to find.</p><p><strong>Capsanoto v2.3:</strong> added inline Transclusion Card editing from the writing surface: Edit TCard enters direct edit mode, Change saves the source TCard, and all references update everywhere.</p><p><strong>Capsanoto v2.4:</strong> wired the Transclusion Cards panel style controls, made the side panel use the full available page height, added top command icon fields, linked top/command bar background images, and separated Writing Room body styling from its title bar styling.</p></section></aside>
+<p><strong>Capsanoto v1.7:</strong> added the Writing Assist Rail placeholder and the Deprecate Paragraph right-click action, with safe background history records that do not change the live document text.</p><p><strong>Capsanoto v1.8:</strong> locked the Writing Assist Rail to the writing surface, changed it to show only active structural markers, improved custom icon rendering for Filing Cabinet icons, and tidied icon-setting alignment.</p><p><strong>Capsanoto v1.9:</strong> aligned Writing Assist Rail markers to their matching document elements, added more background image scale controls, added writing-desk glow opacity, fixed Settings search highlight styling, and tightened custom icon rendering.</p><p><strong>Capsanoto v2.0:</strong> completed the custom Emoji Spark icon slots and added the advanced Transclusion Card delete workflow with usage counts, Show Use, and scrollable document previews.</p><p><strong>Capsanoto v2.1:</strong> fixed Writing Assist Rail horizontal locking for floating writing surfaces, added a Settings search result counter, added desk glow flip control, and added top bar / writing surface shadow controls.</p><p><strong>Capsanoto v2.2:</strong> added writing desk background and glow color controls, document title strip background controls, and reorganized the Writing Area controls so background and title settings are easier to find.</p><p><strong>Capsanoto v2.3:</strong> added inline Transclusion Card editing from the writing surface: Edit TCard enters direct edit mode, Change saves the source TCard, and all references update everywhere.</p><p><strong>Capsanoto v2.4:</strong> wired the Transclusion Cards panel style controls, made the side panel use the full available page height, added top command icon fields, linked top/command bar background images, and separated Writing Room body styling from its title bar styling.</p><p><strong>Capsanoto v2.5:</strong> fixed table header color targeting and added editable command-bar label fields beside the command icon fields.</p><p><strong>Capsanoto v2.6:</strong> added Folder Mode Phase 1 with Create/Open Writing Room Folder controls, HDD Markdown project structure, project JSON, a TCard library file, disk-save status messages, and 10-minute local-vs-disk save reminders.</p></section></aside>
 <aside aria-label="Transclusion Cards" class="block-panel" hidden="" id="blockPanel">
 <header>
 <div>

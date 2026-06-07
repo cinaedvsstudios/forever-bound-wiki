@@ -9,6 +9,11 @@ const HELP_KEY = "capsanoto-help-html-v1";
 const WRITING_ROOM_LAYOUT_KEY = "capsanoto-writing-room-layout-v1";
 const FAVORITE_EMOJI_KEY = "capsanoto-favorite-emojis-v1";
 const CUSTOM_EMOJI_KEY = "capsanoto-custom-emojis-v1";
+const FOLDER_MODE_DB = "capsanoto-folder-mode-db-v1";
+const FOLDER_MODE_STORE = "handles";
+const FOLDER_MODE_HANDLE_KEY = "activeWritingRoomFolder";
+const FOLDER_MODE_PREF_KEY = "capsanoto-folder-mode-prefs-v1";
+const FOLDER_MODE_CHECK_INTERVAL = 10 * 60 * 1000;
 
 const CAPSANOTO_PALETTE = {
   black: "#000000",
@@ -115,6 +120,16 @@ const state = {
   settingsDirty: false,
   contextStatusLocked: false,
   contextStatusTimer: null,
+  folderMode: {
+    enabled: false,
+    supported: typeof window !== "undefined" && "showDirectoryPicker" in window,
+    directoryHandle: null,
+    projectName: "",
+    lastDiskSaveAt: "",
+    reminderTimer: null,
+    reminderOpen: false,
+    writeInProgress: false,
+  },
 };
 
 const els = {
@@ -208,6 +223,12 @@ const els = {
   expandDesignerCards: document.querySelector("#expandDesignerCards"),
   collapseDesignerCards: document.querySelector("#collapseDesignerCards"),
   settingsMenu: document.querySelector(".settings-menu"),
+  createFolderProjectButton: document.querySelector("#createFolderProjectButton"),
+  openFolderProjectButton: document.querySelector("#openFolderProjectButton"),
+  saveFolderProjectButton: document.querySelector("#saveFolderProjectButton"),
+  resetFolderReminderButton: document.querySelector("#resetFolderReminderButton"),
+  folderModeStatus: document.querySelector("#folderModeStatus"),
+  folderModeStructure: document.querySelector("#folderModeStructure"),
   settingsSections: document.querySelectorAll("[data-settings-section]"),
   writingRoomButton: document.querySelector("#writingRoomButton"),
   writingRoomPanel: document.querySelector("#writingRoomPanel"),
@@ -350,6 +371,7 @@ async function startEditor() {
   setAuthVisibility(true);
   await loadWorkspace();
   applySavedDesignSettings();
+  await restoreFolderModeHandle();
   loadFavoriteEmojis();
   hydrateIconButtons();
   bindEditorEvents();
@@ -360,6 +382,8 @@ async function startEditor() {
   scrollToRouteBookmark();
   setStatus("Ready", "saved");
   updateContextStatus();
+  startFolderModeReminderLoop();
+  updateFolderModeStatus();
 }
 
 function showPasswordScreen(message = "") {
@@ -549,6 +573,10 @@ function bindEditorEvents() {
   els.settingsSearchInput?.addEventListener("input", handleSettingsSearchInput);
   els.settingsSearchNext?.addEventListener("click", () => moveSettingsSearch(1));
   els.settingsSearchPrev?.addEventListener("click", () => moveSettingsSearch(-1));
+  els.createFolderProjectButton?.addEventListener("click", createNewWritingRoomFolder);
+  els.openFolderProjectButton?.addEventListener("click", openWritingRoomFolder);
+  els.saveFolderProjectButton?.addEventListener("click", () => saveFolderModeSnapshot("Saved to disk", { force: true }));
+  els.resetFolderReminderButton?.addEventListener("click", resetFolderModeReminderPreference);
   els.importColorImageButton?.addEventListener("click", () => els.colorImageInput?.click());
   els.colorImageInput?.addEventListener("change", showColorReferenceImage);
   els.closeColorImagePopup?.addEventListener("click", () => { if (els.colorImagePopup) els.colorImagePopup.hidden = true; });
@@ -667,12 +695,16 @@ function createDocument(id = `doc-${Date.now()}`, title = "Untitled Document") {
     tags: [],
     updatedAt: new Date().toISOString(),
     content: els.documentTemplate.innerHTML.trim(),
+    diskPath: "",
+    diskSavedAt: "",
+    localDraftAt: "",
   };
   state.documents.unshift(doc);
   return doc;
 }
 
 function openDocument(id, bookmarkId = "") {
+  void promptForLocalDiskMismatch(id);
   state.activeId = id;
   state.pendingBookmarkId = bookmarkId;
   renderAll();
@@ -2465,10 +2497,17 @@ function handleTableToolAction(event, table, toolbar) {
   const action = control.dataset.tableTool;
   if (action === "toggle") { toolbar.classList.toggle("is-open"); highlightActiveTableCell(table); return; }
   const activeCell = state.activeTableCell && table.contains(state.activeTableCell) ? state.activeTableCell : table.querySelector("td, th");
-  if (action === "header-bg") table.querySelectorAll("thead th, tr:first-child th, tr:first-child td").forEach((cell) => { cell.style.backgroundColor = control.value; });
-  if (action === "cell-bg" && activeCell) activeCell.style.backgroundColor = control.value;
-  if (action === "line") table.querySelectorAll("th, td").forEach((cell) => { cell.style.borderColor = control.value; });
-  if (action === "outer-border") table.style.borderColor = control.value;
+  if (action === "header-bg") {
+    table.style.setProperty("--table-head-bg", control.value);
+    const headerCells = table.tHead ? table.tHead.querySelectorAll("th, td") : table.querySelectorAll("tr:first-child th, tr:first-child td");
+    headerCells.forEach((cell) => { cell.style.setProperty("background-color", control.value, "important"); });
+  }
+  if (action === "cell-bg" && activeCell) activeCell.style.setProperty("background-color", control.value, "important");
+  if (action === "line") {
+    table.style.setProperty("--table-border", control.value);
+    table.querySelectorAll("th, td").forEach((cell) => { cell.style.setProperty("border-color", control.value, "important"); });
+  }
+  if (action === "outer-border") table.style.setProperty("border-color", control.value, "important");
   if (action === "align" && activeCell) cycleTextAlignment(activeCell);
   if (["add-row", "add-col", "delete-row", "delete-col", "wider", "equalize"].includes(action)) applyTableEdits(table, { action });
   highlightActiveTableCell(table);
@@ -2969,10 +3008,497 @@ function markDirty(message = "Saving locally") {
 }
 
 function persistNow(message = "Autosaved locally") {
+  const now = new Date().toISOString();
+  const doc = activeDocument();
+  if (doc) doc.localDraftAt = now;
   localStorage.setItem(STORAGE_KEY, serializedWorkspace());
   setStatus(message || "Autosaved locally", "saved");
+  if (state.folderMode.enabled && state.folderMode.directoryHandle) {
+    void saveFolderModeSnapshot("Saved to disk").catch((error) => {
+      console.warn("Folder Mode disk save failed", error);
+      setStatus("Disk save failed — local backup kept", "dirty");
+      updateFolderModeStatus("Disk save failed — local backup kept");
+    });
+  }
 }
 
+
+
+/* Folder Mode: local HDD Writing Room storage using the File System Access API. */
+function folderModeSupported() {
+  return Boolean(window.showDirectoryPicker);
+}
+
+function startFolderModeReminderLoop() {
+  if (state.folderMode.reminderTimer) return;
+  state.folderMode.reminderTimer = window.setInterval(checkFolderModeUnsavedChanges, FOLDER_MODE_CHECK_INTERVAL);
+}
+
+function folderModePrefs() {
+  try { return JSON.parse(localStorage.getItem(FOLDER_MODE_PREF_KEY) || "{}"); }
+  catch { return {}; }
+}
+
+function saveFolderModePrefs(prefs) {
+  localStorage.setItem(FOLDER_MODE_PREF_KEY, JSON.stringify(prefs));
+}
+
+function resetFolderModeReminderPreference() {
+  const prefs = folderModePrefs();
+  prefs.hideUnsavedReminder = false;
+  saveFolderModePrefs(prefs);
+  updateFolderModeStatus("Ten-minute disk-save reminders reset");
+  setStatus("Folder Mode reminder reset", "saved");
+}
+
+function updateFolderModeStatus(message = "") {
+  if (!els.folderModeStatus) return;
+  const supported = folderModeSupported();
+  const mode = state.folderMode.enabled ? `Folder Mode active: ${escapeHtml(state.folderMode.projectName || "selected Writing Room folder")}` : "Folder Mode inactive";
+  const support = supported ? "File System Access API available in this browser." : "File System Access API is not available in this browser. Use Chrome or Edge for Folder Mode.";
+  const disk = state.folderMode.lastDiskSaveAt ? `Last disk save: ${new Date(state.folderMode.lastDiskSaveAt).toLocaleString()}` : "Last disk save: none yet";
+  els.folderModeStatus.innerHTML = `<strong>${mode}</strong><br>${support}<br>${disk}${message ? `<br><span>${escapeHtml(message)}</span>` : ""}`;
+  if (els.folderModeStructure) els.folderModeStructure.textContent = folderModeStructureText();
+}
+
+function folderModeStructureText() {
+  return [
+    "Selected Writing Room folder/",
+    "  capsanoto.project.json",
+    "  tcards.json",
+    "  assets/",
+    "  Folder Name/",
+    "    Tab Name/",
+    "      File Title.md",
+  ].join("\n");
+}
+
+async function restoreFolderModeHandle() {
+  if (!folderModeSupported()) return;
+  try {
+    const handle = await readFolderModeHandle();
+    if (!handle) return;
+    const allowed = await verifyFilePermission(handle, false);
+    state.folderMode.directoryHandle = handle;
+    state.folderMode.enabled = Boolean(allowed);
+    state.folderMode.projectName = handle.name || "Writing Room Folder";
+  } catch (error) {
+    console.warn("Could not restore Folder Mode handle", error);
+  }
+}
+
+function openFolderModeDb() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(FOLDER_MODE_DB, 1);
+    request.onupgradeneeded = () => request.result.createObjectStore(FOLDER_MODE_STORE);
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function readFolderModeHandle() {
+  const db = await openFolderModeDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(FOLDER_MODE_STORE, "readonly");
+    const request = tx.objectStore(FOLDER_MODE_STORE).get(FOLDER_MODE_HANDLE_KEY);
+    request.onsuccess = () => resolve(request.result || null);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function storeFolderModeHandle(handle) {
+  const db = await openFolderModeDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(FOLDER_MODE_STORE, "readwrite");
+    tx.objectStore(FOLDER_MODE_STORE).put(handle, FOLDER_MODE_HANDLE_KEY);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function verifyFilePermission(handle, readwrite = true) {
+  const options = readwrite ? { mode: "readwrite" } : {};
+  if ((await handle.queryPermission?.(options)) === "granted") return true;
+  if ((await handle.requestPermission?.(options)) === "granted") return true;
+  return false;
+}
+
+async function createNewWritingRoomFolder() {
+  if (!folderModeSupported()) {
+    setStatus("Folder Mode needs Chrome or Edge", "dirty");
+    updateFolderModeStatus("Folder Mode is not supported in this browser.");
+    return;
+  }
+  try {
+    const directoryHandle = await window.showDirectoryPicker({ mode: "readwrite" });
+    if (!(await verifyFilePermission(directoryHandle, true))) {
+      setStatus("Folder permission was not granted", "dirty");
+      return;
+    }
+    state.folderMode.directoryHandle = directoryHandle;
+    state.folderMode.enabled = true;
+    state.folderMode.projectName = directoryHandle.name || state.writingRoomName || "Writing Room";
+    await storeFolderModeHandle(directoryHandle);
+    await prepareDocumentsForFolderMode();
+    await saveFolderModeSnapshot("Writing Room folder created", { force: true, writeAll: true });
+    updateFolderModeStatus("Created project files and starter Markdown files.");
+    setStatus("Writing Room folder created", "saved");
+  } catch (error) {
+    if (error?.name === "AbortError") return;
+    console.error(error);
+    setStatus("Could not create Writing Room folder", "dirty");
+    updateFolderModeStatus(error.message || "Could not create Writing Room folder.");
+  }
+}
+
+async function openWritingRoomFolder() {
+  if (!folderModeSupported()) {
+    setStatus("Folder Mode needs Chrome or Edge", "dirty");
+    updateFolderModeStatus("Folder Mode is not supported in this browser.");
+    return;
+  }
+  try {
+    const directoryHandle = await window.showDirectoryPicker({ mode: "readwrite" });
+    if (!(await verifyFilePermission(directoryHandle, true))) {
+      setStatus("Folder permission was not granted", "dirty");
+      return;
+    }
+    state.folderMode.directoryHandle = directoryHandle;
+    state.folderMode.enabled = true;
+    state.folderMode.projectName = directoryHandle.name || "Writing Room Folder";
+    await storeFolderModeHandle(directoryHandle);
+    await loadWritingRoomFromFolder(directoryHandle);
+    localStorage.setItem(STORAGE_KEY, serializedWorkspace());
+    renderAll();
+    updateFolderModeStatus("Opened Writing Room folder from disk.");
+    setStatus("Opened Writing Room folder", "saved");
+  } catch (error) {
+    if (error?.name === "AbortError") return;
+    console.error(error);
+    setStatus("Could not open Writing Room folder", "dirty");
+    updateFolderModeStatus(error.message || "Could not open Writing Room folder.");
+  }
+}
+
+async function loadWritingRoomFromFolder(directoryHandle) {
+  const project = await readJsonFromDirectory(directoryHandle, "capsanoto.project.json");
+  if (!project?.documents) {
+    const create = confirm("This folder does not contain a Capsanoto project file. Create one here from the current Writing Room?");
+    if (!create) return;
+    await prepareDocumentsForFolderMode();
+    await saveFolderModeSnapshot("Writing Room folder created", { force: true, writeAll: true });
+    return;
+  }
+  state.writingRoomName = project.writingRoomName || directoryHandle.name || "Writing Room";
+  state.filingGroups = Array.isArray(project.filingGroups) ? project.filingGroups : defaultFilingGroups();
+  state.filingTabs = Array.isArray(project.filingTabs) ? project.filingTabs : [];
+  state.trash = Array.isArray(project.trash) ? project.trash : [];
+  state.deprecated = Array.isArray(project.deprecated) ? project.deprecated : [];
+  state.deprecatedParagraphs = Array.isArray(project.deprecatedParagraphs) ? project.deprecatedParagraphs : [];
+  state.documents = [];
+  const tcardPayload = await readJsonFromDirectory(directoryHandle, "tcards.json").catch(() => null);
+  state.blocks = tcardPayload?.blocks && typeof tcardPayload.blocks === "object" ? tcardPayload.blocks : (project.blocks || {});
+  for (const docMeta of project.documents || []) {
+    const doc = { ...docMeta };
+    if (doc.diskPath) {
+      try {
+        const md = await readTextFileAtPath(directoryHandle, doc.diskPath);
+        const parsed = capsMarkdownToDocument(md, doc);
+        Object.assign(doc, parsed);
+        doc.diskSavedAt = doc.diskSavedAt || new Date().toISOString();
+      } catch (error) {
+        console.warn(`Could not read ${doc.diskPath}`, error);
+        doc.content = doc.content || `<h1>${escapeHtml(doc.title || "Missing File")}</h1><p>Capsanoto could not read this Markdown file from disk.</p>`;
+      }
+    }
+    state.documents.push(doc);
+  }
+  ensureFilingTabs();
+  if (!state.documents.length) createDocument();
+  state.activeId = project.activeId && state.documents.some((doc) => doc.id === project.activeId) ? project.activeId : state.documents[0].id;
+  state.folderMode.lastDiskSaveAt = project.updatedAt || "";
+}
+
+async function prepareDocumentsForFolderMode() {
+  ensureFilingTabs();
+  const used = new Set();
+  for (const doc of state.documents) {
+    if (!doc.diskPath) doc.diskPath = suggestedMarkdownPath(doc, used);
+    else used.add(doc.diskPath.toLowerCase());
+  }
+}
+
+function suggestedMarkdownPath(doc, used = new Set()) {
+  const tab = state.filingTabs.find((item) => item.id === doc.filingTabId);
+  const group = state.filingGroups.find((item) => item.id === (tab?.groupId || doc.filingGroupId));
+  const parts = [safePathPart(group?.label || "Writing Room"), safePathPart(tab?.label || "Tab number 1")];
+  let base = safePathPart(doc.title || doc.id || "Untitled File") || "Untitled File";
+  let path = `${parts.join("/")}/${base}.md`;
+  let count = 2;
+  while (used.has(path.toLowerCase())) path = `${parts.join("/")}/${base}-${count++}.md`;
+  used.add(path.toLowerCase());
+  return path;
+}
+
+function safePathPart(value) {
+  return String(value || "Untitled")
+    .replace(/[\\/:*?"<>|]+/g, "-")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 80) || "Untitled";
+}
+
+async function saveFolderModeSnapshot(message = "Saved to disk", options = {}) {
+  if (!state.folderMode.enabled || !state.folderMode.directoryHandle || state.folderMode.writeInProgress) return;
+  state.folderMode.writeInProgress = true;
+  try {
+    const handle = state.folderMode.directoryHandle;
+    if (!(await verifyFilePermission(handle, true))) throw new Error("Folder permission was not granted.");
+    await prepareDocumentsForFolderMode();
+    const active = activeDocument();
+    const docsToWrite = options.writeAll ? state.documents : (active ? [active] : []);
+    for (const doc of docsToWrite) await writeDocumentMarkdown(handle, doc);
+    await writeJsonToDirectory(handle, "tcards.json", { schemaVersion: 1, updatedAt: new Date().toISOString(), blocks: state.blocks });
+    await writeJsonToDirectory(handle, "capsanoto.project.json", folderModeProjectPayload());
+    const now = new Date().toISOString();
+    docsToWrite.forEach((doc) => { doc.diskSavedAt = now; });
+    state.folderMode.lastDiskSaveAt = now;
+    localStorage.setItem(STORAGE_KEY, serializedWorkspace());
+    setStatus(message || "Saved to disk", "saved");
+    updateFolderModeStatus(message || "Saved to disk");
+  } finally {
+    state.folderMode.writeInProgress = false;
+  }
+}
+
+function folderModeProjectPayload() {
+  return {
+    schemaVersion: 3,
+    storageMode: "folder-md",
+    updatedAt: new Date().toISOString(),
+    writingRoomName: state.writingRoomName,
+    activeId: state.activeId,
+    filingGroups: state.filingGroups,
+    filingTabs: state.filingTabs,
+    documents: state.documents.map((doc) => ({
+      id: doc.id,
+      title: doc.title,
+      tags: doc.tags || [],
+      updatedAt: doc.updatedAt,
+      filingGroupId: doc.filingGroupId,
+      filingTabId: doc.filingTabId,
+      diskPath: doc.diskPath || "",
+      diskSavedAt: doc.diskSavedAt || "",
+      localDraftAt: doc.localDraftAt || "",
+      status: doc.status || "",
+      style: doc.style || null,
+    })),
+    trash: state.trash,
+    deprecated: state.deprecated,
+    deprecatedParagraphs: state.deprecatedParagraphs || [],
+    designSettings: readDesignSettingsFromStorage(),
+    folderModePrefs: folderModePrefs(),
+  };
+}
+
+function readDesignSettingsFromStorage() {
+  try { return JSON.parse(localStorage.getItem(DESIGN_KEY) || "{}"); }
+  catch { return {}; }
+}
+
+async function writeDocumentMarkdown(directoryHandle, doc) {
+  if (!doc.diskPath) doc.diskPath = suggestedMarkdownPath(doc);
+  const markdown = documentToCapsMarkdown(doc);
+  await writeTextFileAtPath(directoryHandle, doc.diskPath, markdown);
+}
+
+async function getDirectoryAtPath(directoryHandle, parts, create = false) {
+  let current = directoryHandle;
+  for (const part of parts.filter(Boolean)) current = await current.getDirectoryHandle(part, { create });
+  return current;
+}
+
+async function writeTextFileAtPath(directoryHandle, path, content) {
+  const parts = path.split("/").filter(Boolean);
+  const fileName = parts.pop();
+  const folder = await getDirectoryAtPath(directoryHandle, parts, true);
+  const fileHandle = await folder.getFileHandle(fileName, { create: true });
+  const writable = await fileHandle.createWritable();
+  await writable.write(content);
+  await writable.close();
+}
+
+async function readTextFileAtPath(directoryHandle, path) {
+  const parts = path.split("/").filter(Boolean);
+  const fileName = parts.pop();
+  const folder = await getDirectoryAtPath(directoryHandle, parts, false);
+  const fileHandle = await folder.getFileHandle(fileName);
+  const file = await fileHandle.getFile();
+  return file.text();
+}
+
+async function writeJsonToDirectory(directoryHandle, name, payload) {
+  await writeTextFileAtPath(directoryHandle, name, JSON.stringify(payload, null, 2));
+}
+
+async function readJsonFromDirectory(directoryHandle, name) {
+  const text = await readTextFileAtPath(directoryHandle, name);
+  return JSON.parse(text);
+}
+
+function documentToCapsMarkdown(doc) {
+  const frontMatter = {
+    id: doc.id,
+    title: doc.title || "Untitled File",
+    tags: doc.tags || [],
+    updatedAt: doc.updatedAt || new Date().toISOString(),
+    filingGroupId: doc.filingGroupId || "",
+    filingTabId: doc.filingTabId || "",
+    diskPath: doc.diskPath || "",
+  };
+  return `---\n${yamlLike(frontMatter)}---\n\n${htmlToCapsMarkdown(doc.content || "")}`.trimEnd() + "\n";
+}
+
+function yamlLike(data) {
+  return Object.entries(data).map(([key, value]) => {
+    if (Array.isArray(value)) return `${key}: [${value.map((item) => JSON.stringify(item)).join(", ")}]`;
+    return `${key}: ${JSON.stringify(value ?? "")}`;
+  }).join("\n") + "\n";
+}
+
+function capsMarkdownToDocument(markdown, fallback = {}) {
+  const parsed = parseCapsFrontMatter(markdown);
+  const meta = { ...fallback, ...parsed.meta };
+  return {
+    ...meta,
+    tags: Array.isArray(meta.tags) ? meta.tags : (typeof meta.tags === "string" ? meta.tags.split(",").map((tag) => tag.trim()).filter(Boolean) : []),
+    content: capsMarkdownToHtml(parsed.body || ""),
+  };
+}
+
+function parseCapsFrontMatter(markdown) {
+  const text = String(markdown || "");
+  if (!text.startsWith("---\n")) return { meta: {}, body: text };
+  const end = text.indexOf("\n---", 4);
+  if (end < 0) return { meta: {}, body: text };
+  const rawMeta = text.slice(4, end).trim();
+  const body = text.slice(end + 4).replace(/^\s+/, "");
+  const meta = {};
+  rawMeta.split(/\n/).forEach((line) => {
+    const match = line.match(/^([^:]+):\s*(.*)$/);
+    if (!match) return;
+    const key = match[1].trim();
+    const value = match[2].trim();
+    try { meta[key] = JSON.parse(value); }
+    catch { meta[key] = value.replace(/^['"]|['"]$/g, ""); }
+  });
+  return { meta, body };
+}
+
+function htmlToCapsMarkdown(html) {
+  const container = document.createElement("div");
+  container.innerHTML = renderTransclusions(String(html || ""));
+  container.querySelectorAll(".floating-edit-button").forEach((node) => node.remove());
+  container.querySelectorAll(".transclusion-ref[data-block-id]").forEach((node) => node.replaceWith(document.createTextNode(`{{${node.dataset.blockId}}}`)));
+  const lines = [];
+  container.childNodes.forEach((node) => lines.push(nodeToCapsMarkdown(node)));
+  return lines.join("\n\n").replace(/\n{3,}/g, "\n\n").trim();
+}
+
+function nodeToCapsMarkdown(node) {
+  if (node.nodeType === Node.TEXT_NODE) return node.textContent.trim();
+  if (node.nodeType !== Node.ELEMENT_NODE) return "";
+  const tag = node.tagName.toLowerCase();
+  const text = inlineMarkdown(node);
+  if (tag === "h1") return `# ${text}`;
+  if (tag === "h2") return `## ${text}`;
+  if (tag === "h3") return `### ${text}`;
+  if (tag === "p") return text;
+  if (tag === "ul") return [...node.children].map((li) => `- ${inlineMarkdown(li)}`).join("\n");
+  if (tag === "ol") return [...node.children].map((li, i) => `${i + 1}. ${inlineMarkdown(li)}`).join("\n");
+  if (tag === "blockquote") return text.split(/\n/).map((line) => `> ${line}`).join("\n");
+  if (tag === "hr") return "---";
+  if (tag === "table" || node.classList.contains("emphasis-box")) return node.outerHTML;
+  return node.outerHTML || text;
+}
+
+function inlineMarkdown(node) {
+  return [...node.childNodes].map((child) => {
+    if (child.nodeType === Node.TEXT_NODE) return child.textContent;
+    if (child.nodeType !== Node.ELEMENT_NODE) return "";
+    const tag = child.tagName.toLowerCase();
+    const text = inlineMarkdown(child);
+    if (tag === "strong" || tag === "b") return `**${text}**`;
+    if (tag === "em" || tag === "i") return `*${text}*`;
+    if (tag === "code") return `\`${text}\``;
+    if (tag === "a") return `[${text}](${child.getAttribute("href") || child.dataset.linkTarget || "#"})`;
+    if (tag === "br") return "\n";
+    return child.outerHTML || text;
+  }).join("").trim();
+}
+
+function capsMarkdownToHtml(markdown) {
+  const text = String(markdown || "").trim();
+  if (!text) return "";
+  const blocks = text.split(/\n{2,}/);
+  return blocks.map((block) => {
+    if (/^<\w[\s\S]*>$/.test(block.trim())) return block.trim();
+    if (/^###\s+/.test(block)) return `<h3>${inlineCapsMarkdownToHtml(block.replace(/^###\s+/, ""))}</h3>`;
+    if (/^##\s+/.test(block)) return `<h2>${inlineCapsMarkdownToHtml(block.replace(/^##\s+/, ""))}</h2>`;
+    if (/^#\s+/.test(block)) return `<h1>${inlineCapsMarkdownToHtml(block.replace(/^#\s+/, ""))}</h1>`;
+    if (/^---$/.test(block.trim())) return "<hr>";
+    if (/^-\s+/m.test(block)) return `<ul>${block.split(/\n/).map((line) => `<li>${inlineCapsMarkdownToHtml(line.replace(/^-\s+/, ""))}</li>`).join("")}</ul>`;
+    return `<p>${inlineCapsMarkdownToHtml(block).replace(/\n/g, "<br>")}</p>`;
+  }).join("\n");
+}
+
+function inlineCapsMarkdownToHtml(text) {
+  return escapeHtml(text)
+    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*([^*]+)\*/g, "<em>$1</em>")
+    .replace(/`([^`]+)`/g, "<code>$1</code>")
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" data-link-target="$2">$1</a>');
+}
+
+function hasUnsavedDiskChanges(doc = activeDocument()) {
+  if (!state.folderMode.enabled || !doc) return false;
+  if (!doc.diskSavedAt) return Boolean(doc.localDraftAt || doc.updatedAt);
+  const localTime = Date.parse(doc.localDraftAt || doc.updatedAt || 0);
+  const diskTime = Date.parse(doc.diskSavedAt || 0);
+  return localTime > diskTime + 1000;
+}
+
+async function checkFolderModeUnsavedChanges() {
+  if (!state.folderMode.enabled || folderModePrefs().hideUnsavedReminder || state.folderMode.reminderOpen) return;
+  const doc = activeDocument();
+  if (!hasUnsavedDiskChanges(doc)) return;
+  showFolderModeReminder(doc);
+}
+
+function showFolderModeReminder(doc) {
+  state.folderMode.reminderOpen = true;
+  const toast = document.createElement("div");
+  toast.className = "folder-mode-toast";
+  toast.innerHTML = `<strong>Unsaved disk changes</strong><p>Local backup is newer than the HDD file for <em>${escapeHtml(doc.title || doc.id)}</em>.</p><small>Local: ${escapeHtml(new Date(doc.localDraftAt || doc.updatedAt).toLocaleString())}<br>Disk: ${escapeHtml(doc.diskSavedAt ? new Date(doc.diskSavedAt).toLocaleString() : "never")}</small><div><button data-folder-toast="save">Save now</button><button data-folder-toast="later">Not yet</button><button data-folder-toast="hide">Don’t show this again</button></div>`;
+  document.body.appendChild(toast);
+  toast.addEventListener("click", async (event) => {
+    const action = event.target.closest("button")?.dataset.folderToast;
+    if (!action) return;
+    if (action === "save") await saveFolderModeSnapshot("Saved to disk", { force: true });
+    if (action === "hide") { const prefs = folderModePrefs(); prefs.hideUnsavedReminder = true; saveFolderModePrefs(prefs); }
+    toast.remove();
+    state.folderMode.reminderOpen = false;
+  });
+}
+
+async function promptForLocalDiskMismatch(documentId) {
+  const doc = state.documents.find((item) => item.id === documentId);
+  if (!hasUnsavedDiskChanges(doc) || state.folderMode.reminderOpen) return;
+  const result = await openCapsDialog("Local draft is newer", [
+    { html: `<p>The local backup for <strong>${escapeHtml(doc.title || doc.id)}</strong> is newer than the HDD file.</p><p>Local: ${escapeHtml(new Date(doc.localDraftAt || doc.updatedAt).toLocaleString())}<br>Disk: ${escapeHtml(doc.diskSavedAt ? new Date(doc.diskSavedAt).toLocaleString() : "never")}</p><p>Click Apply to save the local draft to disk now, or close this dialog to keep editing locally.</p>` },
+  ]);
+  if (result) await saveFolderModeSnapshot("Saved local draft to disk", { force: true });
+}
 
 function renderExportSourceSelect() {
   if (!els.exportSourceSelect) return;
@@ -3241,9 +3767,30 @@ function applyTopCommandIconSettings(settings) {
     topIconHelp: "🗿",
     topIconSettings: "🗝️",
   };
+  const labelDefaults = {
+    topIconWritingRoom: ["topLabelWritingRoom", "Writing Room"],
+    topIconFormat: ["topLabelFormat", "Format"],
+    topIconInsert: ["topLabelInsert", "Insert"],
+    topIconSubnoto: ["topLabelSubnoto", "Subnoto"],
+    topIconSpecnoto: ["topLabelSpecnoto", "Specnoto"],
+    topIconHelp: ["topLabelHelp", "Help"],
+    topIconSettings: ["topLabelSettings", "Settings"],
+  };
   Object.entries(defaults).forEach(([key, fallback]) => {
-    const glyph = document.querySelector(`[data-icon-key="${key}"] .command-glyph`);
+    const button = document.querySelector(`[data-icon-key="${key}"]`);
+    const glyph = button?.querySelector(".command-glyph");
     if (glyph) glyph.innerHTML = iconMarkupFromValue(settings[key] || fallback, fallback);
+    const [labelKey, labelFallback] = labelDefaults[key] || [];
+    const labelText = String(settings[labelKey] || labelFallback || "").trim();
+    const label = button?.querySelector(".command-label");
+    if (label && labelText) label.textContent = labelText;
+    if (button && labelText) {
+      button.setAttribute("aria-label", labelText);
+      button.setAttribute("title", labelText);
+      if (!button.dataset.toolName || ["Writing Room", "Format tools", "Insert tools", "Subnoto clipboard", "Specnoto search/find placeholder", "Help / Guidebook", "Capsanoto Settings"].includes(button.dataset.toolName)) {
+        button.dataset.toolName = labelText;
+      }
+    }
   });
 }
 
