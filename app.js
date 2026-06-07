@@ -122,6 +122,7 @@ const state = {
   inlineTCardEditId: "",
   emojiDrag: null,
   settingsDirty: false,
+  designSettings: {},
   contextStatusLocked: false,
   contextStatusTimer: null,
   folderMode: {
@@ -474,6 +475,8 @@ async function loadWorkspace() {
       state.trash = Array.isArray(payload.trash) ? payload.trash : [];
       state.deprecated = Array.isArray(payload.deprecated) ? payload.deprecated : [];
       state.deprecatedParagraphs = Array.isArray(payload.deprecatedParagraphs) ? payload.deprecatedParagraphs : [];
+      if (payload.designSettings && typeof payload.designSettings === "object") setProjectDesignSettings(payload.designSettings, { persistLocal: true });
+      if (payload.designSettings && typeof payload.designSettings === "object") setProjectDesignSettings(payload.designSettings, { persistLocal: true });
     } catch (error) {
       console.warn("Ignoring unreadable local Capsanoto Writing Room", error);
       localStorage.removeItem(STORAGE_KEY);
@@ -3120,7 +3123,8 @@ function updateProjectSettingsStatus(message = "") {
   if (els.projectInfoStatus) {
     const disk = state.folderMode.lastDiskSaveAt ? new Date(state.folderMode.lastDiskSaveAt).toLocaleString() : "never";
     const online = state.googleDrive.connectedAt ? new Date(state.googleDrive.connectedAt).toLocaleString() : "not connected";
-    els.projectInfoStatus.innerHTML = `<strong>${escapeHtml(state.writingRoomName || "Writing Room")}</strong><br>Active file: ${escapeHtml(active?.title || "No active file")}<br>Storage: ${escapeHtml(storageMode)}<br>Last online connection: ${escapeHtml(online)}<br>Last HDD backup: ${escapeHtml(disk)}`;
+    const design = state.designSettings && Object.keys(state.designSettings).length ? "Writing Room theme active" : "Default theme";
+    els.projectInfoStatus.innerHTML = `<strong>${escapeHtml(state.writingRoomName || "Writing Room")}</strong><br>Active file: ${escapeHtml(active?.title || "No active file")}<br>Storage: ${escapeHtml(storageMode)}<br>Design: ${escapeHtml(design)}<br>Last online connection: ${escapeHtml(online)}<br>Last HDD backup: ${escapeHtml(disk)}`;
   }
   if (els.googleDriveStatus) {
     const expires = state.googleDrive.expiresAt ? new Date(state.googleDrive.expiresAt).toLocaleString() : "not available";
@@ -3393,6 +3397,11 @@ async function loadWritingRoomFromFolder(directoryHandle) {
   state.trash = Array.isArray(project.trash) ? project.trash : [];
   state.deprecated = Array.isArray(project.deprecated) ? project.deprecated : [];
   state.deprecatedParagraphs = Array.isArray(project.deprecatedParagraphs) ? project.deprecatedParagraphs : [];
+  if (project.designSettings && typeof project.designSettings === "object") {
+    setProjectDesignSettings(project.designSettings, { persistLocal: true });
+    applySavedDesignSettings();
+    loadDesignForm();
+  }
   state.documents = [];
   const tcardPayload = await readJsonFromDirectory(directoryHandle, "tcards.json").catch(() => null);
   state.blocks = tcardPayload?.blocks && typeof tcardPayload.blocks === "object" ? tcardPayload.blocks : (project.blocks || {});
@@ -3494,14 +3503,13 @@ function folderModeProjectPayload() {
     trash: state.trash,
     deprecated: state.deprecated,
     deprecatedParagraphs: state.deprecatedParagraphs || [],
-    designSettings: readDesignSettingsFromStorage(),
+    designSettings: currentDesignSettings(),
     folderModePrefs: folderModePrefs(),
   };
 }
 
 function readDesignSettingsFromStorage() {
-  try { return JSON.parse(localStorage.getItem(DESIGN_KEY) || "{}"); }
-  catch { return {}; }
+  return currentDesignSettings();
 }
 
 async function writeDocumentMarkdown(directoryHandle, doc) {
@@ -4130,19 +4138,44 @@ function validFavoriteColors(colors) {
   return [...values, ...DEFAULT_FAVORITE_COLORS].slice(0, DEFAULT_FAVORITE_COLORS.length);
 }
 
-function currentDesignSettings() {
+function designSettingsFromStorage() {
   try {
-    return { ...defaultDesignSettings(), ...extraDesignDefaults(), ...(JSON.parse(localStorage.getItem(DESIGN_KEY) || "null") || {}) };
+    return JSON.parse(localStorage.getItem(DESIGN_KEY) || "null") || {};
   } catch (error) {
     console.warn("Ignoring unreadable Capsanoto design settings", error);
     localStorage.removeItem(DESIGN_KEY);
-    return defaultDesignSettings();
+    return {};
   }
+}
+
+function normalizedDesignSettings(settings = {}) {
+  return { ...defaultDesignSettings(), ...extraDesignDefaults(), ...(settings || {}) };
+}
+
+function setProjectDesignSettings(settings = {}, options = {}) {
+  const next = normalizedDesignSettings(settings);
+  state.designSettings = next;
+  if (options.persistLocal !== false) localStorage.setItem(DESIGN_KEY, JSON.stringify(next));
+  return next;
+}
+
+function currentDesignSettings() {
+  return normalizedDesignSettings({ ...state.designSettings, ...designSettingsFromStorage() });
 }
 
 function defaultDesignSettings() {
   const palette = CAPSANOTO_PALETTE;
   return {
+    pageBg: palette.black,
+    paperBg: palette.espresso,
+    darkBg: palette.espresso,
+    dark2Bg: palette.umber,
+    accentColor: palette.peach,
+    accentSoft: "rgba(232, 143, 105, 0.18)",
+    buttonHover: palette.amethyst,
+    successColor: palette.amethyst,
+    warningColor: palette.ochre,
+    dangerColor: palette.ember,
     buttonBg: palette.charcoal,
     borderColor: palette.peach,
     textColor: palette.parchment,
@@ -4185,10 +4218,11 @@ function saveDesignSettings() {
 }
 
 function resetDesignSettings() {
-  localStorage.removeItem(DESIGN_KEY);
-  applyDesignSettings(defaultDesignSettings());
+  const settings = setProjectDesignSettings(defaultDesignSettings(), { persistLocal: true });
+  applyDesignSettings(settings);
   loadDesignForm();
-  setStatus("Design reset", "saved");
+  persistNow("Design reset and saved to Writing Room");
+  updateProjectSettingsStatus();
 }
 
 function applySavedDesignSettings() {
@@ -4196,7 +4230,29 @@ function applySavedDesignSettings() {
 }
 
 function applyDesignSettings(settings) {
+  settings = normalizedDesignSettings(settings);
   const root = document.documentElement;
+  root.style.setProperty("--theme-bg-main", settings.pageBg);
+  root.style.setProperty("--theme-bg-document", settings.paperBg);
+  root.style.setProperty("--theme-panel", settings.panelBg || settings.darkBg);
+  root.style.setProperty("--theme-panel-strong", settings.darkBg);
+  root.style.setProperty("--theme-panel-soft", settings.dark2Bg);
+  root.style.setProperty("--theme-accent", settings.accentColor);
+  root.style.setProperty("--theme-accent-soft", settings.accentSoft);
+  root.style.setProperty("--theme-button-hover", settings.buttonHover);
+  root.style.setProperty("--theme-success", settings.successColor);
+  root.style.setProperty("--theme-warning", settings.warningColor);
+  root.style.setProperty("--theme-danger", settings.dangerColor);
+  root.style.setProperty("--page", settings.pageBg);
+  root.style.setProperty("--paper", settings.paperBg);
+  root.style.setProperty("--dark", settings.darkBg);
+  root.style.setProperty("--dark-2", settings.dark2Bg);
+  root.style.setProperty("--accent", settings.accentColor);
+  root.style.setProperty("--accent-soft", settings.accentSoft);
+  root.style.setProperty("--button-hover", settings.buttonHover);
+  root.style.setProperty("--success", settings.successColor);
+  root.style.setProperty("--warning", settings.warningColor);
+  root.style.setProperty("--danger", settings.dangerColor);
   root.style.setProperty("--button", settings.buttonBg);
   root.style.setProperty("--line", settings.borderColor);
   root.style.setProperty("--ink", settings.textColor);
@@ -4261,6 +4317,10 @@ function serializedWorkspace() {
     trash: state.trash,
     deprecated: state.deprecated,
     deprecatedParagraphs: state.deprecatedParagraphs || [],
+    designSettings: currentDesignSettings(),
+    favoriteColors: [...state.favoriteColors],
+    customEmojis: [...state.customEmojis],
+    favoriteEmojis: [...state.favoriteEmojis],
   }, null, 2);
 }
 

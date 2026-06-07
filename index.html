@@ -237,6 +237,21 @@
 <label>Default Window Shadow <input data-css-var="--window-shadow-color" data-design-key="windowShadow" type="color" value="#000000"/></label>
 <label>Main App Background <input data-css-var="--app-bg-color" data-design-key="appBgColor" type="color" value="#211812"/></label><label>Global Background Image URL <input id="designBgImage" placeholder="wallpapersm.jpg or https://..." type="text"/></label><label>Global Background Image Scale % <input data-css-var="--app-bg-size" data-design-key="appBgSize" data-suffix="%" max="300" min="25" type="number" value="100"/></label>
 <label>Top Title-Bar Image URL <input data-css-var="--top-bar-image-url" data-design-key="topBarImage" placeholder="optional image URL" type="text"/></label><label>Top Title-Bar Image Scale % <input data-css-var="--top-bar-image-size" data-design-key="topBarImageSize" data-suffix="%" max="300" min="25" type="number" value="100"/></label>
+</details><details class="element-designer-card" data-designer-card="central-theme">
+<summary>Central Theme Tokens</summary>
+<p class="design-section-note">These are the shared project theme colours. They drive the app defaults and save into the active Writing Room project file.</p>
+<label>Main App Background <input data-css-var="--theme-bg-main" data-design-key="pageBg" type="color" value="#000000"/></label>
+<label>Writing Surface Background <input data-css-var="--theme-bg-document" data-design-key="paperBg" type="color" value="#211812"/></label>
+<label>Panel Background <input data-css-var="--theme-panel" data-design-key="panelBg" type="color" value="#211812"/></label>
+<label>Strong Panel Background <input data-css-var="--theme-panel-strong" data-design-key="darkBg" type="color" value="#211812"/></label>
+<label>Soft Panel Background <input data-css-var="--theme-panel-soft" data-design-key="dark2Bg" type="color" value="#2f251c"/></label>
+<label>Accent / Highlight <input data-css-var="--theme-accent" data-design-key="accentColor" type="color" value="#e88f69"/></label>
+<label>Button Hover <input data-css-var="--theme-button-hover" data-design-key="buttonHover" type="color" value="#563485"/></label>
+<label>Saved / Ready Color <input data-css-var="--theme-success" data-design-key="successColor" type="color" value="#563485"/></label>
+<label>Warning Color <input data-css-var="--theme-warning" data-design-key="warningColor" type="color" value="#a97b38"/></label>
+<label>Danger / Delete Color <input data-css-var="--theme-danger" data-design-key="dangerColor" type="color" value="#c55222"/></label>
+<label>Accent Soft Overlay <input data-design-key="accentSoft" placeholder="rgba(232, 143, 105, 0.18)" type="text" value="rgba(232, 143, 105, 0.18)"/></label>
+<p class="project-theme-note">Saved design values travel with <code>capsanoto.project.json</code> when the Writing Room is backed up or synced.</p>
 </details><details class="element-designer-card" data-designer-card="global-dialogue"><summary>Global Dialogue and Buttons</summary><p class="design-section-note">Dialog windows, dialog text, dialog buttons, shadows, and shared button treatment.</p><h4>Dialogue Windows</h4>
 <label>Dialogue BG <input id="dialogBgColor" type="color" value="#211812"/></label>
 <label>Dialogue Border <input id="dialogBorderColor" type="color" value="#e88f69"/></label>
@@ -514,6 +529,7 @@
 <button id="logoutButton" type="button">🧹 Reset Local Save</button>
 <button disabled="" type="button">Placeholder</button>
 <button disabled="" type="button">Placeholder</button>
+<p><strong>Capsanoto v3.8:</strong> centralised theme tokens, connected the Element Designer to shared CSS variables, and made Writing Room design settings save into the project file so colours/layout can sync with project storage.</p>
 </section>
 </aside>
 <aside aria-label="Capsanoto guidebook" class="help-panel" hidden="" id="helpPanel">
@@ -641,7 +657,7 @@
 </section>
 <section>
 <h3>12. Design Settings</h3>
-<p>Settings → Design controls app styling such as fonts, colours, borders, shadows, top bar height, Writing Room window styling, Settings styling, Help styling, writing area controls, table defaults, TCard styling, and scrollbars where implemented.</p>
+<p>Settings → Design controls app styling such as fonts, colours, borders, shadows, top bar height, Writing Room window styling, Settings styling, Help styling, writing area controls, table defaults, TCard styling, and scrollbars where implemented.</p><p>Design has three layers: Capsanoto default theme tokens in the code, the active Writing Room project theme saved in <code>capsanoto.project.json</code>, and temporary local unsaved changes while editing the settings. When you save design settings, they become part of the Writing Room project and will travel with HDD backup and Google Drive sync.</p>
 <p>Recommended font stack: <code>Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif</code>. Courier New should be reserved for code-like/monospace text.</p>
 </section>
 <section>
