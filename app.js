@@ -18,6 +18,7 @@ const GOOGLE_DRIVE_CLIENT_ID = "914452234615-eqsti2er404bhih80jnjemsfc68boso5.ap
 const GOOGLE_DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.file";
 const GOOGLE_IDENTITY_SCRIPT = "https://accounts.google.com/gsi/client";
 const GOOGLE_DRIVE_STORAGE_KEY = "capsanoto-google-drive-storage-v1";
+const GOOGLE_DRIVE_TOKEN_STORAGE_KEY = "capsanoto-google-drive-token-v1";
 const GOOGLE_DRIVE_API_ROOT = "https://www.googleapis.com/drive/v3";
 const GOOGLE_DRIVE_UPLOAD_ROOT = "https://www.googleapis.com/upload/drive/v3";
 const GOOGLE_DRIVE_ROOT_FOLDER_NAME = "Capsanoto";
@@ -180,6 +181,8 @@ const els = {
   createOnlineProjectButton: document.querySelector("#createOnlineProjectButton"),
   openOnlineProjectButton: document.querySelector("#openOnlineProjectButton"),
   syncOnlineProjectButton: document.querySelector("#syncOnlineProjectButton"),
+  openGoogleDriveFolderButton: document.querySelector("#openGoogleDriveFolderButton"),
+  copyGoogleDriveFolderLinkButton: document.querySelector("#copyGoogleDriveFolderLinkButton"),
   projectFolderModeStatus: document.querySelector("#projectFolderModeStatus"),
   projectCreateBackupFolderButton: document.querySelector("#projectCreateBackupFolderButton"),
   projectOpenBackupFolderButton: document.querySelector("#projectOpenBackupFolderButton"),
@@ -611,6 +614,8 @@ function bindEditorEvents() {
   els.createOnlineProjectButton?.addEventListener("click", createGoogleDriveOnlineProject);
   els.openOnlineProjectButton?.addEventListener("click", openGoogleDriveOnlineProject);
   els.syncOnlineProjectButton?.addEventListener("click", syncGoogleDriveProject);
+  els.openGoogleDriveFolderButton?.addEventListener("click", openGoogleDriveProjectFolder);
+  els.copyGoogleDriveFolderLinkButton?.addEventListener("click", copyGoogleDriveProjectLink);
   els.projectCreateBackupFolderButton?.addEventListener("click", createNewWritingRoomFolder);
   els.projectOpenBackupFolderButton?.addEventListener("click", openWritingRoomFolder);
   els.projectSaveBackupButton?.addEventListener("click", () => saveFolderModeSnapshot("Backed up active file to disk", { force: true }));
@@ -3092,7 +3097,8 @@ function persistNow(message = "Autosaved locally") {
 function loadGoogleDriveStorageState() {
   try {
     const saved = JSON.parse(localStorage.getItem(GOOGLE_DRIVE_STORAGE_KEY) || "{}");
-    state.googleDrive.connected = Boolean(saved.connected);
+    const sessionToken = sessionStorage.getItem(GOOGLE_DRIVE_TOKEN_STORAGE_KEY) || "";
+    state.googleDrive.accessToken = sessionToken;
     state.googleDrive.connectedAt = saved.connectedAt || "";
     state.googleDrive.expiresAt = saved.expiresAt || "";
     state.googleDrive.accountLabel = saved.accountLabel || "";
@@ -3100,7 +3106,14 @@ function loadGoogleDriveStorageState() {
     state.googleDrive.projectFolderId = saved.projectFolderId || "";
     state.googleDrive.projectName = saved.projectName || "";
     state.googleDrive.lastSyncAt = saved.lastSyncAt || "";
-    state.googleDrive.lastStatus = saved.lastStatus || (saved.connected ? "Connected previously; sign in again if token expired" : "Not connected");
+    state.googleDrive.connected = Boolean(sessionToken);
+    if (sessionToken) {
+      state.googleDrive.lastStatus = saved.lastStatus || "Google Drive token active for this browser session.";
+    } else if (saved.connected || saved.connectedAt) {
+      state.googleDrive.lastStatus = "Google Drive account was connected previously. Click Connect Google Account to refresh the browser token before syncing.";
+    } else {
+      state.googleDrive.lastStatus = saved.lastStatus || "Not connected";
+    }
   } catch {
     state.googleDrive.lastStatus = "Google Drive connection state could not be read";
   }
@@ -3145,11 +3158,13 @@ function updateProjectSettingsStatus(message = "") {
   }
   if (els.googleDriveStatus) {
     const expires = state.googleDrive.expiresAt ? new Date(state.googleDrive.expiresAt).toLocaleString() : "not available";
-    const connected = state.googleDrive.connected ? "Connected" : "Not connected";
+    const connected = state.googleDrive.accessToken ? "Connected" : (state.googleDrive.accountLabel ? "Reconnect required" : "Not connected");
     const label = state.googleDrive.accountLabel ? ` · ${escapeHtml(state.googleDrive.accountLabel)}` : "";
     const project = state.googleDrive.projectName ? `<br>Online project: ${escapeHtml(state.googleDrive.projectName)}` : "";
     const sync = state.googleDrive.lastSyncAt ? `<br>Last online sync: ${escapeHtml(new Date(state.googleDrive.lastSyncAt).toLocaleString())}` : "";
-    els.googleDriveStatus.innerHTML = `<strong>${connected}${label}</strong><br>${escapeHtml(state.googleDrive.lastStatus || "Google Drive is not connected.")}<br>Token expiry: ${escapeHtml(expires)}${project}${sync}${message ? `<br>${escapeHtml(message)}` : ""}`;
+    const driveLink = googleDriveProjectUrl();
+    const driveLine = driveLink ? `<br><a href="${escapeHtml(driveLink)}" target="_blank" rel="noopener">Open online project folder in Google Drive</a>` : "";
+    els.googleDriveStatus.innerHTML = `<strong>${connected}${label}</strong><br>${escapeHtml(state.googleDrive.lastStatus || "Google Drive is not connected.")}<br>Token expiry: ${escapeHtml(expires)}${project}${sync}${driveLine}${message ? `<br>${escapeHtml(message)}` : ""}`;
   }
   if (els.projectFolderModeStatus) {
     const local = state.folderMode.enabled ? `Backup folder active: ${state.folderMode.projectName || "selected folder"}` : "No backup folder selected";
@@ -3203,6 +3218,7 @@ async function connectGoogleDriveAccount(forceAccountChoice = false) {
 function handleGoogleDriveTokenResponse(response) {
   if (response?.error) return handleGoogleDriveTokenError(response);
   state.googleDrive.accessToken = response.access_token || "";
+  if (state.googleDrive.accessToken) sessionStorage.setItem(GOOGLE_DRIVE_TOKEN_STORAGE_KEY, state.googleDrive.accessToken);
   state.googleDrive.connected = Boolean(state.googleDrive.accessToken);
   const now = Date.now();
   state.googleDrive.connectedAt = new Date(now).toISOString();
@@ -3228,6 +3244,7 @@ function disconnectGoogleDriveAccount() {
   if (state.googleDrive.accessToken && window.google?.accounts?.oauth2?.revoke) {
     try { window.google.accounts.oauth2.revoke(state.googleDrive.accessToken); } catch {}
   }
+  sessionStorage.removeItem(GOOGLE_DRIVE_TOKEN_STORAGE_KEY);
   state.googleDrive.accessToken = "";
   state.googleDrive.connected = false;
   state.googleDrive.connectedAt = "";
@@ -3246,10 +3263,11 @@ function disconnectGoogleDriveAccount() {
 
 async function ensureGoogleDriveAccess(action = "use Google Drive") {
   if (!state.googleDrive.accessToken) {
-    state.googleDrive.lastStatus = `Connect Google Account before you ${action}.`;
+    state.googleDrive.connected = false;
+    state.googleDrive.lastStatus = `Click Connect Google Account to refresh permission before you ${action}.`;
     saveGoogleDriveStorageState();
     updateProjectSettingsStatus(state.googleDrive.lastStatus);
-    setStatus("Google Drive connection needed", "dirty");
+    setStatus("Google Drive reconnect needed", "dirty");
     return false;
   }
   const expiresAt = Date.parse(state.googleDrive.expiresAt || "");
@@ -3419,6 +3437,35 @@ async function readGoogleDriveTextAtPath(projectFolderId, path) {
   const fileName = parts.pop();
   const folder = parts.length ? await getGoogleDriveFolderPath(parts, projectFolderId) : { id: projectFolderId };
   return readGoogleDriveTextFile(folder.id, fileName);
+}
+
+
+function googleDriveProjectUrl() {
+  return state.googleDrive.projectFolderId ? `https://drive.google.com/drive/folders/${encodeURIComponent(state.googleDrive.projectFolderId)}` : "";
+}
+
+function openGoogleDriveProjectFolder() {
+  const url = googleDriveProjectUrl();
+  if (!url) {
+    state.googleDrive.lastStatus = "Create or open an online project before using Open in Drive.";
+    updateProjectSettingsStatus(state.googleDrive.lastStatus);
+    setStatus("No Drive folder selected", "dirty");
+    return;
+  }
+  window.open(url, "_blank", "noopener");
+  setStatus("Opened Google Drive folder", "saved");
+}
+
+async function copyGoogleDriveProjectLink() {
+  const url = googleDriveProjectUrl();
+  if (!url) {
+    state.googleDrive.lastStatus = "No online project folder link is available yet.";
+    updateProjectSettingsStatus(state.googleDrive.lastStatus);
+    setStatus("No Drive link to copy", "dirty");
+    return;
+  }
+  await copyText(url);
+  setStatus("Copied Google Drive folder link", "saved");
 }
 
 async function createGoogleDriveOnlineProject() {

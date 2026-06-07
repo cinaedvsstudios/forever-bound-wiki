@@ -23,7 +23,7 @@
 <main aria-label="Forever Bound writing editor" class="writer-shell" id="editorApp">
 <header aria-label="Capsanoto command bar" class="writer-header toolbar">
 <div class="document-controls">
-<strong class="app-name"><img alt="Capsanoto icon" src="https://raw.githubusercontent.com/cinaedvsstudios/forever-bound-wiki/refs/heads/main/iconcapsanoto.png"/><span class="brand-word">Capsanoto</span><span class="app-version">v3.9</span></strong>
+<strong class="app-name"><img alt="Capsanoto icon" src="https://raw.githubusercontent.com/cinaedvsstudios/forever-bound-wiki/refs/heads/main/iconcapsanoto.png"/><span class="brand-word">Capsanoto</span><span class="app-version">v4.0</span></strong>
 <label class="sr-only" for="documentSelect">Current document</label>
 <select hidden="" id="documentSelect" title="Document Switcher"></select>
 </div>
@@ -122,6 +122,8 @@
 <button id="createOnlineProjectButton" type="button">Create Online Project</button>
 <button id="openOnlineProjectButton" type="button">Open Online Project</button>
 <button id="syncOnlineProjectButton" type="button">Sync Now</button>
+<button id="openGoogleDriveFolderButton" type="button">Open in Drive</button>
+<button id="copyGoogleDriveFolderLinkButton" type="button">Copy Drive Link</button>
 </div>
 <div class="project-status-card" id="googleDriveStatus">Google Drive is not connected.</div>
 </section>
@@ -529,7 +531,7 @@
 <button id="logoutButton" type="button">🧹 Reset Local Save</button>
 <button disabled="" type="button">Placeholder</button>
 <button disabled="" type="button">Placeholder</button>
-<p><strong>Capsanoto v3.8:</strong> centralised theme tokens, connected the Element Designer to shared CSS variables, and made Writing Room design settings save into the project file so colours/layout can sync with project storage.</p><p><strong>Capsanoto v3.9:</strong> added Google Drive Project Storage Phase 1: Create Online Project, Open Online Project by project folder name, and Sync Now for project JSON, TCard library, and Markdown files.</p>
+<p><strong>Capsanoto v3.8:</strong> centralised theme tokens, connected the Element Designer to shared CSS variables, and made Writing Room design settings save into the project file so colours/layout can sync with project storage.</p><p><strong>Capsanoto v3.9:</strong> added Google Drive Project Storage Phase 1: Create Online Project, Open Online Project by project folder name, and Sync Now for project JSON, TCard library, and Markdown files.</p><p><strong>Capsanoto v4.0:</strong> added Open in Drive and Copy Drive Link controls, stored the active Google token for the browser session, and clarified reconnect-required status so the app no longer says connected and connect-first at the same time.</p>
 </section>
 </aside>
 <aside aria-label="Capsanoto guidebook" class="help-panel" hidden="" id="helpPanel">
