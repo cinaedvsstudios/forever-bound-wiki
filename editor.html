@@ -23,7 +23,7 @@
 <main aria-label="Forever Bound writing editor" class="writer-shell" id="editorApp">
 <header aria-label="Capsanoto command bar" class="writer-header toolbar">
 <div class="document-controls">
-<strong class="app-name"><img alt="Capsanoto icon" src="https://raw.githubusercontent.com/cinaedvsstudios/forever-bound-wiki/refs/heads/main/iconcapsanoto.png"/><span class="brand-word">Capsanoto</span><span class="app-version">v4.0</span></strong>
+<strong class="app-name"><img alt="Capsanoto icon" src="https://raw.githubusercontent.com/cinaedvsstudios/forever-bound-wiki/refs/heads/main/iconcapsanoto.png"/><span class="brand-word">Capsanoto</span><span class="app-version">v4.2</span></strong>
 <label class="sr-only" for="documentSelect">Current document</label>
 <select hidden="" id="documentSelect" title="Document Switcher"></select>
 </div>
@@ -134,6 +134,7 @@
 <button id="projectCreateBackupFolderButton" type="button">Create Backup Folder</button>
 <button id="projectOpenBackupFolderButton" type="button">Open Backup Folder</button>
 <button id="projectSaveBackupButton" type="button">Backup Active File</button>
+<button id="projectSyncBackupFolderButton" type="button">Sync Backup Folder</button>
 <button id="projectResetBackupReminderButton" type="button">Reset Reminder</button>
 </div>
 <div class="folder-mode-status" id="projectFolderModeStatus">Local backup folder is not selected.</div>
@@ -141,12 +142,12 @@
 <section class="project-settings-section">
 <h3>Project Actions</h3>
 <div class="project-action-row">
-<button id="newProjectPlaceholderButton" type="button">New Project</button>
-<button id="openProjectPlaceholderButton" type="button">Open / Switch Project</button>
-<button id="duplicateProjectPlaceholderButton" type="button">Duplicate Project</button>
+<button id="newProjectPlaceholderButton" type="button">New Writing Room</button>
+<button id="openProjectPlaceholderButton" type="button">Open / Switch Online</button>
+<button id="duplicateProjectPlaceholderButton" type="button">Duplicate Online</button>
 <button id="downloadProjectBackupButton" type="button">Download Project Backup</button>
 </div>
-<p class="panel-help">These buttons are placeholders for the project-list workflow. The storage order is Google Drive primary, HDD backup, and localStorage emergency draft.</p>
+<p class="panel-help">Use these project-level actions to start a fresh local Writing Room, switch to an online Google Drive Writing Room, duplicate the current Writing Room online, or download a complete Capsanoto project backup. Storage order remains Google Drive primary, HDD backup, and localStorage emergency draft.</p>
 </section>
 </aside>
 <nav aria-label="Document bookmarks" class="bookmark-bar" hidden="" id="bookmarkBar"></nav>
@@ -512,6 +513,7 @@
 <button id="createFolderProjectButton" type="button">Create New Writing Room Folder</button>
 <button id="openFolderProjectButton" type="button">Open Writing Room Folder</button>
 <button id="saveFolderProjectButton" type="button">Save Active File to Disk</button>
+<button id="syncFolderProjectButton" type="button">Sync Backup Folder</button>
 <button id="resetFolderReminderButton" type="button">Reset 10-Minute Save Reminder</button>
 </div>
 <div class="folder-mode-status" id="folderModeStatus">Folder Mode inactive.</div>
@@ -531,7 +533,7 @@
 <button id="logoutButton" type="button">🧹 Reset Local Save</button>
 <button disabled="" type="button">Placeholder</button>
 <button disabled="" type="button">Placeholder</button>
-<p><strong>Capsanoto v3.8:</strong> centralised theme tokens, connected the Element Designer to shared CSS variables, and made Writing Room design settings save into the project file so colours/layout can sync with project storage.</p><p><strong>Capsanoto v3.9:</strong> added Google Drive Project Storage Phase 1: Create Online Project, Open Online Project by project folder name, and Sync Now for project JSON, TCard library, and Markdown files.</p><p><strong>Capsanoto v4.0:</strong> added Open in Drive and Copy Drive Link controls, stored the active Google token for the browser session, and clarified reconnect-required status so the app no longer says connected and connect-first at the same time.</p>
+<p><strong>Capsanoto v3.8:</strong> centralised theme tokens, connected the Element Designer to shared CSS variables, and made Writing Room design settings save into the project file so colours/layout can sync with project storage.</p><p><strong>Capsanoto v3.9:</strong> added Google Drive Project Storage Phase 1: Create Online Project, Open Online Project by project folder name, and Sync Now for project JSON, TCard library, and Markdown files.</p><p><strong>Capsanoto v4.0:</strong> added Open in Drive and Copy Drive Link controls, stored the active Google token for the browser session, and clarified reconnect-required status so the app no longer says connected and connect-first at the same time.</p><p><strong>Capsanoto v4.1:</strong> added Sync Backup Folder controls to the local HDD backup sections so the full Writing Room mirror can be written to disk on demand.</p><p><strong>Capsanoto v4.2:</strong> made Project Actions functional: New Writing Room starts a fresh local project, Open / Switch Online uses a selectable Drive project picker, Duplicate Online creates a Drive copy, and Download Project Backup saves a full .caps.json archive.</p>
 </section>
 </aside>
 <aside aria-label="Capsanoto guidebook" class="help-panel" hidden="" id="helpPanel">

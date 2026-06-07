@@ -307,7 +307,7 @@ button, summary { font-size: var(--button-font-size); font-weight: var(--button-
 .caps-dialog h2 { margin:0; color:var(--dialog-text); }
 .dialog-fields { display:grid; gap:0.8rem; margin:1rem 0; }
 .dialog-fields label { display:grid; gap:0.35rem; }
-.dialog-fields input, .dialog-fields textarea {
+.dialog-fields input, .dialog-fields textarea, .dialog-fields select {
   width: 100%;
   color: var(--dialog-text);
   background: rgba(0,0,0,0.28);

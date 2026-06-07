@@ -187,6 +187,7 @@ const els = {
   projectCreateBackupFolderButton: document.querySelector("#projectCreateBackupFolderButton"),
   projectOpenBackupFolderButton: document.querySelector("#projectOpenBackupFolderButton"),
   projectSaveBackupButton: document.querySelector("#projectSaveBackupButton"),
+  projectSyncBackupFolderButton: document.querySelector("#projectSyncBackupFolderButton"),
   projectResetBackupReminderButton: document.querySelector("#projectResetBackupReminderButton"),
   newProjectPlaceholderButton: document.querySelector("#newProjectPlaceholderButton"),
   openProjectPlaceholderButton: document.querySelector("#openProjectPlaceholderButton"),
@@ -272,6 +273,7 @@ const els = {
   createFolderProjectButton: document.querySelector("#createFolderProjectButton"),
   openFolderProjectButton: document.querySelector("#openFolderProjectButton"),
   saveFolderProjectButton: document.querySelector("#saveFolderProjectButton"),
+  syncFolderProjectButton: document.querySelector("#syncFolderProjectButton"),
   resetFolderReminderButton: document.querySelector("#resetFolderReminderButton"),
   folderModeStatus: document.querySelector("#folderModeStatus"),
   folderModeStructure: document.querySelector("#folderModeStructure"),
@@ -619,11 +621,12 @@ function bindEditorEvents() {
   els.projectCreateBackupFolderButton?.addEventListener("click", createNewWritingRoomFolder);
   els.projectOpenBackupFolderButton?.addEventListener("click", openWritingRoomFolder);
   els.projectSaveBackupButton?.addEventListener("click", () => saveFolderModeSnapshot("Backed up active file to disk", { force: true }));
+  els.projectSyncBackupFolderButton?.addEventListener("click", syncLocalBackupFolder);
   els.projectResetBackupReminderButton?.addEventListener("click", resetFolderModeReminderPreference);
-  els.newProjectPlaceholderButton?.addEventListener("click", createGoogleDriveOnlineProject);
+  els.newProjectPlaceholderButton?.addEventListener("click", createNewWritingRoomProject);
   els.openProjectPlaceholderButton?.addEventListener("click", openGoogleDriveOnlineProject);
-  els.duplicateProjectPlaceholderButton?.addEventListener("click", () => projectStoragePlaceholder("Duplicate Project will clone project files after Drive sync is implemented."));
-  els.downloadProjectBackupButton?.addEventListener("click", () => exportSmartBundle("caps"));
+  els.duplicateProjectPlaceholderButton?.addEventListener("click", duplicateGoogleDriveProject);
+  els.downloadProjectBackupButton?.addEventListener("click", downloadCapsanotoProjectBackup);
   els.closeSettingsPanel.addEventListener("pointerdown", (event) => event.stopPropagation());
   els.closeSettingsPanel.addEventListener("pointerup", (event) => { event.preventDefault(); event.stopPropagation(); toggleSettingsPanel(false); });
   els.closeSettingsPanel.addEventListener("click", (event) => { event.preventDefault(); event.stopPropagation(); toggleSettingsPanel(false); });
@@ -643,6 +646,7 @@ function bindEditorEvents() {
   els.createFolderProjectButton?.addEventListener("click", createNewWritingRoomFolder);
   els.openFolderProjectButton?.addEventListener("click", openWritingRoomFolder);
   els.saveFolderProjectButton?.addEventListener("click", () => saveFolderModeSnapshot("Saved to disk", { force: true }));
+  els.syncFolderProjectButton?.addEventListener("click", syncLocalBackupFolder);
   els.resetFolderReminderButton?.addEventListener("click", resetFolderModeReminderPreference);
   els.importColorImageButton?.addEventListener("click", () => els.colorImageInput?.click());
   els.colorImageInput?.addEventListener("change", showColorReferenceImage);
@@ -1213,6 +1217,15 @@ function renderDialogField(field) {
   }
   if (field.checkbox) {
     return `<label class="dialog-check ${field.footer ? "dialog-footer-field" : ""}"><input type="checkbox" name="${escapeAttr(field.name)}"> ${escapeHtml(field.label)}</label>`;
+  }
+  if (field.options) {
+    const options = field.options.map((option) => {
+      const value = typeof option === "string" ? option : option.value;
+      const label = typeof option === "string" ? option : option.label;
+      const selected = value === field.value ? " selected" : "";
+      return `<option value="${escapeAttr(value)}"${selected}>${escapeHtml(label)}</option>`;
+    }).join("");
+    return `<label>${escapeHtml(field.label)}<select name="${escapeAttr(field.name)}">${options}</select></label>`;
   }
   const readonly = field.readonly ? " readonly" : "";
   return `
@@ -3541,13 +3554,21 @@ async function openGoogleDriveOnlineProject() {
       setStatus("No online projects found", "dirty");
       return;
     }
-    const listHtml = `<p>Available projects:</p><ul>${projects.map((item) => `<li>${escapeHtml(item.name)} <small>${escapeHtml(item.modifiedTime ? new Date(item.modifiedTime).toLocaleString() : "")}</small></li>`).join("")}</ul>`;
+    const sortedProjects = [...projects].sort((a, b) => (b.modifiedTime || "").localeCompare(a.modifiedTime || ""));
     const result = await openCapsDialog("Open Online Project", [
-      { html: listHtml },
-      { name: "projectName", label: "Project folder name to open", value: state.googleDrive.projectName || projects[0].name, placeholder: projects[0].name },
+      { html: `<p>Choose a Capsanoto Writing Room project from this Google Drive account.</p>` },
+      {
+        name: "projectId",
+        label: "Online Writing Room",
+        value: state.googleDrive.projectFolderId || sortedProjects[0].id,
+        options: sortedProjects.map((item) => ({
+          value: item.id,
+          label: `${item.name}${item.modifiedTime ? ` · ${new Date(item.modifiedTime).toLocaleString()}` : ""}`,
+        })),
+      },
     ]);
-    if (!result?.projectName) return;
-    const selected = projects.find((item) => item.name === result.projectName.trim()) || await findGoogleDriveItem(result.projectName.trim(), state.googleDrive.rootFolderId, GOOGLE_DRIVE_FOLDER_MIME);
+    if (!result?.projectId) return;
+    const selected = sortedProjects.find((item) => item.id === result.projectId);
     if (!selected?.id) throw new Error("Selected project folder was not found.");
     await loadGoogleDriveProject(selected);
   } catch (error) {
@@ -3609,6 +3630,123 @@ async function loadGoogleDriveProject(projectFolder) {
   updateUrl();
   updateProjectSettingsStatus(state.googleDrive.lastStatus);
   setStatus("Opened Google Drive project", "saved");
+}
+
+
+function resetWritingRoomState(projectName) {
+  const now = new Date().toISOString();
+  const safeName = projectName?.trim() || "Untitled Writing Room";
+  const documentId = `doc-${slugify(safeName || "writing-room")}-${Date.now()}`;
+  state.writingRoomName = safeName;
+  state.documents = [{
+    id: documentId,
+    title: "New Lore Document",
+    tags: [],
+    updatedAt: now,
+    content: '<h1 id="new-lore-document">New Lore Document</h1><p>Start writing here.</p>',
+    filingGroupId: "writing-room-tabs",
+    filingTabId: "tab-writing-room-tabs-default",
+    diskPath: "",
+    diskSavedAt: "",
+    localDraftAt: now,
+  }];
+  state.blocks = {};
+  state.activeId = documentId;
+  state.filingGroups = defaultFilingGroups();
+  state.filingTabs = [];
+  ensureFilingTabs();
+  const firstTab = state.filingTabs.find((tab) => tab.groupId === "writing-room-tabs") || state.filingTabs[0];
+  state.documents[0].filingGroupId = firstTab?.groupId || "writing-room-tabs";
+  state.documents[0].filingTabId = firstTab?.id || "tab-writing-room-tabs-default";
+  state.trash = [];
+  state.deprecated = [];
+  state.deprecatedParagraphs = [];
+  state.exportItems = [];
+  state.googleDrive.projectFolderId = "";
+  state.googleDrive.projectName = "";
+  state.googleDrive.lastSyncAt = "";
+  state.googleDrive.lastStatus = state.googleDrive.accessToken ? "New Writing Room is local until Create Online Project or Sync Now is used." : state.googleDrive.lastStatus;
+}
+
+async function createNewWritingRoomProject() {
+  try {
+    const result = await openCapsDialog("New Writing Room", [
+      { html: "<p>This creates a fresh local Writing Room in the current browser. It does not delete Google Drive or HDD backup files. Sync or backup when you are ready.</p>" },
+      { name: "projectName", label: "Writing Room name", value: "New Writing Room", placeholder: "Forever Bound" },
+      { name: "confirm", checkbox: true, label: "Create a new blank Writing Room and replace the currently open local workspace.", footer: true },
+    ]);
+    if (!result?.projectName || result.confirm !== "on") return;
+    syncEditorToDocument();
+    resetWritingRoomState(result.projectName);
+    localStorage.setItem(STORAGE_KEY, serializedWorkspace());
+    saveGoogleDriveStorageState();
+    renderAll();
+    updateUrl();
+    updateProjectSettingsStatus("New Writing Room created locally. Use Create Online Project, Sync Now, or Sync Backup Folder when ready.");
+    setStatus("New Writing Room created", "saved");
+  } catch (error) {
+    console.error(error);
+    setStatus("New Writing Room failed", "dirty");
+  }
+}
+
+async function duplicateGoogleDriveProject() {
+  try {
+    syncEditorToDocument();
+    if (!(await ensureGoogleDriveAccess("duplicate this Writing Room online"))) return;
+    const result = await openCapsDialog("Duplicate Writing Room", [
+      { html: "<p>This makes a new Google Drive project folder using the currently open Writing Room content.</p>" },
+      { name: "projectName", label: "New online copy name", value: `${state.writingRoomName || "Writing Room"} Copy`, placeholder: "Forever Bound Copy" },
+    ]);
+    if (!result?.projectName) return;
+    const previousProjectId = state.googleDrive.projectFolderId;
+    const previousProjectName = state.googleDrive.projectName;
+    state.googleDrive.projectFolderId = "";
+    state.googleDrive.projectName = result.projectName.trim();
+    await ensureGoogleDriveProject(state.googleDrive.projectName);
+    await syncGoogleDriveProject({ writeAll: true, silentEnsure: true });
+    state.googleDrive.lastStatus = `Duplicated online Writing Room as: ${state.googleDrive.projectName}`;
+    saveGoogleDriveStorageState();
+    updateProjectSettingsStatus(state.googleDrive.lastStatus);
+    setStatus("Duplicated online Writing Room", "saved");
+    if (!state.googleDrive.projectFolderId && previousProjectId) {
+      state.googleDrive.projectFolderId = previousProjectId;
+      state.googleDrive.projectName = previousProjectName;
+    }
+  } catch (error) {
+    console.error(error);
+    state.googleDrive.lastStatus = `Duplicate failed: ${error.message}`;
+    saveGoogleDriveStorageState();
+    updateProjectSettingsStatus(state.googleDrive.lastStatus);
+    setStatus("Duplicate failed", "dirty");
+  }
+}
+
+async function downloadCapsanotoProjectBackup() {
+  try {
+    syncEditorToDocument();
+    await prepareDocumentsForFolderMode();
+    const now = new Date().toISOString();
+    const payload = {
+      schemaVersion: 1,
+      type: "capsanoto-project-backup",
+      exportedAt: now,
+      project: folderModeProjectPayload(),
+      tcards: { schemaVersion: 1, updatedAt: now, blocks: state.blocks },
+      markdownFiles: state.documents.map((doc) => ({
+        id: doc.id,
+        path: doc.diskPath || suggestedMarkdownPath(doc),
+        title: doc.title || doc.id,
+        markdown: documentToCapsMarkdown(doc),
+      })),
+    };
+    const name = `${safePathPart(state.writingRoomName || "Writing Room") || "Writing-Room"}.caps.json`;
+    downloadFile(name, JSON.stringify(payload, null, 2), "application/json");
+    setStatus("Downloaded Writing Room backup", "saved");
+  } catch (error) {
+    console.error(error);
+    setStatus("Download backup failed", "dirty");
+  }
 }
 
 function projectStoragePlaceholder(message) {
@@ -3844,6 +3982,25 @@ function safePathPart(value) {
     .replace(/\s+/g, " ")
     .trim()
     .slice(0, 80) || "Untitled";
+}
+
+
+async function syncLocalBackupFolder() {
+  if (!state.folderMode.enabled || !state.folderMode.directoryHandle) {
+    setStatus("Choose a backup folder first", "dirty");
+    updateFolderModeStatus("Choose or open a backup folder before syncing.");
+    updateProjectSettingsStatus();
+    return;
+  }
+  try {
+    await saveFolderModeSnapshot("Synced local backup folder", { force: true, writeAll: true });
+    setStatus("Local backup folder synced", "saved");
+    updateFolderModeStatus("Full Writing Room backup synced to disk.");
+  } catch (error) {
+    console.error(error);
+    setStatus("Local backup sync failed", "dirty");
+    updateFolderModeStatus(error.message || "Local backup sync failed.");
+  }
 }
 
 async function saveFolderModeSnapshot(message = "Saved to disk", options = {}) {
