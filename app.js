@@ -181,6 +181,7 @@ const els = {
   createOnlineProjectButton: document.querySelector("#createOnlineProjectButton"),
   openOnlineProjectButton: document.querySelector("#openOnlineProjectButton"),
   syncOnlineProjectButton: document.querySelector("#syncOnlineProjectButton"),
+  checkOnlineStatusButton: document.querySelector("#checkOnlineStatusButton"),
   openGoogleDriveFolderButton: document.querySelector("#openGoogleDriveFolderButton"),
   copyGoogleDriveFolderLinkButton: document.querySelector("#copyGoogleDriveFolderLinkButton"),
   projectFolderModeStatus: document.querySelector("#projectFolderModeStatus"),
@@ -188,11 +189,15 @@ const els = {
   projectOpenBackupFolderButton: document.querySelector("#projectOpenBackupFolderButton"),
   projectSaveBackupButton: document.querySelector("#projectSaveBackupButton"),
   projectSyncBackupFolderButton: document.querySelector("#projectSyncBackupFolderButton"),
+  projectCheckBackupStatusButton: document.querySelector("#projectCheckBackupStatusButton"),
   projectResetBackupReminderButton: document.querySelector("#projectResetBackupReminderButton"),
   newProjectPlaceholderButton: document.querySelector("#newProjectPlaceholderButton"),
   openProjectPlaceholderButton: document.querySelector("#openProjectPlaceholderButton"),
   duplicateProjectPlaceholderButton: document.querySelector("#duplicateProjectPlaceholderButton"),
   downloadProjectBackupButton: document.querySelector("#downloadProjectBackupButton"),
+  projectImportBackupButton: document.querySelector("#projectImportBackupButton"),
+  importProjectBackupButton: document.querySelector("#importProjectBackupButton"),
+  importProjectBackupInput: document.querySelector("#importProjectBackupInput"),
   closeSettingsPanel: document.querySelector("#closeSettingsPanel"),
   saveSettingsPanelButton: document.querySelector("#saveSettingsPanelButton"),
   settingsEmojiLibraryButton: document.querySelector("#settingsEmojiLibraryButton"),
@@ -616,17 +621,22 @@ function bindEditorEvents() {
   els.createOnlineProjectButton?.addEventListener("click", createGoogleDriveOnlineProject);
   els.openOnlineProjectButton?.addEventListener("click", openGoogleDriveOnlineProject);
   els.syncOnlineProjectButton?.addEventListener("click", syncGoogleDriveProject);
+  els.checkOnlineStatusButton?.addEventListener("click", checkGoogleDriveProjectStatus);
   els.openGoogleDriveFolderButton?.addEventListener("click", openGoogleDriveProjectFolder);
   els.copyGoogleDriveFolderLinkButton?.addEventListener("click", copyGoogleDriveProjectLink);
   els.projectCreateBackupFolderButton?.addEventListener("click", createNewWritingRoomFolder);
   els.projectOpenBackupFolderButton?.addEventListener("click", openWritingRoomFolder);
   els.projectSaveBackupButton?.addEventListener("click", () => saveFolderModeSnapshot("Backed up active file to disk", { force: true }));
   els.projectSyncBackupFolderButton?.addEventListener("click", syncLocalBackupFolder);
+  els.projectCheckBackupStatusButton?.addEventListener("click", checkLocalBackupStatus);
   els.projectResetBackupReminderButton?.addEventListener("click", resetFolderModeReminderPreference);
   els.newProjectPlaceholderButton?.addEventListener("click", createNewWritingRoomProject);
   els.openProjectPlaceholderButton?.addEventListener("click", openGoogleDriveOnlineProject);
   els.duplicateProjectPlaceholderButton?.addEventListener("click", duplicateGoogleDriveProject);
   els.downloadProjectBackupButton?.addEventListener("click", downloadCapsanotoProjectBackup);
+  els.projectImportBackupButton?.addEventListener("click", triggerProjectBackupImport);
+  els.importProjectBackupButton?.addEventListener("click", triggerProjectBackupImport);
+  els.importProjectBackupInput?.addEventListener("change", importProjectBackupFromInput);
   els.closeSettingsPanel.addEventListener("pointerdown", (event) => event.stopPropagation());
   els.closeSettingsPanel.addEventListener("pointerup", (event) => { event.preventDefault(); event.stopPropagation(); toggleSettingsPanel(false); });
   els.closeSettingsPanel.addEventListener("click", (event) => { event.preventDefault(); event.stopPropagation(); toggleSettingsPanel(false); });
@@ -3537,6 +3547,104 @@ async function syncGoogleDriveProject(options = {}) {
   }
 }
 
+
+function localProjectHealthSummary() {
+  const newestDocument = state.documents.reduce((latest, doc) => {
+    const stamp = Date.parse(doc.updatedAt || doc.localDraftAt || doc.diskSavedAt || 0);
+    return Number.isFinite(stamp) && stamp > latest ? stamp : latest;
+  }, 0);
+  return {
+    writingRoomName: state.writingRoomName || "Writing Room",
+    documents: state.documents.length,
+    tcards: Object.keys(state.blocks || {}).length,
+    folders: state.filingGroups.length,
+    tabs: state.filingTabs.length,
+    trash: state.trash.length,
+    deprecated: state.deprecated.length,
+    updatedAt: newestDocument ? new Date(newestDocument).toISOString() : "",
+    designSettings: currentDesignSettings() && Object.keys(currentDesignSettings()).length ? "present" : "default",
+  };
+}
+
+function projectPayloadHealthSummary(payload = {}, tcardPayload = null) {
+  const docs = Array.isArray(payload.documents) ? payload.documents : [];
+  const tcards = tcardPayload?.blocks && typeof tcardPayload.blocks === "object"
+    ? Object.keys(tcardPayload.blocks).length
+    : (payload.blocks && typeof payload.blocks === "object" ? Object.keys(payload.blocks).length : 0);
+  return {
+    writingRoomName: payload.writingRoomName || payload.googleDrive?.projectName || "Writing Room",
+    documents: docs.length,
+    tcards,
+    folders: Array.isArray(payload.filingGroups) ? payload.filingGroups.length : 0,
+    tabs: Array.isArray(payload.filingTabs) ? payload.filingTabs.length : 0,
+    trash: Array.isArray(payload.trash) ? payload.trash.length : 0,
+    deprecated: Array.isArray(payload.deprecated) ? payload.deprecated.length : 0,
+    updatedAt: payload.updatedAt || "",
+    designSettings: payload.designSettings && typeof payload.designSettings === "object" && Object.keys(payload.designSettings).length ? "present" : "default",
+  };
+}
+
+function storageHealthLines(label, summary) {
+  const updated = summary.updatedAt ? new Date(summary.updatedAt).toLocaleString() : "not recorded";
+  return [
+    `${label}: ${summary.writingRoomName}`,
+    `Files: ${summary.documents} · TCards: ${summary.tcards} · Folders: ${summary.folders} · Tabs: ${summary.tabs}`,
+    `Trash: ${summary.trash} · Deprecated: ${summary.deprecated} · Theme: ${summary.designSettings}`,
+    `Updated: ${updated}`,
+  ];
+}
+
+function compareStorageSummaries(remote, local) {
+  const warnings = [];
+  if (remote.documents !== local.documents) warnings.push(`file count differs (${remote.documents} online/backup vs ${local.documents} open)`);
+  if (remote.tcards !== local.tcards) warnings.push(`TCard count differs (${remote.tcards} online/backup vs ${local.tcards} open)`);
+  if (remote.folders !== local.folders) warnings.push(`folder count differs (${remote.folders} online/backup vs ${local.folders} open)`);
+  if (remote.tabs !== local.tabs) warnings.push(`tab count differs (${remote.tabs} online/backup vs ${local.tabs} open)`);
+  const remoteUpdated = Date.parse(remote.updatedAt || "");
+  const localUpdated = Date.parse(local.updatedAt || "");
+  if (Number.isFinite(remoteUpdated) && Number.isFinite(localUpdated)) {
+    if (remoteUpdated > localUpdated + 1000) warnings.push("stored project looks newer than the open Writing Room");
+    if (localUpdated > remoteUpdated + 1000) warnings.push("open Writing Room looks newer than the stored project");
+  }
+  return warnings;
+}
+
+async function checkGoogleDriveProjectStatus() {
+  try {
+    if (!(await ensureGoogleDriveAccess("check the online project status"))) return;
+    if (!state.googleDrive.projectFolderId) {
+      state.googleDrive.lastStatus = "No Google Drive project folder is selected yet. Use Create Online Project or Open Online Project first.";
+      saveGoogleDriveStorageState();
+      updateProjectSettingsStatus(state.googleDrive.lastStatus);
+      setStatus("No online project selected", "dirty");
+      return;
+    }
+    setStatus("Checking Google Drive status…", "dirty");
+    const projectText = await readGoogleDriveTextFile(state.googleDrive.projectFolderId, "capsanoto.project.json");
+    const project = JSON.parse(projectText);
+    const tcardText = await readGoogleDriveTextFile(state.googleDrive.projectFolderId, "tcards.json").catch(() => "");
+    const tcardPayload = tcardText ? JSON.parse(tcardText) : null;
+    const remote = projectPayloadHealthSummary(project, tcardPayload);
+    const local = localProjectHealthSummary();
+    const warnings = compareStorageSummaries(remote, local);
+    const lines = [
+      ...storageHealthLines("Google Drive", remote),
+      ...storageHealthLines("Open Writing Room", local),
+      warnings.length ? `Check: ${warnings.join("; ")}` : "Check: Google Drive and the open Writing Room look aligned by counts.",
+    ];
+    state.googleDrive.lastStatus = lines.join("\n");
+    saveGoogleDriveStorageState();
+    updateProjectSettingsStatus(state.googleDrive.lastStatus);
+    setStatus(warnings.length ? "Storage differences found" : "Google Drive status checked", warnings.length ? "dirty" : "saved");
+  } catch (error) {
+    console.error(error);
+    state.googleDrive.lastStatus = `Online status check failed: ${error.message}`;
+    saveGoogleDriveStorageState();
+    updateProjectSettingsStatus(state.googleDrive.lastStatus);
+    setStatus("Online status check failed", "dirty");
+  }
+}
+
 async function listGoogleDriveProjects() {
   if (!(await ensureGoogleDriveAccess("open an online project"))) return [];
   const root = await ensureGoogleDriveFolder(GOOGLE_DRIVE_ROOT_FOLDER_NAME);
@@ -3747,6 +3855,124 @@ async function downloadCapsanotoProjectBackup() {
     console.error(error);
     setStatus("Download backup failed", "dirty");
   }
+}
+
+function triggerProjectBackupImport() {
+  if (!els.importProjectBackupInput) {
+    setStatus("Import input unavailable", "dirty");
+    return;
+  }
+  els.importProjectBackupInput.value = "";
+  els.importProjectBackupInput.click();
+}
+
+async function importProjectBackupFromInput(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  try {
+    const text = await file.text();
+    const payload = JSON.parse(text);
+    await previewAndImportProjectBackup(payload, file.name || "Capsanoto backup");
+  } catch (error) {
+    console.error(error);
+    setStatus("Import backup failed", "dirty");
+    await openCapsDialog("Import Failed", [
+      { html: `<p>Capsanoto could not import this file.</p><p><strong>Error:</strong> ${escapeHtml(error.message || "Unknown import error")}</p>` },
+    ]).catch(() => null);
+  } finally {
+    event.target.value = "";
+  }
+}
+
+function backupProjectPayload(payload) {
+  if (!payload || typeof payload !== "object") throw new Error("The selected file is not a Capsanoto project backup.");
+  if (payload.type === "capsanoto-project-backup" && payload.project) return payload.project;
+  if (Array.isArray(payload.documents) || payload.writingRoomName) return payload;
+  throw new Error("This JSON does not contain a Capsanoto Writing Room project.");
+}
+
+function backupTcardBlocks(payload, project) {
+  if (payload?.tcards?.blocks && typeof payload.tcards.blocks === "object") return payload.tcards.blocks;
+  if (payload?.blocks && typeof payload.blocks === "object") return payload.blocks;
+  if (project?.blocks && typeof project.blocks === "object") return project.blocks;
+  return {};
+}
+
+function backupMarkdownFiles(payload) {
+  return Array.isArray(payload?.markdownFiles) ? payload.markdownFiles : [];
+}
+
+async function previewAndImportProjectBackup(payload, sourceName = "Capsanoto backup") {
+  const project = backupProjectPayload(payload);
+  const markdownFiles = backupMarkdownFiles(payload);
+  const tcardBlocks = backupTcardBlocks(payload, project);
+  const projectName = project.writingRoomName || payload.projectName || payload.name || "Imported Writing Room";
+  const fileCount = markdownFiles.length || (Array.isArray(project.documents) ? project.documents.length : 0);
+  const tcardCount = Object.keys(tcardBlocks).length;
+  const exportedAt = payload.exportedAt || project.updatedAt || "unknown";
+  const result = await openCapsDialog("Import Writing Room Backup", [
+    { html: `<p>You are about to import <strong>${escapeHtml(projectName)}</strong> from <code>${escapeHtml(sourceName)}</code>.</p><ul><li>${fileCount} file${fileCount === 1 ? "" : "s"}</li><li>${tcardCount} TCard${tcardCount === 1 ? "" : "s"}</li><li>Exported: ${escapeHtml(exportedAt === "unknown" ? exportedAt : new Date(exportedAt).toLocaleString())}</li></ul><p>This replaces the current local Writing Room. It does not delete Google Drive or HDD backup files.</p>` },
+    { name: "confirm", checkbox: true, label: "Replace the current local Writing Room with this imported backup.", footer: true },
+  ]);
+  if (result?.confirm !== "on") return;
+  importProjectBackupPayload(payload);
+}
+
+function importProjectBackupPayload(payload) {
+  const project = backupProjectPayload(payload);
+  const markdownFiles = backupMarkdownFiles(payload);
+  const importedDocs = [];
+  const markdownById = new Map(markdownFiles.map((item) => [item.id || item.path || item.title, item]));
+  if (markdownFiles.length) {
+    markdownFiles.forEach((item, index) => {
+      const fallback = {
+        id: item.id || `doc-import-${Date.now()}-${index}`,
+        title: item.title || item.path || `Imported File ${index + 1}`,
+        diskPath: item.path || "",
+      };
+      const doc = capsMarkdownToDocument(item.markdown || "", fallback);
+      doc.id = doc.id || fallback.id;
+      doc.title = doc.title || fallback.title;
+      doc.diskPath = doc.diskPath || fallback.diskPath;
+      importedDocs.push(doc);
+    });
+  } else if (Array.isArray(project.documents)) {
+    project.documents.forEach((item, index) => {
+      const doc = { ...item };
+      const markdownItem = markdownById.get(doc.id) || markdownById.get(doc.diskPath) || markdownById.get(doc.title);
+      if (markdownItem?.markdown) Object.assign(doc, capsMarkdownToDocument(markdownItem.markdown, doc));
+      if (!doc.id) doc.id = `doc-import-${Date.now()}-${index}`;
+      if (!doc.title) doc.title = `Imported File ${index + 1}`;
+      if (!doc.content) doc.content = `<h1>${escapeHtml(doc.title)}</h1><p>Imported file content was not included in this backup.</p>`;
+      importedDocs.push(doc);
+    });
+  }
+  state.writingRoomName = project.writingRoomName || payload.projectName || payload.name || "Imported Writing Room";
+  state.documents = importedDocs;
+  state.blocks = backupTcardBlocks(payload, project);
+  state.filingGroups = Array.isArray(project.filingGroups) ? project.filingGroups : defaultFilingGroups();
+  state.filingTabs = Array.isArray(project.filingTabs) ? project.filingTabs : [];
+  state.trash = Array.isArray(project.trash) ? project.trash : [];
+  state.deprecated = Array.isArray(project.deprecated) ? project.deprecated : [];
+  state.deprecatedParagraphs = Array.isArray(project.deprecatedParagraphs) ? project.deprecatedParagraphs : [];
+  if (project.designSettings && typeof project.designSettings === "object") {
+    setProjectDesignSettings(project.designSettings, { persistLocal: true });
+    applySavedDesignSettings();
+    loadDesignForm();
+  }
+  ensureFilingTabs();
+  if (!state.documents.length) createDocument();
+  state.activeId = project.activeId && state.documents.some((doc) => doc.id === project.activeId) ? project.activeId : state.documents[0].id;
+  state.googleDrive.projectFolderId = "";
+  state.googleDrive.projectName = "";
+  state.googleDrive.lastSyncAt = "";
+  state.googleDrive.lastStatus = state.googleDrive.accessToken ? "Imported backup locally. Use Create Online Project or Sync Now to upload it to Google Drive." : "Imported backup locally. Connect Google Account if you want to sync it online.";
+  saveGoogleDriveStorageState();
+  localStorage.setItem(STORAGE_KEY, serializedWorkspace());
+  renderAll();
+  updateUrl();
+  updateProjectSettingsStatus(state.googleDrive.lastStatus);
+  setStatus("Imported Writing Room backup", "saved");
 }
 
 function projectStoragePlaceholder(message) {
@@ -3984,6 +4210,38 @@ function safePathPart(value) {
     .slice(0, 80) || "Untitled";
 }
 
+
+
+async function checkLocalBackupStatus() {
+  if (!state.folderMode.enabled || !state.folderMode.directoryHandle) {
+    setStatus("Choose a backup folder first", "dirty");
+    updateFolderModeStatus("Choose or open a backup folder before checking it.");
+    updateProjectSettingsStatus();
+    return;
+  }
+  try {
+    setStatus("Checking backup folder…", "dirty");
+    const project = await readJsonFromDirectory(state.folderMode.directoryHandle, "capsanoto.project.json");
+    const tcardPayload = await readJsonFromDirectory(state.folderMode.directoryHandle, "tcards.json").catch(() => null);
+    const backup = projectPayloadHealthSummary(project || {}, tcardPayload);
+    const local = localProjectHealthSummary();
+    const warnings = compareStorageSummaries(backup, local);
+    const lines = [
+      ...storageHealthLines("HDD backup", backup),
+      ...storageHealthLines("Open Writing Room", local),
+      warnings.length ? `Check: ${warnings.join("; ")}` : "Check: backup folder and the open Writing Room look aligned by counts.",
+    ];
+    const message = lines.join("\n");
+    updateFolderModeStatus(message);
+    updateProjectSettingsStatus(message);
+    setStatus(warnings.length ? "Backup differences found" : "Backup status checked", warnings.length ? "dirty" : "saved");
+  } catch (error) {
+    console.error(error);
+    updateFolderModeStatus(`Backup status check failed: ${error.message}`);
+    updateProjectSettingsStatus(`Backup status check failed: ${error.message}`);
+    setStatus("Backup status check failed", "dirty");
+  }
+}
 
 async function syncLocalBackupFolder() {
   if (!state.folderMode.enabled || !state.folderMode.directoryHandle) {
