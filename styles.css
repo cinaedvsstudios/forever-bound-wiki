@@ -1,4 +1,4 @@
-/* Capsanoto styles.css v5.8.1 forced layout recovery
+/* Capsanoto styles.css v5.8.3 forced layout recovery
    Rollback anchor: v5.7 clean theme rebuild + v5.1–v5.3 writing-surface behaviour.
    This is a full drop-in stylesheet. Overwrite styles.css with this file.
 */
@@ -713,7 +713,7 @@ details.settings-card:not([open]) > *:not(summary), details.element-designer-car
    ============================================================ */
 
 :root {
-  --capsanoto-forced-recovery: "v5.8.1";
+  --capsanoto-forced-recovery: "v5.8.3";
   --forced-plum: #28133f;
   --forced-brown: #2f251c;
   --forced-espresso: #211812;
@@ -727,7 +727,7 @@ details.settings-card:not([open]) > *:not(summary), details.element-designer-car
   font-size: 0 !important;
 }
 .app-version::after {
-  content: "v5.8.1" !important;
+  content: "v5.8.3" !important;
   font-size: .72rem !important;
   color: var(--forced-peach) !important;
 }
@@ -1092,5 +1092,131 @@ details.settings-card:not([open]) > *:not(summary), details.element-designer-car
   .document-end-bar {
     width: calc(100vw - 1rem) !important;
     min-width: 0 !important;
+  }
+}
+
+
+/* ============================================================
+   CAPSANOTO v5.8.3 FULL-FILE RECOVERY FINAL LAYER
+   Files in this pass: app.js, styles.css, editor.html, index.html, writing-room.html
+   Rollback anchor: v5.7 clean rebuild before the broken layout pass.
+   ============================================================ */
+
+body.capsanoto-v583-recovery .app-version,
+.app-version {
+  font-size: 0 !important;
+}
+body.capsanoto-v583-recovery .app-version::after,
+.app-version::after {
+  content: "v5.8.3" !important;
+  font-size: .72rem !important;
+  color: #e88f69 !important;
+}
+
+body.capsanoto-v583-recovery .writing-surface-shell,
+.writing-surface-shell {
+  display: grid !important;
+  grid-template-columns: 34px minmax(0, 1fr) !important;
+  grid-template-rows: auto minmax(0, 1fr) !important;
+  width: min(100%, 920px) !important;
+  max-width: 96vw !important;
+  height: 70vh !important;
+  min-width: 420px !important;
+  min-height: 340px !important;
+  overflow: hidden !important;
+  resize: none !important;
+}
+
+body.capsanoto-v583-recovery .title-strip,
+.title-strip {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: #2f251c !important;
+}
+
+body.capsanoto-v583-recovery .writing-assist-rail,
+.writing-assist-rail {
+  grid-column: 1 !important;
+  grid-row: 1 / span 2 !important;
+  position: relative !important;
+  width: 34px !important;
+  height: 100% !important;
+  min-height: 100% !important;
+  align-self: stretch !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: #28133f !important;
+}
+
+body.capsanoto-v583-recovery .editor,
+.editor {
+  grid-column: 2 !important;
+  grid-row: 2 !important;
+  min-height: 0 !important;
+  height: 100% !important;
+  overflow: auto !important;
+}
+
+body.capsanoto-v583-recovery .document-end-bar,
+.document-end-bar {
+  width: min(100%, 920px) !important;
+  max-width: 96vw !important;
+  margin: .7rem auto 4rem !important;
+  position: relative !important;
+  z-index: 5 !important;
+}
+
+body.capsanoto-v583-recovery .settings-panel:not([hidden]) {
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+
+body.capsanoto-v583-recovery .design-editor-grid,
+.design-editor-grid {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 340px) !important;
+  gap: .85rem !important;
+  align-items: start !important;
+}
+
+body.capsanoto-v583-recovery .design-controls,
+.design-controls {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: .45rem .6rem !important;
+  overflow: auto !important;
+}
+
+body.capsanoto-v583-recovery .design-preview-column,
+.design-preview-column {
+  position: sticky !important;
+  top: 0 !important;
+  display: grid !important;
+  gap: .55rem !important;
+  overflow: auto !important;
+}
+
+@media (max-width: 1100px) {
+  body.capsanoto-v583-recovery .writing-surface-shell,
+  .writing-surface-shell,
+  body.capsanoto-v583-recovery .document-end-bar,
+  .document-end-bar {
+    width: calc(100vw - 1rem) !important;
+    min-width: 0 !important;
+  }
+
+  body.capsanoto-v583-recovery .design-editor-grid,
+  .design-editor-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  body.capsanoto-v583-recovery .design-controls,
+  .design-controls {
+    grid-template-columns: 1fr !important;
   }
 }

@@ -1,13 +1,13 @@
-/* Capsanoto app.js v5.7 clean working file. Legacy v5.6 copy archived in archive/app.v5-6.legacy.js. */
+/* Capsanoto app.js v5.8.3 layout recovery file. Based on v5.7 clean working file; old broken design keys are bypassed. */
 const STORAGE_KEY = "forever-bound-writing-room-v2";
 const AUTH_KEY = "forever-bound-authenticated";
 const AUTH_CONFIG_PATH = "config/auth.json";
 const CONTENT_PATH = "content/documents.json";
 const EDITOR_ENTRY = "editor.html";
 const AUTOSAVE_DELAY = 600;
-const DESIGN_KEY = "capsanoto-design-settings-v5-clean";
+const DESIGN_KEY = "capsanoto-design-settings-v5-8-3-layout-recovery";
 const HELP_KEY = "capsanoto-help-html-v1";
-const WRITING_ROOM_LAYOUT_KEY = "capsanoto-writing-room-layout-v1";
+const WRITING_ROOM_LAYOUT_KEY = "capsanoto-writing-room-layout-v5-8-3";
 const FAVORITE_EMOJI_KEY = "capsanoto-favorite-emojis-v1";
 const CUSTOM_EMOJI_KEY = "capsanoto-custom-emojis-v1";
 const FOLDER_MODE_DB = "capsanoto-folder-mode-db-v1";
@@ -24,7 +24,7 @@ const GOOGLE_DRIVE_API_ROOT = "https://www.googleapis.com/drive/v3";
 const GOOGLE_DRIVE_UPLOAD_ROOT = "https://www.googleapis.com/upload/drive/v3";
 const GOOGLE_DRIVE_ROOT_FOLDER_NAME = "Capsanoto";
 const GOOGLE_DRIVE_FOLDER_MIME = "application/vnd.google-apps.folder";
-const CAPSANOTO_THEME_VERSION = "warm-copper-clean-v1";
+const CAPSANOTO_THEME_VERSION = "warm-copper-clean-v5-8-3";
 const FILING_HIERARCHY_VERSION = 1;
 
 const CAPSANOTO_PALETTE = {
@@ -428,6 +428,7 @@ async function startEditor() {
   setAuthVisibility(true);
   await loadWorkspace();
   applySavedDesignSettings();
+  runLayoutRecovery("after-design");
   await restoreFolderModeHandle();
   loadGoogleDriveStorageState();
   loadFavoriteEmojis();
@@ -436,6 +437,9 @@ async function startEditor() {
   applyRouteToState();
   loadEditableHelp();
   renderAll();
+  runLayoutRecovery("after-render");
+  requestAnimationFrame(() => runLayoutRecovery("after-frame"));
+  setTimeout(() => runLayoutRecovery("after-timeout"), 250);
   if (!new URLSearchParams(location.search).has("doc")) updateUrl();
   scrollToRouteBookmark();
   setStatus("Ready", "saved");
@@ -1163,8 +1167,9 @@ function updateWritingAssistRailPosition() {
   if (connectedShell) {
     els.writingAssistRail.style.setProperty("left", "0px", "important");
     els.writingAssistRail.style.setProperty("top", "0px", "important");
-    els.writingAssistRail.style.setProperty("min-height", `${Math.max(120, els.editor.offsetHeight)}px`, "important");
-    els.writingAssistRail.style.setProperty("height", `${Math.max(120, els.editor.offsetHeight)}px`, "important");
+    els.writingAssistRail.style.setProperty("width", "34px", "important");
+    els.writingAssistRail.style.setProperty("min-height", "100%", "important");
+    els.writingAssistRail.style.setProperty("height", "100%", "important");
     positionWritingAssistRailMarkers(editorRect, 0, 0);
     return;
   }
@@ -1860,6 +1865,7 @@ function toggleSettingsPanel(show) {
   refreshIconInputPreviews();
   setElementDesignerCards(false);
   showSettingsSection("design");
+  runLayoutRecovery("settings-open");
   state.settingsDirty = false;
 }
 
@@ -5222,10 +5228,15 @@ function ensureCurrentThemeSettings() {
 function purgeOldDesignStorageKeys() {
   [
     "capsanoto-design-settings-v5-clean",
+    "capsanoto-design-settings-v5-8-layout-recovery",
+    "capsanoto-design-settings-v5-8-forced-recovery",
+    "capsanoto-design-settings-v5-8-2-layout-recovery",
+    "capsanoto-design-settings-v5-8-1-forced-recovery",
     "capsanoto-design-settings-v2",
-    "capsanoto-design-settings-v3"
+    "capsanoto-design-settings-v3",
+    "capsanoto-writing-room-layout-v1"
   ].forEach((key) => {
-    try { localStorage.removeItem(key); } catch (error) { console.warn("Unable to clear old design settings", key, error); }
+    try { localStorage.removeItem(key); } catch (error) { console.warn("Unable to clear old layout/design settings", key, error); }
   });
 }
 
@@ -5512,6 +5523,115 @@ function applyThemeToCurrentWritingRoom() {
   persistNow("Theme saved to current Writing Room");
   updateProjectSettingsStatus();
 }
+
+
+function setImportantStyle(node, property, value) {
+  if (!node) return;
+  node.style.setProperty(property, value, "important");
+}
+
+function runLayoutRecovery(reason = "") {
+  document.body?.classList.add("capsanoto-v583-recovery");
+  document.querySelectorAll(".app-version").forEach((node) => { node.textContent = "v5.8.3"; });
+
+  const shell = els.writingSurfaceShell || document.querySelector("#writingSurfaceShell, .writing-surface-shell");
+  const title = document.querySelector(".title-strip");
+  const rail = els.writingAssistRail || document.querySelector("#writingAssistRail, .writing-assist-rail");
+  const editor = els.editor || document.querySelector("#editor, .editor");
+  const grip = els.writingSurfaceGrip || document.querySelector("#writingSurfaceGrip, .writing-surface-grip");
+  const endBar = els.documentEndBar || document.querySelector("#documentEndBar, .document-end-bar");
+
+  setImportantStyle(shell, "display", "grid");
+  setImportantStyle(shell, "grid-template-columns", "34px minmax(0, 1fr)");
+  setImportantStyle(shell, "grid-template-rows", "auto minmax(0, 1fr)");
+  setImportantStyle(shell, "width", "min(100%, 920px)");
+  setImportantStyle(shell, "max-width", "96vw");
+  setImportantStyle(shell, "height", "70vh");
+  setImportantStyle(shell, "min-width", "420px");
+  setImportantStyle(shell, "min-height", "340px");
+  setImportantStyle(shell, "margin", "2.2rem auto 0");
+  setImportantStyle(shell, "overflow", "hidden");
+  setImportantStyle(shell, "resize", "none");
+  setImportantStyle(shell, "position", "relative");
+
+  setImportantStyle(title, "grid-column", "2");
+  setImportantStyle(title, "grid-row", "1");
+  setImportantStyle(title, "margin", "0");
+  setImportantStyle(title, "border", "0");
+  setImportantStyle(title, "border-radius", "0");
+  setImportantStyle(title, "background", "#2f251c");
+
+  if (rail) rail.classList.remove("is-empty");
+  setImportantStyle(rail, "grid-column", "1");
+  setImportantStyle(rail, "grid-row", "1 / span 2");
+  setImportantStyle(rail, "position", "relative");
+  setImportantStyle(rail, "inset", "auto");
+  setImportantStyle(rail, "width", "34px");
+  setImportantStyle(rail, "height", "100%");
+  setImportantStyle(rail, "min-height", "100%");
+  setImportantStyle(rail, "align-self", "stretch");
+  setImportantStyle(rail, "margin", "0");
+  setImportantStyle(rail, "border", "0");
+  setImportantStyle(rail, "border-radius", "0");
+  setImportantStyle(rail, "background", "#28133f");
+
+  setImportantStyle(editor, "grid-column", "2");
+  setImportantStyle(editor, "grid-row", "2");
+  setImportantStyle(editor, "height", "100%");
+  setImportantStyle(editor, "min-height", "0");
+  setImportantStyle(editor, "overflow", "auto");
+  setImportantStyle(editor, "padding", "1rem 1.1rem 4.4rem");
+
+  setImportantStyle(grip, "position", "absolute");
+  setImportantStyle(grip, "right", ".45rem");
+  setImportantStyle(grip, "bottom", ".45rem");
+  setImportantStyle(grip, "z-index", "50");
+  setImportantStyle(grip, "display", "inline-flex");
+  setImportantStyle(grip, "cursor", "nwse-resize");
+
+  setImportantStyle(endBar, "width", "min(100%, 920px)");
+  setImportantStyle(endBar, "max-width", "96vw");
+  setImportantStyle(endBar, "margin", ".7rem auto 4rem");
+  setImportantStyle(endBar, "position", "relative");
+  setImportantStyle(endBar, "z-index", "5");
+  setImportantStyle(endBar, "display", "flex");
+
+  const settings = els.settingsPanel || document.querySelector("#settingsPanel, .settings-panel");
+  const designGrid = document.querySelector(".design-editor-grid");
+  const designControls = document.querySelector(".design-controls");
+  const designPreview = document.querySelector(".design-preview-column");
+
+  setImportantStyle(settings, "display", settings?.hidden ? "none" : "flex");
+  setImportantStyle(settings, "flex-direction", "column");
+  setImportantStyle(settings, "overflow", "hidden");
+  setImportantStyle(settings, "width", "min(88vw, 1080px)");
+  setImportantStyle(settings, "height", "min(82vh, 760px)");
+
+  setImportantStyle(designGrid, "display", "grid");
+  setImportantStyle(designGrid, "grid-template-columns", "minmax(0, 1fr) minmax(260px, 340px)");
+  setImportantStyle(designGrid, "gap", ".85rem");
+  setImportantStyle(designGrid, "align-items", "start");
+  setImportantStyle(designGrid, "overflow", "hidden");
+
+  setImportantStyle(designControls, "display", "grid");
+  setImportantStyle(designControls, "grid-template-columns", "repeat(2, minmax(0, 1fr))");
+  setImportantStyle(designControls, "gap", ".45rem .6rem");
+  setImportantStyle(designControls, "overflow", "auto");
+  setImportantStyle(designControls, "min-height", "0");
+
+  setImportantStyle(designPreview, "position", "sticky");
+  setImportantStyle(designPreview, "top", "0");
+  setImportantStyle(designPreview, "display", "grid");
+  setImportantStyle(designPreview, "gap", ".55rem");
+  setImportantStyle(designPreview, "overflow", "auto");
+
+  document.documentElement.style.setProperty("--writing-shell-width", "min(100%, 920px)");
+  document.documentElement.style.setProperty("--writing-shell-height", "70vh");
+  if (typeof updateWritingSurfaceMetrics === "function") {
+    try { updateWritingSurfaceMetrics(); } catch (error) { console.warn("Layout recovery metrics update failed", error); }
+  }
+}
+
 
 function applySavedDesignSettings() {
   purgeOldDesignStorageKeys();
