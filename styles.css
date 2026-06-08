@@ -1,4 +1,4 @@
-/* Capsanoto styles.css v5.8.3 forced layout recovery
+/* Capsanoto styles.css v5.8.4 forced layout recovery
    Rollback anchor: v5.7 clean theme rebuild + v5.1–v5.3 writing-surface behaviour.
    This is a full drop-in stylesheet. Overwrite styles.css with this file.
 */
@@ -713,7 +713,7 @@ details.settings-card:not([open]) > *:not(summary), details.element-designer-car
    ============================================================ */
 
 :root {
-  --capsanoto-forced-recovery: "v5.8.3";
+  --capsanoto-forced-recovery: "v5.8.4";
   --forced-plum: #28133f;
   --forced-brown: #2f251c;
   --forced-espresso: #211812;
@@ -727,7 +727,7 @@ details.settings-card:not([open]) > *:not(summary), details.element-designer-car
   font-size: 0 !important;
 }
 .app-version::after {
-  content: "v5.8.3" !important;
+  content: "v5.8.4" !important;
   font-size: .72rem !important;
   color: var(--forced-peach) !important;
 }
@@ -1097,7 +1097,7 @@ details.settings-card:not([open]) > *:not(summary), details.element-designer-car
 
 
 /* ============================================================
-   CAPSANOTO v5.8.3 FULL-FILE RECOVERY FINAL LAYER
+   CAPSANOTO v5.8.4 FULL-FILE RECOVERY FINAL LAYER
    Files in this pass: app.js, styles.css, editor.html, index.html, writing-room.html
    Rollback anchor: v5.7 clean rebuild before the broken layout pass.
    ============================================================ */
@@ -1108,7 +1108,7 @@ body.capsanoto-v583-recovery .app-version,
 }
 body.capsanoto-v583-recovery .app-version::after,
 .app-version::after {
-  content: "v5.8.3" !important;
+  content: "v5.8.4" !important;
   font-size: .72rem !important;
   color: #e88f69 !important;
 }
@@ -1218,5 +1218,189 @@ body.capsanoto-v583-recovery .design-preview-column,
   body.capsanoto-v583-recovery .design-controls,
   .design-controls {
     grid-template-columns: 1fr !important;
+  }
+}
+
+
+/* ============================================================
+   CAPSANOTO v5.8.4 USER-REPORTED LAYOUT FIXES
+   Rollback anchor: v5.8.3. Files touched: app.js, styles.css,
+   editor.html, index.html, writing-room.html.
+   ============================================================ */
+
+body.capsanoto-v584-recovery .app-version,
+.app-version { font-size: 0 !important; }
+body.capsanoto-v584-recovery .app-version::after,
+.app-version::after {
+  content: "v5.8.4" !important;
+  font-size: .72rem !important;
+  color: #e88f69 !important;
+}
+
+/* Top bar restored toward the older single attached command strip. */
+.writer-header.toolbar {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 1000 !important;
+  min-height: 64px !important;
+  display: grid !important;
+  grid-template-columns: 250px minmax(760px, 1180px) 1fr !important;
+  align-items: center !important;
+  gap: .65rem !important;
+  padding: .35rem 1rem !important;
+  overflow: visible !important;
+  background-color: #211812 !important;
+  border-bottom: 1px solid #724837 !important;
+}
+
+.app-name {
+  justify-self: start !important;
+  min-width: 0 !important;
+}
+
+.top-command-menus.unified-command-bar {
+  justify-self: center !important;
+  width: min(100%, 1160px) !important;
+  height: 56px !important;
+  min-height: 56px !important;
+  display: grid !important;
+  grid-template-columns: 96px minmax(260px, 1fr) 112px 112px repeat(4, 92px) !important;
+  gap: 0 !important;
+  align-items: stretch !important;
+  overflow: visible !important;
+  border: 1px solid #e88f69 !important;
+  border-radius: 28px !important;
+  background: #28133f !important;
+  box-shadow: 0 12px 34px rgba(0,0,0,.35) !important;
+}
+
+.top-command-menus .writing-room-button,
+.top-command-menus .command-status.context-status,
+.top-command-menus .tool-menu-trigger,
+.top-command-menus .direct-command {
+  height: 54px !important;
+  min-height: 54px !important;
+  max-height: 54px !important;
+  border-radius: 0 !important;
+  border-width: 0 1px 0 0 !important;
+  border-color: #724837 !important;
+  box-shadow: none !important;
+  margin: 0 !important;
+}
+
+.top-command-menus > :first-child,
+.top-command-menus .writing-room-button:first-child {
+  border-top-left-radius: 27px !important;
+  border-bottom-left-radius: 27px !important;
+}
+
+.top-command-menus > :last-child,
+.top-command-menus .direct-command:last-child {
+  border-top-right-radius: 27px !important;
+  border-bottom-right-radius: 27px !important;
+  border-right: 0 !important;
+}
+
+.command-status.context-status {
+  width: auto !important;
+  min-width: 0 !important;
+  background: #211812 !important;
+  color: #fbf4d6 !important;
+  text-align: center !important;
+}
+
+.tool-menu-panel {
+  z-index: 50000 !important;
+}
+
+/* Settings must always sit above toolbar, table tools, emoji, TCard and dialogs. */
+.settings-panel:not([hidden]) {
+  z-index: 100000 !important;
+  pointer-events: auto !important;
+  isolation: isolate !important;
+}
+.settings-panel:not([hidden]) > header,
+.settings-panel:not([hidden]) .settings-menu {
+  z-index: 100001 !important;
+}
+#closeSettingsPanel {
+  position: relative !important;
+  z-index: 100002 !important;
+  pointer-events: auto !important;
+}
+
+/* TCard edit buttons belong at the right edge of the card, not on the left. */
+.transclusion-ref {
+  position: relative !important;
+}
+.transclusion-ref > .floating-edit-button.tcard-edit-button,
+.transclusion-ref > .tcard-edit-button {
+  position: absolute !important;
+  top: .75rem !important;
+  right: .75rem !important;
+  left: auto !important;
+  z-index: 30 !important;
+}
+.transclusion-ref > span {
+  padding-right: 2.4rem !important;
+}
+
+/* Table tools: show one right-side edit button first; full toolbar only while open. */
+.table-edit-toolbar {
+  position: fixed !important;
+  z-index: 45000 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: .25rem !important;
+  width: auto !important;
+  max-width: min(92vw, 520px) !important;
+  padding: .3rem !important;
+  border-radius: 999px !important;
+  background: #211812 !important;
+  border: 1px solid #724837 !important;
+  box-shadow: 0 12px 36px rgba(0,0,0,.58) !important;
+}
+.table-edit-toolbar .table-edit-button {
+  position: static !important;
+  flex: 0 0 auto !important;
+}
+.table-edit-toolbar .table-tool-row {
+  display: none !important;
+}
+.table-edit-toolbar.is-open .table-tool-row {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: .25rem !important;
+  flex-wrap: wrap !important;
+}
+.table-edit-toolbar:not(.is-open) {
+  max-width: 2.6rem !important;
+}
+
+/* Keep assist markers bound to rail coordinates. */
+.assist-rail-marker {
+  position: absolute !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+}
+
+@media (max-width: 1100px) {
+  .writer-header.toolbar {
+    grid-template-columns: 1fr !important;
+  }
+  .top-command-menus.unified-command-bar {
+    grid-template-columns: 1fr !important;
+    height: auto !important;
+    border-radius: 18px !important;
+    overflow: hidden !important;
+  }
+  .top-command-menus .writing-room-button,
+  .top-command-menus .command-status.context-status,
+  .top-command-menus .tool-menu-trigger,
+  .top-command-menus .direct-command {
+    height: 2.45rem !important;
+    min-height: 2.45rem !important;
+    border-radius: 0 !important;
+    width: 100% !important;
   }
 }

@@ -1,11 +1,11 @@
-/* Capsanoto app.js v5.8.3 layout recovery file. Based on v5.7 clean working file; old broken design keys are bypassed. */
+/* Capsanoto app.js v5.8.4 layout recovery file. Based on v5.7 clean working file; old broken design keys are bypassed. */
 const STORAGE_KEY = "forever-bound-writing-room-v2";
 const AUTH_KEY = "forever-bound-authenticated";
 const AUTH_CONFIG_PATH = "config/auth.json";
 const CONTENT_PATH = "content/documents.json";
 const EDITOR_ENTRY = "editor.html";
 const AUTOSAVE_DELAY = 600;
-const DESIGN_KEY = "capsanoto-design-settings-v5-8-3-layout-recovery";
+const DESIGN_KEY = "capsanoto-design-settings-v5-8-4-layout-recovery";
 const HELP_KEY = "capsanoto-help-html-v1";
 const WRITING_ROOM_LAYOUT_KEY = "capsanoto-writing-room-layout-v5-8-3";
 const FAVORITE_EMOJI_KEY = "capsanoto-favorite-emojis-v1";
@@ -24,7 +24,7 @@ const GOOGLE_DRIVE_API_ROOT = "https://www.googleapis.com/drive/v3";
 const GOOGLE_DRIVE_UPLOAD_ROOT = "https://www.googleapis.com/upload/drive/v3";
 const GOOGLE_DRIVE_ROOT_FOLDER_NAME = "Capsanoto";
 const GOOGLE_DRIVE_FOLDER_MIME = "application/vnd.google-apps.folder";
-const CAPSANOTO_THEME_VERSION = "warm-copper-clean-v5-8-3";
+const CAPSANOTO_THEME_VERSION = "warm-copper-clean-v5-8-4";
 const FILING_HIERARCHY_VERSION = 1;
 
 const CAPSANOTO_PALETTE = {
@@ -645,8 +645,8 @@ function bindEditorEvents() {
   els.importProjectBackupButton?.addEventListener("click", triggerProjectBackupImport);
   els.importProjectBackupInput?.addEventListener("change", importProjectBackupFromInput);
   els.closeSettingsPanel.addEventListener("pointerdown", (event) => event.stopPropagation());
-  els.closeSettingsPanel.addEventListener("pointerup", (event) => { event.preventDefault(); event.stopPropagation(); toggleSettingsPanel(false); });
-  els.closeSettingsPanel.addEventListener("click", (event) => { event.preventDefault(); event.stopPropagation(); toggleSettingsPanel(false); });
+  els.closeSettingsPanel.addEventListener("pointerup", (event) => { event.preventDefault(); event.stopPropagation(); closeSettingsPanelNow({ force: true }); });
+  els.closeSettingsPanel.addEventListener("click", (event) => { event.preventDefault(); event.stopPropagation(); closeSettingsPanelNow({ force: true }); });
   els.saveSettingsPanelButton?.addEventListener("click", (event) => { event.preventDefault(); event.stopPropagation(); saveSettingsAndClose(); });
   els.settingsEmojiLibraryButton?.addEventListener("click", (event) => { event.preventDefault(); event.stopPropagation(); showEmojiPicker(event); });
   document.querySelectorAll("#openTcardPanelButton").forEach((button) => button.addEventListener("click", (event) => { event.preventDefault(); saveSelectionRange(); toggleBlockPanel(true); }));
@@ -763,6 +763,7 @@ function bindEditorEvents() {
   els.editor.addEventListener("click", handleEditorClick);
   els.editor.addEventListener("mouseover", handleEditorHover);
   els.editor.addEventListener("mouseout", handleEditorMouseOut);
+  els.editor.addEventListener("scroll", updateWritingAssistRailPosition, { passive: true });
   els.editor.addEventListener("dragstart", handleEditorDragStart);
   els.editor.addEventListener("dragover", handleEditorDragOver);
   els.editor.addEventListener("drop", handleEditorDrop);
@@ -1803,6 +1804,14 @@ window.addEventListener("resize", () => {
   const toolbar = document.querySelector(".table-edit-toolbar");
   if (toolbar && state.activeTable) positionTableEditToolbar(toolbar, state.activeTable);
 });
+document.addEventListener("pointerdown", (event) => {
+  const toolbar = document.querySelector(".table-edit-toolbar");
+  if (!toolbar) return;
+  if (event.target.closest?.(".table-edit-toolbar") || event.target.closest?.("table")) return;
+  toolbar.remove();
+  state.activeTable = null;
+  state.activeTableCell = null;
+}, true);
 
 function closeEmojiPickerOnOutside(event) {
   // Emoji Spark now stays open until the X button is clicked.
@@ -1822,7 +1831,7 @@ function handleGlobalSettingsCloseClick(event) {
   event.preventDefault();
   event.stopPropagation();
   if (typeof event.stopImmediatePropagation === "function") event.stopImmediatePropagation();
-  closeSettingsPanelNow();
+  closeSettingsPanelNow({ force: true });
 }
 
 function closeSettingsPanelNow({ force = false } = {}) {
@@ -1832,6 +1841,7 @@ function closeSettingsPanelNow({ force = false } = {}) {
   state.settingsDirty = false;
   els.settingsPanel.hidden = true;
   els.settingsPanel.setAttribute("hidden", "");
+  els.settingsPanel.style.setProperty("display", "none", "important");
   els.settingsButton?.setAttribute("aria-expanded", "false");
 }
 
@@ -1856,6 +1866,8 @@ function toggleSettingsPanel(show) {
   }
   els.settingsPanel.hidden = false;
   els.settingsPanel.removeAttribute("hidden");
+  els.settingsPanel.style.setProperty("display", "flex", "important");
+  els.settingsPanel.style.setProperty("z-index", "100000", "important");
   els.settingsButton?.setAttribute("aria-expanded", "true");
   renderExportSourceSelect();
   renderExportQueue();
@@ -2691,9 +2703,24 @@ function handleEditorHover(event) {
 function handleEditorMouseOut(event) {
   if (!event.relatedTarget?.closest?.(".table-edit-toolbar") && !event.relatedTarget?.closest?.("table")) {
     clearTimeout(state.tableEditTimer);
-    const toolbar = document.querySelector(".table-edit-toolbar:not(.is-open)");
-    toolbar?.remove();
+    scheduleTableToolbarRemoval();
   }
+}
+
+function scheduleTableToolbarRemoval(delay = 650) {
+  clearTimeout(state.tableToolbarRemoveTimer);
+  state.tableToolbarRemoveTimer = setTimeout(() => {
+    const toolbar = document.querySelector(".table-edit-toolbar");
+    if (!toolbar) return;
+    if (toolbar.matches(":hover") || state.activeTable?.matches?.(":hover")) return;
+    toolbar.remove();
+    state.activeTable = null;
+    state.activeTableCell = null;
+  }, delay);
+}
+
+function cancelTableToolbarRemoval() {
+  clearTimeout(state.tableToolbarRemoveTimer);
 }
 
 function showTableEditButton(table, open = false) {
@@ -2712,9 +2739,8 @@ function showTableEditButton(table, open = false) {
   toolbar.innerHTML = `<button type="button" class="table-edit-button" data-table-tool="toggle" title="Edit table">✎</button><span class="table-tool-row"><button type="button" data-table-tool="equalize" title="Equalise column widths">⇔</button><button type="button" data-table-tool="wider" title="Widen selected column">↔</button><button type="button" data-table-tool="add-row" title="Add row below selected cell">＋R</button><button type="button" data-table-tool="add-col" title="Add column right of selected cell">＋C</button><button type="button" data-table-tool="delete-row" title="Delete selected row">−R</button><button type="button" data-table-tool="delete-col" title="Delete selected column">−C</button><button type="button" data-table-tool="align" title="Cycle selected cell text alignment">≡</button><input type="color" data-table-tool="header-bg" title="Header/title background" value="#28133f"><input type="color" data-table-tool="cell-bg" title="Selected cell background" value="#211812"><input type="color" data-table-tool="line" title="Inner line color" value="#563485"><input type="color" data-table-tool="outer-border" title="Outer table border" value="#e88f69"></span>`;
   toolbar.addEventListener("click", (event) => handleTableToolAction(event, table, toolbar));
   toolbar.addEventListener("input", (event) => handleTableToolAction(event, table, toolbar));
-  toolbar.addEventListener("mouseleave", () => {
-    if (!toolbar.classList.contains("is-open") && !table.matches(":hover")) toolbar.remove();
-  });
+  toolbar.addEventListener("mouseenter", cancelTableToolbarRemoval);
+  toolbar.addEventListener("mouseleave", () => scheduleTableToolbarRemoval(450));
   document.body.append(toolbar);
   positionTableEditToolbar(toolbar, table);
 }
@@ -2722,8 +2748,9 @@ function showTableEditButton(table, open = false) {
 function positionTableEditToolbar(toolbar, table) {
   if (!toolbar || !table?.isConnected) return;
   const rect = table.getBoundingClientRect();
+  toolbar.style.position = "fixed";
   const width = toolbar.offsetWidth || 44;
-  const left = Math.max(8, Math.min(window.innerWidth - width - 8, rect.right - width - 8));
+  const left = Math.max(8, Math.min(window.innerWidth - width - 8, rect.right - width - 10));
   const top = Math.max(8, Math.min(window.innerHeight - 44, rect.top + 8));
   toolbar.style.left = `${left}px`;
   toolbar.style.top = `${top}px`;
@@ -2738,7 +2765,12 @@ function handleTableToolAction(event, table, toolbar) {
   const control = event.target.closest?.("[data-table-tool]");
   if (!control) return;
   const action = control.dataset.tableTool;
-  if (action === "toggle") { toolbar.classList.toggle("is-open"); highlightActiveTableCell(table); return; }
+  if (action === "toggle") {
+    toolbar.classList.toggle("is-open");
+    highlightActiveTableCell(table);
+    requestAnimationFrame(() => positionTableEditToolbar(toolbar, table));
+    return;
+  }
   const activeCell = state.activeTableCell && table.contains(state.activeTableCell) ? state.activeTableCell : table.querySelector("td, th");
   if (action === "header-bg") {
     table.style.setProperty("--table-head-bg", control.value);
@@ -5230,6 +5262,7 @@ function purgeOldDesignStorageKeys() {
     "capsanoto-design-settings-v5-clean",
     "capsanoto-design-settings-v5-8-layout-recovery",
     "capsanoto-design-settings-v5-8-forced-recovery",
+    "capsanoto-design-settings-v5-8-3-layout-recovery",
     "capsanoto-design-settings-v5-8-2-layout-recovery",
     "capsanoto-design-settings-v5-8-1-forced-recovery",
     "capsanoto-design-settings-v2",
@@ -5531,8 +5564,8 @@ function setImportantStyle(node, property, value) {
 }
 
 function runLayoutRecovery(reason = "") {
-  document.body?.classList.add("capsanoto-v583-recovery");
-  document.querySelectorAll(".app-version").forEach((node) => { node.textContent = "v5.8.3"; });
+  document.body?.classList.add("capsanoto-v584-recovery");
+  document.querySelectorAll(".app-version").forEach((node) => { node.textContent = "v5.8.4"; });
 
   const shell = els.writingSurfaceShell || document.querySelector("#writingSurfaceShell, .writing-surface-shell");
   const title = document.querySelector(".title-strip");
@@ -5561,7 +5594,6 @@ function runLayoutRecovery(reason = "") {
   setImportantStyle(title, "border-radius", "0");
   setImportantStyle(title, "background", "#2f251c");
 
-  if (rail) rail.classList.remove("is-empty");
   setImportantStyle(rail, "grid-column", "1");
   setImportantStyle(rail, "grid-row", "1 / span 2");
   setImportantStyle(rail, "position", "relative");
@@ -5602,6 +5634,7 @@ function runLayoutRecovery(reason = "") {
   const designPreview = document.querySelector(".design-preview-column");
 
   setImportantStyle(settings, "display", settings?.hidden ? "none" : "flex");
+  if (settings && !settings.hidden) setImportantStyle(settings, "z-index", "100000");
   setImportantStyle(settings, "flex-direction", "column");
   setImportantStyle(settings, "overflow", "hidden");
   setImportantStyle(settings, "width", "min(88vw, 1080px)");
