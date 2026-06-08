@@ -1,4 +1,4 @@
-/* Capsanoto styles.css v5.8 layout recovery
+/* Capsanoto styles.css v5.8.1 forced layout recovery
    Rollback anchor: v5.7 clean theme rebuild + v5.1–v5.3 writing-surface behaviour.
    This is a full drop-in stylesheet. Overwrite styles.css with this file.
 */
@@ -701,4 +701,396 @@ details.settings-card:not([open]) > *:not(summary), details.element-designer-car
   .writing-surface-shell, .document-end-bar { width:calc(100vw - 1rem); }
   .settings-panel, .writing-room-panel, .help-panel { left:.5rem; right:.5rem; width:calc(100vw - 1rem); }
   .emoji-grid { grid-template-columns:repeat(8, minmax(0,1fr)); }
+}
+
+
+/* ============================================================
+   CAPSANOTO v5.8.1 FORCED RECOVERY OVERRIDES
+   Reason: browser/app localStorage design variables can override the
+   clean CSS defaults. This layer forces the core recovery layout.
+   Rollback: remove this final block or restore previous styles.css.
+   Files touched: styles.css only.
+   ============================================================ */
+
+:root {
+  --capsanoto-forced-recovery: "v5.8.1";
+  --forced-plum: #28133f;
+  --forced-brown: #2f251c;
+  --forced-espresso: #211812;
+  --forced-peach: #e88f69;
+  --forced-cream: #fbf4d6;
+  --forced-clay: #724837;
+}
+
+/* show the loaded version even before app.js is edited */
+.app-version {
+  font-size: 0 !important;
+}
+.app-version::after {
+  content: "v5.8.1" !important;
+  font-size: .72rem !important;
+  color: var(--forced-peach) !important;
+}
+
+/* keep old saved theme variables from wrecking the essential layout */
+.writer-shell,
+.writer-header,
+.writer-header *,
+.writing-surface-shell,
+.writing-surface-shell *,
+.document-end-bar,
+.settings-panel,
+.settings-panel *,
+.writing-room-panel,
+.writing-room-panel *,
+.block-panel,
+.block-panel * {
+  font-family: Arial, Helvetica, sans-serif !important;
+}
+
+/* top bar: do not allow saved settings to collapse the command strip */
+.writer-header.toolbar {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 1000 !important;
+  min-height: 64px !important;
+  display: grid !important;
+  grid-template-columns: minmax(190px, 260px) minmax(720px, 1fr) max-content !important;
+  gap: .55rem !important;
+  align-items: center !important;
+  padding: .45rem .7rem !important;
+  overflow: visible !important;
+  background-color: var(--forced-espresso) !important;
+  border-bottom: 1px solid var(--forced-clay) !important;
+}
+
+.top-command-menus.unified-command-bar {
+  display: grid !important;
+  grid-template-columns: 120px minmax(240px, 1fr) minmax(180px, 1fr) minmax(180px, 1fr) repeat(4, 92px) !important;
+  gap: .35rem !important;
+  align-items: center !important;
+  min-width: 0 !important;
+}
+
+.writing-room-button,
+.command-status.context-status,
+.tool-menu-trigger,
+.direct-command {
+  height: 2.45rem !important;
+  min-height: 2.45rem !important;
+  max-height: 2.45rem !important;
+  border-radius: 14px !important;
+  overflow: hidden !important;
+}
+
+.command-status.context-status {
+  width: auto !important;
+  min-width: 220px !important;
+  white-space: nowrap !important;
+  text-overflow: ellipsis !important;
+  background: var(--forced-espresso) !important;
+  border-color: var(--forced-clay) !important;
+  color: var(--forced-cream) !important;
+}
+
+.tool-menu.has-panel {
+  position: relative !important;
+  min-width: 0 !important;
+}
+.tool-menu-panel {
+  position: absolute !important;
+  top: calc(100% + .45rem) !important;
+  left: 0 !important;
+  right: auto !important;
+  display: none !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: .35rem !important;
+  width: 100% !important;
+  min-width: 100% !important;
+  max-width: 34rem !important;
+  z-index: 2000 !important;
+}
+.tool-menu.has-panel:hover .tool-menu-panel,
+.tool-menu.has-panel:focus-within .tool-menu-panel {
+  display: grid !important;
+}
+
+/* writing surface: force the known good attached structure */
+.writing-surface-shell {
+  position: relative !important;
+  display: grid !important;
+  grid-template-columns: 34px minmax(0, 1fr) !important;
+  grid-template-rows: auto minmax(0, 1fr) !important;
+  width: min(100%, 920px) !important;
+  max-width: 96vw !important;
+  height: 70vh !important;
+  min-width: 420px !important;
+  min-height: 340px !important;
+  margin: 2.2rem auto 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  resize: none !important;
+  border: 1px solid var(--forced-clay) !important;
+  border-radius: 18px !important;
+  background: var(--forced-espresso) !important;
+  box-shadow: 0 14px 50px rgba(0,0,0,.45) !important;
+}
+
+.title-strip {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  position: relative !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: .6rem .9rem !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: var(--forced-brown) !important;
+}
+
+.title-input {
+  width: 100% !important;
+  padding: .05rem 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: var(--forced-cream) !important;
+  font-size: 2.05rem !important;
+  font-weight: 900 !important;
+  line-height: 1.15 !important;
+}
+
+.writing-assist-rail {
+  grid-column: 1 !important;
+  grid-row: 1 / span 2 !important;
+  position: relative !important;
+  inset: auto !important;
+  width: 34px !important;
+  height: 100% !important;
+  min-height: 100% !important;
+  max-height: none !important;
+  align-self: stretch !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: var(--forced-plum) !important;
+}
+
+.editor {
+  grid-column: 2 !important;
+  grid-row: 2 !important;
+  position: relative !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 1rem 1.1rem 4.4rem !important;
+  overflow: auto !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: var(--forced-espresso) !important;
+  color: var(--forced-cream) !important;
+}
+
+.writing-surface-grip {
+  position: absolute !important;
+  right: .45rem !important;
+  bottom: .45rem !important;
+  z-index: 50 !important;
+  display: inline-flex !important;
+  width: 1.45rem !important;
+  min-width: 1.45rem !important;
+  height: 1.45rem !important;
+  padding: 0 !important;
+  cursor: nwse-resize !important;
+  background: var(--forced-brown) !important;
+  border-color: var(--forced-clay) !important;
+  color: var(--forced-cream) !important;
+}
+
+.document-end-bar {
+  position: relative !important;
+  z-index: 5 !important;
+  width: min(100%, 920px) !important;
+  max-width: 96vw !important;
+  min-height: 2.8rem !important;
+  margin: .7rem auto 4rem !important;
+  padding: .55rem .8rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: .45rem !important;
+  border: 1px solid var(--forced-clay) !important;
+  border-radius: 16px !important;
+  background: var(--forced-espresso) !important;
+  color: var(--forced-cream) !important;
+}
+
+/* floating table/TCard controls: keep them contained instead of smashing layout */
+.table-edit-toolbar {
+  position: absolute !important;
+  z-index: 3000 !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  max-width: min(92vw, 480px) !important;
+  gap: .25rem !important;
+  padding: .35rem !important;
+  border-radius: 16px !important;
+  background: var(--forced-espresso) !important;
+  border: 1px solid var(--forced-clay) !important;
+  box-shadow: 0 12px 40px rgba(0,0,0,.6) !important;
+}
+
+/* Settings: force real two-column Element Designer */
+.settings-panel {
+  position: fixed !important;
+  top: 5.4rem !important;
+  right: 1rem !important;
+  width: min(88vw, 1080px) !important;
+  height: min(82vh, 760px) !important;
+  min-width: 560px !important;
+  min-height: 360px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  background: var(--forced-espresso) !important;
+  border: 1px solid var(--forced-clay) !important;
+  border-radius: 22px !important;
+  resize: both !important;
+}
+
+.settings-panel > header,
+.settings-menu {
+  flex: 0 0 auto !important;
+}
+
+.settings-links,
+.settings-section[data-settings-section] {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+}
+
+.settings-section.settings-card.design-section {
+  display: block !important;
+  padding: .75rem !important;
+  margin: .75rem !important;
+  overflow: hidden !important;
+}
+
+.designer-heading-row {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: .75rem !important;
+  margin-bottom: .65rem !important;
+}
+
+.designer-expand-actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: .4rem !important;
+}
+
+.design-editor-grid {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 340px) !important;
+  gap: .85rem !important;
+  align-items: start !important;
+  min-height: 0 !important;
+  height: calc(100% - 4.2rem) !important;
+  overflow: hidden !important;
+}
+
+.design-controls {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: .45rem .6rem !important;
+  align-content: start !important;
+  max-height: 100% !important;
+  min-height: 0 !important;
+  overflow: auto !important;
+  padding-right: .35rem !important;
+}
+
+.design-controls .element-designer-card {
+  margin: 0 !important;
+  padding: .55rem !important;
+  border-width: 1px !important;
+}
+
+.design-controls .element-designer-card[open] {
+  grid-column: span 2 !important;
+}
+
+.design-controls label,
+.element-designer-card label,
+.tcard-style-grid label {
+  display: grid !important;
+  grid-template-columns: minmax(7.5rem, 1fr) minmax(2.5rem, auto) !important;
+  gap: .35rem !important;
+  align-items: center !important;
+  font-size: .76rem !important;
+}
+
+.design-preview-column {
+  position: sticky !important;
+  top: 0 !important;
+  align-self: start !important;
+  display: grid !important;
+  gap: .55rem !important;
+  max-height: 100% !important;
+  overflow: auto !important;
+}
+
+/* Filing cabinet recovery */
+.writing-room-panel {
+  overflow: hidden !important;
+}
+.writing-room-cards {
+  position: relative !important;
+  height: calc(100% - 4.3rem) !important;
+  overflow: auto !important;
+  padding-right: 3.1rem !important;
+}
+.filing-jump-rail {
+  position: absolute !important;
+  top: 5.2rem !important;
+  right: .75rem !important;
+  bottom: 1rem !important;
+  z-index: 10 !important;
+}
+
+/* Responsive safety */
+@media (max-width: 1100px) {
+  .writer-header.toolbar {
+    grid-template-columns: 1fr !important;
+  }
+  .top-command-menus.unified-command-bar {
+    grid-template-columns: 1fr !important;
+  }
+  .design-editor-grid {
+    grid-template-columns: 1fr !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  .design-controls {
+    grid-template-columns: 1fr !important;
+    max-height: none !important;
+  }
+  .design-controls .element-designer-card[open] {
+    grid-column: auto !important;
+  }
+  .settings-panel {
+    left: .5rem !important;
+    right: .5rem !important;
+    width: calc(100vw - 1rem) !important;
+    min-width: 0 !important;
+  }
+  .writing-surface-shell,
+  .document-end-bar {
+    width: calc(100vw - 1rem) !important;
+    min-width: 0 !important;
+  }
 }
