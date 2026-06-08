@@ -1,13 +1,13 @@
-/* Capsanoto app.js v5.8.5 integrated layout repair. */
+/* Capsanoto app.js v5.8.6 integrated settings layout repair. */
 const STORAGE_KEY = "forever-bound-writing-room-v2";
 const AUTH_KEY = "forever-bound-authenticated";
 const AUTH_CONFIG_PATH = "config/auth.json";
 const CONTENT_PATH = "content/documents.json";
 const EDITOR_ENTRY = "editor.html";
 const AUTOSAVE_DELAY = 600;
-const DESIGN_KEY = "capsanoto-design-settings-v5-8-5-integrated-layout";
+const DESIGN_KEY = "capsanoto-design-settings-v5-8-6-settings-layout";
 const HELP_KEY = "capsanoto-help-html-v1";
-const WRITING_ROOM_LAYOUT_KEY = "capsanoto-writing-room-layout-v5-8-5";
+const WRITING_ROOM_LAYOUT_KEY = "capsanoto-writing-room-layout-v5-8-6";
 const FAVORITE_EMOJI_KEY = "capsanoto-favorite-emojis-v1";
 const CUSTOM_EMOJI_KEY = "capsanoto-custom-emojis-v1";
 const FOLDER_MODE_DB = "capsanoto-folder-mode-db-v1";
@@ -24,7 +24,7 @@ const GOOGLE_DRIVE_API_ROOT = "https://www.googleapis.com/drive/v3";
 const GOOGLE_DRIVE_UPLOAD_ROOT = "https://www.googleapis.com/upload/drive/v3";
 const GOOGLE_DRIVE_ROOT_FOLDER_NAME = "Capsanoto";
 const GOOGLE_DRIVE_FOLDER_MIME = "application/vnd.google-apps.folder";
-const CAPSANOTO_THEME_VERSION = "warm-copper-clean-v5-8-5";
+const CAPSANOTO_THEME_VERSION = "warm-copper-clean-v5-8-6";
 const FILING_HIERARCHY_VERSION = 1;
 
 const CAPSANOTO_PALETTE = {
@@ -5277,12 +5277,14 @@ function purgeOldDesignStorageKeys() {
     "capsanoto-design-settings-v5-clean",
     "capsanoto-design-settings-v5-8-layout-recovery",
     "capsanoto-design-settings-v5-8-forced-recovery",
+    "capsanoto-design-settings-v5-8-5-integrated-layout",
     "capsanoto-design-settings-v5-8-4-layout-recovery",
     "capsanoto-design-settings-v5-8-3-layout-recovery",
     "capsanoto-design-settings-v5-8-2-layout-recovery",
     "capsanoto-design-settings-v5-8-1-forced-recovery",
     "capsanoto-design-settings-v2",
     "capsanoto-design-settings-v3",
+    "capsanoto-writing-room-layout-v5-8-5",
     "capsanoto-writing-room-layout-v5-8-4",
     "capsanoto-writing-room-layout-v5-8-3",
     "capsanoto-writing-room-layout-v1"
@@ -5577,8 +5579,8 @@ function applyThemeToCurrentWritingRoom() {
 
 
 function runLayoutRecovery(reason = "") {
-  document.body?.classList.add("capsanoto-v585-layout");
-  document.querySelectorAll(".app-version").forEach((node) => { node.textContent = "v5.8.5"; });
+  document.body?.classList.add("capsanoto-v586-layout");
+  document.querySelectorAll(".app-version").forEach((node) => { node.textContent = "v5.8.6"; });
   try { updateWritingSurfaceMetrics(); } catch (error) { console.warn("Writing surface metric update failed", error); }
   try { updateWritingAssistRailPosition(); } catch (error) { console.warn("Writing assist rail update failed", error); }
   const toolbar = document.querySelector(".table-edit-toolbar");
