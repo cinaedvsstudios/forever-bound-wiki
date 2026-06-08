@@ -1,13 +1,13 @@
-/* Capsanoto app.js v5.8.4 layout recovery file. Based on v5.7 clean working file; old broken design keys are bypassed. */
+/* Capsanoto app.js v5.8.5 integrated layout repair. */
 const STORAGE_KEY = "forever-bound-writing-room-v2";
 const AUTH_KEY = "forever-bound-authenticated";
 const AUTH_CONFIG_PATH = "config/auth.json";
 const CONTENT_PATH = "content/documents.json";
 const EDITOR_ENTRY = "editor.html";
 const AUTOSAVE_DELAY = 600;
-const DESIGN_KEY = "capsanoto-design-settings-v5-8-4-layout-recovery";
+const DESIGN_KEY = "capsanoto-design-settings-v5-8-5-integrated-layout";
 const HELP_KEY = "capsanoto-help-html-v1";
-const WRITING_ROOM_LAYOUT_KEY = "capsanoto-writing-room-layout-v5-8-3";
+const WRITING_ROOM_LAYOUT_KEY = "capsanoto-writing-room-layout-v5-8-5";
 const FAVORITE_EMOJI_KEY = "capsanoto-favorite-emojis-v1";
 const CUSTOM_EMOJI_KEY = "capsanoto-custom-emojis-v1";
 const FOLDER_MODE_DB = "capsanoto-folder-mode-db-v1";
@@ -24,7 +24,7 @@ const GOOGLE_DRIVE_API_ROOT = "https://www.googleapis.com/drive/v3";
 const GOOGLE_DRIVE_UPLOAD_ROOT = "https://www.googleapis.com/upload/drive/v3";
 const GOOGLE_DRIVE_ROOT_FOLDER_NAME = "Capsanoto";
 const GOOGLE_DRIVE_FOLDER_MIME = "application/vnd.google-apps.folder";
-const CAPSANOTO_THEME_VERSION = "warm-copper-clean-v5-8-4";
+const CAPSANOTO_THEME_VERSION = "warm-copper-clean-v5-8-5";
 const FILING_HIERARCHY_VERSION = 1;
 
 const CAPSANOTO_PALETTE = {
@@ -701,8 +701,8 @@ function bindEditorEvents() {
   window.addEventListener("pointermove", movePanelDrag);
   window.addEventListener("pointerup", stopPanelDrag);
   window.addEventListener("resize", renderWritingAssistRail);
-  window.addEventListener("scroll", updateWritingAssistRailPosition, { passive: true });
-  document.addEventListener("keydown", (event) => { if (event.key === "Escape") { toggleHelpPanel(false); toggleSettingsPanel(false); toggleProjectSettingsPanel(false); toggleWritingRoomPanel(false); } });
+  window.addEventListener("scroll", () => { updateWritingAssistRailPosition(); removeTableEditToolbar(); }, { passive: true });
+  document.addEventListener("keydown", (event) => { if (event.key === "Escape") { removeTableEditToolbar(); toggleHelpPanel(false); toggleSettingsPanel(false); toggleProjectSettingsPanel(false); toggleWritingRoomPanel(false); } });
   bindDesignColorTools();
   bindInheritanceToggles();
   bindElementDesignerCardScroll();
@@ -763,7 +763,7 @@ function bindEditorEvents() {
   els.editor.addEventListener("click", handleEditorClick);
   els.editor.addEventListener("mouseover", handleEditorHover);
   els.editor.addEventListener("mouseout", handleEditorMouseOut);
-  els.editor.addEventListener("scroll", updateWritingAssistRailPosition, { passive: true });
+  els.editor.addEventListener("scroll", handleEditorScroll, { passive: true });
   els.editor.addEventListener("dragstart", handleEditorDragStart);
   els.editor.addEventListener("dragover", handleEditorDragOver);
   els.editor.addEventListener("drop", handleEditorDrop);
@@ -1108,6 +1108,11 @@ function stopWritingSurfaceResize(event) {
   queueLocalSave?.();
 }
 
+function handleEditorScroll() {
+  updateWritingAssistRailPosition();
+  removeTableEditToolbar();
+}
+
 function renderWritingAssistRail() {
   if (!els.writingAssistRail || !els.editor) return;
   const doc = activeDocument();
@@ -1162,42 +1167,26 @@ function updateWritingAssistRailPosition() {
   if (!els.writingAssistRail || !els.editor) return;
   if (els.writingAssistRail.classList.contains("is-empty")) return;
 
+  const railRect = els.writingAssistRail.getBoundingClientRect();
   const editorRect = els.editor.getBoundingClientRect();
-  const connectedShell = els.writingAssistRail.closest?.(".writing-surface-shell");
+  const railHeight = Math.max(0, railRect.height || els.writingAssistRail.offsetHeight || els.editor.clientHeight || 0);
+  const minTop = 6;
+  const markerSize = 22;
+  const maxTop = Math.max(minTop, railHeight - markerSize - 6);
 
-  if (connectedShell) {
-    els.writingAssistRail.style.setProperty("left", "0px", "important");
-    els.writingAssistRail.style.setProperty("top", "0px", "important");
-    els.writingAssistRail.style.setProperty("width", "34px", "important");
-    els.writingAssistRail.style.setProperty("min-height", "100%", "important");
-    els.writingAssistRail.style.setProperty("height", "100%", "important");
-    positionWritingAssistRailMarkers(editorRect, 0, 0);
-    return;
-  }
-
-  const shell = els.editorApp || document.querySelector(".writer-shell");
-  const shellRect = shell?.getBoundingClientRect?.() || { left: 0, top: 0 };
-  const railWidth = Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--attached-rail-width")) || 34;
-  const left = Math.max(0, editorRect.left - shellRect.left - railWidth);
-  const rawTop = editorRect.top - shellRect.top;
-  els.writingAssistRail.style.setProperty("left", `${left}px`, "important");
-  els.writingAssistRail.style.setProperty("top", `${Math.max(0, rawTop)}px`, "important");
-  els.writingAssistRail.style.setProperty("min-height", `${Math.max(120, els.editor.offsetHeight)}px`, "important");
-  positionWritingAssistRailMarkers(editorRect, Number(els.writingAssistRail.style.top.replace("px", "")) || 0, rawTop);
-}
-
-function positionWritingAssistRailMarkers(editorRect, railTop, editorTopRelativeToShell) {
-  if (!els.writingAssistRail) return;
-  const railShift = railTop - Math.max(0, editorTopRelativeToShell);
   els.writingAssistRail.querySelectorAll(".assist-rail-marker").forEach((marker) => {
     const target = marker._assistTarget;
-    if (!target || !document.body.contains(target)) {
+    if (!target || !document.body.contains(target) || !els.editor.contains(target)) {
       marker.hidden = true;
       return;
     }
-    const rect = target.getBoundingClientRect();
-    const top = rect.top - editorRect.top + rect.height / 2 - 11 - railShift;
-    marker.style.top = `${Math.max(6, top)}px`;
+    marker.hidden = false;
+    const targetRect = target.getBoundingClientRect();
+    const visible = targetRect.bottom >= editorRect.top && targetRect.top <= editorRect.bottom;
+    marker.classList.toggle("is-offscreen", !visible);
+    const rawTop = targetRect.top - editorRect.top + targetRect.height / 2 - markerSize / 2;
+    const top = Math.min(maxTop, Math.max(minTop, rawTop));
+    marker.style.top = `${top}px`;
   });
 }
 
@@ -1796,10 +1785,7 @@ document.addEventListener("pointermove", (event) => {
 });
 
 document.addEventListener("pointerup", () => { state.emojiDrag = null; });
-window.addEventListener("scroll", () => {
-  const toolbar = document.querySelector(".table-edit-toolbar");
-  if (toolbar && state.activeTable) positionTableEditToolbar(toolbar, state.activeTable);
-}, true);
+window.addEventListener("scroll", () => removeTableEditToolbar(), true);
 window.addEventListener("resize", () => {
   const toolbar = document.querySelector(".table-edit-toolbar");
   if (toolbar && state.activeTable) positionTableEditToolbar(toolbar, state.activeTable);
@@ -1808,9 +1794,7 @@ document.addEventListener("pointerdown", (event) => {
   const toolbar = document.querySelector(".table-edit-toolbar");
   if (!toolbar) return;
   if (event.target.closest?.(".table-edit-toolbar") || event.target.closest?.("table")) return;
-  toolbar.remove();
-  state.activeTable = null;
-  state.activeTableCell = null;
+  removeTableEditToolbar();
 }, true);
 
 function closeEmojiPickerOnOutside(event) {
@@ -1841,7 +1825,8 @@ function closeSettingsPanelNow({ force = false } = {}) {
   state.settingsDirty = false;
   els.settingsPanel.hidden = true;
   els.settingsPanel.setAttribute("hidden", "");
-  els.settingsPanel.style.setProperty("display", "none", "important");
+  els.settingsPanel.style.removeProperty("display");
+  els.settingsPanel.style.removeProperty("z-index");
   els.settingsButton?.setAttribute("aria-expanded", "false");
 }
 
@@ -1866,8 +1851,8 @@ function toggleSettingsPanel(show) {
   }
   els.settingsPanel.hidden = false;
   els.settingsPanel.removeAttribute("hidden");
-  els.settingsPanel.style.setProperty("display", "flex", "important");
-  els.settingsPanel.style.setProperty("z-index", "100000", "important");
+  els.settingsPanel.style.removeProperty("display");
+  els.settingsPanel.style.removeProperty("z-index");
   els.settingsButton?.setAttribute("aria-expanded", "true");
   renderExportSourceSelect();
   renderExportQueue();
@@ -1877,7 +1862,8 @@ function toggleSettingsPanel(show) {
   refreshIconInputPreviews();
   setElementDesignerCards(false);
   showSettingsSection("design");
-  runLayoutRecovery("settings-open");
+  updateWritingSurfaceMetrics();
+  updateWritingAssistRailPosition();
   state.settingsDirty = false;
 }
 
@@ -2707,15 +2693,13 @@ function handleEditorMouseOut(event) {
   }
 }
 
-function scheduleTableToolbarRemoval(delay = 650) {
+function scheduleTableToolbarRemoval(delay = 350) {
   clearTimeout(state.tableToolbarRemoveTimer);
   state.tableToolbarRemoveTimer = setTimeout(() => {
     const toolbar = document.querySelector(".table-edit-toolbar");
     if (!toolbar) return;
     if (toolbar.matches(":hover") || state.activeTable?.matches?.(":hover")) return;
-    toolbar.remove();
-    state.activeTable = null;
-    state.activeTableCell = null;
+    removeTableEditToolbar();
   }, delay);
 }
 
@@ -2723,14 +2707,25 @@ function cancelTableToolbarRemoval() {
   clearTimeout(state.tableToolbarRemoveTimer);
 }
 
+function removeTableEditToolbar({ clearActive = true } = {}) {
+  clearTimeout(state.tableToolbarRemoveTimer);
+  clearTimeout(state.tableEditTimer);
+  document.querySelectorAll(".table-edit-toolbar").forEach((toolbar) => toolbar.remove());
+  if (clearActive) {
+    state.activeTable = null;
+    state.activeTableCell = null;
+  }
+}
+
 function showTableEditButton(table, open = false) {
+  if (!table || !els.editor?.contains(table)) return;
   const existing = document.querySelector(".table-edit-toolbar");
   if (existing && state.activeTable === table) {
-    if (open) existing.classList.add("is-open");
+    existing.classList.toggle("is-open", Boolean(open || existing.classList.contains("is-open")));
     positionTableEditToolbar(existing, table);
     return;
   }
-  removeFloatingEditorButtons(".table-edit-toolbar");
+  removeTableEditToolbar();
   state.activeTable = table;
   const toolbar = document.createElement("span");
   toolbar.className = "table-edit-toolbar is-floating";
@@ -2740,18 +2735,26 @@ function showTableEditButton(table, open = false) {
   toolbar.addEventListener("click", (event) => handleTableToolAction(event, table, toolbar));
   toolbar.addEventListener("input", (event) => handleTableToolAction(event, table, toolbar));
   toolbar.addEventListener("mouseenter", cancelTableToolbarRemoval);
-  toolbar.addEventListener("mouseleave", () => scheduleTableToolbarRemoval(450));
+  toolbar.addEventListener("mouseleave", () => scheduleTableToolbarRemoval(250));
   document.body.append(toolbar);
   positionTableEditToolbar(toolbar, table);
 }
 
 function positionTableEditToolbar(toolbar, table) {
-  if (!toolbar || !table?.isConnected) return;
+  if (!toolbar || !table?.isConnected || !els.editor?.contains(table)) {
+    removeTableEditToolbar();
+    return;
+  }
   const rect = table.getBoundingClientRect();
+  const editorRect = els.editor.getBoundingClientRect();
+  if (rect.bottom < editorRect.top || rect.top > editorRect.bottom) {
+    removeTableEditToolbar();
+    return;
+  }
   toolbar.style.position = "fixed";
   const width = toolbar.offsetWidth || 44;
-  const left = Math.max(8, Math.min(window.innerWidth - width - 8, rect.right - width - 10));
-  const top = Math.max(8, Math.min(window.innerHeight - 44, rect.top + 8));
+  const left = Math.max(8, Math.min(window.innerWidth - width - 8, rect.right - width - 8));
+  const top = Math.max(8, Math.min(window.innerHeight - 48, rect.top + 8));
   toolbar.style.left = `${left}px`;
   toolbar.style.top = `${top}px`;
 }
@@ -2786,12 +2789,8 @@ function handleTableToolAction(event, table, toolbar) {
   if (action === "align" && activeCell) cycleTextAlignment(activeCell);
   if (["add-row", "add-col", "delete-row", "delete-col", "wider", "equalize"].includes(action)) applyTableEdits(table, { action });
   highlightActiveTableCell(table);
+  requestAnimationFrame(() => positionTableEditToolbar(toolbar, table));
   syncAndSave("Table updated");
-}
-
-function removeFloatingEditorButtons(selector) {
-  els.editor.querySelectorAll(selector).forEach((button) => button.remove());
-  document.querySelectorAll(selector).forEach((button) => button.remove());
 }
 
 async function openTableEditor(table) {
@@ -5030,6 +5029,22 @@ function extraDesignInputs() {
   return Array.from(document.querySelectorAll("[data-design-key]"));
 }
 
+
+function compactTopCommandLabel(key, value) {
+  const fixed = {
+    topIconWritingRoom: "ROOM",
+    topIconFormat: "FORMAT",
+    topIconInsert: "INSERT",
+    topIconSubnoto: "SUBNOTO",
+    topIconSpecnoto: "SPECNOTO",
+    topIconHelp: "HELP",
+    topIconSettings: "SETTINGS",
+  };
+  if (fixed[key]) return fixed[key];
+  const cleaned = String(value || "").trim().replace(/[\/|].*$/, "").split(/\s+/)[0] || "TOOL";
+  return cleaned.toUpperCase();
+}
+
 function applyTopCommandIconSettings(settings) {
   loadCustomEmojis();
   const defaults = {
@@ -5042,7 +5057,7 @@ function applyTopCommandIconSettings(settings) {
     topIconSettings: "🗝️",
   };
   const labelDefaults = {
-    topIconWritingRoom: ["topLabelWritingRoom", "Writing Room"],
+    topIconWritingRoom: ["topLabelWritingRoom", "ROOM"],
     topIconFormat: ["topLabelFormat", "Format"],
     topIconInsert: ["topLabelInsert", "Insert"],
     topIconSubnoto: ["topLabelSubnoto", "Subnoto"],
@@ -5055,7 +5070,7 @@ function applyTopCommandIconSettings(settings) {
     const glyph = button?.querySelector(".command-glyph");
     if (glyph) glyph.innerHTML = iconMarkupFromValue(settings[key] || fallback, fallback);
     const [labelKey, labelFallback] = labelDefaults[key] || [];
-    const labelText = String(settings[labelKey] || labelFallback || "").trim();
+    const labelText = compactTopCommandLabel(key, settings[labelKey] || labelFallback || "");
     const label = button?.querySelector(".command-label");
     if (label && labelText) label.textContent = labelText;
     if (button && labelText) {
@@ -5262,11 +5277,14 @@ function purgeOldDesignStorageKeys() {
     "capsanoto-design-settings-v5-clean",
     "capsanoto-design-settings-v5-8-layout-recovery",
     "capsanoto-design-settings-v5-8-forced-recovery",
+    "capsanoto-design-settings-v5-8-4-layout-recovery",
     "capsanoto-design-settings-v5-8-3-layout-recovery",
     "capsanoto-design-settings-v5-8-2-layout-recovery",
     "capsanoto-design-settings-v5-8-1-forced-recovery",
     "capsanoto-design-settings-v2",
     "capsanoto-design-settings-v3",
+    "capsanoto-writing-room-layout-v5-8-4",
+    "capsanoto-writing-room-layout-v5-8-3",
     "capsanoto-writing-room-layout-v1"
   ].forEach((key) => {
     try { localStorage.removeItem(key); } catch (error) { console.warn("Unable to clear old layout/design settings", key, error); }
@@ -5558,111 +5576,13 @@ function applyThemeToCurrentWritingRoom() {
 }
 
 
-function setImportantStyle(node, property, value) {
-  if (!node) return;
-  node.style.setProperty(property, value, "important");
-}
-
 function runLayoutRecovery(reason = "") {
-  document.body?.classList.add("capsanoto-v584-recovery");
-  document.querySelectorAll(".app-version").forEach((node) => { node.textContent = "v5.8.4"; });
-
-  const shell = els.writingSurfaceShell || document.querySelector("#writingSurfaceShell, .writing-surface-shell");
-  const title = document.querySelector(".title-strip");
-  const rail = els.writingAssistRail || document.querySelector("#writingAssistRail, .writing-assist-rail");
-  const editor = els.editor || document.querySelector("#editor, .editor");
-  const grip = els.writingSurfaceGrip || document.querySelector("#writingSurfaceGrip, .writing-surface-grip");
-  const endBar = els.documentEndBar || document.querySelector("#documentEndBar, .document-end-bar");
-
-  setImportantStyle(shell, "display", "grid");
-  setImportantStyle(shell, "grid-template-columns", "34px minmax(0, 1fr)");
-  setImportantStyle(shell, "grid-template-rows", "auto minmax(0, 1fr)");
-  setImportantStyle(shell, "width", "min(100%, 920px)");
-  setImportantStyle(shell, "max-width", "96vw");
-  setImportantStyle(shell, "height", "70vh");
-  setImportantStyle(shell, "min-width", "420px");
-  setImportantStyle(shell, "min-height", "340px");
-  setImportantStyle(shell, "margin", "2.2rem auto 0");
-  setImportantStyle(shell, "overflow", "hidden");
-  setImportantStyle(shell, "resize", "none");
-  setImportantStyle(shell, "position", "relative");
-
-  setImportantStyle(title, "grid-column", "2");
-  setImportantStyle(title, "grid-row", "1");
-  setImportantStyle(title, "margin", "0");
-  setImportantStyle(title, "border", "0");
-  setImportantStyle(title, "border-radius", "0");
-  setImportantStyle(title, "background", "#2f251c");
-
-  setImportantStyle(rail, "grid-column", "1");
-  setImportantStyle(rail, "grid-row", "1 / span 2");
-  setImportantStyle(rail, "position", "relative");
-  setImportantStyle(rail, "inset", "auto");
-  setImportantStyle(rail, "width", "34px");
-  setImportantStyle(rail, "height", "100%");
-  setImportantStyle(rail, "min-height", "100%");
-  setImportantStyle(rail, "align-self", "stretch");
-  setImportantStyle(rail, "margin", "0");
-  setImportantStyle(rail, "border", "0");
-  setImportantStyle(rail, "border-radius", "0");
-  setImportantStyle(rail, "background", "#28133f");
-
-  setImportantStyle(editor, "grid-column", "2");
-  setImportantStyle(editor, "grid-row", "2");
-  setImportantStyle(editor, "height", "100%");
-  setImportantStyle(editor, "min-height", "0");
-  setImportantStyle(editor, "overflow", "auto");
-  setImportantStyle(editor, "padding", "1rem 1.1rem 4.4rem");
-
-  setImportantStyle(grip, "position", "absolute");
-  setImportantStyle(grip, "right", ".45rem");
-  setImportantStyle(grip, "bottom", ".45rem");
-  setImportantStyle(grip, "z-index", "50");
-  setImportantStyle(grip, "display", "inline-flex");
-  setImportantStyle(grip, "cursor", "nwse-resize");
-
-  setImportantStyle(endBar, "width", "min(100%, 920px)");
-  setImportantStyle(endBar, "max-width", "96vw");
-  setImportantStyle(endBar, "margin", ".7rem auto 4rem");
-  setImportantStyle(endBar, "position", "relative");
-  setImportantStyle(endBar, "z-index", "5");
-  setImportantStyle(endBar, "display", "flex");
-
-  const settings = els.settingsPanel || document.querySelector("#settingsPanel, .settings-panel");
-  const designGrid = document.querySelector(".design-editor-grid");
-  const designControls = document.querySelector(".design-controls");
-  const designPreview = document.querySelector(".design-preview-column");
-
-  setImportantStyle(settings, "display", settings?.hidden ? "none" : "flex");
-  if (settings && !settings.hidden) setImportantStyle(settings, "z-index", "100000");
-  setImportantStyle(settings, "flex-direction", "column");
-  setImportantStyle(settings, "overflow", "hidden");
-  setImportantStyle(settings, "width", "min(88vw, 1080px)");
-  setImportantStyle(settings, "height", "min(82vh, 760px)");
-
-  setImportantStyle(designGrid, "display", "grid");
-  setImportantStyle(designGrid, "grid-template-columns", "minmax(0, 1fr) minmax(260px, 340px)");
-  setImportantStyle(designGrid, "gap", ".85rem");
-  setImportantStyle(designGrid, "align-items", "start");
-  setImportantStyle(designGrid, "overflow", "hidden");
-
-  setImportantStyle(designControls, "display", "grid");
-  setImportantStyle(designControls, "grid-template-columns", "repeat(2, minmax(0, 1fr))");
-  setImportantStyle(designControls, "gap", ".45rem .6rem");
-  setImportantStyle(designControls, "overflow", "auto");
-  setImportantStyle(designControls, "min-height", "0");
-
-  setImportantStyle(designPreview, "position", "sticky");
-  setImportantStyle(designPreview, "top", "0");
-  setImportantStyle(designPreview, "display", "grid");
-  setImportantStyle(designPreview, "gap", ".55rem");
-  setImportantStyle(designPreview, "overflow", "auto");
-
-  document.documentElement.style.setProperty("--writing-shell-width", "min(100%, 920px)");
-  document.documentElement.style.setProperty("--writing-shell-height", "70vh");
-  if (typeof updateWritingSurfaceMetrics === "function") {
-    try { updateWritingSurfaceMetrics(); } catch (error) { console.warn("Layout recovery metrics update failed", error); }
-  }
+  document.body?.classList.add("capsanoto-v585-layout");
+  document.querySelectorAll(".app-version").forEach((node) => { node.textContent = "v5.8.5"; });
+  try { updateWritingSurfaceMetrics(); } catch (error) { console.warn("Writing surface metric update failed", error); }
+  try { updateWritingAssistRailPosition(); } catch (error) { console.warn("Writing assist rail update failed", error); }
+  const toolbar = document.querySelector(".table-edit-toolbar");
+  if (toolbar && (!state.activeTable || !state.activeTable.isConnected)) removeTableEditToolbar();
 }
 
 
