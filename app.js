@@ -1,11 +1,11 @@
-/* Capsanoto app.js v5.8.6 integrated settings layout repair. */
+/* Capsanoto app.js v5.8.7 table edit icon repair. */
 const STORAGE_KEY = "forever-bound-writing-room-v2";
 const AUTH_KEY = "forever-bound-authenticated";
 const AUTH_CONFIG_PATH = "config/auth.json";
 const CONTENT_PATH = "content/documents.json";
 const EDITOR_ENTRY = "editor.html";
 const AUTOSAVE_DELAY = 600;
-const DESIGN_KEY = "capsanoto-design-settings-v5-8-6-settings-layout";
+const DESIGN_KEY = "capsanoto-design-settings-v5-8-7-table-edit-icon";
 const HELP_KEY = "capsanoto-help-html-v1";
 const WRITING_ROOM_LAYOUT_KEY = "capsanoto-writing-room-layout-v5-8-6";
 const FAVORITE_EMOJI_KEY = "capsanoto-favorite-emojis-v1";
@@ -24,7 +24,7 @@ const GOOGLE_DRIVE_API_ROOT = "https://www.googleapis.com/drive/v3";
 const GOOGLE_DRIVE_UPLOAD_ROOT = "https://www.googleapis.com/upload/drive/v3";
 const GOOGLE_DRIVE_ROOT_FOLDER_NAME = "Capsanoto";
 const GOOGLE_DRIVE_FOLDER_MIME = "application/vnd.google-apps.folder";
-const CAPSANOTO_THEME_VERSION = "warm-copper-clean-v5-8-6";
+const CAPSANOTO_THEME_VERSION = "warm-copper-clean-v5-8-7";
 const FILING_HIERARCHY_VERSION = 1;
 
 const CAPSANOTO_PALETTE = {
@@ -1442,8 +1442,20 @@ function currentLink() {
 }
 
 function handleEditorClick(event) {
+  const tableTool = event.target.closest(".table-edit-toolbar, .table-edit-button, [data-table-tool]");
+  if (tableTool) return;
+
   const cell = event.target.closest("th, td");
-  if (cell && els.editor.contains(cell)) { state.activeTableCell = cell; highlightActiveTableCell(cell.closest("table")); }
+  if (cell && els.editor.contains(cell)) {
+    const table = cell.closest("table");
+    state.activeTableCell = cell;
+    highlightActiveTableCell(table);
+    showTableEditButton(table, false);
+  } else {
+    const table = event.target.closest("table");
+    if (table && els.editor.contains(table)) showTableEditButton(table, false);
+  }
+
   const tcardButton = event.target.closest("[data-edit-tcard]");
   if (tcardButton) {
     const id = tcardButton.dataset.editTcard;
@@ -1452,8 +1464,6 @@ function handleEditorClick(event) {
     if (state.inlineTCardEditId === id) commitInlineTCardEdit(id);
     return;
   }
-  const tableButton = event.target.closest(".table-edit-button");
-  if (tableButton) return;
   hideSelectionContextMenu();
   handleEditorLinkClick(event);
 }
@@ -2682,7 +2692,8 @@ function handleEditorHover(event) {
   const table = event.target.closest("table");
   clearTimeout(state.tableEditTimer);
   if (table && els.editor.contains(table)) {
-    state.tableEditTimer = setTimeout(() => showTableEditButton(table), 1000);
+    cancelTableToolbarRemoval();
+    showTableEditButton(table, false);
   }
 }
 
@@ -2721,7 +2732,7 @@ function showTableEditButton(table, open = false) {
   if (!table || !els.editor?.contains(table)) return;
   const existing = document.querySelector(".table-edit-toolbar");
   if (existing && state.activeTable === table) {
-    existing.classList.toggle("is-open", Boolean(open || existing.classList.contains("is-open")));
+    if (open) existing.classList.add("is-open");
     positionTableEditToolbar(existing, table);
     return;
   }
@@ -2735,9 +2746,9 @@ function showTableEditButton(table, open = false) {
   toolbar.addEventListener("click", (event) => handleTableToolAction(event, table, toolbar));
   toolbar.addEventListener("input", (event) => handleTableToolAction(event, table, toolbar));
   toolbar.addEventListener("mouseenter", cancelTableToolbarRemoval);
-  toolbar.addEventListener("mouseleave", () => scheduleTableToolbarRemoval(250));
+  toolbar.addEventListener("mouseleave", () => scheduleTableToolbarRemoval(450));
   document.body.append(toolbar);
-  positionTableEditToolbar(toolbar, table);
+  requestAnimationFrame(() => positionTableEditToolbar(toolbar, table));
 }
 
 function positionTableEditToolbar(toolbar, table) {
@@ -5580,7 +5591,7 @@ function applyThemeToCurrentWritingRoom() {
 
 function runLayoutRecovery(reason = "") {
   document.body?.classList.add("capsanoto-v586-layout");
-  document.querySelectorAll(".app-version").forEach((node) => { node.textContent = "v5.8.6"; });
+  document.querySelectorAll(".app-version").forEach((node) => { node.textContent = "v5.8.7"; });
   try { updateWritingSurfaceMetrics(); } catch (error) { console.warn("Writing surface metric update failed", error); }
   try { updateWritingAssistRailPosition(); } catch (error) { console.warn("Writing assist rail update failed", error); }
   const toolbar = document.querySelector(".table-edit-toolbar");

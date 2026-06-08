@@ -1,4 +1,4 @@
-/* Capsanoto styles.css v5.8.6 integrated settings layout repair
+/* Capsanoto styles.css v5.8.7 table edit icon repair
    Rollback anchor: v5.7 clean theme rebuild + v5.1–v5.3 writing-surface behaviour.
    This is a full drop-in stylesheet. Overwrite styles.css with this file.
 */
@@ -704,7 +704,7 @@ details.settings-card:not([open]) > *:not(summary), details.element-designer-car
 }
 
 
-/* Capsanoto v5.8.6 integrated component layout */
+/* Capsanoto v5.8.7 integrated component layout */
 :root {
   --layer-toolbar: 1000;
   --layer-floating-panel: 4000;
@@ -1176,4 +1176,30 @@ details.settings-card:not([open]) > *:not(summary), details.element-designer-car
   .design-preview-column {
     position: static;
   }
+}
+
+
+/* Capsanoto v5.8.7 table edit icon repair */
+.editable-table {
+  position: relative;
+}
+
+.editable-table:hover,
+.editable-table:focus-within {
+  outline: 1px solid color-mix(in srgb, var(--accent) 65%, transparent);
+  outline-offset: 2px;
+}
+
+.table-edit-toolbar {
+  pointer-events: auto;
+  opacity: 1;
+}
+
+.table-edit-toolbar .table-edit-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--tcard-edit-button-bg, var(--caps-amethyst));
+  border-color: var(--tcard-edit-button-border, var(--caps-peach));
+  color: var(--tcard-edit-button-text, var(--caps-parchment));
 }
