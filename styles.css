@@ -5151,3 +5151,74 @@ body.is-resizing-writing-surface {
 body.is-resizing-writing-surface .writing-surface-shell {
   transition: none !important;
 }
+
+
+/* v5.5 theme reset + colour picker recovery */
+:root {
+  --theme-bg-main: #211812;
+  --theme-bg-document: #211812;
+  --theme-panel: #211812;
+  --theme-panel-strong: #211812;
+  --theme-panel-soft: #2f251c;
+  --theme-accent: #e88f69;
+  --theme-button-hover: #563485;
+  --theme-success: #563485;
+  --theme-warning: #a97b38;
+  --theme-danger: #c55222;
+  --page: #211812;
+  --paper: #211812;
+  --dark: #211812;
+  --dark-2: #2f251c;
+  --button: #2f251c;
+  --line: #724837;
+  --ink: #fbf4d6;
+  --accent: #e88f69;
+  --muted: #a97b38;
+}
+.writer-shell {
+  background-color: var(--page, #211812) !important;
+}
+body {
+  background-color: var(--page, #211812) !important;
+}
+.design-controls input[type="color"],
+.element-designer-card input[type="color"],
+.tcard-style-grid input[type="color"],
+.table-tool-row input[type="color"] {
+  appearance: auto !important;
+  -webkit-appearance: auto !important;
+  display: inline-block !important;
+  width: 2.6rem !important;
+  min-width: 2.6rem !important;
+  max-width: 2.6rem !important;
+  height: 2rem !important;
+  min-height: 2rem !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 1px solid #6f6258 !important;
+  border-radius: 999px !important;
+  background: transparent !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  cursor: pointer !important;
+  position: relative !important;
+  z-index: 20 !important;
+}
+.design-controls input[type="color"]::-webkit-color-swatch-wrapper,
+.element-designer-card input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 2px !important;
+}
+.design-controls input[type="color"]::-webkit-color-swatch,
+.element-designer-card input[type="color"]::-webkit-color-swatch {
+  border: 0 !important;
+  border-radius: 999px !important;
+}
+.design-controls input[type="color"]::-moz-color-swatch,
+.element-designer-card input[type="color"]::-moz-color-swatch {
+  border: 0 !important;
+  border-radius: 999px !important;
+}
+.element-designer-card label:has(input[type="color"]) {
+  grid-template-columns: minmax(8rem, 1fr) 2.8rem !important;
+  align-items: center !important;
+}

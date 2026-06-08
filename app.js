@@ -4,7 +4,7 @@ const AUTH_CONFIG_PATH = "config/auth.json";
 const CONTENT_PATH = "content/documents.json";
 const EDITOR_ENTRY = "editor.html";
 const AUTOSAVE_DELAY = 600;
-const DESIGN_KEY = "capsanoto-design-settings-v2";
+const DESIGN_KEY = "capsanoto-design-settings-v3";
 const HELP_KEY = "capsanoto-help-html-v1";
 const WRITING_ROOM_LAYOUT_KEY = "capsanoto-writing-room-layout-v1";
 const FAVORITE_EMOJI_KEY = "capsanoto-favorite-emojis-v1";
@@ -23,7 +23,7 @@ const GOOGLE_DRIVE_API_ROOT = "https://www.googleapis.com/drive/v3";
 const GOOGLE_DRIVE_UPLOAD_ROOT = "https://www.googleapis.com/upload/drive/v3";
 const GOOGLE_DRIVE_ROOT_FOLDER_NAME = "Capsanoto";
 const GOOGLE_DRIVE_FOLDER_MIME = "application/vnd.google-apps.folder";
-const CAPSANOTO_THEME_VERSION = "warm-copper-v3";
+const CAPSANOTO_THEME_VERSION = "warm-copper-v4";
 const FILING_HIERARCHY_VERSION = 1;
 
 const CAPSANOTO_PALETTE = {
@@ -4806,8 +4806,16 @@ function bindDesignColorTools() {
   const colorInputs = document.querySelectorAll(".design-section input[type='color']");
   colorInputs.forEach((input) => {
     input.draggable = true;
+    input.style.pointerEvents = "auto";
+    input.style.opacity = "1";
     input.addEventListener("focus", () => syncActiveColorInput(input));
     input.addEventListener("input", () => syncActiveColorInput(input));
+    input.addEventListener("click", () => {
+      syncActiveColorInput(input);
+      if (typeof input.showPicker === "function") {
+        try { input.showPicker(); } catch (error) { /* native picker already opened or browser blocked it */ }
+      }
+    });
     input.addEventListener("dragstart", (event) => event.dataTransfer?.setData("text/plain", input.value));
     if (!state.lastColorInput) state.lastColorInput = input;
   });
@@ -5165,7 +5173,7 @@ function setProjectDesignSettings(settings = {}, options = {}) {
 }
 
 function currentDesignSettings() {
-  return normalizedDesignSettings({ ...state.designSettings, ...designSettingsFromStorage() });
+  return normalizedDesignSettings({ ...designSettingsFromStorage(), ...state.designSettings });
 }
 
 function ensureCurrentThemeSettings() {
@@ -5181,6 +5189,180 @@ function ensureCurrentThemeSettings() {
     localStorage.setItem(DESIGN_KEY, JSON.stringify(normalized));
   }
   return normalized;
+}
+
+function purgeOldDesignStorageKeys() {
+  [
+    "capsanoto-design-settings-v1",
+    "capsanoto-design-settings-v2"
+  ].forEach((key) => {
+    try { localStorage.removeItem(key); } catch (error) { console.warn("Unable to clear old design settings", key, error); }
+  });
+}
+
+function capsanotoForcedThemeSettings() {
+  return normalizedDesignSettings({
+    ...defaultDesignSettings(),
+    ...capsanotoForcedExtraDesignSettings(),
+    paletteVersion: CAPSANOTO_THEME_VERSION,
+    favoriteColors: [...DEFAULT_FAVORITE_COLORS],
+  });
+}
+
+function capsanotoForcedExtraDesignSettings() {
+  const palette = CAPSANOTO_PALETTE;
+  return {
+    topBarHeight: "64",
+    buttonTextColor: palette.parchment,
+    buttonTextSize: "14",
+    windowBg: palette.espresso,
+    windowBorder: palette.clay,
+    windowShadow: palette.black,
+    appBgColor: palette.espresso,
+    appBgSize: "100",
+    topBarImage: "",
+    topBarImageSize: "100",
+    pageBg: palette.espresso,
+    paperBg: palette.espresso,
+    panelBg: palette.espresso,
+    darkBg: palette.espresso,
+    dark2Bg: palette.umber,
+    accentColor: palette.peach,
+    buttonHover: palette.amethyst,
+    successColor: palette.amethyst,
+    warningColor: palette.ochre,
+    dangerColor: palette.ember,
+    accentSoft: "rgba(232, 143, 105, 0.18)",
+    titleColor: palette.peach,
+    titleSize: "1",
+    topBarBg: palette.espresso,
+    topBarBgImage: "",
+    topBarBgSize: "100",
+    topBarBorder: palette.clay,
+    writingRoomButtonBg: palette.umber,
+    writingRoomButtonBorder: palette.clay,
+    writingRoomButtonText: palette.parchment,
+    commandBarBg: palette.deepPlum,
+    commandBarBorder: palette.clay,
+    commandBarText: palette.parchment,
+    dropdownButtonBg: palette.umber,
+    dropdownButtonBorder: palette.clay,
+    dropdownButtonText: palette.parchment,
+    rightIconButtonBg: palette.umber,
+    rightIconButtonBorder: palette.clay,
+    writingRoomBg: palette.espresso,
+    writingRoomBgImage: "",
+    writingRoomHeaderBg: palette.espresso,
+    writingRoomHeaderBgImage: "",
+    writingRoomHeaderBorder: palette.clay,
+    writingRoomTitleColor: palette.peach,
+    folderRowBg: palette.charcoal,
+    folderRowBorder: palette.clay,
+    folderTextColor: palette.parchment,
+    tabRowBg: palette.deepPlum,
+    tabRowBorder: palette.amethyst,
+    tabTextColor: palette.parchment,
+    docRowBg: palette.umber,
+    docRowBorder: palette.clay,
+    docTextColor: palette.parchment,
+    expandedDocTextColor: palette.ochre,
+    metadataPillBg: palette.amethyst,
+    metadataPillBorder: palette.clay,
+    metadataPillTextColor: palette.parchment,
+    trashBg: palette.deepPlum,
+    trashBorder: palette.amethyst,
+    jumpRailLine: "#69635f",
+    jumpRailButtonBg: palette.charcoal,
+    jumpRailButtonBorder: palette.clay,
+    jumpRailIconColor: palette.parchment,
+    writingDeskBgColor: palette.espresso,
+    writingDeskGlowColor: palette.black,
+    writingDeskGlowOpacity: "82",
+    writingSurfaceBg: palette.espresso,
+    writingOverlayOpacity: "92",
+    writingSurfaceBorder: palette.clay,
+    docTitleBg: palette.umber,
+    docTitleBgOpacity: "100",
+    docTitleBorder: palette.clay,
+    docTitleColor: palette.parchment,
+    editorTextColor: palette.parchment,
+    h1Color: palette.parchment,
+    h2Color: palette.parchment,
+    h3Color: palette.parchment,
+    linkColor: palette.peach,
+    linkPillBg: palette.peach,
+    linkPillBorder: palette.clay,
+    linkPillText: palette.black,
+    bottomBarBg: palette.espresso,
+    bottomBarBorder: palette.clay,
+    bottomBarText: palette.parchment,
+    settingsBg: palette.espresso,
+    settingsBgImage: "",
+    settingsBorder: palette.clay,
+    settingsTitleColor: palette.peach,
+    settingsCardBg: palette.espresso,
+    settingsCardBorder: palette.clay,
+    settingsLabelColor: palette.ochre,
+    settingsInputBg: palette.black,
+    settingsInputText: palette.parchment,
+    settingsInputBorder: palette.clay,
+    settingsScrollbarTrack: palette.espresso,
+    settingsScrollbarThumb: palette.peach,
+    settingsSearchHighlight: palette.deepPlum,
+    settingsSearchHighlightBorder: palette.amethyst,
+    settingsHeaderButtonBg: palette.umber,
+    settingsHeaderButtonBorder: palette.clay,
+    settingsHeaderButtonText: palette.parchment,
+    settingsSaveButtonBg: palette.amethyst,
+    settingsCloseButtonBg: palette.umber,
+    helpBg: palette.espresso,
+    helpBgImage: "",
+    helpBorder: palette.clay,
+    helpTitleColor: palette.peach,
+    helpTextColor: palette.parchment,
+    helpHeadingColor: palette.parchment,
+    helpRuleColor: palette.clay,
+    tcardBg: palette.deepPlum,
+    tcardBorder: palette.peach,
+    tcardText: palette.parchment,
+    tcardHeading: palette.peach,
+    tcardPanelBg: palette.espresso,
+    tcardPanelBgImage: "",
+    tcardPanelBorder: palette.clay,
+    tcardInputBg: palette.deepPlum,
+    tcardInputText: palette.parchment,
+    tableBg: palette.espresso,
+    tableBorder: palette.clay,
+    tableHeadBg: palette.umber,
+    tableHeadText: palette.parchment,
+    tableBodyText: palette.parchment,
+    emphasisBg: palette.umber,
+    emphasisBorder: palette.amethyst,
+    emphasisText: palette.parchment,
+    emojiWindowBg: palette.deepPlum,
+    emojiWindowBorder: palette.peach,
+    emojiHeaderBg: palette.espresso,
+    emojiTitleText: palette.parchment,
+    emojiSectionBg: palette.espresso,
+    emojiFavoriteAccent: palette.peach,
+    emojiCustomBg: palette.umber,
+    emojiLibraryBg: palette.espresso,
+    emojiSearchBg: palette.black,
+    emojiSearchBorder: palette.clay,
+    emojiSearchText: palette.parchment,
+    emojiButtonBg: palette.charcoal,
+    emojiButtonBorder: "#6f6258",
+    emojiButtonText: palette.parchment,
+    emojiScrollbarTrack: palette.espresso,
+    emojiScrollbarThumb: palette.peach,
+    statusBg: palette.espresso,
+    statusBorder: palette.clay,
+    statusText: palette.parchment,
+    labelText: palette.ochre,
+    dynamicText: palette.peach,
+    scrollbarTrack: palette.espresso,
+    scrollbarThumb: palette.peach,
+  };
 }
 
 function defaultDesignSettings() {
@@ -5281,8 +5463,10 @@ function resetDesignSettings() {
 }
 
 function forceCapsanotoDefaultTheme() {
-  const settings = setProjectDesignSettings(defaultDesignSettings(), { persistLocal: true });
+  purgeOldDesignStorageKeys();
+  const settings = setProjectDesignSettings(capsanotoForcedThemeSettings(), { persistLocal: true });
   state.favoriteColors = [...DEFAULT_FAVORITE_COLORS];
+  settings.favoriteColors = [...DEFAULT_FAVORITE_COLORS];
   applyDesignSettings(settings);
   loadDesignForm();
   persistNow("Capsanoto default theme applied to Writing Room");
@@ -5299,6 +5483,7 @@ function applyThemeToCurrentWritingRoom() {
 }
 
 function applySavedDesignSettings() {
+  purgeOldDesignStorageKeys();
   applyDesignSettings(ensureCurrentThemeSettings());
 }
 
