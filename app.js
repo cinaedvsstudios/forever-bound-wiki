@@ -23,7 +23,7 @@ const GOOGLE_DRIVE_API_ROOT = "https://www.googleapis.com/drive/v3";
 const GOOGLE_DRIVE_UPLOAD_ROOT = "https://www.googleapis.com/upload/drive/v3";
 const GOOGLE_DRIVE_ROOT_FOLDER_NAME = "Capsanoto";
 const GOOGLE_DRIVE_FOLDER_MIME = "application/vnd.google-apps.folder";
-const CAPSANOTO_THEME_VERSION = "warm-copper-v2";
+const CAPSANOTO_THEME_VERSION = "warm-copper-v3";
 const FILING_HIERARCHY_VERSION = 1;
 
 const CAPSANOTO_PALETTE = {
@@ -273,6 +273,8 @@ const els = {
   settingsSearchCount: document.querySelector("#settingsSearchCount"),
   expandDesignerCards: document.querySelector("#expandDesignerCards"),
   collapseDesignerCards: document.querySelector("#collapseDesignerCards"),
+  forceDefaultThemeButton: document.querySelector("#forceDefaultThemeButton"),
+  saveProjectThemeButton: document.querySelector("#saveProjectThemeButton"),
   settingsMenu: document.querySelector(".settings-menu"),
   createFolderProjectButton: document.querySelector("#createFolderProjectButton"),
   openFolderProjectButton: document.querySelector("#openFolderProjectButton"),
@@ -719,6 +721,8 @@ function bindEditorEvents() {
   els.exportQueue.addEventListener("click", handleExportQueueClick);
   els.applyDesignButton.addEventListener("click", saveDesignSettings);
   els.resetDesignButton.addEventListener("click", resetDesignSettings);
+  els.forceDefaultThemeButton?.addEventListener("click", forceCapsanotoDefaultTheme);
+  els.saveProjectThemeButton?.addEventListener("click", applyThemeToCurrentWritingRoom);
 
   els.bookmarkBar.addEventListener("click", (event) => {
     const copyButton = event.target.closest("button[data-copy-bookmark]");
@@ -5164,6 +5168,21 @@ function currentDesignSettings() {
   return normalizedDesignSettings({ ...state.designSettings, ...designSettingsFromStorage() });
 }
 
+function ensureCurrentThemeSettings() {
+  const stored = designSettingsFromStorage();
+  const merged = { ...state.designSettings, ...stored };
+  const normalized = normalizedDesignSettings(merged);
+  const staleTheme = merged.paletteVersion !== CAPSANOTO_THEME_VERSION;
+  const staleFavorites = JSON.stringify(validFavoriteColors(normalized.favoriteColors)) !== JSON.stringify(DEFAULT_FAVORITE_COLORS);
+  if (staleTheme || staleFavorites) {
+    normalized.favoriteColors = [...DEFAULT_FAVORITE_COLORS];
+    state.favoriteColors = [...DEFAULT_FAVORITE_COLORS];
+    state.designSettings = normalized;
+    localStorage.setItem(DESIGN_KEY, JSON.stringify(normalized));
+  }
+  return normalized;
+}
+
 function defaultDesignSettings() {
   const palette = CAPSANOTO_PALETTE;
   return {
@@ -5212,24 +5231,75 @@ function defaultDesignSettings() {
   };
 }
 
-function saveDesignSettings() {
-  const settings = collectExtraDesignSettings({ buttonBg: els.designButtonBg.value, borderColor: els.designBorderColor.value, textColor: els.designTextColor.value, fontSize: els.designFontSize.value || "14", fontFamily: els.designFontFamily?.value || "Arial, Helvetica, sans-serif", titleIconScale: els.titleIconScale?.value || "143", bold: els.designBold.checked, bgImage: els.designBgImage.value.trim(), dialogBg: els.dialogBgColor.value, dialogBorder: els.dialogBorderColor.value, dialogShadow: els.dialogShadowColor.value, dialogText: els.dialogTextColor.value, dialogFontSize: els.dialogFontSize.value || "14", dialogBold: els.dialogBold.checked, dialogButtonBg: els.dialogButtonBg.value, dialogButtonBorder: els.dialogButtonBorder.value, dialogButtonText: els.dialogButtonText.value, dialogButtonShadow: els.dialogButtonShadow.value, labelText: els.labelTextColor.value, dynamicText: els.dynamicTextColor.value, scrollbarTrack: els.scrollbarTrackColor.value, scrollbarThumb: els.scrollbarThumbColor.value, statusBg: els.statusBgColor.value, statusBorder: els.statusBorderColor.value, statusText: els.statusTextColor.value, emphasisBg: els.emphasisBgColor.value, emphasisBorder: els.emphasisBorderColor.value, emphasisText: els.emphasisTextColor.value, panelBg: currentDesignSettings().panelBg || defaultDesignSettings().panelBg, panelBorder: els.panelBorderColor.value, favoriteColors: [...state.favoriteColors] });
+function collectDesignSettingsFromForm() {
+  const settings = collectExtraDesignSettings({
+    buttonBg: els.designButtonBg.value,
+    borderColor: els.designBorderColor.value,
+    textColor: els.designTextColor.value,
+    fontSize: els.designFontSize.value || "14",
+    fontFamily: els.designFontFamily?.value || "Arial, Helvetica, sans-serif",
+    titleIconScale: els.titleIconScale?.value || "143",
+    bold: els.designBold.checked,
+    bgImage: els.designBgImage.value.trim(),
+    dialogBg: els.dialogBgColor.value,
+    dialogBorder: els.dialogBorderColor.value,
+    dialogShadow: els.dialogShadowColor.value,
+    dialogText: els.dialogTextColor.value,
+    dialogFontSize: els.dialogFontSize.value || "14",
+    dialogBold: els.dialogBold.checked,
+    dialogButtonBg: els.dialogButtonBg.value,
+    dialogButtonBorder: els.dialogButtonBorder.value,
+    dialogButtonText: els.dialogButtonText.value,
+    dialogButtonShadow: els.dialogButtonShadow.value,
+    labelText: els.labelTextColor.value,
+    dynamicText: els.dynamicTextColor.value,
+    scrollbarTrack: els.scrollbarTrackColor.value,
+    scrollbarThumb: els.scrollbarThumbColor.value,
+    statusBg: els.statusBgColor.value,
+    statusBorder: els.statusBorderColor.value,
+    statusText: els.statusTextColor.value,
+    emphasisBg: els.emphasisBgColor.value,
+    emphasisBorder: els.emphasisBorderColor.value,
+    emphasisText: els.emphasisTextColor.value,
+    panelBg: currentDesignSettings().panelBg || defaultDesignSettings().panelBg,
+    panelBorder: els.panelBorderColor.value,
+    favoriteColors: [...state.favoriteColors],
+  });
   settings.paletteVersion = CAPSANOTO_THEME_VERSION;
-  localStorage.setItem(DESIGN_KEY, JSON.stringify(settings));
+  return normalizedDesignSettings(settings);
+}
+
+function saveDesignSettings() {
+  const settings = collectDesignSettingsFromForm();
+  setProjectDesignSettings(settings, { persistLocal: true });
   applyDesignSettings(settings);
   setStatus("Design applied", "saved");
 }
 
 function resetDesignSettings() {
+  forceCapsanotoDefaultTheme();
+}
+
+function forceCapsanotoDefaultTheme() {
   const settings = setProjectDesignSettings(defaultDesignSettings(), { persistLocal: true });
+  state.favoriteColors = [...DEFAULT_FAVORITE_COLORS];
   applyDesignSettings(settings);
   loadDesignForm();
-  persistNow("Design reset and saved to Writing Room");
+  persistNow("Capsanoto default theme applied to Writing Room");
+  updateProjectSettingsStatus();
+}
+
+function applyThemeToCurrentWritingRoom() {
+  const settings = collectDesignSettingsFromForm();
+  setProjectDesignSettings(settings, { persistLocal: true });
+  applyDesignSettings(settings);
+  loadDesignForm();
+  persistNow("Theme saved to current Writing Room");
   updateProjectSettingsStatus();
 }
 
 function applySavedDesignSettings() {
-  applyDesignSettings(currentDesignSettings());
+  applyDesignSettings(ensureCurrentThemeSettings());
 }
 
 function applyDesignSettings(settings) {
