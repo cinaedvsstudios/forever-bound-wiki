@@ -1,11 +1,11 @@
-/* Capsanoto app.js v5.9.5 logo tcard/table/rail polish. */
+/* Capsanoto app.js v5.9.6 TCard rail/settings/shadow repair. */
 const STORAGE_KEY = "forever-bound-writing-room-v2";
 const AUTH_KEY = "forever-bound-authenticated";
 const AUTH_CONFIG_PATH = "config/auth.json";
 const CONTENT_PATH = "content/documents.json";
 const EDITOR_ENTRY = "editor.html";
 const AUTOSAVE_DELAY = 600;
-const DESIGN_KEY = "capsanoto-design-settings-v5-9-5-logo-table-controls-rail";
+const DESIGN_KEY = "capsanoto-design-settings-v5-9-6-tcard-rail-settings-shadow";
 const HELP_KEY = "capsanoto-help-html-v1";
 const WRITING_ROOM_LAYOUT_KEY = "capsanoto-writing-room-layout-v5-8-6";
 const PANEL_LAYOUT_KEY = "capsanoto-floating-panel-layouts-v5-9-0";
@@ -26,7 +26,7 @@ const GOOGLE_DRIVE_API_ROOT = "https://www.googleapis.com/drive/v3";
 const GOOGLE_DRIVE_UPLOAD_ROOT = "https://www.googleapis.com/upload/drive/v3";
 const GOOGLE_DRIVE_ROOT_FOLDER_NAME = "Capsanoto";
 const GOOGLE_DRIVE_FOLDER_MIME = "application/vnd.google-apps.folder";
-const CAPSANOTO_THEME_VERSION = "purple-glow-leather-v5-9-5";
+const CAPSANOTO_THEME_VERSION = "purple-glow-leather-v5-9-6";
 const FILING_HIERARCHY_VERSION = 1;
 
 const CAPSANOTO_PALETTE = {
@@ -1151,16 +1151,19 @@ function renderWritingAssistRail() {
   const targets = [];
 
   els.editor.querySelectorAll(".transclusion-ref[data-block-id]").forEach((node) => {
-    targets.push({ node, type: "tcard", icon: "𝞃", title: `TCard: ${node.dataset.blockId || "Transclusion Card"}` });
+    targets.push({ node, type: "tcard", icon: "logo", title: `TCard: ${node.dataset.blockId || "Transclusion Card"}` });
+  });
+  els.editor.querySelectorAll("table").forEach((node) => {
+    targets.push({ node, type: "table", icon: "🧮", title: "Table" });
   });
   els.editor.querySelectorAll(".emphasis-box").forEach((node) => {
-    targets.push({ node, type: "emphasis", icon: "ε", title: "Emphasis box" });
+    targets.push({ node, type: "box", icon: "📦", title: "Box / emphasis box" });
   });
   els.editor.querySelectorAll("a[href]").forEach((node) => {
     targets.push({ node, type: "link", icon: "🔗", title: `Link: ${node.getAttribute("href") || "reference"}` });
   });
-  els.editor.querySelectorAll("[data-bookmark='true'][id]").forEach((node) => {
-    targets.push({ node, type: "anchor", icon: "⚓", title: `Link Anchor: ${node.id}` });
+  els.editor.querySelectorAll("[data-bookmark='true'][id], h1[id], h2[id], h3[id]").forEach((node) => {
+    targets.push({ node, type: "bookmark", icon: "🔖", title: `Bookmark: ${node.id || node.textContent.trim()}` });
   });
   (state.deprecatedParagraphs || [])
     .filter((item) => item.documentId === doc.id)
@@ -1177,7 +1180,15 @@ function renderWritingAssistRail() {
     marker.dataset.markerType = target.type;
     marker.dataset.assistTargetIndex = String(index);
     marker.title = target.title;
-    marker.textContent = target.icon;
+    if (target.type === "tcard") {
+      const image = document.createElement("img");
+      image.src = "iconcapsanoto.png";
+      image.alt = "";
+      image.className = "assist-rail-marker-logo";
+      marker.appendChild(image);
+    } else {
+      marker.textContent = target.icon;
+    }
     marker._assistTarget = target.node;
     els.writingAssistRail.appendChild(marker);
   });
@@ -2099,7 +2110,14 @@ function renderWritingRoomCards() {
   `).join("");
   const rail = `<nav class="filing-jump-rail" aria-label="Filing Cabinet jumps"><button type="button" data-filing-action="collapse-all" title="Collapse all">−</button>${groups.map((group) => `<button type="button" data-scroll-group="${escapeAttr(group.id)}" title="${escapeAttr(group.label)}"><span>${groupIcon(group)}</span></button>`).join("")}<button type="button" data-filing-action="expand-all" title="Expand all">＋</button></nav>`;
   const trashHtml = renderTrashSection();
-  els.writingRoomCards.innerHTML = rail + groupHtml + trashHtml;
+  els.writingRoomPanel?.querySelector(":scope > .filing-jump-rail")?.remove();
+  els.writingRoomCards.innerHTML = groupHtml + trashHtml;
+  if (els.writingRoomPanel) {
+    els.writingRoomPanel.insertAdjacentHTML("beforeend", rail);
+    els.writingRoomPanel.querySelector(":scope > .filing-jump-rail")?.addEventListener("click", handleWritingRoomCardClick);
+  } else {
+    els.writingRoomCards.insertAdjacentHTML("afterbegin", rail);
+  }
 }
 
 function inlineEditAttrs(kind, id, field) {
@@ -3249,7 +3267,7 @@ function renderBlockList() {
   const blocks = Object.values(state.blocks).sort((a, b) => a.id.localeCompare(b.id));
   els.blockList.classList.toggle("is-delete-mode", state.blockDeleteMode);
   els.blockList.innerHTML = blocks.length ? blocks.map((block) => (
-    `<div class="block-list-row"><button type="button" data-block-id="${escapeAttr(block.id)}"><strong>${escapeHtml(block.id)}</strong><span>${escapeHtml(block.content).slice(0, 90)}</span></button>${state.blockDeleteMode ? `<button type="button" class="block-delete-x" data-delete-block-id="${escapeAttr(block.id)}" title="Delete TCard">×</button>` : ""}</div>`
+    `<div class="block-list-row"><button type="button" class="tcard-content" data-block-id="${escapeAttr(block.id)}"${blockStyleAttr(block?.style)}><strong>${escapeHtml(block.id)}</strong><span>${escapeHtml(block.content).slice(0, 90)}</span></button>${state.blockDeleteMode ? `<button type="button" class="block-delete-x" data-delete-block-id="${escapeAttr(block.id)}" title="Delete TCard">×</button>` : ""}</div>`
   )).join("") : `<p class="panel-help">No reusable TCards yet.</p>`;
 }
 
@@ -5819,7 +5837,7 @@ function applyThemeToCurrentWritingRoom() {
 
 function runLayoutRecovery(reason = "") {
   document.body?.classList.add("capsanoto-v586-layout");
-  document.querySelectorAll(".app-version").forEach((node) => { node.textContent = "v5.9.5"; });
+  document.querySelectorAll(".app-version").forEach((node) => { node.textContent = "v5.9.6"; });
   try { updateWritingSurfaceMetrics(); } catch (error) { console.warn("Writing surface metric update failed", error); }
   try { updateWritingAssistRailPosition(); } catch (error) { console.warn("Writing assist rail update failed", error); }
   const toolbar = document.querySelector(".table-edit-toolbar");

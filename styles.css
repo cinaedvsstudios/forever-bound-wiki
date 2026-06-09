@@ -2583,3 +2583,268 @@ details[data-section="trash"] > summary:hover,
     right: .75rem !important;
   }
 }
+
+
+/* Capsanoto v5.9.6 TCard / rail / settings / shadow repair
+   Rollback anchor: v5.9.5.
+   This layer removes the v5.9.5 rail breakage, restores variable-driven TCard styling,
+   makes Settings use true two-column open cards, and adds stronger shadows to pills/boxes/buttons.
+*/
+
+/* TCards must obey the TCard control panel/inline style variables */
+.transclusion-ref,
+.tcard-content,
+.block-list-row .tcard-content {
+  background: var(--tcard-bg) !important;
+  background-color: var(--tcard-bg) !important;
+  border-color: var(--tcard-border) !important;
+  border-left-color: var(--tcard-heading) !important;
+  color: var(--tcard-text) !important;
+  box-shadow: 0 18px 38px rgba(0,0,0,.62), 0 0 0 1px color-mix(in srgb, var(--tcard-border) 48%, transparent) !important;
+}
+
+.transclusion-ref > span,
+.tcard-content > span,
+.block-list-row .tcard-content > strong {
+  color: var(--tcard-heading) !important;
+}
+
+.transclusion-ref:hover,
+.tcard-content:hover,
+.block-list-row .tcard-content:hover {
+  border-color: var(--tcard-border) !important;
+  box-shadow: 0 20px 46px rgba(0,0,0,.68), 0 0 0 1px var(--tcard-border), 0 0 20px color-mix(in srgb, var(--tcard-border) 45%, transparent) !important;
+}
+
+.block-list-row .tcard-content {
+  display: grid !important;
+  gap: .18rem;
+  width: 100%;
+  text-align: left;
+  border-radius: 16px;
+  padding: .75rem .95rem;
+}
+
+.block-list-row .tcard-content span {
+  color: var(--tcard-text) !important;
+}
+
+/* Writing assist rail icons: TCard uses Capsanoto logo, other types use emoji */
+.assist-rail-marker {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 1.45rem;
+  height: 1.45rem;
+  min-width: 1.45rem;
+  min-height: 1.45rem;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,.78));
+  font-size: 1.05rem;
+}
+
+.assist-rail-marker-logo {
+  width: 1.28rem;
+  height: 1.28rem;
+  object-fit: contain;
+  display: block;
+  pointer-events: none;
+}
+
+.assist-rail-marker:hover,
+.assist-rail-marker.is-active {
+  background: rgba(95,30,102,.35) !important;
+  border-radius: 999px;
+  box-shadow: 0 0 0 1px rgba(141,67,160,.75), 0 0 16px rgba(95,30,102,.45) !important;
+}
+
+/* Restore Writing Room jump rail as a fixed-in-panel rail, not a sticky/float content object */
+.writing-room-panel {
+  position: fixed !important;
+}
+
+.writing-room-cards {
+  position: relative !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  padding-right: 3.25rem !important;
+  scrollbar-width: none !important;
+}
+
+.writing-room-cards::-webkit-scrollbar {
+  display: none !important;
+}
+
+.writing-room-panel > .filing-jump-rail {
+  position: absolute !important;
+  top: 5.25rem !important;
+  right: .75rem !important;
+  bottom: 1.1rem !important;
+  float: none !important;
+  margin: 0 !important;
+  width: 1.85rem !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-evenly !important;
+  align-items: center !important;
+  z-index: 40 !important;
+  pointer-events: auto !important;
+}
+
+.writing-room-panel > .filing-jump-rail::before {
+  content: "";
+  position: absolute;
+  top: .65rem;
+  bottom: .65rem;
+  left: 50%;
+  width: 2px;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, rgba(97,82,67,.55), rgba(95,30,102,.92), rgba(97,82,67,.55)) !important;
+  box-shadow: 0 0 12px rgba(95,30,102,.48);
+}
+
+.writing-room-panel > .filing-jump-rail button {
+  position: relative;
+  z-index: 1;
+  background: radial-gradient(circle, rgba(28,18,14,.96) 0%, rgba(95,30,102,.50) 100%) !important;
+  border: 1px solid rgba(141,67,160,.82) !important;
+  border-radius: 999px !important;
+  box-shadow: 0 8px 18px rgba(0,0,0,.62), 0 0 12px rgba(95,30,102,.30) !important;
+}
+
+.writing-room-panel > .filing-jump-rail button:hover {
+  background: radial-gradient(circle, rgba(95,30,102,.92) 0%, rgba(28,18,14,.96) 100%) !important;
+}
+
+/* Settings: use the left-side space properly with true two-column open cards */
+.design-editor-grid {
+  grid-template-columns: minmax(620px, 1fr) minmax(280px, 360px) !important;
+}
+
+.design-controls {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: .58rem !important;
+  align-content: start !important;
+}
+
+.design-controls .element-designer-card[open] {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(240px, 1fr)) !important;
+  grid-auto-flow: row dense !important;
+  gap: .44rem .78rem !important;
+  align-items: center !important;
+}
+
+.design-controls .element-designer-card[open] > summary,
+.design-controls .element-designer-card[open] > h4,
+.design-controls .element-designer-card[open] > .design-section-note,
+.design-controls .element-designer-card[open] > p,
+.design-controls .element-designer-card[open] > .inherit-controls,
+.design-controls .element-designer-card[open] > .placeholder-card,
+.design-controls .element-designer-card[open] > button {
+  grid-column: 1 / -1 !important;
+}
+
+.design-controls .element-designer-card[open] > label {
+  display: grid !important;
+  grid-template-columns: minmax(9.5rem, 1fr) minmax(3rem, auto) !important;
+  gap: .42rem !important;
+  align-items: center !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+}
+
+.design-controls .element-designer-card[open] > label:has(input[type="text"]),
+.design-controls .element-designer-card[open] > label:has(textarea) {
+  grid-template-columns: minmax(9rem, .8fr) minmax(12rem, 1.2fr) !important;
+}
+
+.design-controls .element-designer-card[open] > label input[type="text"],
+.design-controls .element-designer-card[open] > label textarea,
+.design-controls .element-designer-card[open] > label select {
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+/* Smaller screens fall back cleanly */
+@media (max-width: 1050px) {
+  .design-editor-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .design-controls .element-designer-card[open] {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Strong shadow under every pill/box/button/control family */
+button,
+.pill-link,
+.metadata-pill,
+.toggle-pill,
+.settings-tab,
+.tool-menu-trigger,
+.direct-command,
+.writing-room-button,
+.context-status,
+.filing-folder > summary,
+.filing-tab > summary,
+.filing-doc-card > summary,
+.writing-room-card > summary,
+.transclusion-ref,
+.tcard-content,
+.emphasis-box,
+.editor table,
+.editable-table,
+.settings-card,
+.element-designer-card,
+.preview-card,
+.design-preview,
+.block-list-row button,
+.block-panel button,
+.caps-dialog button,
+.project-settings-panel button,
+.emoji-grid button,
+.custom-emoji-slot,
+.favorite-colors button,
+.table-edit-toolbar,
+.table-edit-toolbar button,
+input,
+select,
+textarea {
+  box-shadow: 0 12px 26px rgba(0,0,0,.56), 0 1px 0 rgba(255,240,206,.045) inset !important;
+}
+
+button:hover,
+.pill-link:hover,
+.metadata-pill:hover,
+.toggle-pill:hover,
+.settings-tab:hover,
+.tool-menu-trigger:hover,
+.direct-command:hover,
+.writing-room-button:hover,
+.filing-folder > summary:hover,
+.filing-tab > summary:hover,
+.filing-doc-card > summary:hover,
+.writing-room-card > summary:hover,
+.transclusion-ref:hover,
+.tcard-content:hover,
+.emphasis-box:hover,
+.editor table:hover,
+.editable-table:hover,
+.settings-card:hover,
+.element-designer-card:hover,
+.preview-card:hover,
+.design-preview:hover,
+.block-list-row button:hover,
+.emoji-grid button:hover,
+.custom-emoji-slot:hover,
+.favorite-colors button:hover {
+  box-shadow: 0 16px 36px rgba(0,0,0,.66), 0 0 0 1px rgba(141,67,160,.72), 0 0 20px rgba(95,30,102,.34) !important;
+}
