@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
 <title>Capsanoto</title>
-<link href="styles.css?v=5.9.3" rel="stylesheet"/>
+<link href="styles.css?v=5.9.4" rel="stylesheet"/>
 </head>
 <body class="is-unlocked">
 <main aria-labelledby="passwordTitle" class="password-screen" hidden="" id="passwordScreen">
@@ -23,7 +23,7 @@
 <main aria-label="Forever Bound writing editor" class="writer-shell" id="editorApp">
 <header aria-label="Capsanoto command bar" class="writer-header toolbar">
 <div class="document-controls">
-<strong class="app-name"><img alt="Capsanoto icon" src="https://raw.githubusercontent.com/cinaedvsstudios/forever-bound-wiki/refs/heads/main/iconcapsanoto.png"/><span class="brand-word">Capsanoto</span><span class="app-version">v5.9.3</span></strong>
+<strong class="app-name"><img alt="Capsanoto icon" src="https://raw.githubusercontent.com/cinaedvsstudios/forever-bound-wiki/refs/heads/main/iconcapsanoto.png"/><span class="brand-word">Capsanoto</span><span class="app-version">v5.9.4</span></strong>
 <label class="sr-only" for="documentSelect">Current document</label>
 <select hidden="" id="documentSelect" title="Document Switcher"></select>
 </div>
@@ -33,24 +33,24 @@
 <div class="tool-menu has-panel" data-menu-kind="format">
 <button aria-haspopup="true" aria-label="Format" class="tool-menu-trigger command-icon" data-icon-key="topIconFormat" data-tool-name="Format tools" title="Format" type="button"><span class="command-glyph">🪶</span><span class="command-label">Format</span></button>
 <div class="tool-menu-panel format-tool-panel">
-<button aria-label="Paragraph" data-block="p" data-tool-name="Text" title="Text" type="button"><span class="menu-tool-glyph">¶</span><span class="menu-tool-label">Text</span></button>
-<button aria-label="Bold" data-command="bold" data-tool-name="Bold" title="Bold" type="button"><span class="menu-tool-glyph"><strong>B</strong></span><span class="menu-tool-label">Bold</span></button>
-<button aria-label="Italic" data-command="italic" data-tool-name="Italic" title="Italic" type="button"><span class="menu-tool-glyph"><em>I</em></span><span class="menu-tool-label">Italic</span></button>
-<button aria-label="Bullet List" data-command="insertUnorderedList" data-tool-name="List" title="List" type="button"><span class="menu-tool-glyph">☰</span><span class="menu-tool-label">List</span></button>
-<button aria-label="Heading 1" data-block="h1" data-tool-name="H1" title="Heading 1" type="button"><span class="menu-tool-glyph">H1</span><span class="menu-tool-label">Head 1</span></button>
-<button aria-label="Heading 2" data-block="h2" data-tool-name="H2" title="Heading 2" type="button"><span class="menu-tool-glyph">H2</span><span class="menu-tool-label">Head 2</span></button>
-<button aria-label="Heading 3" data-block="h3" data-tool-name="H3" title="Heading 3" type="button"><span class="menu-tool-glyph">H3</span><span class="menu-tool-label">Head 3</span></button>
-<button aria-label="Text Alignment" data-command="cycleTextAlign" data-tool-name="Align" title="Cycle text alignment" type="button"><span class="menu-tool-glyph">↔</span><span class="menu-tool-label">Align</span></button>
+<button aria-label="Paragraph" data-block="p" data-tool-name="Text" title="Text" type="button"><span class="menu-tool-glyph">📝</span><span class="menu-tool-label">Text</span></button>
+<button aria-label="Bold" data-command="bold" data-tool-name="Bold" title="Bold" type="button"><span class="menu-tool-glyph">🅱️</span><span class="menu-tool-label">Bold</span></button>
+<button aria-label="Italic" data-command="italic" data-tool-name="Italic" title="Italic" type="button"><span class="menu-tool-glyph">✒️</span><span class="menu-tool-label">Italic</span></button>
+<button aria-label="Bullet List" data-command="insertUnorderedList" data-tool-name="List" title="List" type="button"><span class="menu-tool-glyph">📋</span><span class="menu-tool-label">List</span></button>
+<button aria-label="Heading 1" data-block="h1" data-tool-name="H1" title="Heading 1" type="button"><span class="menu-tool-glyph">🔠</span><span class="menu-tool-label">Head 1</span></button>
+<button aria-label="Heading 2" data-block="h2" data-tool-name="H2" title="Heading 2" type="button"><span class="menu-tool-glyph">🔡</span><span class="menu-tool-label">Head 2</span></button>
+<button aria-label="Heading 3" data-block="h3" data-tool-name="H3" title="Heading 3" type="button"><span class="menu-tool-glyph">🔤</span><span class="menu-tool-label">Head 3</span></button>
+<button aria-label="Text Alignment" data-command="cycleTextAlign" data-tool-name="Align" title="Cycle text alignment" type="button"><span class="menu-tool-glyph">↔️</span><span class="menu-tool-label">Align</span></button>
 </div>
 </div>
 <div class="tool-menu has-panel" data-menu-kind="insert">
 <button aria-haspopup="true" aria-label="Insert" class="tool-menu-trigger command-icon" data-icon-key="topIconInsert" data-tool-name="Insert tools" title="Insert" type="button"><span class="command-glyph">🗡️</span><span class="command-label">Insert</span></button>
 <div class="tool-menu-panel insert-tool-panel">
 <button aria-label="Image" data-tool-name="Image" id="imageButton" title="Image" type="button"><span class="menu-tool-glyph">🖼️</span><span class="menu-tool-label">Image</span></button>
-<button aria-label="Table" data-tool-name="Table" id="tableButton" title="Table" type="button"><span class="menu-tool-glyph">▦</span><span class="menu-tool-label">Table</span></button>
-<button aria-label="TCards" data-tool-name="TCard" id="blockButton" title="TCards" type="button"><span class="menu-tool-glyph">𝞃</span><span class="menu-tool-label">TCard</span></button>
-<button aria-label="Horizontal Rule" data-command="insertHorizontalRule" data-tool-name="Rule" title="Horizontal Rule" type="button"><span class="menu-tool-glyph">—</span><span class="menu-tool-label">Rule</span></button>
-<button aria-label="Emphasis Box" id="emphasisButton" title="Emphasis Box" type="button"><span class="menu-tool-glyph">ε</span><span class="menu-tool-label">Box</span></button>
+<button aria-label="Table" data-tool-name="Table" id="tableButton" title="Table" type="button"><span class="menu-tool-glyph">🧮</span><span class="menu-tool-label">Table</span></button>
+<button aria-label="TCards" data-tool-name="TCard" id="blockButton" title="TCards" type="button"><span class="menu-tool-glyph">🧩</span><span class="menu-tool-label">TCard</span></button>
+<button aria-label="Horizontal Rule" data-command="insertHorizontalRule" data-tool-name="Rule" title="Horizontal Rule" type="button"><span class="menu-tool-glyph">➖</span><span class="menu-tool-label">Rule</span></button>
+<button aria-label="Emphasis Box" id="emphasisButton" title="Emphasis Box" type="button"><span class="menu-tool-glyph">📦</span><span class="menu-tool-label">Box</span></button>
 <button aria-label="Emoji" data-tool-name="Emoji" id="emojiButton" title="Emoji" type="button"><span class="menu-tool-glyph">✨</span><span class="menu-tool-label">Emoji</span></button>
 </div>
 </div>
@@ -181,14 +181,14 @@
 <button aria-label="Open emoji library" class="icon-button" id="settingsEmojiLibraryButton" title="Emoji library" type="button">😊</button><button class="settings-save-button" id="saveSettingsPanelButton" title="Save settings and close" type="button">Save</button><button aria-label="Close settings" class="icon-button" id="closeSettingsPanel" type="button">×</button>
 </header>
 <nav aria-label="Settings sections" class="settings-menu">
-<button aria-pressed="true" data-settings-tab="design" type="button">Design</button>
-<button aria-pressed="false" data-settings-tab="export" type="button">Download</button>
-<button aria-pressed="false" data-settings-tab="support" type="button">Help</button>
-<button aria-pressed="false" data-settings-tab="import" type="button">Import File</button>
-<button aria-pressed="false" data-settings-tab="emoji" type="button">Emoji</button>
-<button aria-pressed="false" data-settings-tab="command-layout" type="button">Command Layout</button>
-<button aria-pressed="false" data-settings-tab="folder-mode" type="button">Local Backup</button>
-<button aria-pressed="false" data-settings-tab="debug" type="button">Debug</button>
+<button aria-pressed="true" data-settings-tab="design" type="button">🎨 Design</button>
+<button aria-pressed="false" data-settings-tab="export" type="button">📥 Download</button>
+<button aria-pressed="false" data-settings-tab="support" type="button">❓ Help</button>
+<button aria-pressed="false" data-settings-tab="import" type="button">📤 Import File</button>
+<button aria-pressed="false" data-settings-tab="emoji" type="button">✨ Emoji</button>
+<button aria-pressed="false" data-settings-tab="command-layout" type="button">🧭 Command Layout</button>
+<button aria-pressed="false" data-settings-tab="folder-mode" type="button">💾 Local Backup</button>
+<button aria-pressed="false" data-settings-tab="debug" type="button">🧪 Debug</button>
 </nav>
 <section class="settings-section settings-card" data-settings-section="export" hidden="">
 <h3>Smart Download Builder</h3>
@@ -768,6 +768,6 @@
 <h2 id="notes">Notes</h2>
 <p>Add internal references, links, and reusable TCards.</p>
 </template>
-<script src="app.js?v=5.9.3"></script>
+<script src="app.js?v=5.9.4"></script>
 </body>
 </html>

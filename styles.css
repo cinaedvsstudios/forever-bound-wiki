@@ -2034,3 +2034,337 @@ textarea::placeholder {
 *::-webkit-scrollbar-thumb:hover {
   background: var(--caps-purple-outline);
 }
+
+
+/* Capsanoto v5.9.4 emoji gradient polish
+   - Emoji-first controls in menus/settings.
+   - Purple underlined links instead of browser blue.
+   - Subtle brown-to-purple gradients on buttons and document pills.
+   - Purple gradient headers on floating panels.
+   - Emoji Spark layout repair.
+   - Filing Cabinet emojis no longer get circular borders; only emoji + drop shadow.
+*/
+
+:root {
+  --caps-button-gradient: linear-gradient(180deg, rgba(28,18,14,.96) 0%, rgba(30,14,27,.94) 55%, rgba(61,18,66,.86) 100%);
+  --caps-button-gradient-hover: linear-gradient(180deg, rgba(61,18,66,.98) 0%, rgba(95,30,102,.96) 100%);
+  --caps-doc-pill-gradient: linear-gradient(180deg, rgba(54,53,50,.92) 0%, rgba(38,34,31,.91) 48%, rgba(95,30,102,.34) 100%);
+  --caps-panel-header-gradient: linear-gradient(90deg, rgba(95,30,102,.86) 0%, rgba(28,18,14,.92) 48%, rgba(16,10,9,.95) 100%);
+  --caps-tab-gradient: linear-gradient(180deg, rgba(95,30,102,.95) 0%, rgba(71,20,77,.92) 50%, rgba(28,18,14,.82) 100%);
+  --link-color: #8d43a0;
+  --link-text-decoration: underline;
+}
+
+/* Links should never fall back to browser blue */
+a,
+.editor a,
+.settings-panel a,
+.help-panel a,
+.block-panel a,
+.project-settings-panel a,
+.preview-card a,
+.design-preview a {
+  color: #8d43a0 !important;
+  text-decoration: underline !important;
+  text-underline-offset: .16em;
+}
+
+a:visited,
+.editor a:visited,
+.settings-panel a:visited,
+.help-panel a:visited {
+  color: #8d43a0 !important;
+}
+
+a:hover,
+.editor a:hover,
+.settings-panel a:hover,
+.help-panel a:hover {
+  color: #fff0ce !important;
+  text-decoration-color: #8d43a0 !important;
+}
+
+/* Real buttons use a subtle gradient rather than flat colour */
+button,
+.tool-menu-trigger,
+.direct-command,
+.writing-room-button,
+.settings-tab,
+.settings-menu button,
+.settings-panel .pill-button,
+.block-panel button,
+.caps-dialog button,
+.project-settings-panel button,
+.filing-action-button,
+.filing-mini-action,
+.document-card-actions button,
+.filing-group-actions button,
+.lock-button,
+.table-edit-toolbar button,
+.emoji-copy,
+.emoji-upload,
+.emoji-clear,
+.emoji-close {
+  background: var(--caps-button-gradient) !important;
+  border-color: var(--caps-line-brown) !important;
+  color: var(--caps-regular-text) !important;
+  box-shadow: var(--caps-button-shadow) !important;
+}
+
+button:hover,
+button:focus-visible,
+.tool-menu-trigger:hover,
+.direct-command:hover,
+.writing-room-button:hover,
+.settings-tab:hover,
+.settings-menu button:hover,
+.settings-menu button[aria-pressed="true"],
+.settings-panel .pill-button:hover,
+.block-panel button:hover,
+.caps-dialog button:hover,
+.project-settings-panel button:hover,
+.filing-action-button:hover,
+.filing-mini-action:hover,
+.document-card-actions button:hover,
+.filing-group-actions button:hover,
+.lock-button:hover,
+.table-edit-toolbar button:hover,
+.emoji-copy:hover,
+.emoji-upload:hover,
+.emoji-clear:hover,
+.emoji-close:hover {
+  background: var(--caps-button-gradient-hover) !important;
+  border-color: var(--caps-purple-outline) !important;
+  color: #fff0ce !important;
+}
+
+/* Purple gradient header bars for the floating UI family */
+.writing-room-panel > header,
+.settings-panel > header,
+.help-panel > header,
+.block-panel > header,
+.project-settings-panel > header,
+.emoji-picker-header {
+  background: var(--caps-panel-header-gradient) !important;
+  border-bottom: 1px solid var(--caps-purple-outline) !important;
+  box-shadow: 0 10px 28px rgba(0,0,0,.36) !important;
+}
+
+/* Writing Room: emojis as bare icons with drop shadow, not circled/bordered buttons */
+.writing-room-panel > header .icon-button,
+.writing-room-panel .filing-group-actions button,
+.writing-room-panel .document-card-actions button,
+.writing-room-panel .lock-button,
+.writing-room-panel .sub-file-add,
+.writing-room-panel .filing-action-button,
+.writing-room-panel .filing-mini-action {
+  background: transparent !important;
+  border-color: transparent !important;
+  border-width: 0 !important;
+  box-shadow: none !important;
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,.70));
+  color: #fff0ce !important;
+}
+
+.writing-room-panel > header .icon-button:hover,
+.writing-room-panel .filing-group-actions button:hover,
+.writing-room-panel .document-card-actions button:hover,
+.writing-room-panel .lock-button:hover,
+.writing-room-panel .sub-file-add:hover,
+.writing-room-panel .filing-action-button:hover,
+.writing-room-panel .filing-mini-action:hover {
+  background: rgba(95,30,102,.28) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 0 0 1px rgba(141,67,160,.55), 0 0 16px rgba(95,30,102,.35) !important;
+}
+
+/* The actual folder/tab/document emojis should be just emoji with shadow */
+.folder-icon,
+.tab-icon,
+.card-icon,
+.sub-file-icon,
+.filing-jump-rail button span,
+.custom-inline-icon {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  filter: drop-shadow(0 3px 5px rgba(0,0,0,.82));
+}
+
+/* Filing Cabinet rows/pills get gradients */
+.writing-room-card > summary,
+.filing-doc-card > summary,
+.filing-folder > summary,
+.writing-room-card > summary {
+  background: var(--caps-doc-pill-gradient) !important;
+  border-radius: 13px !important;
+}
+
+.filing-tab > summary {
+  background: var(--caps-tab-gradient) !important;
+  border-radius: 13px !important;
+}
+
+.filing-folder > summary,
+.filing-tab > summary,
+.writing-room-card > summary {
+  box-shadow: var(--caps-button-shadow) !important;
+}
+
+.writing-room-card.is-active > summary,
+.filing-folder[open] > summary,
+.filing-tab[open] > summary {
+  border-color: var(--caps-purple-outline) !important;
+  box-shadow: var(--caps-pill-shadow) !important;
+}
+
+/* Menu icon panels: larger emoji, calmer text, two-row tile feel */
+.tool-menu-panel {
+  background: rgba(28,18,14,.94) !important;
+  border-color: var(--caps-purple-outline) !important;
+  box-shadow: 0 22px 62px rgba(0,0,0,.66), 0 0 0 1px rgba(95,30,102,.32) !important;
+}
+
+.tool-menu-panel button {
+  background: var(--caps-button-gradient) !important;
+  border-color: var(--caps-line-brown) !important;
+  color: var(--caps-regular-text) !important;
+  padding: .55rem .58rem .5rem !important;
+}
+
+.menu-tool-glyph {
+  font-size: 1.45rem !important;
+  line-height: 1 !important;
+  display: block;
+  margin-bottom: .18rem;
+  filter: drop-shadow(0 4px 5px rgba(0,0,0,.70));
+}
+
+.menu-tool-label {
+  font-weight: 500 !important;
+  color: rgba(199,176,142,.92) !important;
+  letter-spacing: .08em !important;
+}
+
+/* Settings menu tabs become emoji+text pills */
+.settings-menu button {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  min-height: 2rem;
+  padding: .35rem .72rem;
+  font-weight: 500 !important;
+}
+
+/* Emoji Spark layout repair */
+.emoji-picker {
+  display: flex !important;
+  flex-direction: column !important;
+  width: min(94vw, 660px) !important;
+  max-height: min(82vh, 720px) !important;
+  background: rgba(28,18,14,.88) !important;
+  border-color: var(--caps-purple-outline) !important;
+  box-shadow: 0 28px 80px rgba(0,0,0,.70), 0 0 0 1px rgba(95,30,102,.42) !important;
+}
+
+.emoji-picker-header {
+  flex: 0 0 auto;
+  display: flex !important;
+  align-items: center;
+  justify-content: space-between;
+  padding: .6rem .75rem !important;
+  color: #fff0ce !important;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+.emoji-search-row {
+  flex: 0 0 auto;
+  display: grid !important;
+  grid-template-columns: auto auto auto minmax(12rem, 1fr) !important;
+  gap: .45rem !important;
+  align-items: center;
+  padding: .6rem .7rem !important;
+  background: rgba(16,10,9,.72) !important;
+  border-bottom: 1px solid rgba(97,82,67,.55);
+}
+
+.emoji-search-row .emoji-search {
+  min-width: 0;
+  width: 100%;
+}
+
+.emoji-section {
+  margin: .55rem .7rem !important;
+  background: rgba(28,18,14,.60) !important;
+  border-color: rgba(97,82,67,.75) !important;
+  box-shadow: var(--caps-card-shadow) !important;
+}
+
+.emoji-library {
+  flex: 1 1 auto;
+  max-height: none !important;
+  overflow: auto !important;
+  margin-bottom: .75rem !important;
+}
+
+.emoji-grid {
+  grid-template-columns: repeat(auto-fill, minmax(2rem, 1fr)) !important;
+  gap: .34rem !important;
+}
+
+.emoji-grid button,
+.custom-emoji-slot {
+  width: 2rem !important;
+  min-width: 2rem !important;
+  height: 2rem !important;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: rgba(16,10,9,.76) !important;
+  border: 1px solid rgba(97,82,67,.78) !important;
+  border-radius: 10px !important;
+  font-size: 1.12rem !important;
+  padding: 0 !important;
+}
+
+.emoji-grid button img,
+.custom-emoji-slot img {
+  max-width: 1.45rem !important;
+  max-height: 1.45rem !important;
+  width: auto !important;
+  height: auto !important;
+  object-fit: contain !important;
+  display: block;
+  pointer-events: none;
+}
+
+.emoji-grid button.is-selected {
+  border-color: var(--caps-purple-outline) !important;
+  box-shadow: 0 0 0 1px rgba(141,67,160,.85), 0 0 14px rgba(95,30,102,.44) !important;
+}
+
+.emoji-grid button:hover {
+  transform: scale(1.14) !important;
+  z-index: 3;
+}
+
+/* Stronger gradient on panel/card headers inside Settings and Help */
+.settings-card > summary,
+.element-designer-card > summary,
+.project-settings-section > summary,
+.help-content h3 {
+  background: linear-gradient(90deg, rgba(95,30,102,.20), rgba(28,18,14,.12)) !important;
+  border-radius: 12px;
+}
+
+/* Keep native scrollbars out of the custom filing rail look */
+.writing-room-cards {
+  scrollbar-width: none !important;
+}
+
+.writing-room-cards::-webkit-scrollbar {
+  display: none !important;
+}

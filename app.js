@@ -1,11 +1,11 @@
-/* Capsanoto app.js v5.9.3 purple glow card theme. */
+/* Capsanoto app.js v5.9.4 emoji gradient polish. */
 const STORAGE_KEY = "forever-bound-writing-room-v2";
 const AUTH_KEY = "forever-bound-authenticated";
 const AUTH_CONFIG_PATH = "config/auth.json";
 const CONTENT_PATH = "content/documents.json";
 const EDITOR_ENTRY = "editor.html";
 const AUTOSAVE_DELAY = 600;
-const DESIGN_KEY = "capsanoto-design-settings-v5-9-3-purple-glow-card-theme";
+const DESIGN_KEY = "capsanoto-design-settings-v5-9-4-emoji-gradient-polish";
 const HELP_KEY = "capsanoto-help-html-v1";
 const WRITING_ROOM_LAYOUT_KEY = "capsanoto-writing-room-layout-v5-8-6";
 const PANEL_LAYOUT_KEY = "capsanoto-floating-panel-layouts-v5-9-0";
@@ -26,7 +26,7 @@ const GOOGLE_DRIVE_API_ROOT = "https://www.googleapis.com/drive/v3";
 const GOOGLE_DRIVE_UPLOAD_ROOT = "https://www.googleapis.com/upload/drive/v3";
 const GOOGLE_DRIVE_ROOT_FOLDER_NAME = "Capsanoto";
 const GOOGLE_DRIVE_FOLDER_MIME = "application/vnd.google-apps.folder";
-const CAPSANOTO_THEME_VERSION = "purple-glow-leather-v5-9-3";
+const CAPSANOTO_THEME_VERSION = "purple-glow-leather-v5-9-4";
 const FILING_HIERARCHY_VERSION = 1;
 
 const CAPSANOTO_PALETTE = {
@@ -5621,7 +5621,7 @@ function capsanotoForcedExtraDesignSettings() {
     h1Color: palette.parchment,
     h2Color: palette.parchment,
     h3Color: palette.parchment,
-    linkColor: palette.parchment,
+    linkColor: palette.purpleBright,
     linkPillBg: palette.purpleGlass,
     linkPillBorder: palette.purpleBright,
     linkPillText: palette.parchment,
@@ -5819,7 +5819,7 @@ function applyThemeToCurrentWritingRoom() {
 
 function runLayoutRecovery(reason = "") {
   document.body?.classList.add("capsanoto-v586-layout");
-  document.querySelectorAll(".app-version").forEach((node) => { node.textContent = "v5.9.3"; });
+  document.querySelectorAll(".app-version").forEach((node) => { node.textContent = "v5.9.4"; });
   try { updateWritingSurfaceMetrics(); } catch (error) { console.warn("Writing surface metric update failed", error); }
   try { updateWritingAssistRailPosition(); } catch (error) { console.warn("Writing assist rail update failed", error); }
   const toolbar = document.querySelector(".table-edit-toolbar");
