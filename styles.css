@@ -1179,7 +1179,7 @@ details.settings-card:not([open]) > *:not(summary), details.element-designer-car
 }
 
 
-/* Capsanoto v5.8.9 custom table toolbar icons */
+/* Capsanoto v5.9.0 layout memory and menu refinement */
 .editable-table {
   position: relative;
 }
@@ -1205,7 +1205,7 @@ details.settings-card:not([open]) > *:not(summary), details.element-designer-car
 }
 
 
-/* Capsanoto v5.8.9 custom table toolbar icons */
+/* Capsanoto v5.9.0 layout memory and menu refinement */
 .table-edit-toolbar {
   align-items: center;
   justify-content: flex-start;
@@ -1270,7 +1270,7 @@ details.settings-card:not([open]) > *:not(summary), details.element-designer-car
 }
 
 
-/* Capsanoto v5.8.9 custom table toolbar icons */
+/* Capsanoto v5.9.0 layout memory and menu refinement */
 .table-edit-toolbar .table-tool-row {
   gap: .26rem;
 }
@@ -1298,4 +1298,158 @@ details.settings-card:not([open]) > *:not(summary), details.element-designer-car
 .table-edit-toolbar button[data-table-tool="delete-row"]:hover,
 .table-edit-toolbar button[data-table-tool="delete-col"]:hover {
   background: color-mix(in srgb, var(--danger, #c55222) 65%, var(--button));
+}
+
+
+/* Capsanoto v5.9.0 toolbar/menu/table/settings refinement */
+
+/* Top and dropdown command text: bigger icons, softer non-bold labels. */
+.command-glyph {
+  font-size: 1.35rem;
+  line-height: 1;
+  margin-bottom: .12rem;
+}
+
+.command-label {
+  font-weight: 400 !important;
+  color: color-mix(in srgb, var(--command-bar-text) 82%, #9b8f84);
+  letter-spacing: .08em;
+}
+
+.tool-menu-panel {
+  grid-auto-rows: minmax(3.05rem, auto);
+  gap: .42rem;
+}
+
+.tool-menu-panel button {
+  min-height: 3.05rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: .14rem;
+  padding: .38rem .45rem .42rem;
+  font-weight: 400 !important;
+  color: color-mix(in srgb, var(--dropdown-button-text) 76%, #9b8f84);
+}
+
+.menu-tool-glyph {
+  display: block;
+  font-size: 1.46rem;
+  line-height: 1;
+  margin-bottom: .08rem;
+  color: color-mix(in srgb, var(--dropdown-button-text) 88%, var(--dynamic-text));
+}
+
+.menu-tool-glyph strong,
+.menu-tool-glyph em {
+  font-weight: 500;
+}
+
+.menu-tool-label {
+  display: block;
+  font-size: .7rem;
+  line-height: 1.05;
+  font-weight: 400 !important;
+  letter-spacing: .08em;
+  color: color-mix(in srgb, var(--dropdown-button-text) 72%, #8f8278);
+}
+
+/* Table toolbar: icon artwork should read as the control, not sit inside another circle. */
+.table-edit-toolbar {
+  gap: .18rem;
+  padding: .28rem .34rem;
+}
+
+.table-edit-toolbar .table-edit-button,
+.table-edit-toolbar .table-tool-row button {
+  position: static;
+  width: 2.12rem;
+  min-width: 2.12rem;
+  height: 2.12rem;
+  padding: .05rem;
+  border: 0 !important;
+  border-radius: 0;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: var(--caps-parchment);
+  font-size: 1.25rem;
+}
+
+.table-edit-toolbar .table-edit-button:hover,
+.table-edit-toolbar .table-tool-row button:hover {
+  transform: scale(1.08);
+  background: transparent !important;
+  color: var(--dynamic-text);
+}
+
+.table-tool-icon {
+  width: 1.72rem;
+  height: 1.72rem;
+  object-fit: contain;
+}
+
+.table-edit-toolbar [data-table-tool="delete-table"] {
+  color: var(--danger, #c55222);
+}
+
+.table-edit-toolbar input[type="color"] {
+  margin-left: .1rem;
+}
+
+/* Settings design card: use the left-side space instead of a long one-column form. */
+.settings-panel {
+  max-width: min(94vw, 1050px);
+}
+
+.design-editor-grid {
+  grid-template-columns: minmax(0, 1fr) minmax(250px, 320px);
+}
+
+.design-controls .element-designer-card[open] {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(210px, 1fr));
+  gap: .42rem .75rem;
+  align-items: start;
+}
+
+.design-controls .element-designer-card[open] > summary,
+.design-controls .element-designer-card[open] > .design-section-note,
+.design-controls .element-designer-card[open] > p,
+.design-controls .element-designer-card[open] > h4,
+.design-controls .element-designer-card[open] > button {
+  grid-column: 1 / -1;
+}
+
+.design-controls .element-designer-card[open] > label {
+  min-width: 0;
+  grid-template-columns: minmax(7.2rem, 1fr) minmax(4.6rem, 9rem);
+  gap: .3rem;
+}
+
+.design-controls .element-designer-card[open] > .toggle-pill {
+  justify-self: start;
+}
+
+.design-controls input[type="color"],
+.tcard-style-grid input[type="color"],
+.table-tool-row input[type="color"] {
+  border-width: 1px !important;
+  border-color: var(--caps-line-soft, #6f6258) !important;
+  box-shadow: none !important;
+}
+
+/* Resize memory works best when native resize handles are available. */
+.settings-panel,
+.help-panel,
+.project-settings-panel,
+.block-panel {
+  resize: both;
+  overflow: hidden;
+}
+
+@media (max-width: 900px) {
+  .design-controls .element-designer-card[open] {
+    grid-template-columns: 1fr;
+  }
 }

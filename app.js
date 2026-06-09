@@ -1,13 +1,15 @@
-/* Capsanoto app.js v5.8.9 custom table toolbar icons. */
+/* Capsanoto app.js v5.9.0 layout memory and menu refinement. */
 const STORAGE_KEY = "forever-bound-writing-room-v2";
 const AUTH_KEY = "forever-bound-authenticated";
 const AUTH_CONFIG_PATH = "config/auth.json";
 const CONTENT_PATH = "content/documents.json";
 const EDITOR_ENTRY = "editor.html";
 const AUTOSAVE_DELAY = 600;
-const DESIGN_KEY = "capsanoto-design-settings-v5-8-9-custom-table-icons";
+const DESIGN_KEY = "capsanoto-design-settings-v5-9-0-layout-memory-menu-refine";
 const HELP_KEY = "capsanoto-help-html-v1";
 const WRITING_ROOM_LAYOUT_KEY = "capsanoto-writing-room-layout-v5-8-6";
+const PANEL_LAYOUT_KEY = "capsanoto-floating-panel-layouts-v5-9-0";
+const WRITING_SURFACE_LAYOUT_KEY = "capsanoto-writing-surface-layout-v5-9-0";
 const FAVORITE_EMOJI_KEY = "capsanoto-favorite-emojis-v1";
 const CUSTOM_EMOJI_KEY = "capsanoto-custom-emojis-v1";
 const FOLDER_MODE_DB = "capsanoto-folder-mode-db-v1";
@@ -24,7 +26,7 @@ const GOOGLE_DRIVE_API_ROOT = "https://www.googleapis.com/drive/v3";
 const GOOGLE_DRIVE_UPLOAD_ROOT = "https://www.googleapis.com/upload/drive/v3";
 const GOOGLE_DRIVE_ROOT_FOLDER_NAME = "Capsanoto";
 const GOOGLE_DRIVE_FOLDER_MIME = "application/vnd.google-apps.folder";
-const CAPSANOTO_THEME_VERSION = "warm-copper-clean-v5-8-9";
+const CAPSANOTO_THEME_VERSION = "warm-copper-clean-v5-9-0";
 const FILING_HIERARCHY_VERSION = 1;
 
 const CAPSANOTO_PALETTE = {
@@ -692,6 +694,8 @@ function bindEditorEvents() {
   if (window.ResizeObserver && els.writingSurfaceShell) {
     new ResizeObserver(updateWritingSurfaceMetrics).observe(els.writingSurfaceShell);
   }
+  bindFloatingLayoutMemory();
+  applyWritingSurfaceLayout();
   els.writingRoomPanelHeader.addEventListener("pointerdown", startWritingRoomDrag);
   window.addEventListener("pointermove", moveWritingRoomPanel);
   window.addEventListener("pointerup", stopWritingRoomDrag);
@@ -1104,6 +1108,7 @@ function stopWritingSurfaceResize(event) {
   try { els.writingSurfaceGrip?.releasePointerCapture?.(writingSurfaceResizeState.pointerId); } catch {}
   writingSurfaceResizeState = null;
   document.body.classList.remove("is-resizing-writing-surface");
+  saveWritingSurfaceLayout();
   updateWritingSurfaceMetrics();
   queueLocalSave?.();
 }
@@ -1863,6 +1868,7 @@ function toggleSettingsPanel(show) {
   els.settingsPanel.removeAttribute("hidden");
   els.settingsPanel.style.removeProperty("display");
   els.settingsPanel.style.removeProperty("z-index");
+  applyPanelLayout(els.settingsPanel);
   els.settingsButton?.setAttribute("aria-expanded", "true");
   renderExportSourceSelect();
   renderExportQueue();
@@ -2607,7 +2613,103 @@ function movePanelDrag(event) {
   panel.style.right = "auto";
 }
 
-function stopPanelDrag() { state.panelDrag = null; }
+function stopPanelDrag() {
+  if (state.panelDrag?.panel) savePanelLayout(state.panelDrag.panel);
+  state.panelDrag = null;
+}
+
+function layoutMemoryPanels() {
+  return [els.settingsPanel, els.helpPanel, els.projectSettingsPanel, els.blockPanel].filter(Boolean);
+}
+
+function readPanelLayouts() {
+  try {
+    return JSON.parse(localStorage.getItem(PANEL_LAYOUT_KEY) || "{}") || {};
+  } catch (error) {
+    console.warn("Ignoring unreadable floating panel layout memory", error);
+    localStorage.removeItem(PANEL_LAYOUT_KEY);
+    return {};
+  }
+}
+
+function writePanelLayouts(layouts) {
+  localStorage.setItem(PANEL_LAYOUT_KEY, JSON.stringify(layouts));
+}
+
+function panelLayoutId(panel) {
+  return panel?.id || "";
+}
+
+function savePanelLayout(panel) {
+  const id = panelLayoutId(panel);
+  if (!id || panel.hidden) return;
+  const rect = panel.getBoundingClientRect();
+  if (rect.width < 40 || rect.height < 40) return;
+  const layouts = readPanelLayouts();
+  layouts[id] = {
+    left: Math.round(rect.left),
+    top: Math.round(rect.top),
+    width: Math.round(rect.width),
+    height: Math.round(rect.height),
+  };
+  writePanelLayouts(layouts);
+}
+
+function applyPanelLayout(panel) {
+  const id = panelLayoutId(panel);
+  if (!id) return;
+  const layout = readPanelLayouts()[id];
+  if (!layout) return;
+  const maxWidth = Math.max(320, window.innerWidth - 16);
+  const maxHeight = Math.max(260, window.innerHeight - 16);
+  if (layout.width) panel.style.width = `${Math.max(280, Math.min(maxWidth, layout.width))}px`;
+  if (layout.height) panel.style.height = `${Math.max(240, Math.min(maxHeight, layout.height))}px`;
+  if (Number.isFinite(layout.left)) panel.style.left = `${Math.max(8, Math.min(window.innerWidth - 80, layout.left))}px`;
+  if (Number.isFinite(layout.top)) panel.style.top = `${Math.max(8, Math.min(window.innerHeight - 80, layout.top))}px`;
+  panel.style.right = "auto";
+}
+
+function bindFloatingLayoutMemory() {
+  if (document.documentElement.dataset.panelLayoutMemoryBound === "true") return;
+  document.documentElement.dataset.panelLayoutMemoryBound = "true";
+  layoutMemoryPanels().forEach((panel) => applyPanelLayout(panel));
+  if (window.ResizeObserver) {
+    const timers = new WeakMap();
+    const observer = new ResizeObserver((entries) => {
+      entries.forEach((entry) => {
+        const panel = entry.target;
+        clearTimeout(timers.get(panel));
+        timers.set(panel, setTimeout(() => savePanelLayout(panel), 350));
+      });
+    });
+    layoutMemoryPanels().forEach((panel) => observer.observe(panel));
+  }
+}
+
+function saveWritingSurfaceLayout() {
+  if (!els.writingSurfaceShell) return;
+  const rect = els.writingSurfaceShell.getBoundingClientRect();
+  if (rect.width < 200 || rect.height < 200) return;
+  localStorage.setItem(WRITING_SURFACE_LAYOUT_KEY, JSON.stringify({
+    width: Math.round(rect.width),
+    height: Math.round(rect.height),
+  }));
+}
+
+function applyWritingSurfaceLayout() {
+  if (!els.writingSurfaceShell) return;
+  try {
+    const layout = JSON.parse(localStorage.getItem(WRITING_SURFACE_LAYOUT_KEY) || "null");
+    if (!layout) return;
+    if (layout.width) els.writingSurfaceShell.style.setProperty("width", `${Math.max(520, Math.min(window.innerWidth - 32, layout.width))}px`, "important");
+    if (layout.height) els.writingSurfaceShell.style.setProperty("height", `${Math.max(420, Math.min(window.innerHeight - 96, layout.height))}px`, "important");
+    els.writingSurfaceShell.style.setProperty("max-width", "calc(100vw - 2rem)", "important");
+    els.writingSurfaceShell.style.setProperty("max-height", "calc(100vh - var(--top-bar-height, 64px) - 3rem)", "important");
+  } catch (error) {
+    console.warn("Ignoring unreadable writing surface layout memory", error);
+    localStorage.removeItem(WRITING_SURFACE_LAYOUT_KEY);
+  }
+}
 
 
 function openSubnotoWindow() {
@@ -2974,7 +3076,10 @@ function toggleHelpEditMode() {
 
 function toggleHelpPanel(show) {
   els.helpPanel.hidden = !show;
-  if (show) els.helpPanel.style.zIndex = "70";
+  if (show) {
+    els.helpPanel.style.zIndex = "70";
+    applyPanelLayout(els.helpPanel);
+  }
 }
 
 function hydrateIconButtons() {
@@ -2999,7 +3104,10 @@ function hydrateIconButtons() {
 
 function toggleBlockPanel(show) {
   els.blockPanel.hidden = !show;
-  if (show) els.blockIdInput.focus();
+  if (show) {
+    applyPanelLayout(els.blockPanel);
+    els.blockIdInput.focus();
+  }
 }
 
 function saveBlock() {
@@ -5618,7 +5726,7 @@ function applyThemeToCurrentWritingRoom() {
 
 function runLayoutRecovery(reason = "") {
   document.body?.classList.add("capsanoto-v586-layout");
-  document.querySelectorAll(".app-version").forEach((node) => { node.textContent = "v5.8.9"; });
+  document.querySelectorAll(".app-version").forEach((node) => { node.textContent = "v5.9.0"; });
   try { updateWritingSurfaceMetrics(); } catch (error) { console.warn("Writing surface metric update failed", error); }
   try { updateWritingAssistRailPosition(); } catch (error) { console.warn("Writing assist rail update failed", error); }
   const toolbar = document.querySelector(".table-edit-toolbar");
