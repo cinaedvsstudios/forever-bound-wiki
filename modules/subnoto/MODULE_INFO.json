@@ -1,0 +1,15 @@
+{
+  "moduleId": "subnoto",
+  "displayName": "Subnoto",
+  "convertedFor": "Capsanoto",
+  "sourceType": "Chrome extension",
+  "version": "1.0.0-capsanoto",
+  "entry": "modules/subnoto/subnoto.module.js",
+  "buttonSelector": "[data-capsanoto-tool=\"subnoto\"]",
+  "apiGlobal": "window.CapsanotoSubnoto",
+  "storage": [
+    "capsanoto_subnoto_notes_v1",
+    "capsanoto_subnoto_dark_mode_v1",
+    "capsanoto_subnoto_layout_v1"
+  ]
+}

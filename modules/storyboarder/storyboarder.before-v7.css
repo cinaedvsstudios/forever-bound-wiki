@@ -230,48 +230,26 @@ h1 { margin: 2px 0 0; font-size: 30px; line-height: 1; }
 .left-panel {
   height: 100%;
   min-height: 0;
-  padding: 14px 12px 24px;
+  padding: 16px 14px 24px;
   overflow-y: auto;
   overflow-x: hidden;
   background: rgba(16, 7, 17, 0.86);
   border-right: 1px solid rgba(255,181,119,0.22);
   box-shadow: 10px 0 24px rgba(0,0,0,0.34), inset -1px 0 0 rgba(255,255,255,0.03);
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  align-content: start;
-  gap: 8px;
 }
 .nav-button {
   width: 100%;
-  min-height: 72px;
-  margin: 0;
-  padding: 9px 6px 8px;
+  min-height: 44px;
+  margin: 6px 0;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 5px;
-  font-size: 12px;
-  line-height: 1.05;
-  text-align: center;
-}
-.nav-button .nav-icon {
-  display: block;
-  font-size: 22px;
-  line-height: 1;
-  filter: drop-shadow(0 0 6px rgba(244, 91, 206, 0.25));
-}
-.nav-button .nav-label {
-  display: block;
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  gap: 8px;
+  font-size: 16px;
 }
 .nav-button.active { background: linear-gradient(180deg, rgba(119, 34, 122, 0.92), rgba(55, 23, 70, 0.98)); border-color: var(--pink); box-shadow: var(--glow); }
 .search-card {
-  grid-column: 1 / -1;
-  margin: 8px 0 6px;
+  margin: 14px 0;
   padding: 12px;
   border: 1px solid rgba(255,181,119,0.22);
   border-radius: 22px;
@@ -350,21 +328,8 @@ input:focus, textarea:focus { border-color: var(--pink); box-shadow: var(--glow)
   font-size: 26px;
   background: linear-gradient(180deg, rgba(106, 58, 50, 0.92), rgba(61, 29, 48, 0.98));
 }
-.scene-code-line {
-  font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 11px;
-  letter-spacing: 0.06em;
-  font-weight: 800;
-  text-shadow: none;
-}
 .scene-title-text h4 { margin: 1px 0 5px; font-size: 22px; }
-.scene-subline {
-  color: var(--muted);
-  font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 13px;
-  letter-spacing: 0.03em;
-  margin-top: 3px;
-}
+.scene-subline { color: var(--muted); font-size: 14px; margin-top: 3px; }
 .scene-summary { margin: 12px 0 0; color: #f7dcca; font-size: 17px; line-height: 1.45; }
 .scene-actions-row { display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; }
 .scene-icon-button {
@@ -584,7 +549,7 @@ input:focus, textarea:focus { border-color: var(--pink); box-shadow: var(--glow)
   z-index: 35; grid-template-columns: 1fr; }
   .jump-nav { min-width: 0; overflow-x: auto; grid-template-columns: repeat(5, 132px); }
   .workspace { grid-template-columns: 1fr; }
-  .left-panel { height: auto; max-height: 34vh; display: grid; grid-template-columns: repeat(auto-fit, minmax(104px, 1fr)); gap: 8px; }
+  .left-panel { height: auto; max-height: 34vh; display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 8px; }
   .search-card, .validation-list { grid-column: 1 / -1; }
 }
 
@@ -609,7 +574,3 @@ input:focus, textarea:focus { border-color: var(--pink); box-shadow: var(--glow)
 .scene-stage::-webkit-scrollbar, .left-panel::-webkit-scrollbar { width: 12px; height: 12px; }
 .scene-stage::-webkit-scrollbar-thumb, .left-panel::-webkit-scrollbar-thumb { background: rgba(255,181,119,0.32); border-radius: 20px; border: 3px solid rgba(16,7,17,0.9); }
 .scene-stage::-webkit-scrollbar-track, .left-panel::-webkit-scrollbar-track { background: rgba(0,0,0,0.18); }
-
-
-/* v7 sidebar + scene readability refinements */
-.validation-list { grid-column: 1 / -1; }
