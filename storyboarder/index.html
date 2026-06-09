@@ -37,27 +37,38 @@
       </div>
     </header>
 
-    <section class="episode-hero">
-      <div class="episode-title-row">
-        <div>
-          <div class="episode-number" id="episodeNumber">Episode 01</div>
+    <section class="episode-hero compact-hero">
+      <div class="episode-title-row compact-title-row">
+        <div class="episode-title-block">
+          <div class="episode-meta-line">
+            <span class="episode-number" id="episodeNumber">Episode 01</span>
+            <div class="custom-status" id="episodeStatusWidget">
+              <button id="episodeStatusButton" class="status-pill" type="button" aria-haspopup="listbox" aria-expanded="false">Not Started ▾</button>
+              <div id="episodeStatusMenu" class="status-menu hidden" role="listbox" aria-label="Episode status"></div>
+            </div>
+          </div>
           <h2 id="episodeTitle">The Curse Begins</h2>
         </div>
-        <div class="episode-status-wrap">
-          <label for="episodeStatus">Episode status</label>
-          <select id="episodeStatus"></select>
-        </div>
+        <nav class="jump-nav compact-jump-nav" id="jumpNav" aria-label="Episode jump navigator"></nav>
       </div>
-
-      <nav class="jump-nav" id="jumpNav" aria-label="Episode jump navigator"></nav>
     </section>
 
     <div class="workspace">
       <aside class="left-panel">
+        <section class="panel-card view-card">
+          <h3>View</h3>
+          <div class="view-switch" role="group" aria-label="Storyboarder view mode">
+            <button type="button" data-view-mode="overview">Overview</button>
+            <button type="button" data-view-mode="act">Act view</button>
+            <button type="button" data-view-mode="scene">Scene view</button>
+          </div>
+        </section>
+
         <section class="panel-card">
           <h3>Controls</h3>
           <button id="btnFolderPlan" type="button" class="wide-button">Show folder plan</button>
           <button id="btnCreateFolders" type="button" class="wide-button">Create folders via HDD API</button>
+          <button id="btnOpenEffectsLibrary" type="button" class="wide-button">Effects library</button>
           <button id="btnClearLocal" type="button" class="wide-button danger">Clear local draft</button>
         </section>
 
@@ -66,12 +77,6 @@
           <input id="sceneSearch" type="search" placeholder="Search scene title, location, notes..." />
           <label for="statusFilter">Status filter</label>
           <select id="statusFilter"></select>
-        </section>
-
-        <section class="panel-card">
-          <h3>Episode effects</h3>
-          <div id="episodeEffects" class="effects-list"></div>
-          <button id="btnAddEpisodeEffect" type="button" class="wide-button small">Add effect</button>
         </section>
 
         <section class="panel-card validation-card">

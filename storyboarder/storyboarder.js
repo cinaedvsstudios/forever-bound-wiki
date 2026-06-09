@@ -18,6 +18,7 @@
     scriptName: localStorage.getItem(SCRIPT_STORAGE_KEY) || '',
     mediaRuntime: new Map(),
     validation: [],
+    viewMode: 'scene',
     filter: {
       query: '',
       status: 'All'
@@ -29,7 +30,8 @@
     episodeSelect: document.getElementById('episodeSelect'),
     episodeNumber: document.getElementById('episodeNumber'),
     episodeTitle: document.getElementById('episodeTitle'),
-    episodeStatus: document.getElementById('episodeStatus'),
+    episodeStatusButton: document.getElementById('episodeStatusButton'),
+    episodeStatusMenu: document.getElementById('episodeStatusMenu'),
     jumpNav: document.getElementById('jumpNav'),
     sceneStage: document.getElementById('sceneStage'),
     jsonInput: document.getElementById('jsonInput'),
@@ -39,10 +41,10 @@
     btnFolderPlan: document.getElementById('btnFolderPlan'),
     btnCreateFolders: document.getElementById('btnCreateFolders'),
     btnClearLocal: document.getElementById('btnClearLocal'),
-    btnAddEpisodeEffect: document.getElementById('btnAddEpisodeEffect'),
+    btnOpenEffectsLibrary: document.getElementById('btnOpenEffectsLibrary'),
+    viewButtons: Array.from(document.querySelectorAll('[data-view-mode]')),
     sceneSearch: document.getElementById('sceneSearch'),
     statusFilter: document.getElementById('statusFilter'),
-    episodeEffects: document.getElementById('episodeEffects'),
     validationList: document.getElementById('validationList'),
     scriptWindow: document.getElementById('scriptWindow'),
     scriptWindowHeader: document.getElementById('scriptWindowHeader'),
@@ -366,7 +368,23 @@
 
     el.episodeNumber.textContent = `Episode ${String(ep.episodeNumber || '1').padStart(2, '0')}`;
     el.episodeTitle.textContent = ep.episodeTitle || 'Untitled Episode';
-    el.episodeStatus.innerHTML = STATUSES.map(status => `<option ${status === ep.status ? 'selected' : ''}>${status}</option>`).join('');
+    el.episodeStatusButton.textContent = `${ep.status || 'Not Started'} ▾`;
+    el.episodeStatusButton.setAttribute('aria-expanded', el.episodeStatusMenu.classList.contains('hidden') ? 'false' : 'true');
+    el.episodeStatusMenu.innerHTML = '';
+
+    STATUSES.forEach(status => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.role = 'option';
+      button.className = status === ep.status ? 'active' : '';
+      button.textContent = status;
+      button.addEventListener('click', () => {
+        state.project.episode.status = status;
+        el.episodeStatusMenu.classList.add('hidden');
+        render();
+      });
+      el.episodeStatusMenu.appendChild(button);
+    });
   }
 
   function renderJumpNav() {
@@ -393,7 +411,7 @@
 
   function renderLeftPanel() {
     el.statusFilter.innerHTML = ['All', ...STATUSES].map(status => `<option ${status === state.filter.status ? 'selected' : ''}>${status}</option>`).join('');
-    renderEffects();
+    el.viewButtons.forEach(button => button.classList.toggle('active', button.dataset.viewMode === state.viewMode));
     renderValidation();
   }
 
@@ -425,6 +443,22 @@
 
   function renderScenes() {
     el.sceneStage.innerHTML = '';
+    el.sceneStage.dataset.viewMode = state.viewMode;
+
+    if (state.viewMode === 'overview') {
+      renderOverviewView();
+      return;
+    }
+
+    if (state.viewMode === 'act') {
+      renderActView();
+      return;
+    }
+
+    renderSceneView();
+  }
+
+  function renderSceneView() {
     state.project.acts.forEach(act => {
       const section = document.createElement('section');
       section.id = act.actId;
@@ -452,6 +486,116 @@
 
       el.sceneStage.appendChild(section);
     });
+  }
+
+  function renderOverviewView() {
+    const wrap = document.createElement('div');
+    wrap.className = 'overview-board';
+    state.project.acts.forEach(act => {
+      const card = document.createElement('article');
+      card.className = 'overview-act-card';
+      card.id = act.actId;
+      const scenes = act.scenes || [];
+      card.innerHTML = `
+        <div class="overview-act-head">
+          <div>
+            <h3>${escapeHtml(act.actLabel)}${act.actTitle ? ` — ${escapeHtml(act.actTitle)}` : ''}</h3>
+            <p>${escapeHtml(act.shortDescription || `${scenes.length} scenes`)}</p>
+          </div>
+          <button type="button" data-act-open="${escapeHtml(act.actId)}">Open act</button>
+        </div>
+        <div class="overview-scene-strip"></div>
+      `;
+      const strip = card.querySelector('.overview-scene-strip');
+      if (!scenes.length) {
+        strip.innerHTML = '<div class="mini-scene empty-mini">No scenes yet</div>';
+      } else {
+        scenes.forEach(scene => strip.appendChild(renderMiniSceneBox(act, scene)));
+      }
+      card.querySelector('[data-act-open]').addEventListener('click', () => {
+        state.viewMode = 'act';
+        render();
+        document.getElementById(act.actId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+      wrap.appendChild(card);
+    });
+    el.sceneStage.appendChild(wrap);
+  }
+
+  function renderActView() {
+    state.project.acts.forEach(act => {
+      const section = document.createElement('section');
+      section.id = act.actId;
+      section.className = 'act-section act-board-section';
+      section.innerHTML = `
+        <div class="act-header">
+          <div>
+            <h3>${escapeHtml(act.actLabel)}${act.actTitle ? ` — ${escapeHtml(act.actTitle)}` : ''}</h3>
+            <p>${escapeHtml(act.shortDescription || act.folderName)}</p>
+          </div>
+          <span class="scene-count">${act.scenes.length} scene${act.scenes.length === 1 ? '' : 's'}</span>
+        </div>
+        <div class="act-scene-grid"></div>
+      `;
+      const grid = section.querySelector('.act-scene-grid');
+      if (!act.scenes.length) {
+        grid.innerHTML = '<div class="empty-state">No scenes yet.</div>';
+      } else {
+        act.scenes.filter(sceneMatchesFilter).forEach(scene => grid.appendChild(renderActSceneCard(act, scene)));
+      }
+      el.sceneStage.appendChild(section);
+    });
+  }
+
+  function renderMiniSceneBox(act, scene) {
+    const box = document.createElement('button');
+    box.type = 'button';
+    box.className = 'mini-scene';
+    const thumb = getFirstImageRuntimeUrl(scene);
+    if (thumb) box.style.setProperty('--mini-thumb', `url('${thumb}')`);
+    box.innerHTML = `
+      <span class="mini-visual">${thumb ? '' : sceneEmoji(scene)}</span>
+      <strong>${escapeHtml(getSceneCode(scene) || '—')}</strong>
+      <small>${escapeHtml(scene.sceneTitle)}</small>
+    `;
+    box.addEventListener('click', () => {
+      state.viewMode = 'scene';
+      render();
+      document.getElementById(scene.sceneId)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+    return box;
+  }
+
+  function renderActSceneCard(act, scene) {
+    const card = document.createElement('article');
+    card.className = `act-scene-card${sceneMatchesFilter(scene) ? '' : ' hidden-by-filter'}`;
+    const thumb = getFirstImageRuntimeUrl(scene);
+    if (thumb) card.style.setProperty('--mini-thumb', `url('${thumb}')`);
+    card.innerHTML = `
+      <button type="button" class="act-scene-thumb" data-open-scene>${thumb ? '' : sceneEmoji(scene)}</button>
+      <div class="act-scene-info">
+        <strong>${escapeHtml(getSceneCode(scene) || '—')} · ${escapeHtml(scene.sceneTitle)}</strong>
+        <span>${escapeHtml(scene.slugLine || scene.location || scene.folderName)}</span>
+        <div class="act-card-actions">
+          <button type="button" data-script>Script</button>
+          <button type="button" data-folder>Folder</button>
+        </div>
+      </div>
+    `;
+    card.querySelector('[data-open-scene]').addEventListener('click', () => {
+      state.viewMode = 'scene';
+      render();
+      document.getElementById(scene.sceneId)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+    card.querySelector('[data-script]').addEventListener('click', () => openScriptPreview(scene));
+    card.querySelector('[data-folder]').addEventListener('click', () => revealSceneFolder(act, scene));
+    return card;
+  }
+
+  function getFirstImageRuntimeUrl(scene) {
+    const first = (scene.media?.images || [])[0];
+    if (!first) return '';
+    return state.mediaRuntime.get(first.id)?.objectUrl || '';
   }
 
   function sceneMatchesFilter(scene) {
@@ -482,11 +626,12 @@
     const characterLine = (scene.characters || []).slice(0, 6).join(', ');
 
     card.innerHTML = `
-      <div class="scene-main">
+      <div class="scene-main compact-scene-main">
         <div>
           <div class="scene-title-wrap">
-            <div class="scene-badge">${escapeHtml(code)}</div>
-            <div>
+            <div class="scene-emoji" title="Scene type">${sceneEmoji(scene)}</div>
+            <div class="scene-title-text">
+              <div class="scene-code-line">Scene ${escapeHtml(code)}</div>
               <h4>${escapeHtml(scene.sceneTitle)}</h4>
               <div class="scene-subline">${escapeHtml(scene.slugLine || scene.location || scene.folderName)}</div>
               ${characterLine ? `<div class="scene-subline">${escapeHtml(characterLine)}</div>` : ''}
@@ -494,7 +639,7 @@
           </div>
           ${scene.storySummary ? `<p class="scene-summary">${escapeHtml(scene.storySummary)}</p>` : ''}
         </div>
-        <div class="scene-tools">
+        <div class="scene-tools compact-tools">
           <label>Status</label>
           <select data-scene-control="status">
             ${STATUSES.map(status => `<option ${status === scene.status ? 'selected' : ''}>${status}</option>`).join('')}
@@ -503,15 +648,14 @@
             <button type="button" data-scene-control="script">Script</button>
             <button type="button" data-scene-control="folder">Folder</button>
           </div>
-          <label class="file-button subdued">
-            Add media
-            <input type="file" multiple data-scene-control="media" accept="image/*,video/*,audio/*,.blend,.txt,.md,.json" />
-          </label>
+          <div class="notes-hover">
+            <button type="button" class="notes-trigger">📝 Notes</button>
+            <div class="notes-popover" role="dialog" aria-label="Scene notes">
+              <label>Scene notes</label>
+              <textarea data-scene-control="notes" placeholder="Production notes, ideas, problems, reminders...">${escapeHtml(scene.notes || '')}</textarea>
+            </div>
+          </div>
         </div>
-      </div>
-      <div class="notes-area">
-        <label>Scene notes</label>
-        <textarea data-scene-control="notes" placeholder="Production notes, ideas, problems, reminders...">${escapeHtml(scene.notes || '')}</textarea>
       </div>
       <div class="media-strip" data-media-strip="${escapeHtml(scene.sceneId)}"></div>
     `;
@@ -528,7 +672,6 @@
 
     card.querySelector('[data-scene-control="script"]').addEventListener('click', () => openScriptPreview(scene));
     card.querySelector('[data-scene-control="folder"]').addEventListener('click', () => revealSceneFolder(act, scene));
-    card.querySelector('[data-scene-control="media"]').addEventListener('change', event => addMediaFiles(scene, event.target.files));
 
     renderMediaStrip(card.querySelector('[data-media-strip]'), scene);
     return card;
@@ -538,12 +681,32 @@
     container.innerHTML = '';
     const allMedia = getAllSceneMedia(scene);
 
-    const addTile = document.createElement('div');
-    addTile.className = 'add-media-tile';
-    addTile.innerHTML = `<span>Media boxes appear here after you add images, video, audio, or .blend files.</span>`;
-    container.appendChild(addTile);
-
     allMedia.forEach(media => container.appendChild(renderMediaTile(scene, media)));
+
+    const addTile = document.createElement('label');
+    addTile.className = 'add-media-tile drop-media-tile';
+    addTile.innerHTML = `
+      <input type="file" multiple accept="image/*,video/*,audio/*,.blend,.txt,.md,.json" />
+      <span class="drop-icon">🖼️</span>
+      <strong>Drop image here</strong>
+      <small>or click to add video, audio, .blend, notes</small>
+    `;
+    const input = addTile.querySelector('input');
+    input.addEventListener('change', event => {
+      addMediaFiles(scene, event.target.files);
+      event.target.value = '';
+    });
+    addTile.addEventListener('dragover', event => {
+      event.preventDefault();
+      addTile.classList.add('drag-over');
+    });
+    addTile.addEventListener('dragleave', () => addTile.classList.remove('drag-over'));
+    addTile.addEventListener('drop', event => {
+      event.preventDefault();
+      addTile.classList.remove('drag-over');
+      addMediaFiles(scene, event.dataTransfer?.files);
+    });
+    container.appendChild(addTile);
   }
 
   function getAllSceneMedia(scene) {
@@ -598,6 +761,19 @@
     if (type === 'audio') return '🔊';
     if (type === 'blender') return '🧊';
     return '📎';
+  }
+
+  function sceneEmoji(scene) {
+    const text = normalizeText(`${scene.sceneTitle} ${scene.slugLine} ${scene.location}`);
+    if (/song|music|charm|night without end/.test(text)) return '🎵';
+    if (/oracle|sylvara|prophecy/.test(text)) return '🔮';
+    if (/church|crypt|vitus|holy/.test(text)) return '⛪';
+    if (/castle|keep|courtyard|execution|duke/.test(text)) return '🏰';
+    if (/forest|tree|grove|river|lake/.test(text)) return '🌲';
+    if (/nyx|curse|dark|underworld|moravok/.test(text)) return '🖤';
+    if (/battle|duel|arrest|field|archery/.test(text)) return '⚔️';
+    if (/prologue|book|library|alexandria/.test(text)) return '📜';
+    return '🎬';
   }
 
   function formatBytes(bytes) {
@@ -772,6 +948,42 @@
     el.scriptPreview.innerHTML = renderMarkdownLite(preview);
   }
 
+  function openEffectsLibrary() {
+    el.scriptWindow.classList.remove('hidden');
+    el.scriptWindowTitle.textContent = 'Episode Effects Library';
+    const effects = state.project.episodeEffects || [];
+    const rows = effects.length ? effects.map(effect => `
+      <article class="effect-library-row">
+        <strong>${escapeHtml(effect.name)}</strong>
+        <span>${escapeHtml(effect.type || 'effect')} · ${escapeHtml(effect.status || 'Needs Assets')}</span>
+        <p>${escapeHtml(effect.description || 'No description yet.')}</p>
+      </article>
+    `).join('') : '<p>No episode effects yet. Add reusable VFX/music/SFX here later.</p>';
+
+    el.scriptPreview.innerHTML = `
+      <p>Episode-level reusable effects live here once Storyboarder is connected to actual media. Scene cards should reference this library instead of duplicating files.</p>
+      <div class="effect-library-list">${rows}</div>
+      <p><button id="addEffectFromLibrary" type="button">Add effect</button></p>
+    `;
+
+    document.getElementById('addEffectFromLibrary')?.addEventListener('click', () => {
+      const name = prompt('Episode effect name');
+      if (!name) return;
+      state.project.episodeEffects.push({
+        effectId: makeId('episode-effect'),
+        name,
+        type: 'vfx',
+        description: '',
+        localPath: '',
+        usedInScenes: [],
+        status: 'Needs Assets',
+        notes: ''
+      });
+      persist();
+      openEffectsLibrary();
+    });
+  }
+
   function showFolderPlan() {
     const plan = buildFolderPlan();
     el.scriptWindow.classList.remove('hidden');
@@ -884,9 +1096,24 @@
   }
 
   function bindEvents() {
-    el.episodeStatus.addEventListener('change', event => {
-      state.project.episode.status = event.target.value;
-      render();
+    el.episodeStatusButton.addEventListener('click', event => {
+      event.stopPropagation();
+      el.episodeStatusMenu.classList.toggle('hidden');
+      el.episodeStatusButton.setAttribute('aria-expanded', el.episodeStatusMenu.classList.contains('hidden') ? 'false' : 'true');
+    });
+
+    document.addEventListener('click', event => {
+      if (!event.target.closest('#episodeStatusWidget')) {
+        el.episodeStatusMenu.classList.add('hidden');
+        el.episodeStatusButton.setAttribute('aria-expanded', 'false');
+      }
+    });
+
+    el.viewButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        state.viewMode = button.dataset.viewMode || 'scene';
+        render();
+      });
     });
 
     el.jsonInput.addEventListener('change', async event => {
@@ -918,6 +1145,7 @@
     el.btnExport.addEventListener('click', exportProject);
     el.btnFolderPlan.addEventListener('click', showFolderPlan);
     el.btnCreateFolders.addEventListener('click', createFoldersViaApi);
+    el.btnOpenEffectsLibrary.addEventListener('click', openEffectsLibrary);
 
     el.btnClearLocal.addEventListener('click', () => {
       if (!confirm('Clear the local Storyboarder draft from this browser?')) return;
@@ -927,21 +1155,6 @@
       showToast('Local draft cleared.');
     });
 
-    el.btnAddEpisodeEffect.addEventListener('click', () => {
-      const name = prompt('Episode effect name');
-      if (!name) return;
-      state.project.episodeEffects.push({
-        effectId: makeId('episode-effect'),
-        name,
-        type: 'vfx',
-        description: '',
-        localPath: '',
-        usedInScenes: [],
-        status: 'Needs Assets',
-        notes: ''
-      });
-      render();
-    });
 
     el.sceneSearch.addEventListener('input', event => {
       state.filter.query = event.target.value;
