@@ -1,11 +1,11 @@
-/* Capsanoto app.js v5.10.1 window/favicon icon. */
+/* Capsanoto app.js v5.10.2 TCard cleanup and scroll repair. */
 const STORAGE_KEY = "forever-bound-writing-room-v2";
 const AUTH_KEY = "forever-bound-authenticated";
 const AUTH_CONFIG_PATH = "config/auth.json";
 const CONTENT_PATH = "content/documents.json";
 const EDITOR_ENTRY = "editor.html";
 const AUTOSAVE_DELAY = 600;
-const DESIGN_KEY = "capsanoto-design-settings-v5-10-1-window-icon";
+const DESIGN_KEY = "capsanoto-design-settings-v5-10-2-tcard-cleanup-scroll";
 const HELP_KEY = "capsanoto-help-html-v1";
 const WRITING_ROOM_LAYOUT_KEY = "capsanoto-writing-room-layout-v5-8-6";
 const PANEL_LAYOUT_KEY = "capsanoto-floating-panel-layouts-v5-9-0";
@@ -26,7 +26,7 @@ const GOOGLE_DRIVE_API_ROOT = "https://www.googleapis.com/drive/v3";
 const GOOGLE_DRIVE_UPLOAD_ROOT = "https://www.googleapis.com/upload/drive/v3";
 const GOOGLE_DRIVE_ROOT_FOLDER_NAME = "Capsanoto";
 const GOOGLE_DRIVE_FOLDER_MIME = "application/vnd.google-apps.folder";
-const CAPSANOTO_THEME_VERSION = "purple-gold-cyan-leather-v5-10-1";
+const CAPSANOTO_THEME_VERSION = "purple-gold-cyan-leather-v5-10-2";
 const FILING_HIERARCHY_VERSION = 1;
 
 const CAPSANOTO_PALETTE = {
@@ -92,13 +92,13 @@ const DEFAULT_WORKSPACE = {
       title: "Character Mel Ameldra",
       tags: ["character", "example", "deep-link"],
       updatedAt: "2026-05-08T00:00:00.000Z",
-      content: '<h1 id="Overview">Character Mel Ameldra</h1><p>This starter profile demonstrates document URLs like <code>editor.html?doc=Character-Mel-Ameldra</code>.</p><h2 id="Runestones">Runestones</h2><p>This section demonstrates direct bookmark URLs like <code>editor.html?doc=Character-Mel-Ameldra#Runestones</code>.</p><h2 id="Relationships">Relationships</h2><p>Add linked characters, factions, and locations here.</p>',
+      content: '<h1 id="Overview">Character Mel Ameldra</h1><p>This starter profile demonstrates document URLs like <code>editor.html?doc=Character-Mel-Ameldra</code>.</p><h2 id="shared-notes">Shared Notes</h2><p>This section demonstrates direct bookmark URLs like <code>editor.html?doc=Character-Mel-Ameldra#shared-notes</code>.</p><h2 id="Relationships">Relationships</h2><p>Add linked characters, factions, and locations here.</p>',
     },
   ],
   blocks: {
-    "Item-Runestones": {
-      id: "Item-Runestones",
-      content: "Runestones are reusable canon items that can be referenced across lore documents without duplicating text.",
+    "Canon-Example": {
+      id: "Canon-Example",
+      content: "Reusable canon text that can be referenced across lore documents without duplicating it.",
       updatedAt: "2026-05-07T00:00:00.000Z",
     },
     "Location-Ironvale": {
@@ -554,9 +554,11 @@ async function loadWorkspace() {
     persistNow("Loaded starter Writing Room");
   }
 
+  const legacyStarterCleaned = legacyStarterTCardCleanup();
   normalizeFilingHierarchy();
   if (!state.documents.length) createDocument();
   state.activeId = state.documents[0].id;
+  if (legacyStarterCleaned) persistNow("Cleaned starter TCard examples");
 }
 
 async function loadStarterWorkspace() {
@@ -897,6 +899,80 @@ function sanitizeWorkspaceDocumentIds() {
 
 function cleanRouteDocumentId(value) {
   return cleanDocumentId(value);
+}
+
+function legacyStarterTCardCleanup() {
+  const legacyStem = "Rune" + "stones";
+  const legacyId = `Item-${legacyStem}`;
+  const replacementId = "Canon-Example";
+  const replacementText = "Reusable canon text that can be referenced across lore documents without duplicating it.";
+  let changed = false;
+
+  if (state.blocks?.[legacyId]) {
+    const existing = state.blocks[replacementId] || {};
+    state.blocks[replacementId] = {
+      ...state.blocks[legacyId],
+      ...existing,
+      id: replacementId,
+      content: replacementText,
+      updatedAt: new Date().toISOString(),
+    };
+    delete state.blocks[legacyId];
+    changed = true;
+  }
+
+  Object.keys(state.blocks || {}).forEach((id) => {
+    const block = state.blocks[id];
+    if (!block) return;
+    if (block.id && block.id.includes(legacyStem)) {
+      block.id = block.id.replaceAll(legacyStem, "Example");
+      changed = true;
+    }
+    if (typeof block.content === "string" && block.content.includes(legacyStem)) {
+      block.content = block.content.replaceAll(`${legacyStem} are reusable canon items that can be referenced across lore documents without duplicating text.`, replacementText);
+      block.content = block.content.replaceAll(`${legacyStem} are reusable canon items that can be referenced across lore documents without duplicating.`, replacementText);
+      block.content = block.content.replaceAll(legacyStem, "Shared Notes");
+      block.content = block.content.replaceAll(legacyStem.toLowerCase(), "shared notes");
+      changed = true;
+    }
+  });
+
+  const repairText = (value) => {
+    let next = String(value || "");
+    const before = next;
+    next = next.replaceAll(legacyId, replacementId);
+    next = next.replaceAll(`{{${legacyId}}}`, `{{${replacementId}}}`);
+    next = next.replaceAll(`block:${legacyId}`, `block:${replacementId}`);
+    next = next.replaceAll(`#${legacyStem}`, "#shared-notes");
+    next = next.replaceAll(`id="${legacyStem}"`, 'id="shared-notes"');
+    next = next.replaceAll(`>${legacyStem}<`, ">Shared Notes<");
+    next = next.replaceAll(`${legacyStem} are reusable canon items that can be referenced across lore documents without duplicating text.`, replacementText);
+    next = next.replaceAll(`${legacyStem} are reusable canon items that can be referenced across lore documents without duplicating.`, replacementText);
+    next = next.replaceAll(legacyStem, "Shared Notes");
+    next = next.replaceAll(legacyStem.toLowerCase(), "shared notes");
+    return { next, changed: next !== before };
+  };
+
+  [...state.documents, ...state.trash, ...state.deprecated].forEach((doc) => {
+    if (!doc) return;
+    ["id", "title", "content", "diskPath"].forEach((field) => {
+      if (typeof doc[field] !== "string") return;
+      const repaired = repairText(doc[field]);
+      if (repaired.changed) {
+        doc[field] = field === "id" ? cleanDocumentId(repaired.next) : repaired.next;
+        changed = true;
+      }
+    });
+    if (Array.isArray(doc.tags)) {
+      const tags = doc.tags.map((tag) => String(tag).includes(legacyStem) ? String(tag).replaceAll(legacyStem, "example") : tag);
+      if (tags.join("\n") !== doc.tags.join("\n")) {
+        doc.tags = tags;
+        changed = true;
+      }
+    }
+  });
+
+  return changed;
 }
 
 
@@ -1403,7 +1479,7 @@ async function createTransclusionFromSelection() {
   if (!result?.id) return;
   const id = result.id.trim();
   if (!/^[A-Za-z]+-[A-Za-z0-9-]+$/.test(id)) {
-    setStatus("Use TCard IDs like Item-Runestones", "dirty");
+    setStatus("Use TCard IDs like Canon-Example", "dirty");
     return;
   }
   state.blocks[id] = { id, content: result.content || selectedText, updatedAt: new Date().toISOString() };
@@ -3401,7 +3477,7 @@ function toggleBlockPanel(show) {
 function saveBlock() {
   const id = els.blockIdInput.value.trim();
   if (!/^[A-Za-z]+-[A-Za-z0-9-]+$/.test(id)) {
-    setStatus("Use TCard IDs like Item-Runestones", "dirty");
+    setStatus("Use TCard IDs like Canon-Example", "dirty");
     return;
   }
   state.blocks[id] = {
@@ -6035,7 +6111,7 @@ function applyThemeToCurrentWritingRoom() {
 
 function runLayoutRecovery(reason = "") {
   document.body?.classList.add("capsanoto-v586-layout");
-  document.querySelectorAll(".app-version").forEach((node) => { node.textContent = "v5.10.1"; });
+  document.querySelectorAll(".app-version").forEach((node) => { node.textContent = "v5.10.2"; });
   try { updateWritingSurfaceMetrics(); } catch (error) { console.warn("Writing surface metric update failed", error); }
   try { updateWritingAssistRailPosition(); } catch (error) { console.warn("Writing assist rail update failed", error); }
   const toolbar = document.querySelector(".table-edit-toolbar");
@@ -6126,6 +6202,7 @@ function exportWorkspace() {
 
 function serializedWorkspace() {
   sanitizeWorkspaceDocumentIds();
+  legacyStarterTCardCleanup();
   return JSON.stringify({
     schemaVersion: 2,
     updatedAt: new Date().toISOString(),

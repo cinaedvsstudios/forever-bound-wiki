@@ -37,7 +37,7 @@ Change list:
 
 5. Version/cache:
    - Version bumped to v5.9.0.
-   - HTML loads styles.css?v=5.9.0 and app.js?v=5.9.0.
+   - HTML loads styles.css?v=5.10.2 and app.js?v=5.10.2.
 
 Checks run:
 - node --check app.js

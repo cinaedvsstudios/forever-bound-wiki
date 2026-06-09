@@ -21,13 +21,13 @@
         "deep-link"
       ],
       "updatedAt": "2026-05-08T00:00:00.000Z",
-      "content": "<h1 id=\"Overview\">Character Mel Ameldra</h1><p>This starter profile demonstrates document URLs like <code>editor.html?doc=Character-Mel-Ameldra</code>.</p><h2 id=\"Runestones\">Runestones</h2><p>This section demonstrates direct bookmark URLs like <code>editor.html?doc=Character-Mel-Ameldra#Runestones</code>.</p><h2 id=\"Relationships\">Relationships</h2><p>Add linked characters, factions, and locations here.</p>"
+      "content": "<h1 id=\"Overview\">Character Mel Ameldra</h1><p>This starter profile demonstrates document URLs like <code>editor.html?doc=Character-Mel-Ameldra</code>.</p><h2 id=\"shared-notes\">Shared Notes</h2><p>This section demonstrates direct bookmark URLs like <code>editor.html?doc=Character-Mel-Ameldra#shared-notes</code>.</p><h2 id=\"Relationships\">Relationships</h2><p>Add linked characters, factions, and locations here.</p>"
     }
   ],
   "blocks": {
-    "Item-Runestones": {
-      "id": "Item-Runestones",
-      "content": "Runestones are reusable canon items that can be referenced across lore documents without duplicating text.",
+    "Canon-Example": {
+      "id": "Canon-Example",
+      "content": "Reusable canon text that can be referenced across lore documents without duplicating it.",
       "updatedAt": "2026-05-07T00:00:00.000Z"
     },
     "Location-Ironvale": {
