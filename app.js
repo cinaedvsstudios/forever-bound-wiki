@@ -1,11 +1,11 @@
-/* Capsanoto app.js v5.8.7 table edit icon repair. */
+/* Capsanoto app.js v5.8.8 table toolbar emoji/delete repair. */
 const STORAGE_KEY = "forever-bound-writing-room-v2";
 const AUTH_KEY = "forever-bound-authenticated";
 const AUTH_CONFIG_PATH = "config/auth.json";
 const CONTENT_PATH = "content/documents.json";
 const EDITOR_ENTRY = "editor.html";
 const AUTOSAVE_DELAY = 600;
-const DESIGN_KEY = "capsanoto-design-settings-v5-8-7-table-edit-icon";
+const DESIGN_KEY = "capsanoto-design-settings-v5-8-8-table-toolbar-emoji-delete";
 const HELP_KEY = "capsanoto-help-html-v1";
 const WRITING_ROOM_LAYOUT_KEY = "capsanoto-writing-room-layout-v5-8-6";
 const FAVORITE_EMOJI_KEY = "capsanoto-favorite-emojis-v1";
@@ -24,7 +24,7 @@ const GOOGLE_DRIVE_API_ROOT = "https://www.googleapis.com/drive/v3";
 const GOOGLE_DRIVE_UPLOAD_ROOT = "https://www.googleapis.com/upload/drive/v3";
 const GOOGLE_DRIVE_ROOT_FOLDER_NAME = "Capsanoto";
 const GOOGLE_DRIVE_FOLDER_MIME = "application/vnd.google-apps.folder";
-const CAPSANOTO_THEME_VERSION = "warm-copper-clean-v5-8-7";
+const CAPSANOTO_THEME_VERSION = "warm-copper-clean-v5-8-8";
 const FILING_HIERARCHY_VERSION = 1;
 
 const CAPSANOTO_PALETTE = {
@@ -2742,7 +2742,22 @@ function showTableEditButton(table, open = false) {
   toolbar.className = "table-edit-toolbar is-floating";
   toolbar.dataset.tableToolsFor = table.dataset.tableId || (table.dataset.tableId = `table-${Date.now()}-${Math.floor(Math.random() * 1000)}`);
   if (open) toolbar.classList.add("is-open");
-  toolbar.innerHTML = `<button type="button" class="table-edit-button" data-table-tool="toggle" title="Edit table">✎</button><span class="table-tool-row"><button type="button" data-table-tool="equalize" title="Equalise column widths">⇔</button><button type="button" data-table-tool="wider" title="Widen selected column">↔</button><button type="button" data-table-tool="add-row" title="Add row below selected cell">＋R</button><button type="button" data-table-tool="add-col" title="Add column right of selected cell">＋C</button><button type="button" data-table-tool="delete-row" title="Delete selected row">−R</button><button type="button" data-table-tool="delete-col" title="Delete selected column">−C</button><button type="button" data-table-tool="align" title="Cycle selected cell text alignment">≡</button><input type="color" data-table-tool="header-bg" title="Header/title background" value="#28133f"><input type="color" data-table-tool="cell-bg" title="Selected cell background" value="#211812"><input type="color" data-table-tool="line" title="Inner line color" value="#563485"><input type="color" data-table-tool="outer-border" title="Outer table border" value="#e88f69"></span>`;
+  toolbar.innerHTML = `
+    <button type="button" class="table-edit-button" data-table-tool="toggle" title="Open table tools" aria-label="Open table tools">🛠️</button>
+    <span class="table-tool-row" aria-label="Table tools">
+      <button type="button" data-table-tool="equalize" title="Equalise all column widths" aria-label="Equalise all column widths">⚖️</button>
+      <button type="button" data-table-tool="wider" title="Make selected column wider" aria-label="Make selected column wider">↔️</button>
+      <button type="button" data-table-tool="add-row" title="Add row below selected cell" aria-label="Add row below selected cell">➕↕️</button>
+      <button type="button" data-table-tool="add-col" title="Add column after selected cell" aria-label="Add column after selected cell">➕↔️</button>
+      <button type="button" data-table-tool="delete-row" title="Delete selected row" aria-label="Delete selected row">➖↕️</button>
+      <button type="button" data-table-tool="delete-col" title="Delete selected column" aria-label="Delete selected column">➖↔️</button>
+      <button type="button" data-table-tool="align" title="Cycle selected cell text alignment" aria-label="Cycle selected cell text alignment">📐</button>
+      <button type="button" data-table-tool="delete-table" title="Delete entire table" aria-label="Delete entire table">🗑️</button>
+      <input type="color" data-table-tool="header-bg" title="Header background colour" aria-label="Header background colour" value="#28133f">
+      <input type="color" data-table-tool="cell-bg" title="Selected cell background colour" aria-label="Selected cell background colour" value="#211812">
+      <input type="color" data-table-tool="line" title="Inner line colour" aria-label="Inner line colour" value="#563485">
+      <input type="color" data-table-tool="outer-border" title="Outer table border colour" aria-label="Outer table border colour" value="#e88f69">
+    </span>`;
   toolbar.addEventListener("click", (event) => handleTableToolAction(event, table, toolbar));
   toolbar.addEventListener("input", (event) => handleTableToolAction(event, table, toolbar));
   toolbar.addEventListener("mouseenter", cancelTableToolbarRemoval);
@@ -2781,8 +2796,20 @@ function handleTableToolAction(event, table, toolbar) {
   const action = control.dataset.tableTool;
   if (action === "toggle") {
     toolbar.classList.toggle("is-open");
+    control.textContent = toolbar.classList.contains("is-open") ? "✖️" : "🛠️";
+    control.title = toolbar.classList.contains("is-open") ? "Close table tools" : "Open table tools";
+    control.setAttribute("aria-label", control.title);
     highlightActiveTableCell(table);
     requestAnimationFrame(() => positionTableEditToolbar(toolbar, table));
+    return;
+  }
+  if (action === "delete-table") {
+    const confirmed = window.confirm("Delete this entire table?");
+    if (!confirmed) return;
+    removeTableEditToolbar();
+    table.remove();
+    syncAndSave("Table deleted");
+    updateWritingAssistRailPosition();
     return;
   }
   const activeCell = state.activeTableCell && table.contains(state.activeTableCell) ? state.activeTableCell : table.querySelector("td, th");
@@ -5591,7 +5618,7 @@ function applyThemeToCurrentWritingRoom() {
 
 function runLayoutRecovery(reason = "") {
   document.body?.classList.add("capsanoto-v586-layout");
-  document.querySelectorAll(".app-version").forEach((node) => { node.textContent = "v5.8.7"; });
+  document.querySelectorAll(".app-version").forEach((node) => { node.textContent = "v5.8.8"; });
   try { updateWritingSurfaceMetrics(); } catch (error) { console.warn("Writing surface metric update failed", error); }
   try { updateWritingAssistRailPosition(); } catch (error) { console.warn("Writing assist rail update failed", error); }
   const toolbar = document.querySelector(".table-edit-toolbar");

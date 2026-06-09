@@ -1179,7 +1179,7 @@ details.settings-card:not([open]) > *:not(summary), details.element-designer-car
 }
 
 
-/* Capsanoto v5.8.7 table edit icon repair */
+/* Capsanoto v5.8.8 table toolbar emoji/delete repair */
 .editable-table {
   position: relative;
 }
@@ -1202,4 +1202,69 @@ details.settings-card:not([open]) > *:not(summary), details.element-designer-car
   background: var(--tcard-edit-button-bg, var(--caps-amethyst));
   border-color: var(--tcard-edit-button-border, var(--caps-peach));
   color: var(--tcard-edit-button-text, var(--caps-parchment));
+}
+
+
+/* Capsanoto v5.8.8 table toolbar emoji/delete repair */
+.table-edit-toolbar {
+  align-items: center;
+  justify-content: flex-start;
+  gap: .32rem;
+  max-width: min(94vw, 620px);
+  padding: .32rem .38rem;
+}
+
+.table-edit-toolbar .table-edit-button,
+.table-edit-toolbar .table-tool-row button {
+  position: static;
+  inset: auto;
+  flex: 0 0 auto;
+  width: 2rem;
+  min-width: 2rem;
+  height: 2rem;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  font-size: .98rem;
+  border-radius: 999px;
+  box-shadow: 0 6px 18px rgba(0,0,0,.45);
+}
+
+.table-edit-toolbar .table-edit-button {
+  background: var(--tcard-edit-button-bg, var(--caps-amethyst));
+  border-color: var(--tcard-edit-button-border, var(--caps-peach));
+  color: var(--tcard-edit-button-text, var(--caps-parchment));
+}
+
+.table-edit-toolbar .table-tool-row {
+  display: none;
+  align-items: center;
+  gap: .32rem;
+  flex-wrap: nowrap;
+}
+
+.table-edit-toolbar.is-open .table-tool-row {
+  display: inline-flex;
+}
+
+.table-edit-toolbar input[type="color"] {
+  position: static;
+  flex: 0 0 auto;
+  width: 2rem;
+  min-width: 2rem;
+  height: 2rem;
+  padding: 1px;
+  border-radius: 999px;
+}
+
+.table-edit-toolbar [data-table-tool="delete-table"] {
+  background: color-mix(in srgb, var(--danger, #c55222) 42%, var(--button));
+  border-color: var(--danger, #c55222);
+}
+
+.table-edit-toolbar [data-table-tool="delete-table"]:hover {
+  background: var(--danger, #c55222);
+  color: var(--caps-parchment);
 }
