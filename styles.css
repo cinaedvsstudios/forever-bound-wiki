@@ -5,17 +5,17 @@
 
 :root {
   --caps-black: #000000;
-  --caps-espresso: #211812;
-  --caps-umber: #2f251c;
-  --caps-charcoal: #2c2c2c;
-  --caps-clay: #724837;
-  --caps-ochre: #a97b38;
+  --caps-espresso: #1c120e;
+  --caps-umber: #171013;
+  --caps-charcoal: #363532;
+  --caps-clay: #615243;
+  --caps-ochre: #615243;
   --caps-ember: #c55222;
-  --caps-peach: #e88f69;
-  --caps-deep-plum: #28133f;
-  --caps-amethyst: #563485;
-  --caps-parchment: #fbf4d6;
-  --caps-line-soft: #6f6258;
+  --caps-peach: #fff0ce;
+  --caps-deep-plum: #5f1e66;
+  --caps-amethyst: #5f1e66;
+  --caps-parchment: #fff0ce;
+  --caps-line-soft: #615243;
 
   --page: var(--theme-bg-main, var(--caps-espresso));
   --paper: var(--theme-bg-document, var(--caps-espresso));
@@ -25,7 +25,7 @@
   --muted: var(--label-text, var(--caps-ochre));
   --line: var(--caps-clay);
   --accent: var(--theme-accent, var(--caps-peach));
-  --accent-soft: rgba(232, 143, 105, 0.18);
+  --accent-soft: rgba(95, 30, 102, 0.28);
   --button: var(--caps-umber);
   --button-hover: var(--theme-button-hover, var(--caps-amethyst));
   --success: var(--theme-success, var(--caps-amethyst));
@@ -1179,7 +1179,7 @@ details.settings-card:not([open]) > *:not(summary), details.element-designer-car
 }
 
 
-/* Capsanoto v5.9.0 layout memory and menu refinement */
+/* Capsanoto v5.9.1 layout memory and menu refinement */
 .editable-table {
   position: relative;
 }
@@ -1205,7 +1205,7 @@ details.settings-card:not([open]) > *:not(summary), details.element-designer-car
 }
 
 
-/* Capsanoto v5.9.0 layout memory and menu refinement */
+/* Capsanoto v5.9.1 layout memory and menu refinement */
 .table-edit-toolbar {
   align-items: center;
   justify-content: flex-start;
@@ -1270,7 +1270,7 @@ details.settings-card:not([open]) > *:not(summary), details.element-designer-car
 }
 
 
-/* Capsanoto v5.9.0 layout memory and menu refinement */
+/* Capsanoto v5.9.1 layout memory and menu refinement */
 .table-edit-toolbar .table-tool-row {
   gap: .26rem;
 }
@@ -1301,7 +1301,7 @@ details.settings-card:not([open]) > *:not(summary), details.element-designer-car
 }
 
 
-/* Capsanoto v5.9.0 toolbar/menu/table/settings refinement */
+/* Capsanoto v5.9.1 toolbar/menu/table/settings refinement */
 
 /* Top and dropdown command text: bigger icons, softer non-bold labels. */
 .command-glyph {
@@ -1452,4 +1452,317 @@ details.settings-card:not([open]) > *:not(summary), details.element-designer-car
   .design-controls .element-designer-card[open] {
     grid-template-columns: 1fr;
   }
+}
+
+
+/* Capsanoto v5.9.1 debug panel and sub-file layer */
+.debug-section { min-height: min(62vh, 520px); }
+.debug-layout { display: grid; grid-template-columns: minmax(180px, 0.72fr) minmax(280px, 1.28fr); gap: 0.8rem; min-height: 430px; }
+.debug-task-list { display: grid; align-content: start; gap: 0.4rem; padding: 0.55rem; border: 1px solid var(--settings-card-border); border-radius: 16px; background: color-mix(in srgb, var(--settings-card-bg) 82%, #000); overflow: auto; }
+.debug-task-list button { justify-content: flex-start; border-radius: 12px; font-size: 0.78rem; padding: 0.42rem 0.6rem; }
+.debug-report-pane { display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 0.5rem; min-height: 0; }
+.debug-actions { display: flex; gap: 0.45rem; justify-content: flex-end; flex-wrap: wrap; }
+#debugReport { width: 100%; min-height: 380px; resize: vertical; font-family: "Courier New", Courier, monospace !important; font-size: 0.78rem; line-height: 1.45; white-space: pre; overflow: auto; background: var(--settings-input-bg); color: var(--settings-input-text); border: 1px solid var(--settings-input-border); border-radius: 16px; padding: 0.75rem; }
+.sub-file-list { margin-top: 0.55rem; border: 1px solid color-mix(in srgb, var(--settings-card-border) 72%, transparent); border-radius: 14px; background: rgba(0,0,0,0.18); overflow: hidden; }
+.sub-file-list > summary { display: flex; align-items: center; gap: 0.35rem; min-height: 2rem; padding: 0.25rem 0.55rem; color: var(--dynamic-text); background: color-mix(in srgb, var(--caps-deep-plum, #28133f) 44%, transparent); }
+.sub-file-stack { display: grid; gap: 0.38rem; padding: 0.45rem; }
+.writing-room-card.is-sub-file { margin-left: clamp(0.4rem, calc(var(--tab-depth, 0) * 0.7rem), 2rem); border-color: color-mix(in srgb, var(--accent) 62%, var(--settings-card-border)); }
+.writing-room-card.is-sub-file > summary { background: color-mix(in srgb, var(--doc-row-bg, #2c2c2c) 82%, var(--caps-deep-plum, #28133f)); }
+.sub-file-add { justify-self: start; border-radius: 999px; padding: 0.35rem 0.7rem; font-size: 0.78rem; }
+.sub-file-count { margin-left: auto; color: var(--label-text); font-size: 0.72rem; }
+@media (max-width: 860px) { .debug-layout { grid-template-columns: 1fr; } }
+
+
+/* Capsanoto v5.9.2 obsidian leather default theme
+   Purpose: dark transparent leather-card theme using the user-provided palette.
+   Left writing rail remains a purple gradient.
+*/
+
+:root {
+  --caps-core-brown: #1c120e;
+  --caps-darkest-brown: #100a09;
+  --caps-line-brown: #615243;
+  --caps-highlight-cream: #fff0ce;
+  --caps-purple: #5f1e66;
+  --caps-neutral: #363532;
+  --caps-ink-black: #171013;
+  --caps-panel-glass: rgba(28, 18, 14, 0.76);
+  --caps-panel-glass-soft: rgba(28, 18, 14, 0.62);
+  --caps-panel-glass-faint: rgba(28, 18, 14, 0.48);
+  --caps-purple-glass: rgba(95, 30, 102, 0.74);
+  --caps-purple-glow: rgba(95, 30, 102, 0.58);
+
+  --page: var(--theme-bg-main, var(--caps-darkest-brown));
+  --paper: var(--theme-bg-document, rgba(28, 18, 14, 0.78));
+  --dark: var(--theme-panel-strong, var(--caps-core-brown));
+  --dark-2: var(--theme-panel-soft, var(--caps-ink-black));
+  --ink: var(--caps-highlight-cream);
+  --muted: var(--label-text, var(--caps-line-brown));
+  --line: var(--caps-line-brown);
+  --accent: var(--caps-purple);
+  --accent-soft: rgba(95, 30, 102, 0.28);
+  --button: var(--caps-panel-glass);
+  --button-hover: var(--caps-purple);
+  --button-text-color: var(--caps-highlight-cream);
+
+  --app-bg-color: var(--caps-darkest-brown);
+  --top-bar-bg: rgba(16, 10, 9, 0.92);
+  --top-bar-border: var(--caps-line-brown);
+  --command-bar-bg: rgba(28, 18, 14, 0.82);
+  --command-bar-border: var(--caps-line-brown);
+  --command-bar-text: var(--caps-highlight-cream);
+
+  --writing-room-bg: var(--caps-panel-glass);
+  --writing-room-header-bg: rgba(16, 10, 9, 0.70);
+  --writing-room-header-border: var(--caps-line-brown);
+  --writing-room-title-color: var(--caps-highlight-cream);
+
+  --writing-surface-bg: rgba(28, 18, 14, 0.78);
+  --writing-surface-border: var(--caps-line-brown);
+  --doc-title-bg: rgba(16, 10, 9, 0.82);
+  --doc-title-color: var(--caps-highlight-cream);
+  --editor-text-color: var(--caps-highlight-cream);
+
+  --settings-bg: var(--caps-panel-glass);
+  --settings-border: var(--caps-line-brown);
+  --settings-card-bg: var(--caps-panel-glass-soft);
+  --settings-card-border: var(--caps-line-brown);
+  --settings-title-color: var(--caps-highlight-cream);
+  --settings-label-color: var(--caps-line-brown);
+  --settings-input-bg: rgba(16, 10, 9, 0.92);
+  --settings-input-border: var(--caps-line-brown);
+  --settings-input-text: var(--caps-highlight-cream);
+  --settings-scrollbar-track: var(--caps-darkest-brown);
+  --settings-scrollbar-thumb: var(--caps-line-brown);
+
+  --dialog-bg: var(--caps-panel-glass);
+  --dialog-border: var(--caps-line-brown);
+  --dialog-text: var(--caps-highlight-cream);
+  --dialog-button-bg: var(--caps-panel-glass);
+  --dialog-button-border: var(--caps-line-brown);
+  --dialog-button-text: var(--caps-highlight-cream);
+
+  --panel-bg: var(--caps-panel-glass);
+  --panel-border: var(--caps-line-brown);
+  --status-bg: var(--caps-panel-glass-soft);
+  --status-border: var(--caps-line-brown);
+  --status-text: var(--caps-highlight-cream);
+  --label-text: var(--caps-line-brown);
+  --dynamic-text: var(--caps-highlight-cream);
+  --scrollbar-track: var(--caps-darkest-brown);
+  --scrollbar-thumb: var(--caps-line-brown);
+
+  --tcard-bg: var(--caps-panel-glass-soft);
+  --tcard-border: var(--caps-line-brown);
+  --tcard-text: var(--caps-highlight-cream);
+  --tcard-heading: var(--caps-highlight-cream);
+  --emphasis-bg: var(--caps-panel-glass-soft);
+  --emphasis-border: var(--caps-line-brown);
+  --emphasis-text: var(--caps-highlight-cream);
+  --table-bg: var(--caps-panel-glass-soft);
+  --table-border: var(--caps-line-brown);
+  --table-head-bg: rgba(16, 10, 9, 0.72);
+  --table-head-text: var(--caps-highlight-cream);
+  --table-body-text: var(--caps-highlight-cream);
+  --link-pill-bg: var(--caps-purple-glass);
+  --link-pill-border: var(--caps-purple);
+  --link-pill-text: var(--caps-highlight-cream);
+}
+
+/* transparent leather cards/panels */
+.writing-surface-shell,
+.document-end-bar,
+.writing-room-panel,
+.settings-panel,
+.help-panel,
+.block-panel,
+.project-settings-panel,
+.emoji-picker,
+.caps-dialog,
+.settings-card,
+.element-designer-card,
+.placeholder-card,
+.project-settings-section,
+.design-preview,
+.preview-card,
+.transclusion-ref,
+.tcard-content,
+.emphasis-box,
+.editor table,
+.editable-table,
+.table-edit-toolbar,
+.selection-menu,
+.color-image-popup {
+  background-color: var(--caps-panel-glass);
+  backdrop-filter: blur(2px);
+  border-color: var(--caps-line-brown);
+  box-shadow: 0 18px 46px rgba(0, 0, 0, 0.44);
+}
+
+.settings-card,
+.element-designer-card,
+.preview-card,
+.design-preview,
+.transclusion-ref,
+.tcard-content,
+.emphasis-box,
+.editor table,
+.editable-table {
+  background-color: var(--caps-panel-glass-soft);
+}
+
+/* keep the left writing rail as a purple gradient */
+.writing-assist-rail {
+  background: linear-gradient(180deg, #4a1760 0%, #28133f 42%, #5f1e66 100%) !important;
+}
+
+/* headings/highlight text */
+.title-input,
+.editor h1,
+.editor h2,
+.editor h3,
+.settings-panel h2,
+.help-panel h2,
+.block-panel header h2,
+.project-settings-panel h2,
+.preview-title-row strong,
+.transclusion-ref > span,
+.tcard-content > span,
+.emphasis-box strong {
+  color: var(--caps-highlight-cream) !important;
+}
+
+.editor,
+.help-content,
+.help-panel > section,
+.settings-links,
+.dialog-html-field {
+  color: var(--caps-highlight-cream);
+}
+
+.eyebrow,
+.settings-card > summary,
+.element-designer-card > summary,
+.settings-label,
+.design-controls label,
+.element-designer-card label,
+.tcard-style-grid label,
+.block-panel label,
+.prop-label,
+.metadata-pill,
+.end-doc-meta {
+  color: var(--caps-line-brown) !important;
+  font-weight: 700;
+}
+
+/* purple pill style, inspired by the blue pill reference */
+.pill-link,
+.editor .pill-link,
+.metadata-pill,
+.toggle-pill[aria-pressed="true"],
+.filing-tab > summary,
+.tool-menu-trigger[aria-expanded="true"],
+.tool-menu.has-panel:hover .tool-menu-trigger,
+.tool-menu.has-panel:focus-within .tool-menu-trigger {
+  background: linear-gradient(180deg, rgba(95, 30, 102, 0.92), rgba(50, 14, 58, 0.92)) !important;
+  border-color: #8d43a0 !important;
+  color: var(--caps-highlight-cream) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 240, 206, 0.12), 0 0 18px rgba(95, 30, 102, 0.36);
+}
+
+/* top menus: icon-first and quieter text */
+.tool-menu-trigger,
+.direct-command,
+.writing-room-button {
+  background-color: rgba(28, 18, 14, 0.82);
+  border-color: var(--caps-line-brown);
+  color: var(--caps-highlight-cream);
+}
+
+.tool-menu-panel {
+  background-color: rgba(28, 18, 14, 0.92);
+  border-color: var(--caps-line-brown);
+  box-shadow: 0 20px 60px rgba(0,0,0,.62);
+}
+
+.tool-menu-panel button {
+  background-color: rgba(16, 10, 9, 0.82);
+  border-color: var(--caps-line-brown);
+  color: rgba(255, 240, 206, 0.88);
+  font-weight: 500;
+}
+
+.tool-menu-panel button:hover {
+  background: linear-gradient(180deg, rgba(95, 30, 102, 0.90), rgba(40, 13, 48, 0.90));
+  color: var(--caps-highlight-cream);
+}
+
+/* input fields like the provided reference */
+input,
+select,
+textarea,
+.dynamic-input,
+.design-controls input,
+.design-controls select,
+.design-controls textarea,
+.block-panel input,
+.block-panel textarea,
+.caps-dialog input,
+.caps-dialog textarea,
+.caps-dialog select {
+  background: rgba(16, 10, 9, 0.92) !important;
+  border: 1px solid var(--caps-line-brown) !important;
+  border-radius: 14px !important;
+  color: var(--caps-highlight-cream) !important;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,.58);
+}
+
+input:focus,
+select:focus,
+textarea:focus,
+.dynamic-input:focus {
+  border-color: #8d43a0 !important;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,.58), 0 0 0 3px rgba(95,30,102,.25) !important;
+}
+
+/* slim circular/pill color controls */
+.design-controls input[type="color"],
+.tcard-style-grid input[type="color"],
+.table-tool-row input[type="color"],
+.favorite-colors button {
+  border: 1px solid var(--caps-line-brown) !important;
+  box-shadow: none !important;
+}
+
+/* scrollbars */
+* {
+  scrollbar-color: var(--caps-line-brown) var(--caps-darkest-brown);
+}
+*::-webkit-scrollbar-track {
+  background: var(--caps-darkest-brown);
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--caps-line-brown);
+  border-color: var(--caps-darkest-brown);
+}
+
+/* round tables/cards */
+.editor table,
+.editable-table,
+.transclusion-ref,
+.tcard-content,
+.emphasis-box,
+.settings-card,
+.element-designer-card,
+.preview-card {
+  border-radius: 16px;
+}
+
+/* table headers/body using the new transparent theme */
+.editor th {
+  background: rgba(16, 10, 9, 0.72);
+  color: var(--caps-highlight-cream);
+}
+.editor td {
+  color: var(--caps-highlight-cream);
 }

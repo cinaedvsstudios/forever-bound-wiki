@@ -1,11 +1,11 @@
-/* Capsanoto app.js v5.9.0 layout memory and menu refinement. */
+/* Capsanoto app.js v5.9.2 obsidian leather theme defaults. */
 const STORAGE_KEY = "forever-bound-writing-room-v2";
 const AUTH_KEY = "forever-bound-authenticated";
 const AUTH_CONFIG_PATH = "config/auth.json";
 const CONTENT_PATH = "content/documents.json";
 const EDITOR_ENTRY = "editor.html";
 const AUTOSAVE_DELAY = 600;
-const DESIGN_KEY = "capsanoto-design-settings-v5-9-0-layout-memory-menu-refine";
+const DESIGN_KEY = "capsanoto-design-settings-v5-9-2-obsidian-leather-theme";
 const HELP_KEY = "capsanoto-help-html-v1";
 const WRITING_ROOM_LAYOUT_KEY = "capsanoto-writing-room-layout-v5-8-6";
 const PANEL_LAYOUT_KEY = "capsanoto-floating-panel-layouts-v5-9-0";
@@ -26,35 +26,47 @@ const GOOGLE_DRIVE_API_ROOT = "https://www.googleapis.com/drive/v3";
 const GOOGLE_DRIVE_UPLOAD_ROOT = "https://www.googleapis.com/upload/drive/v3";
 const GOOGLE_DRIVE_ROOT_FOLDER_NAME = "Capsanoto";
 const GOOGLE_DRIVE_FOLDER_MIME = "application/vnd.google-apps.folder";
-const CAPSANOTO_THEME_VERSION = "warm-copper-clean-v5-9-0";
+const CAPSANOTO_THEME_VERSION = "obsidian-leather-v5-9-2";
 const FILING_HIERARCHY_VERSION = 1;
 
 const CAPSANOTO_PALETTE = {
   black: "#000000",
-  deepPlum: "#28133f",
-  espresso: "#211812",
-  amethyst: "#563485",
-  clay: "#724837",
-  ochre: "#a97b38",
+  coreBrown: "#1c120e",
+  darkestBrown: "#100a09",
+  lineBrown: "#615243",
+  parchment: "#fff0ce",
+  purple: "#5f1e66",
+  charcoal: "#363532",
+  inkBlack: "#171013",
+  panelGlass: "rgba(28, 18, 14, 0.76)",
+  panelGlassSoft: "rgba(28, 18, 14, 0.62)",
+  purpleGlass: "rgba(95, 30, 102, 0.74)",
+  oldClay: "#724837",
+  oldOchre: "#a97b38",
   ember: "#c55222",
   peach: "#e88f69",
-  umber: "#2f251c",
-  charcoal: "#2c2c2c",
-  parchment: "#fbf4d6",
+
+  // Legacy aliases kept so older design/default code still resolves safely.
+  deepPlum: "#5f1e66",
+  espresso: "#1c120e",
+  umber: "#171013",
+  amethyst: "#5f1e66",
+  clay: "#615243",
+  ochre: "#615243",
 };
 
 const DEFAULT_FAVORITE_COLORS = [
   CAPSANOTO_PALETTE.black,
-  CAPSANOTO_PALETTE.espresso,
-  CAPSANOTO_PALETTE.umber,
+  CAPSANOTO_PALETTE.darkestBrown,
+  CAPSANOTO_PALETTE.inkBlack,
+  CAPSANOTO_PALETTE.coreBrown,
   CAPSANOTO_PALETTE.charcoal,
-  CAPSANOTO_PALETTE.clay,
-  CAPSANOTO_PALETTE.ochre,
+  CAPSANOTO_PALETTE.lineBrown,
+  CAPSANOTO_PALETTE.purple,
+  CAPSANOTO_PALETTE.parchment,
   CAPSANOTO_PALETTE.ember,
   CAPSANOTO_PALETTE.peach,
-  CAPSANOTO_PALETTE.deepPlum,
-  CAPSANOTO_PALETTE.amethyst,
-  CAPSANOTO_PALETTE.parchment,
+  CAPSANOTO_PALETTE.oldOchre,
 ];
 
 const DEFAULT_WORKSPACE = {
@@ -333,6 +345,10 @@ const els = {
   editBlockInlineButton: document.querySelector("#editBlockInlineButton"),
   blockList: document.querySelector("#blockList"),
   documentTemplate: document.querySelector("#documentTemplate"),
+  debugTaskList: document.querySelector("#debugTaskList"),
+  debugReport: document.querySelector("#debugReport"),
+  runAllDebugTasksButton: document.querySelector("#runAllDebugTasksButton"),
+  copyDebugReportButton: document.querySelector("#copyDebugReportButton"),
 };
 
 boot().catch((error) => {
@@ -662,6 +678,9 @@ function bindEditorEvents() {
   els.settingsSearchInput?.addEventListener("input", handleSettingsSearchInput);
   els.settingsSearchNext?.addEventListener("click", () => moveSettingsSearch(1));
   els.settingsSearchPrev?.addEventListener("click", () => moveSettingsSearch(-1));
+  els.debugTaskList?.addEventListener("click", handleDebugTaskClick);
+  els.runAllDebugTasksButton?.addEventListener("click", runAllDebugTasks);
+  els.copyDebugReportButton?.addEventListener("click", copyDebugReport);
   els.createFolderProjectButton?.addEventListener("click", createNewWritingRoomFolder);
   els.openFolderProjectButton?.addEventListener("click", openWritingRoomFolder);
   els.saveFolderProjectButton?.addEventListener("click", () => saveFolderModeSnapshot("Saved to disk", { force: true }));
@@ -790,18 +809,23 @@ function bindEditorEvents() {
   });
 }
 
-function createDocument(id = `doc-${Date.now()}`, title = "Untitled Document") {
+function createDocument(id = `doc-${Date.now()}`, title = "Untitled Document", options = {}) {
   const doc = {
     id,
     title,
-    tags: [],
+    tags: Array.isArray(options.tags) ? options.tags : [],
     updatedAt: new Date().toISOString(),
-    content: els.documentTemplate.innerHTML.trim(),
+    content: options.content || els.documentTemplate.innerHTML.trim(),
     diskPath: "",
     diskSavedAt: "",
     localDraftAt: "",
   };
-  state.documents.unshift(doc);
+  if (options.parentDocumentId) doc.parentDocumentId = options.parentDocumentId;
+  if (options.filingGroupId) doc.filingGroupId = options.filingGroupId;
+  if (options.filingTabId) doc.filingTabId = options.filingTabId;
+  const parentIndex = options.parentDocumentId ? state.documents.findIndex((item) => item.id === options.parentDocumentId) : -1;
+  if (parentIndex >= 0) state.documents.splice(parentIndex + 1, 0, doc);
+  else state.documents.unshift(doc);
   return doc;
 }
 
@@ -2089,12 +2113,57 @@ function renderFilingTab(tab) {
   </details>`;
 }
 
+function childDocuments(parentId) {
+  return state.documents.filter((doc) => doc.parentDocumentId === parentId);
+}
+
+function descendantDocuments(parentId, seen = new Set()) {
+  if (seen.has(parentId)) return [];
+  seen.add(parentId);
+  const children = childDocuments(parentId);
+  return children.flatMap((child) => [child, ...descendantDocuments(child.id, seen)]);
+}
+
+function topLevelDocuments() {
+  return state.documents.filter((doc) => !doc.parentDocumentId);
+}
+
+async function createSubDocument(parentId) {
+  const parent = state.documents.find((doc) => doc.id === parentId);
+  if (!parent) return;
+  const result = await openCapsDialog("New Sub File", [
+    { name: "title", label: "Sub file title", value: "New Sub File" },
+    { name: "type", label: "Type tag", value: "subfile", placeholder: "scene, notes, arc, song" },
+  ]);
+  const title = result?.title?.trim() || "New Sub File";
+  const type = result?.type?.trim() || "subfile";
+  const doc = createDocument(uniqueDocumentId(`${parent.id}-${slugify(title) || "subfile"}`), title, {
+    parentDocumentId: parent.id,
+    filingGroupId: parent.filingGroupId,
+    filingTabId: parent.filingTabId,
+    tags: [type],
+    content: `<h1>${escapeHtml(title)}</h1><p>Sub file nested under ${escapeHtml(parent.title)}.</p>`,
+  });
+  openDocument(doc.id);
+  renderWritingRoomCards();
+  markDirty("Sub file created");
+}
+
 function renderWritingRoomCard(doc, depth = 0) {
   const tags = (doc.tags ?? []).slice(0, 8);
   const updated = doc.updatedAt ? new Date(doc.updatedAt).toLocaleDateString() : "Not saved yet";
-  const preview = textFromHtml(renderTransclusions(doc.content)).slice(0, 180) || "Empty Writing Room tab";
+  const preview = textFromHtml(renderTransclusions(doc.content)).slice(0, 180) || "Empty Writing Room file";
   const fileType = documentFileType(doc);
-  return `<details class="writing-room-card ${doc.id === state.activeId ? "is-active" : ""}" draggable="${state.filingEditMode}" style="--tab-depth:${depth}" data-doc-card="${escapeAttr(doc.id)}">
+  const children = childDocuments(doc.id);
+  const childHtml = children.length || state.filingEditMode ? `
+      <details class="sub-file-list" ${children.length ? "open" : ""}>
+        <summary><span class="card-arrow">›</span><span class="sub-file-icon">↳</span><strong>Sub files</strong><span class="sub-file-count">${children.length}</span></summary>
+        <div class="sub-file-stack">
+          ${children.map((child) => renderWritingRoomCard(child, depth + 1)).join("")}
+          ${state.filingEditMode ? `<button type="button" class="sub-file-add" data-card-action="sub-document" data-doc-id="${escapeAttr(doc.id)}">＋ Sub File</button>` : ""}
+        </div>
+      </details>` : "";
+  return `<details class="writing-room-card ${doc.id === state.activeId ? "is-active" : ""} ${doc.parentDocumentId ? "is-sub-file" : ""}" draggable="${state.filingEditMode}" style="--tab-depth:${depth}" data-doc-card="${escapeAttr(doc.id)}">
     <summary>
       <span class="card-arrow">›</span>
       <span class="card-icon" title="${escapeAttr(fileType)}">${docIcon(doc)}</span>
@@ -2103,19 +2172,22 @@ function renderWritingRoomCard(doc, depth = 0) {
     <div class="writing-room-card-body">
       <span class="document-card-actions">
         <button type="button" title="Open" data-card-action="open" data-doc-id="${escapeAttr(doc.id)}">↗</button>
+        <button type="button" title="Create sub file" data-card-action="sub-document" data-doc-id="${escapeAttr(doc.id)}">↳</button>
         <button type="button" title="Edit all TCards, tables, or emphasis boxes" data-card-action="bulk-style" data-doc-id="${escapeAttr(doc.id)}">🎨</button>
         <button type="button" title="Duplicate" data-card-action="duplicate" data-doc-id="${escapeAttr(doc.id)}">⧉</button>
-        <button type="button" title="Deprecate old version" data-card-action="deprecate" data-doc-id="${escapeAttr(doc.id)}">🕰</button>
+        <button type="button" title="Deprecate" data-card-action="deprecate" data-doc-id="${escapeAttr(doc.id)}">🕰</button>
         <button type="button" title="Delete" data-card-action="delete" data-doc-id="${escapeAttr(doc.id)}">❌</button>
         <button type="button" title="Copy URL" data-card-action="copy" data-doc-id="${escapeAttr(doc.id)}">🔗</button>
       </span>
       <details class="metadata-pill"><summary>Meta data</summary><div class="metadata-pill-body">
         <p>Type: <span ${inlineEditAttrs("doc", doc.id, "type")}>${escapeHtml(fileType)}</span></p>
         <p>ID: <span ${inlineEditAttrs("doc", doc.id, "id")}>${escapeHtml(doc.id)}</span></p>
+        ${doc.parentDocumentId ? `<p>Parent: <span>${escapeHtml(state.documents.find((item) => item.id === doc.parentDocumentId)?.title || doc.parentDocumentId)}</span></p>` : ""}
         <p>Tags: <span ${inlineEditAttrs("doc", doc.id, "tags")}>${escapeHtml(tags.join(", ") || "No tags")}</span></p>
         <p>Updated ${escapeHtml(updated)}</p>
       </div></details>
       <p>${escapeHtml(preview)}</p>
+      ${childHtml}
       ${renderDeprecatedVersions(doc)}
     </div>
   </details>`;
@@ -2141,6 +2213,7 @@ function filingCabinetTree() {
   });
   const tabsById = new Map([...groupsById.values()].flatMap((group) => group.tabs.map((tab) => [tab.id, tab])));
   state.documents.forEach((doc) => {
+    if (doc.parentDocumentId) return;
     const tab = resolveDocumentTab(doc, groupsById, tabsById);
     tab.documents.push(doc);
   });
@@ -2251,6 +2324,7 @@ async function handleWritingRoomCardClick(event) {
   const docId = button.dataset.docId;
   const action = button.dataset.cardAction;
   if (action === "open") { openDocument(docId); renderWritingRoomCards(); return; }
+  if (action === "sub-document") return createSubDocument(docId);
   if (action === "duplicate") return duplicateDocument(docId);
   if (action === "deprecate") return deprecateDocument(docId);
   if (action === "delete") return deleteDocumentSafely(docId);
@@ -2378,17 +2452,23 @@ async function deleteDocumentSafely(docId) {
   const index = state.documents.findIndex((item) => item.id === docId);
   if (index < 0) return;
   const doc = state.documents[index];
-  const stats = documentTextStats(doc.content || "");
-  const confirmed = await confirmFilingDelete({ type: "document", label: doc.title, docs: [doc], stats });
+  const docsToMove = [doc, ...descendantDocuments(doc.id)];
+  const stats = documentTextStats(docsToMove.map((item) => item.content || "").join("\n"));
+  const confirmed = await confirmFilingDelete({ type: doc.parentDocumentId ? "sub file" : "document", label: doc.title, docs: docsToMove, stats });
   if (!confirmed) return;
-  moveDocumentsToTrash([doc]);
+  moveDocumentsToTrash(docsToMove);
   if (state.activeId === docId) state.activeId = state.documents[0]?.id || createDocument().id;
   renderAll();
   markDirty("Document moved to Trash");
 }
 
 function moveDocumentsToTrash(docs) {
-  const ids = new Set(docs.map((doc) => doc.id));
+  const ids = new Set();
+  docs.forEach((doc) => {
+    if (!doc?.id) return;
+    ids.add(doc.id);
+    descendantDocuments(doc.id).forEach((child) => ids.add(child.id));
+  });
   const moving = state.documents.filter((doc) => ids.has(doc.id));
   state.documents = state.documents.filter((doc) => !ids.has(doc.id));
   moving.forEach((doc) => {
@@ -2527,11 +2607,13 @@ function handleFilingDrop(event) {
   if (from < 0) return;
   const [doc] = state.documents.splice(from, 1);
   if (targetGroup) {
+    delete doc.parentDocumentId;
     doc.filingGroupId = targetGroup.dataset.dropGroup;
     const groupTab = state.filingTabs.find((tab) => tab.groupId === doc.filingGroupId);
     if (groupTab) doc.filingTabId = groupTab.id;
   }
   if (targetTab) {
+    delete doc.parentDocumentId;
     const tab = state.filingTabs.find((item) => item.id === targetTab.dataset.dropTab);
     if (tab) {
       doc.filingTabId = tab.id;
@@ -4634,13 +4716,20 @@ function filingManifest() {
         order: tabIndex,
         locked: Boolean(tab.locked),
         files: state.documents
-          .filter((doc) => doc.filingTabId === tab.id)
+          .filter((doc) => doc.filingTabId === tab.id && !doc.parentDocumentId)
           .map((doc, fileIndex) => ({
             id: doc.id,
             title: doc.title,
             type: documentType(doc),
             order: fileIndex,
             path: doc.diskPath || suggestedMarkdownPath(doc),
+            subFiles: childDocuments(doc.id).map((child, childIndex) => ({
+              id: child.id,
+              title: child.title,
+              type: documentType(child),
+              order: childIndex,
+              path: child.diskPath || suggestedMarkdownPath(child),
+            })),
           })),
       })),
   }));
@@ -4671,6 +4760,7 @@ function folderModeProjectPayload() {
       updatedAt: doc.updatedAt,
       filingGroupId: doc.filingGroupId,
       filingTabId: doc.filingTabId,
+      parentDocumentId: doc.parentDocumentId || "",
       diskPath: doc.diskPath || "",
       diskSavedAt: doc.diskSavedAt || "",
       localDraftAt: doc.localDraftAt || "",
@@ -5454,133 +5544,133 @@ function capsanotoForcedExtraDesignSettings() {
     topBarHeight: "64",
     buttonTextColor: palette.parchment,
     buttonTextSize: "14",
-    windowBg: palette.espresso,
-    windowBorder: palette.clay,
+    windowBg: palette.panelGlass,
+    windowBorder: palette.lineBrown,
     windowShadow: palette.black,
-    appBgColor: palette.espresso,
+    appBgColor: palette.darkestBrown,
     appBgSize: "100",
     topBarImage: "",
     topBarImageSize: "100",
-    pageBg: palette.espresso,
-    paperBg: palette.espresso,
-    panelBg: palette.espresso,
-    darkBg: palette.espresso,
-    dark2Bg: palette.umber,
-    accentColor: palette.peach,
-    buttonHover: palette.amethyst,
-    successColor: palette.amethyst,
-    warningColor: palette.ochre,
+    pageBg: palette.darkestBrown,
+    paperBg: palette.coreBrown,
+    panelBg: palette.panelGlass,
+    darkBg: palette.coreBrown,
+    dark2Bg: palette.inkBlack,
+    accentColor: palette.purple,
+    buttonHover: palette.purple,
+    successColor: palette.purple,
+    warningColor: palette.lineBrown,
     dangerColor: palette.ember,
-    accentSoft: "rgba(232, 143, 105, 0.18)",
-    titleColor: palette.peach,
+    accentSoft: "rgba(95, 30, 102, 0.28)",
+    titleColor: palette.parchment,
     titleSize: "1",
-    topBarBg: palette.espresso,
+    topBarBg: palette.darkestBrown,
     topBarBgImage: "",
     topBarBgSize: "100",
-    topBarBorder: palette.clay,
-    writingRoomButtonBg: palette.umber,
-    writingRoomButtonBorder: palette.clay,
+    topBarBorder: palette.lineBrown,
+    writingRoomButtonBg: palette.panelGlass,
+    writingRoomButtonBorder: palette.lineBrown,
     writingRoomButtonText: palette.parchment,
-    commandBarBg: palette.deepPlum,
-    commandBarBorder: palette.clay,
+    commandBarBg: palette.purple,
+    commandBarBorder: palette.lineBrown,
     commandBarText: palette.parchment,
-    dropdownButtonBg: palette.umber,
-    dropdownButtonBorder: palette.clay,
+    dropdownButtonBg: palette.panelGlass,
+    dropdownButtonBorder: palette.lineBrown,
     dropdownButtonText: palette.parchment,
-    rightIconButtonBg: palette.umber,
-    rightIconButtonBorder: palette.clay,
-    writingRoomBg: palette.espresso,
+    rightIconButtonBg: palette.panelGlass,
+    rightIconButtonBorder: palette.lineBrown,
+    writingRoomBg: palette.panelGlass,
     writingRoomBgImage: "",
-    writingRoomHeaderBg: palette.espresso,
+    writingRoomHeaderBg: palette.panelGlass,
     writingRoomHeaderBgImage: "",
-    writingRoomHeaderBorder: palette.clay,
-    writingRoomTitleColor: palette.peach,
-    folderRowBg: palette.charcoal,
-    folderRowBorder: palette.clay,
+    writingRoomHeaderBorder: palette.lineBrown,
+    writingRoomTitleColor: palette.parchment,
+    folderRowBg: palette.panelGlassSoft,
+    folderRowBorder: palette.lineBrown,
     folderTextColor: palette.parchment,
-    tabRowBg: palette.deepPlum,
-    tabRowBorder: palette.amethyst,
+    tabRowBg: palette.purpleGlass,
+    tabRowBorder: palette.purple,
     tabTextColor: palette.parchment,
-    docRowBg: palette.umber,
-    docRowBorder: palette.clay,
+    docRowBg: palette.panelGlassSoft,
+    docRowBorder: palette.lineBrown,
     docTextColor: palette.parchment,
-    expandedDocTextColor: palette.ochre,
-    metadataPillBg: palette.amethyst,
-    metadataPillBorder: palette.clay,
+    expandedDocTextColor: palette.lineBrown,
+    metadataPillBg: palette.purpleGlass,
+    metadataPillBorder: palette.lineBrown,
     metadataPillTextColor: palette.parchment,
-    trashBg: palette.deepPlum,
-    trashBorder: palette.amethyst,
-    jumpRailLine: "#69635f",
-    jumpRailButtonBg: palette.charcoal,
-    jumpRailButtonBorder: palette.clay,
+    trashBg: palette.purpleGlass,
+    trashBorder: palette.purple,
+    jumpRailLine: palette.lineBrown,
+    jumpRailButtonBg: palette.panelGlassSoft,
+    jumpRailButtonBorder: palette.lineBrown,
     jumpRailIconColor: palette.parchment,
-    writingDeskBgColor: palette.espresso,
+    writingDeskBgColor: palette.darkestBrown,
     writingDeskGlowColor: palette.black,
     writingDeskGlowOpacity: "82",
-    writingSurfaceBg: palette.espresso,
+    writingSurfaceBg: "rgba(28, 18, 14, 0.78)",
     writingOverlayOpacity: "92",
-    writingSurfaceBorder: palette.clay,
-    docTitleBg: palette.umber,
+    writingSurfaceBorder: palette.lineBrown,
+    docTitleBg: "rgba(16, 10, 9, 0.82)",
     docTitleBgOpacity: "100",
-    docTitleBorder: palette.clay,
+    docTitleBorder: palette.lineBrown,
     docTitleColor: palette.parchment,
     editorTextColor: palette.parchment,
     h1Color: palette.parchment,
     h2Color: palette.parchment,
     h3Color: palette.parchment,
-    linkColor: palette.peach,
-    linkPillBg: palette.peach,
-    linkPillBorder: palette.clay,
-    linkPillText: palette.black,
-    bottomBarBg: palette.espresso,
-    bottomBarBorder: palette.clay,
+    linkColor: palette.parchment,
+    linkPillBg: palette.purpleGlass,
+    linkPillBorder: palette.purple,
+    linkPillText: palette.parchment,
+    bottomBarBg: palette.panelGlass,
+    bottomBarBorder: palette.lineBrown,
     bottomBarText: palette.parchment,
-    settingsBg: palette.espresso,
+    settingsBg: palette.panelGlass,
     settingsBgImage: "",
-    settingsBorder: palette.clay,
-    settingsTitleColor: palette.peach,
-    settingsCardBg: palette.espresso,
-    settingsCardBorder: palette.clay,
-    settingsLabelColor: palette.ochre,
-    settingsInputBg: palette.black,
+    settingsBorder: palette.lineBrown,
+    settingsTitleColor: palette.parchment,
+    settingsCardBg: palette.panelGlassSoft,
+    settingsCardBorder: palette.lineBrown,
+    settingsLabelColor: palette.lineBrown,
+    settingsInputBg: palette.darkestBrown,
     settingsInputText: palette.parchment,
-    settingsInputBorder: palette.clay,
-    settingsScrollbarTrack: palette.espresso,
-    settingsScrollbarThumb: palette.peach,
-    settingsSearchHighlight: palette.deepPlum,
-    settingsSearchHighlightBorder: palette.amethyst,
-    settingsHeaderButtonBg: palette.umber,
-    settingsHeaderButtonBorder: palette.clay,
+    settingsInputBorder: palette.lineBrown,
+    settingsScrollbarTrack: palette.darkestBrown,
+    settingsScrollbarThumb: palette.lineBrown,
+    settingsSearchHighlight: palette.purpleGlass,
+    settingsSearchHighlightBorder: palette.purple,
+    settingsHeaderButtonBg: palette.panelGlass,
+    settingsHeaderButtonBorder: palette.lineBrown,
     settingsHeaderButtonText: palette.parchment,
-    settingsSaveButtonBg: palette.amethyst,
-    settingsCloseButtonBg: palette.umber,
-    helpBg: palette.espresso,
+    settingsSaveButtonBg: palette.purple,
+    settingsCloseButtonBg: palette.panelGlass,
+    helpBg: palette.panelGlass,
     helpBgImage: "",
-    helpBorder: palette.clay,
-    helpTitleColor: palette.peach,
+    helpBorder: palette.lineBrown,
+    helpTitleColor: palette.parchment,
     helpTextColor: palette.parchment,
     helpHeadingColor: palette.parchment,
-    helpRuleColor: palette.clay,
-    tcardBg: palette.deepPlum,
-    tcardBorder: palette.peach,
+    helpRuleColor: palette.lineBrown,
+    tcardBg: palette.panelGlassSoft,
+    tcardBorder: palette.lineBrown,
     tcardText: palette.parchment,
-    tcardHeading: palette.peach,
-    tcardPanelBg: palette.espresso,
+    tcardHeading: palette.parchment,
+    tcardPanelBg: palette.panelGlass,
     tcardPanelBgImage: "",
-    tcardPanelBorder: palette.clay,
-    tcardInputBg: palette.deepPlum,
+    tcardPanelBorder: palette.lineBrown,
+    tcardInputBg: palette.darkestBrown,
     tcardInputText: palette.parchment,
-    tableBg: palette.espresso,
-    tableBorder: palette.clay,
-    tableHeadBg: palette.umber,
+    tableBg: palette.panelGlassSoft,
+    tableBorder: palette.lineBrown,
+    tableHeadBg: palette.panelGlass,
     tableHeadText: palette.parchment,
     tableBodyText: palette.parchment,
-    emphasisBg: palette.umber,
-    emphasisBorder: palette.amethyst,
+    emphasisBg: palette.panelGlassSoft,
+    emphasisBorder: palette.lineBrown,
     emphasisText: palette.parchment,
-    emojiWindowBg: palette.deepPlum,
-    emojiWindowBorder: palette.peach,
-    emojiHeaderBg: palette.espresso,
+    emojiWindowBg: palette.panelGlass,
+    emojiWindowBorder: palette.lineBrown,
+    emojiHeaderBg: palette.panelGlass,
     emojiTitleText: palette.parchment,
     emojiSectionBg: palette.espresso,
     emojiFavoriteAccent: palette.peach,
@@ -5608,46 +5698,46 @@ function defaultDesignSettings() {
   const palette = CAPSANOTO_PALETTE;
   return {
     paletteVersion: CAPSANOTO_THEME_VERSION,
-    pageBg: palette.espresso,
-    paperBg: palette.espresso,
-    darkBg: palette.espresso,
-    dark2Bg: palette.umber,
-    accentColor: palette.peach,
-    accentSoft: "rgba(232, 143, 105, 0.18)",
-    buttonHover: palette.amethyst,
-    successColor: palette.amethyst,
-    warningColor: palette.ochre,
+    pageBg: palette.darkestBrown,
+    paperBg: palette.coreBrown,
+    darkBg: palette.coreBrown,
+    dark2Bg: palette.inkBlack,
+    accentColor: palette.purple,
+    accentSoft: "rgba(95, 30, 102, 0.28)",
+    buttonHover: palette.purple,
+    successColor: palette.purple,
+    warningColor: palette.lineBrown,
     dangerColor: palette.ember,
-    buttonBg: palette.umber,
-    borderColor: palette.clay,
+    buttonBg: palette.panelGlass,
+    borderColor: palette.lineBrown,
     textColor: palette.parchment,
     fontSize: "14",
     fontFamily: "Arial, Helvetica, sans-serif",
     titleIconScale: "143",
-    bold: true,
+    bold: false,
     bgImage: "wallpapersm.jpg",
-    dialogBg: palette.espresso,
-    dialogBorder: palette.clay,
+    dialogBg: palette.panelGlass,
+    dialogBorder: palette.lineBrown,
     dialogShadow: palette.black,
     dialogText: palette.parchment,
     dialogFontSize: "14",
-    dialogBold: true,
-    dialogButtonBg: palette.umber,
-    dialogButtonBorder: palette.clay,
+    dialogBold: false,
+    dialogButtonBg: palette.panelGlass,
+    dialogButtonBorder: palette.lineBrown,
     dialogButtonText: palette.parchment,
     dialogButtonShadow: palette.black,
-    labelText: palette.ochre,
-    dynamicText: palette.peach,
-    scrollbarTrack: palette.espresso,
-    scrollbarThumb: palette.peach,
-    statusBg: palette.espresso,
-    statusBorder: palette.clay,
+    labelText: palette.lineBrown,
+    dynamicText: palette.parchment,
+    scrollbarTrack: palette.darkestBrown,
+    scrollbarThumb: palette.lineBrown,
+    statusBg: palette.panelGlassSoft,
+    statusBorder: palette.lineBrown,
     statusText: palette.parchment,
-    emphasisBg: palette.umber,
-    emphasisBorder: palette.amethyst,
+    emphasisBg: palette.panelGlassSoft,
+    emphasisBorder: palette.lineBrown,
     emphasisText: palette.parchment,
-    panelBg: palette.espresso,
-    panelBorder: palette.clay,
+    panelBg: palette.panelGlass,
+    panelBorder: palette.lineBrown,
     favoriteColors: [...DEFAULT_FAVORITE_COLORS],
   };
 }
@@ -5726,7 +5816,7 @@ function applyThemeToCurrentWritingRoom() {
 
 function runLayoutRecovery(reason = "") {
   document.body?.classList.add("capsanoto-v586-layout");
-  document.querySelectorAll(".app-version").forEach((node) => { node.textContent = "v5.9.0"; });
+  document.querySelectorAll(".app-version").forEach((node) => { node.textContent = "v5.9.2"; });
   try { updateWritingSurfaceMetrics(); } catch (error) { console.warn("Writing surface metric update failed", error); }
   try { updateWritingAssistRailPosition(); } catch (error) { console.warn("Writing assist rail update failed", error); }
   const toolbar = document.querySelector(".table-edit-toolbar");
@@ -5836,6 +5926,201 @@ function serializedWorkspace() {
 
 function updateUrl(bookmarkId = "") {
   history.replaceState(null, "", documentUrl(activeDocument().id, bookmarkId));
+}
+
+
+function handleDebugTaskClick(event) {
+  const button = event.target.closest("button[data-debug-task]");
+  if (!button) return;
+  runDebugTask(button.dataset.debugTask);
+}
+
+function debugTaskDefinitions() {
+  return [
+    { id: "startup", label: "Startup sanity", run: debugStartupSanity },
+    { id: "workspace", label: "Writing Room counts", run: debugWorkspaceCounts },
+    { id: "hierarchy", label: "Filing hierarchy", run: debugFilingHierarchy },
+    { id: "subfiles", label: "Sub files", run: debugSubFiles },
+    { id: "trash", label: "Trash / deprecate", run: debugTrashDeprecate },
+    { id: "serialize", label: "Caps JSON", run: debugSerialization },
+    { id: "localstorage", label: "Local storage", run: debugLocalStorage },
+    { id: "active", label: "Active file content", run: debugActiveFileContent },
+    { id: "layout", label: "Layout memory", run: debugLayoutMemory },
+    { id: "import-readiness", label: "Import readiness", run: debugImportReadiness },
+  ];
+}
+
+function runDebugTask(taskId) {
+  const task = debugTaskDefinitions().find((item) => item.id === taskId);
+  if (!task) return;
+  const lines = debugReportHeader(`Debug: ${task.label}`);
+  try {
+    lines.push(...task.run());
+    lines.push("✓ Completed");
+  } catch (error) {
+    console.error(error);
+    lines.push(`✖ ${error.message}`);
+    lines.push(error.stack || "No stack trace available");
+  }
+  writeDebugReport(lines.join("\n"));
+}
+
+function runAllDebugTasks() {
+  const lines = debugReportHeader("Full Capsanoto debug report");
+  debugTaskDefinitions().forEach((task) => {
+    lines.push("", `## ${task.label}`);
+    try {
+      lines.push(...task.run());
+      lines.push("✓ Passed");
+    } catch (error) {
+      lines.push(`✖ ${error.message}`);
+      if (error.stack) lines.push(error.stack);
+    }
+  });
+  writeDebugReport(lines.join("\n"));
+  setContextStatus("Debug report generated", "saved");
+}
+
+async function copyDebugReport() {
+  const text = els.debugReport?.value || "";
+  if (!text) return;
+  await copyText(text);
+  setContextStatus("Debug report copied", "saved");
+}
+
+function writeDebugReport(text) {
+  if (els.debugReport) els.debugReport.value = text;
+}
+
+function debugReportHeader(title) {
+  return [
+    `# ${title}`,
+    `Generated: ${new Date().toISOString()}`,
+    `URL: ${location.href}`,
+    `App: Capsanoto ${document.querySelector(".app-version")?.textContent || "unknown"}`,
+  ];
+}
+
+function debugStartupSanity() {
+  const required = ["editor", "writingRoomPanel", "writingRoomCards", "settingsPanel", "contextStatus", "titleInput", "blockPanel"];
+  const missing = required.filter((id) => !document.getElementById(id));
+  return [
+    `Required DOM ids missing: ${missing.length ? missing.join(", ") : "none"}`,
+    `Editor bound: ${els.editor?.dataset.bound || "false"}`,
+    `Active file: ${activeDocument()?.title || "none"} (${state.activeId || "no id"})`,
+  ];
+}
+
+function debugWorkspaceCounts() {
+  return [
+    `Writing Room name: ${state.writingRoomName || "Writing Room"}`,
+    `Folders: ${state.filingGroups.length}`,
+    `Tabs: ${state.filingTabs.length}`,
+    `Top-level files: ${topLevelDocuments().length}`,
+    `Sub files: ${state.documents.filter((doc) => doc.parentDocumentId).length}`,
+    `Total files: ${state.documents.length}`,
+    `TCards: ${Object.keys(state.blocks || {}).length}`,
+    `Trash: ${state.trash.length}`,
+    `Deprecated files: ${state.deprecated.length}`,
+  ];
+}
+
+function debugFilingHierarchy() {
+  const folderIds = new Set(state.filingGroups.map((group) => group.id));
+  const tabIds = new Set(state.filingTabs.map((tab) => tab.id));
+  const docIds = new Set(state.documents.map((doc) => doc.id));
+  const badTabs = state.filingTabs.filter((tab) => !folderIds.has(tab.groupId));
+  const badDocs = state.documents.filter((doc) => doc.filingTabId && !tabIds.has(doc.filingTabId));
+  const badSubFiles = state.documents.filter((doc) => doc.parentDocumentId && !docIds.has(doc.parentDocumentId));
+  const duplicateIds = state.documents.map((doc) => doc.id).filter((id, index, ids) => ids.indexOf(id) !== index);
+  return [
+    `Tabs with missing folder: ${badTabs.length}`,
+    `Files with missing tab: ${badDocs.length}`,
+    `Sub files with missing parent: ${badSubFiles.length}`,
+    `Duplicate file ids: ${duplicateIds.length ? duplicateIds.join(", ") : "none"}`,
+    `Filing edit mode: ${state.filingEditMode ? "unlocked" : "locked"}`,
+  ];
+}
+
+function debugSubFiles() {
+  const parents = topLevelDocuments().filter((doc) => childDocuments(doc.id).length);
+  const lines = [`Parents with sub files: ${parents.length}`];
+  parents.slice(0, 20).forEach((doc) => lines.push(`- ${doc.title}: ${childDocuments(doc.id).map((child) => child.title).join(" | ")}`));
+  if (!parents.length) lines.push("No sub files yet. Use Filing Cabinet → edit mode → ↳ on a file.");
+  return lines;
+}
+
+function debugTrashDeprecate() {
+  const deprecatedLinked = state.deprecated.filter((doc) => doc.deprecatedOf);
+  const trashChars = state.trash.reduce((sum, doc) => sum + documentTextStats(doc.content || "").characters, 0);
+  return [
+    `Trash files: ${state.trash.length}`,
+    `Trash characters preserved: ${trashChars}`,
+    `Deprecated files linked to live file: ${deprecatedLinked.length}`,
+    `Deprecated paragraph records: ${(state.deprecatedParagraphs || []).length}`,
+    `Delete confirmation function present: ${typeof confirmFilingDelete === "function"}`,
+    `Restore function present: ${typeof restoreArchivedDocument === "function"}`,
+  ];
+}
+
+function debugSerialization() {
+  const text = serializedWorkspace();
+  const parsed = JSON.parse(text);
+  return [
+    `Serialized bytes: ${text.length}`,
+    `Parsed documents: ${parsed.documents?.length || 0}`,
+    `Parsed sub files: ${(parsed.documents || []).filter((doc) => doc.parentDocumentId).length}`,
+    `Parsed folders/tabs: ${(parsed.filingGroups || []).length}/${(parsed.filingTabs || []).length}`,
+    `Parsed TCards: ${Object.keys(parsed.blocks || {}).length}`,
+  ];
+}
+
+function debugLocalStorage() {
+  const key = "capsanoto-debug-write-test";
+  localStorage.setItem(key, "ok");
+  const value = localStorage.getItem(key);
+  localStorage.removeItem(key);
+  return [
+    `localStorage write/read: ${value === "ok" ? "ok" : "failed"}`,
+    `Workspace key exists: ${localStorage.getItem(STORAGE_KEY) ? "yes" : "no"}`,
+    `Design key exists: ${localStorage.getItem(DESIGN_KEY) ? "yes" : "no"}`,
+    `Writing Room layout saved: ${localStorage.getItem(WRITING_ROOM_LAYOUT_KEY) ? "yes" : "no"}`,
+    `Panel layout saved: ${localStorage.getItem(PANEL_LAYOUT_KEY) ? "yes" : "no"}`,
+  ];
+}
+
+function debugActiveFileContent() {
+  const doc = activeDocument();
+  const html = doc?.content || "";
+  return [
+    `Active file: ${doc?.title || "none"}`,
+    `Parent file: ${doc?.parentDocumentId || "none"}`,
+    `Characters: ${documentTextStats(html).characters}`,
+    `Lines: ${documentTextStats(html).lines}`,
+    `TCards in file: ${(html.match(/\{\{[A-Za-z]+-[A-Za-z0-9-]+\}\}/g) || []).length}`,
+    `Tables in rendered editor: ${els.editor?.querySelectorAll("table").length || 0}`,
+    `Emphasis boxes in rendered editor: ${els.editor?.querySelectorAll(".emphasis-box").length || 0}`,
+  ];
+}
+
+function debugLayoutMemory() {
+  return [
+    `Writing surface inline size: ${els.writingSurfaceShell?.style.width || "default"} × ${els.writingSurfaceShell?.style.height || "default"}`,
+    `Settings panel inline size: ${els.settingsPanel?.style.width || "default"} × ${els.settingsPanel?.style.height || "default"}`,
+    `Writing Room panel inline position: ${els.writingRoomPanel?.style.left || "default"}, ${els.writingRoomPanel?.style.top || "default"}`,
+  ];
+}
+
+function debugImportReadiness() {
+  return [
+    "Google Docs tab-within-tab migration target:",
+    "Application → Writing Room → Folder → Tab → File → Sub File → TCard",
+    "Folders match the big Google Docs groups, e.g. Series Core, Characters, Episodes.",
+    "Tabs are the second organisation layer inside folders.",
+    "Files are the main document records.",
+    "Sub Files are nested under a file for Google Docs tabs-within-tabs style material.",
+    "Recommendation: migrate one folder first, then export/download a Caps JSON backup before importing more.",
+  ];
 }
 
 function parseRoute() {
