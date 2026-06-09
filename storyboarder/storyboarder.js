@@ -27,7 +27,8 @@
   };
 
   const el = {
-    episodeSelect: document.getElementById('episodeSelect'),
+    episodeSelectButton: document.getElementById('episodeSelectButton'),
+    episodeSelectMenu: document.getElementById('episodeSelectMenu'),
     episodeNumber: document.getElementById('episodeNumber'),
     episodeTitle: document.getElementById('episodeTitle'),
     episodeStatusButton: document.getElementById('episodeStatusButton'),
@@ -44,7 +45,9 @@
     btnOpenEffectsLibrary: document.getElementById('btnOpenEffectsLibrary'),
     viewButtons: Array.from(document.querySelectorAll('[data-view-mode]')),
     sceneSearch: document.getElementById('sceneSearch'),
-    statusFilter: document.getElementById('statusFilter'),
+    statusFilterButton: document.getElementById('statusFilterButton'),
+    statusFilterMenu: document.getElementById('statusFilterMenu'),
+    validationToggle: document.getElementById('validationToggle'),
     validationList: document.getElementById('validationList'),
     scriptWindow: document.getElementById('scriptWindow'),
     scriptWindowHeader: document.getElementById('scriptWindowHeader'),
@@ -360,15 +363,25 @@
 
   function renderEpisodeHeader() {
     const ep = state.project.episode;
-    el.episodeSelect.innerHTML = '';
-    const option = document.createElement('option');
-    option.value = ep.episodeNumber;
-    option.textContent = `Episode ${ep.episodeNumber} — ${ep.episodeTitle}`;
-    el.episodeSelect.appendChild(option);
+    const episodeLabel = `Episode ${ep.episodeNumber} — ${ep.episodeTitle || 'Untitled Episode'}`;
+
+    el.episodeSelectButton.textContent = `${episodeLabel} ▾`;
+    el.episodeSelectButton.setAttribute('aria-expanded', el.episodeSelectMenu.classList.contains('hidden') ? 'false' : 'true');
+    el.episodeSelectMenu.innerHTML = '';
+    const episodeButton = document.createElement('button');
+    episodeButton.type = 'button';
+    episodeButton.role = 'option';
+    episodeButton.className = 'active';
+    episodeButton.textContent = episodeLabel;
+    episodeButton.addEventListener('click', () => {
+      el.episodeSelectMenu.classList.add('hidden');
+      el.episodeSelectButton.setAttribute('aria-expanded', 'false');
+    });
+    el.episodeSelectMenu.appendChild(episodeButton);
 
     el.episodeNumber.textContent = `Episode ${String(ep.episodeNumber || '1').padStart(2, '0')}`;
     el.episodeTitle.textContent = ep.episodeTitle || 'Untitled Episode';
-    el.episodeStatusButton.textContent = `${ep.status || 'Not Started'} ▾`;
+    el.episodeStatusButton.textContent = `${statusEmoji(ep.status)} ${ep.status || 'Not Started'} ▾`;
     el.episodeStatusButton.setAttribute('aria-expanded', el.episodeStatusMenu.classList.contains('hidden') ? 'false' : 'true');
     el.episodeStatusMenu.innerHTML = '';
 
@@ -377,7 +390,7 @@
       button.type = 'button';
       button.role = 'option';
       button.className = status === ep.status ? 'active' : '';
-      button.textContent = status;
+      button.textContent = `${statusEmoji(status)} ${status}`;
       button.addEventListener('click', () => {
         state.project.episode.status = status;
         el.episodeStatusMenu.classList.add('hidden');
@@ -410,12 +423,33 @@
   }
 
   function renderLeftPanel() {
-    el.statusFilter.innerHTML = ['All', ...STATUSES].map(status => `<option ${status === state.filter.status ? 'selected' : ''}>${status}</option>`).join('');
     el.viewButtons.forEach(button => button.classList.toggle('active', button.dataset.viewMode === state.viewMode));
+    renderStatusFilterMenu();
     renderValidation();
   }
 
+  function renderStatusFilterMenu() {
+    const options = ['All', ...STATUSES];
+    el.statusFilterButton.textContent = `${statusEmoji(state.filter.status)} ${state.filter.status} ▾`;
+    el.statusFilterButton.setAttribute('aria-expanded', el.statusFilterMenu.classList.contains('hidden') ? 'false' : 'true');
+    el.statusFilterMenu.innerHTML = '';
+    options.forEach(status => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.role = 'option';
+      button.className = status === state.filter.status ? 'active' : '';
+      button.textContent = `${statusEmoji(status)} ${status}`;
+      button.addEventListener('click', () => {
+        state.filter.status = status;
+        el.statusFilterMenu.classList.add('hidden');
+        render();
+      });
+      el.statusFilterMenu.appendChild(button);
+    });
+  }
+
   function renderEffects() {
+    if (!el.episodeEffects) return;
     el.episodeEffects.innerHTML = '';
     const effects = state.project.episodeEffects || [];
     if (!effects.length) {
@@ -639,20 +673,22 @@
           </div>
           ${scene.storySummary ? `<p class="scene-summary">${escapeHtml(scene.storySummary)}</p>` : ''}
         </div>
-        <div class="scene-tools compact-tools">
-          <label>Status</label>
-          <select data-scene-control="status">
-            ${STATUSES.map(status => `<option ${status === scene.status ? 'selected' : ''}>${status}</option>`).join('')}
-          </select>
-          <div class="tool-row">
-            <button type="button" data-scene-control="script">Script</button>
-            <button type="button" data-scene-control="folder">Folder</button>
-          </div>
-          <div class="notes-hover">
-            <button type="button" class="notes-trigger">📝 Notes</button>
-            <div class="notes-popover" role="dialog" aria-label="Scene notes">
-              <label>Scene notes</label>
-              <textarea data-scene-control="notes" placeholder="Production notes, ideas, problems, reminders...">${escapeHtml(scene.notes || '')}</textarea>
+        <div class="scene-tools compact-tools icon-only-tools">
+          <div class="scene-icon-row">
+            <div class="scene-status-widget">
+              <button type="button" class="scene-icon-button scene-status-button" data-scene-status-button title="Status: ${escapeHtml(scene.status)}" aria-haspopup="listbox" aria-expanded="false">${statusEmoji(scene.status)}</button>
+              <div class="scene-status-menu status-menu hidden" data-scene-status-menu role="listbox">
+                ${STATUSES.map(status => `<button type="button" role="option" data-scene-status="${escapeHtml(status)}" class="${status === scene.status ? 'active' : ''}">${statusEmoji(status)} ${escapeHtml(status)}</button>`).join('')}
+              </div>
+            </div>
+            <button type="button" class="scene-icon-button" data-scene-control="script" title="Script">📜</button>
+            <button type="button" class="scene-icon-button" data-scene-control="folder" title="Folder">📁</button>
+            <div class="notes-hover">
+              <button type="button" class="scene-icon-button notes-trigger" title="Notes">📝</button>
+              <div class="notes-popover" role="dialog" aria-label="Scene notes">
+                <label>Scene notes</label>
+                <textarea data-scene-control="notes" placeholder="Production notes, ideas, problems, reminders...">${escapeHtml(scene.notes || '')}</textarea>
+              </div>
             </div>
           </div>
         </div>
@@ -660,9 +696,23 @@
       <div class="media-strip" data-media-strip="${escapeHtml(scene.sceneId)}"></div>
     `;
 
-    card.querySelector('[data-scene-control="status"]').addEventListener('change', event => {
-      scene.status = event.target.value;
-      render();
+    const statusButton = card.querySelector('[data-scene-status-button]');
+    const statusMenu = card.querySelector('[data-scene-status-menu]');
+    statusButton.addEventListener('click', event => {
+      event.stopPropagation();
+      document.querySelectorAll('[data-scene-status-menu]').forEach(menu => {
+        if (menu !== statusMenu) menu.classList.add('hidden');
+      });
+      statusMenu.classList.toggle('hidden');
+      statusButton.setAttribute('aria-expanded', statusMenu.classList.contains('hidden') ? 'false' : 'true');
+    });
+    statusMenu.querySelectorAll('[data-scene-status]').forEach(button => {
+      button.addEventListener('click', event => {
+        event.stopPropagation();
+        scene.status = button.dataset.sceneStatus;
+        statusMenu.classList.add('hidden');
+        render();
+      });
     });
 
     card.querySelector('[data-scene-control="notes"]').addEventListener('input', event => {
@@ -774,6 +824,17 @@
     if (/battle|duel|arrest|field|archery/.test(text)) return '⚔️';
     if (/prologue|book|library|alexandria/.test(text)) return '📜';
     return '🎬';
+  }
+
+  function statusEmoji(status) {
+    if (status === 'All') return '🚦';
+    if (status === 'Not Started') return '⚪';
+    if (status === 'Needs Assets') return '📦';
+    if (status === 'In Progress') return '🟣';
+    if (status === 'Rendered') return '🎞️';
+    if (status === 'Final') return '✅';
+    if (status === 'Problem') return '⚠️';
+    return '🚦';
   }
 
   function formatBytes(bytes) {
@@ -1096,16 +1157,45 @@
   }
 
   function bindEvents() {
+    el.episodeSelectButton.addEventListener('click', event => {
+      event.stopPropagation();
+      el.episodeSelectMenu.classList.toggle('hidden');
+      el.episodeStatusMenu.classList.add('hidden');
+      el.statusFilterMenu.classList.add('hidden');
+      el.episodeSelectButton.setAttribute('aria-expanded', el.episodeSelectMenu.classList.contains('hidden') ? 'false' : 'true');
+    });
+
     el.episodeStatusButton.addEventListener('click', event => {
       event.stopPropagation();
       el.episodeStatusMenu.classList.toggle('hidden');
+      el.episodeSelectMenu.classList.add('hidden');
+      el.statusFilterMenu.classList.add('hidden');
       el.episodeStatusButton.setAttribute('aria-expanded', el.episodeStatusMenu.classList.contains('hidden') ? 'false' : 'true');
     });
 
+    el.statusFilterButton.addEventListener('click', event => {
+      event.stopPropagation();
+      el.statusFilterMenu.classList.toggle('hidden');
+      el.episodeSelectMenu.classList.add('hidden');
+      el.episodeStatusMenu.classList.add('hidden');
+      el.statusFilterButton.setAttribute('aria-expanded', el.statusFilterMenu.classList.contains('hidden') ? 'false' : 'true');
+    });
+
     document.addEventListener('click', event => {
+      if (!event.target.closest('#episodeSelectWidget')) {
+        el.episodeSelectMenu.classList.add('hidden');
+        el.episodeSelectButton.setAttribute('aria-expanded', 'false');
+      }
       if (!event.target.closest('#episodeStatusWidget')) {
         el.episodeStatusMenu.classList.add('hidden');
         el.episodeStatusButton.setAttribute('aria-expanded', 'false');
+      }
+      if (!event.target.closest('#statusFilterWidget')) {
+        el.statusFilterMenu.classList.add('hidden');
+        el.statusFilterButton.setAttribute('aria-expanded', 'false');
+      }
+      if (!event.target.closest('.scene-status-widget')) {
+        document.querySelectorAll('[data-scene-status-menu]').forEach(menu => menu.classList.add('hidden'));
       }
     });
 
@@ -1146,6 +1236,9 @@
     el.btnFolderPlan.addEventListener('click', showFolderPlan);
     el.btnCreateFolders.addEventListener('click', createFoldersViaApi);
     el.btnOpenEffectsLibrary.addEventListener('click', openEffectsLibrary);
+    el.validationToggle?.addEventListener('click', () => {
+      el.validationList.classList.toggle('expanded');
+    });
 
     el.btnClearLocal.addEventListener('click', () => {
       if (!confirm('Clear the local Storyboarder draft from this browser?')) return;
@@ -1158,11 +1251,6 @@
 
     el.sceneSearch.addEventListener('input', event => {
       state.filter.query = event.target.value;
-      renderScenes();
-    });
-
-    el.statusFilter.addEventListener('change', event => {
-      state.filter.status = event.target.value;
       renderScenes();
     });
 

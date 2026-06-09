@@ -9,7 +9,7 @@
 </head>
 <body>
   <div class="app-shell">
-    <header class="topbar">
+    <header class="topbar topbar-v3">
       <div class="brand-block">
         <img class="app-logo" src="storyboarder.png" alt="Storyboarder logo" />
         <div>
@@ -18,70 +18,70 @@
         </div>
       </div>
 
-      <div class="episode-picker">
-        <label for="episodeSelect">Episode</label>
-        <select id="episodeSelect" aria-label="Episode selector"></select>
-      </div>
+      <div class="top-control-strip" aria-label="Storyboarder controls">
+        <div class="custom-select episode-select-widget" id="episodeSelectWidget">
+          <button id="episodeSelectButton" type="button" class="custom-select-button" aria-haspopup="listbox" aria-expanded="false">Episode 1 — The Curse Begins ▾</button>
+          <div id="episodeSelectMenu" class="custom-select-menu hidden" role="listbox"></div>
+        </div>
 
-      <div class="top-actions">
-        <button id="btnLoadSample" type="button">Load sample</button>
+        <button id="btnLoadSample" type="button">🧪 Sample</button>
         <label class="file-button">
-          Import JSON
+          📥 JSON
           <input id="jsonInput" type="file" accept=".json,application/json" />
         </label>
         <label class="file-button subdued">
-          Link script MD
+          📜 Script
           <input id="scriptInput" type="file" accept=".md,.markdown,text/markdown,text/plain" />
         </label>
-        <button id="btnExport" type="button">Export JSON</button>
+        <button id="btnExport" type="button">📤 Export</button>
       </div>
     </header>
 
-    <section class="episode-hero compact-hero">
-      <div class="episode-title-row compact-title-row">
+    <section class="episode-hero compact-hero compact-hero-v3">
+      <div class="episode-title-row compact-title-row compact-title-row-v3">
         <div class="episode-title-block">
           <div class="episode-meta-line">
-            <span class="episode-number" id="episodeNumber">Episode 01</span>
+            <div class="episode-number" id="episodeNumber">Episode 01</div>
             <div class="custom-status" id="episodeStatusWidget">
-              <button id="episodeStatusButton" class="status-pill" type="button" aria-haspopup="listbox" aria-expanded="false">Not Started ▾</button>
-              <div id="episodeStatusMenu" class="status-menu hidden" role="listbox" aria-label="Episode status"></div>
+              <button id="episodeStatusButton" type="button" class="status-pill" aria-haspopup="listbox" aria-expanded="false">Not Started ▾</button>
+              <div id="episodeStatusMenu" class="status-menu hidden" role="listbox"></div>
             </div>
           </div>
           <h2 id="episodeTitle">The Curse Begins</h2>
         </div>
+
         <nav class="jump-nav compact-jump-nav" id="jumpNav" aria-label="Episode jump navigator"></nav>
       </div>
     </section>
 
     <div class="workspace">
-      <aside class="left-panel">
-        <section class="panel-card view-card">
-          <h3>View</h3>
-          <div class="view-switch" role="group" aria-label="Storyboarder view mode">
-            <button type="button" data-view-mode="overview">Overview</button>
-            <button type="button" data-view-mode="act">Act view</button>
-            <button type="button" data-view-mode="scene">Scene view</button>
+      <aside class="left-panel left-panel-v3">
+        <section class="panel-card icon-panel">
+          <div class="view-switch">
+            <button type="button" data-view-mode="overview">🧭 Overview</button>
+            <button type="button" data-view-mode="act">🎬 Acts</button>
+            <button type="button" data-view-mode="scene">🧩 Scenes</button>
+          </div>
+
+          <div class="left-divider"></div>
+
+          <button id="btnFolderPlan" type="button" class="wide-button">📂 Plan</button>
+          <button id="btnCreateFolders" type="button" class="wide-button">🗂️ Create</button>
+          <button id="btnOpenEffectsLibrary" type="button" class="wide-button">✨ Effects</button>
+          <button id="btnClearLocal" type="button" class="wide-button danger">🧹 Clear</button>
+        </section>
+
+        <section class="panel-card icon-panel filter-panel">
+          <input id="sceneSearch" type="search" placeholder="🔎 Search" />
+          <div class="custom-select filter-select-widget" id="statusFilterWidget">
+            <button id="statusFilterButton" type="button" class="custom-select-button" aria-haspopup="listbox" aria-expanded="false">🚦 All ▾</button>
+            <div id="statusFilterMenu" class="custom-select-menu hidden" role="listbox"></div>
           </div>
         </section>
 
-        <section class="panel-card">
-          <h3>Controls</h3>
-          <button id="btnFolderPlan" type="button" class="wide-button">Show folder plan</button>
-          <button id="btnCreateFolders" type="button" class="wide-button">Create folders via HDD API</button>
-          <button id="btnOpenEffectsLibrary" type="button" class="wide-button">Effects library</button>
-          <button id="btnClearLocal" type="button" class="wide-button danger">Clear local draft</button>
-        </section>
-
-        <section class="panel-card">
-          <h3>Find scenes</h3>
-          <input id="sceneSearch" type="search" placeholder="Search scene title, location, notes..." />
-          <label for="statusFilter">Status filter</label>
-          <select id="statusFilter"></select>
-        </section>
-
-        <section class="panel-card validation-card">
-          <h3>Import validation</h3>
-          <div id="validationList" class="validation-list"></div>
+        <section class="panel-card icon-panel validation-card">
+          <button id="validationToggle" type="button" class="wide-button validation-toggle">⚠️ Issues</button>
+          <div id="validationList" class="validation-list compact-validation"></div>
         </section>
       </aside>
 
@@ -110,11 +110,11 @@
         <span class="media-type"></span>
       </div>
       <div class="media-controls">
-        <button type="button" data-media-action="play">▶</button>
-        <button type="button" data-media-action="stop">■</button>
-        <button type="button" data-media-action="download">⬇</button>
-        <button type="button" data-media-action="folder">📁</button>
-        <button type="button" data-media-action="remove">×</button>
+        <button type="button" data-media-action="play" title="Play">▶</button>
+        <button type="button" data-media-action="stop" title="Stop">■</button>
+        <button type="button" data-media-action="download" title="Download">⬇</button>
+        <button type="button" data-media-action="folder" title="Folder">📁</button>
+        <button type="button" data-media-action="remove" title="Remove">×</button>
       </div>
     </article>
   </template>
