@@ -1,11 +1,11 @@
-/* Capsanoto app.js v5.9.2 obsidian leather theme defaults. */
+/* Capsanoto app.js v5.9.3 purple glow card theme. */
 const STORAGE_KEY = "forever-bound-writing-room-v2";
 const AUTH_KEY = "forever-bound-authenticated";
 const AUTH_CONFIG_PATH = "config/auth.json";
 const CONTENT_PATH = "content/documents.json";
 const EDITOR_ENTRY = "editor.html";
 const AUTOSAVE_DELAY = 600;
-const DESIGN_KEY = "capsanoto-design-settings-v5-9-2-obsidian-leather-theme";
+const DESIGN_KEY = "capsanoto-design-settings-v5-9-3-purple-glow-card-theme";
 const HELP_KEY = "capsanoto-help-html-v1";
 const WRITING_ROOM_LAYOUT_KEY = "capsanoto-writing-room-layout-v5-8-6";
 const PANEL_LAYOUT_KEY = "capsanoto-floating-panel-layouts-v5-9-0";
@@ -26,7 +26,7 @@ const GOOGLE_DRIVE_API_ROOT = "https://www.googleapis.com/drive/v3";
 const GOOGLE_DRIVE_UPLOAD_ROOT = "https://www.googleapis.com/upload/drive/v3";
 const GOOGLE_DRIVE_ROOT_FOLDER_NAME = "Capsanoto";
 const GOOGLE_DRIVE_FOLDER_MIME = "application/vnd.google-apps.folder";
-const CAPSANOTO_THEME_VERSION = "obsidian-leather-v5-9-2";
+const CAPSANOTO_THEME_VERSION = "purple-glow-leather-v5-9-3";
 const FILING_HIERARCHY_VERSION = 1;
 
 const CAPSANOTO_PALETTE = {
@@ -36,6 +36,8 @@ const CAPSANOTO_PALETTE = {
   lineBrown: "#615243",
   parchment: "#fff0ce",
   purple: "#5f1e66",
+  purpleBright: "#8d43a0",
+  regularText: "#c7b08e",
   charcoal: "#363532",
   inkBlack: "#171013",
   panelGlass: "rgba(28, 18, 14, 0.76)",
@@ -62,6 +64,7 @@ const DEFAULT_FAVORITE_COLORS = [
   CAPSANOTO_PALETTE.coreBrown,
   CAPSANOTO_PALETTE.charcoal,
   CAPSANOTO_PALETTE.lineBrown,
+  CAPSANOTO_PALETTE.regularText,
   CAPSANOTO_PALETTE.purple,
   CAPSANOTO_PALETTE.parchment,
   CAPSANOTO_PALETTE.ember,
@@ -5589,14 +5592,14 @@ function capsanotoForcedExtraDesignSettings() {
     folderRowBorder: palette.lineBrown,
     folderTextColor: palette.parchment,
     tabRowBg: palette.purpleGlass,
-    tabRowBorder: palette.purple,
+    tabRowBorder: palette.purpleBright,
     tabTextColor: palette.parchment,
     docRowBg: palette.panelGlassSoft,
     docRowBorder: palette.lineBrown,
     docTextColor: palette.parchment,
-    expandedDocTextColor: palette.lineBrown,
+    expandedDocTextColor: palette.regularText,
     metadataPillBg: palette.purpleGlass,
-    metadataPillBorder: palette.lineBrown,
+    metadataPillBorder: palette.purpleBright,
     metadataPillTextColor: palette.parchment,
     trashBg: palette.purpleGlass,
     trashBorder: palette.purple,
@@ -5614,13 +5617,13 @@ function capsanotoForcedExtraDesignSettings() {
     docTitleBgOpacity: "100",
     docTitleBorder: palette.lineBrown,
     docTitleColor: palette.parchment,
-    editorTextColor: palette.parchment,
+    editorTextColor: palette.regularText,
     h1Color: palette.parchment,
     h2Color: palette.parchment,
     h3Color: palette.parchment,
     linkColor: palette.parchment,
     linkPillBg: palette.purpleGlass,
-    linkPillBorder: palette.purple,
+    linkPillBorder: palette.purpleBright,
     linkPillText: palette.parchment,
     bottomBarBg: palette.panelGlass,
     bottomBarBorder: palette.lineBrown,
@@ -5638,7 +5641,7 @@ function capsanotoForcedExtraDesignSettings() {
     settingsScrollbarTrack: palette.darkestBrown,
     settingsScrollbarThumb: palette.lineBrown,
     settingsSearchHighlight: palette.purpleGlass,
-    settingsSearchHighlightBorder: palette.purple,
+    settingsSearchHighlightBorder: palette.purpleBright,
     settingsHeaderButtonBg: palette.panelGlass,
     settingsHeaderButtonBorder: palette.lineBrown,
     settingsHeaderButtonText: palette.parchment,
@@ -5648,12 +5651,12 @@ function capsanotoForcedExtraDesignSettings() {
     helpBgImage: "",
     helpBorder: palette.lineBrown,
     helpTitleColor: palette.parchment,
-    helpTextColor: palette.parchment,
+    helpTextColor: palette.regularText,
     helpHeadingColor: palette.parchment,
     helpRuleColor: palette.lineBrown,
     tcardBg: palette.panelGlassSoft,
     tcardBorder: palette.lineBrown,
-    tcardText: palette.parchment,
+    tcardText: palette.regularText,
     tcardHeading: palette.parchment,
     tcardPanelBg: palette.panelGlass,
     tcardPanelBgImage: "",
@@ -5664,10 +5667,10 @@ function capsanotoForcedExtraDesignSettings() {
     tableBorder: palette.lineBrown,
     tableHeadBg: palette.panelGlass,
     tableHeadText: palette.parchment,
-    tableBodyText: palette.parchment,
+    tableBodyText: palette.regularText,
     emphasisBg: palette.panelGlassSoft,
     emphasisBorder: palette.lineBrown,
-    emphasisText: palette.parchment,
+    emphasisText: palette.regularText,
     emojiWindowBg: palette.panelGlass,
     emojiWindowBorder: palette.lineBrown,
     emojiHeaderBg: palette.panelGlass,
@@ -5710,7 +5713,7 @@ function defaultDesignSettings() {
     dangerColor: palette.ember,
     buttonBg: palette.panelGlass,
     borderColor: palette.lineBrown,
-    textColor: palette.parchment,
+    textColor: palette.regularText,
     fontSize: "14",
     fontFamily: "Arial, Helvetica, sans-serif",
     titleIconScale: "143",
@@ -5727,7 +5730,7 @@ function defaultDesignSettings() {
     dialogButtonText: palette.parchment,
     dialogButtonShadow: palette.black,
     labelText: palette.lineBrown,
-    dynamicText: palette.parchment,
+    dynamicText: palette.regularText,
     scrollbarTrack: palette.darkestBrown,
     scrollbarThumb: palette.lineBrown,
     statusBg: palette.panelGlassSoft,
@@ -5735,7 +5738,7 @@ function defaultDesignSettings() {
     statusText: palette.parchment,
     emphasisBg: palette.panelGlassSoft,
     emphasisBorder: palette.lineBrown,
-    emphasisText: palette.parchment,
+    emphasisText: palette.regularText,
     panelBg: palette.panelGlass,
     panelBorder: palette.lineBrown,
     favoriteColors: [...DEFAULT_FAVORITE_COLORS],
@@ -5816,7 +5819,7 @@ function applyThemeToCurrentWritingRoom() {
 
 function runLayoutRecovery(reason = "") {
   document.body?.classList.add("capsanoto-v586-layout");
-  document.querySelectorAll(".app-version").forEach((node) => { node.textContent = "v5.9.2"; });
+  document.querySelectorAll(".app-version").forEach((node) => { node.textContent = "v5.9.3"; });
   try { updateWritingSurfaceMetrics(); } catch (error) { console.warn("Writing surface metric update failed", error); }
   try { updateWritingAssistRailPosition(); } catch (error) { console.warn("Writing assist rail update failed", error); }
   const toolbar = document.querySelector(".table-edit-toolbar");

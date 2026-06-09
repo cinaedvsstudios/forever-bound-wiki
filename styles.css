@@ -1766,3 +1766,271 @@ textarea:focus,
 .editor td {
   color: var(--caps-highlight-cream);
 }
+
+
+/* Capsanoto v5.9.3 purple glow/shadow refinement
+   Changes:
+   - Cards, pills, buttons and menus gain stronger drop shadows.
+   - Active/focused/highlighted outlines use purple instead of brown.
+   - Regular text uses a mid-tone colour between #615243 and #fff0ce.
+   - #615243 remains for bold labels/subheadings and secondary system text.
+*/
+
+:root {
+  --caps-regular-text: #c7b08e;
+  --caps-purple-bright: #8d43a0;
+  --caps-card-shadow: 0 16px 34px rgba(0, 0, 0, 0.58), 0 1px 0 rgba(255, 240, 206, 0.04) inset;
+  --caps-button-shadow: 0 8px 20px rgba(0, 0, 0, 0.48), 0 1px 0 rgba(255, 240, 206, 0.05) inset;
+  --caps-pill-shadow: 0 10px 26px rgba(0, 0, 0, 0.50), 0 0 18px rgba(95, 30, 102, 0.34), 0 1px 0 rgba(255, 240, 206, 0.08) inset;
+  --caps-purple-outline: #8d43a0;
+  --dynamic-text: var(--caps-regular-text);
+  --editor-text-color: var(--caps-regular-text);
+  --table-body-text: var(--caps-regular-text);
+  --help-text-color: var(--caps-regular-text);
+  --tcard-text: var(--caps-regular-text);
+  --emphasis-text: var(--caps-regular-text);
+}
+
+/* Mid-tone readable text */
+.editor,
+.editor p,
+.editor li,
+.editor td,
+.help-content,
+.help-panel,
+.block-panel,
+.settings-panel,
+.writing-room-card-expanded,
+.transclusion-ref,
+.tcard-content,
+.emphasis-box,
+.dialog-html-field,
+.project-settings-panel {
+  color: var(--caps-regular-text) !important;
+}
+
+/* Keep headings, titles and intentionally highlighted text bright */
+.title-input,
+.editor h1,
+.editor h2,
+.editor h3,
+.editor strong,
+.editor b,
+.editor th,
+.preview-title-row strong,
+.settings-panel h2,
+.help-panel h2,
+.block-panel header h2,
+.project-settings-panel h2,
+.writing-room-title-input,
+.writing-room-card-title,
+.filing-folder > summary,
+.filing-tab > summary,
+.filing-doc-title,
+.transclusion-ref > span,
+.tcard-content > span,
+.emphasis-box strong {
+  color: var(--caps-highlight-cream) !important;
+}
+
+/* Keep labels/subheadings dark, bold and system-like */
+.eyebrow,
+.settings-card > summary,
+.element-designer-card > summary,
+.settings-label,
+.design-controls label,
+.element-designer-card label,
+.tcard-style-grid label,
+.block-panel label,
+.prop-label,
+.metadata-pill,
+.end-doc-meta,
+.help-content h3,
+.help-content h4,
+.dialog-label,
+.filing-card-meta,
+.filing-doc-meta,
+.status-label {
+  color: var(--caps-line-brown) !important;
+  font-weight: 700 !important;
+}
+
+/* Drop shadows on cards/panels */
+.writing-surface-shell,
+.document-end-bar,
+.writing-room-panel,
+.settings-panel,
+.help-panel,
+.block-panel,
+.project-settings-panel,
+.emoji-picker,
+.caps-dialog,
+.settings-card,
+.element-designer-card,
+.placeholder-card,
+.project-settings-section,
+.design-preview,
+.preview-card,
+.transclusion-ref,
+.tcard-content,
+.emphasis-box,
+.editor table,
+.editable-table,
+.table-edit-toolbar,
+.selection-menu,
+.color-image-popup,
+.filing-folder,
+.filing-tab,
+.filing-doc-card,
+.writing-room-card,
+.debug-card {
+  box-shadow: var(--caps-card-shadow) !important;
+}
+
+/* Drop shadows on buttons and compact controls */
+button,
+.tool-menu-trigger,
+.direct-command,
+.writing-room-button,
+.context-status,
+.settings-tab,
+.settings-panel .pill-button,
+.block-panel button,
+.caps-dialog button,
+.filing-action-button,
+.filing-mini-action,
+.table-edit-toolbar button,
+.favorite-colors button,
+.color-chip,
+.color-slot {
+  box-shadow: var(--caps-button-shadow) !important;
+}
+
+/* Purple outline for active/selected/focused/highlighted states */
+button:hover,
+button:focus-visible,
+input:focus,
+select:focus,
+textarea:focus,
+.dynamic-input:focus,
+.filing-doc-card:hover,
+.filing-doc-card.is-active,
+.filing-folder[open] > summary,
+.filing-tab[open] > summary,
+.settings-card[open],
+.element-designer-card[open],
+.transclusion-ref:hover,
+.tcard-content:hover,
+.emphasis-box:hover,
+.editor table:hover,
+.editable-table:hover,
+.table-edit-toolbar:hover,
+.preview-card:hover,
+.selection-menu button:hover,
+.color-chip:hover,
+.favorite-colors button:hover {
+  border-color: var(--caps-purple-outline) !important;
+  outline-color: var(--caps-purple-outline) !important;
+  box-shadow: var(--caps-card-shadow), 0 0 0 1px rgba(141, 67, 160, 0.75), 0 0 18px rgba(95, 30, 102, 0.34) !important;
+}
+
+/* Purple pill look like the reference blue component, but purple */
+.pill-link,
+.editor .pill-link,
+.metadata-pill,
+.toggle-pill[aria-pressed="true"],
+.filing-tab > summary,
+.tool-menu-trigger[aria-expanded="true"],
+.tool-menu.has-panel:hover .tool-menu-trigger,
+.tool-menu.has-panel:focus-within .tool-menu-trigger,
+.settings-tab[aria-selected="true"],
+.settings-tab[aria-pressed="true"],
+.writing-room-card.is-active {
+  background: linear-gradient(180deg, rgba(95, 30, 102, 0.98), rgba(45, 11, 52, 0.96)) !important;
+  border-color: var(--caps-purple-outline) !important;
+  color: var(--caps-highlight-cream) !important;
+  box-shadow: var(--caps-pill-shadow) !important;
+}
+
+/* Softer normal buttons; purple only on hover/active */
+button,
+.tool-menu-trigger,
+.direct-command,
+.writing-room-button,
+.settings-tab,
+.filing-action-button,
+.filing-mini-action {
+  background: linear-gradient(180deg, rgba(28, 18, 14, 0.92), rgba(16, 10, 9, 0.92)) !important;
+  border: 1px solid var(--caps-line-brown) !important;
+  color: var(--caps-regular-text) !important;
+  font-weight: 500 !important;
+}
+
+button:hover,
+.tool-menu-trigger:hover,
+.direct-command:hover,
+.writing-room-button:hover,
+.settings-tab:hover,
+.filing-action-button:hover,
+.filing-mini-action:hover {
+  color: var(--caps-highlight-cream) !important;
+}
+
+/* Top menu text should be calmer; icons can carry the visual weight */
+.tool-menu-trigger small,
+.direct-command small,
+.writing-room-button small,
+.tool-menu-panel button small {
+  color: rgba(199, 176, 142, 0.88) !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.08em;
+}
+
+/* Text inputs keep the dark field style with purple focus */
+input,
+select,
+textarea,
+.dynamic-input,
+.design-controls input,
+.design-controls select,
+.design-controls textarea,
+.block-panel input,
+.block-panel textarea,
+.caps-dialog input,
+.caps-dialog textarea,
+.caps-dialog select {
+  color: var(--caps-regular-text) !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: rgba(97, 82, 67, 0.95) !important;
+}
+
+/* Table/TCard/edit icons remain legible against the darker theme */
+.table-tool-icon {
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,.55));
+}
+
+.table-edit-toolbar input[type="color"],
+.design-controls input[type="color"],
+.tcard-style-grid input[type="color"],
+.favorite-colors button {
+  border-color: var(--caps-line-brown) !important;
+}
+
+.table-edit-toolbar input[type="color"]:hover,
+.design-controls input[type="color"]:hover,
+.tcard-style-grid input[type="color"]:hover,
+.favorite-colors button:hover {
+  border-color: var(--caps-purple-outline) !important;
+}
+
+/* Scrollbar refinement */
+* {
+  scrollbar-color: var(--caps-line-brown) var(--caps-darkest-brown);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--caps-purple-outline);
+}
