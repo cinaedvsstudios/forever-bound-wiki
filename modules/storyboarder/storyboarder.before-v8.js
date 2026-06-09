@@ -410,19 +410,6 @@
     return 'other';
   }
 
-  function findActForScene(scene) {
-    const data = activeEpisode();
-    return data?.acts?.find(act => act.scenes?.some(item => item.sceneId === scene.sceneId)) || null;
-  }
-
-  function getMediaTargetFolder(scene, type) {
-    const act = findActForScene(scene);
-    const actFolder = act?.folderName || scene.section || '';
-    const sceneFolder = scene.folderName || safeFolderText(`${getSceneCode(scene)} - ${scene.sceneTitle}`);
-    if (['music', 'sfx'].includes(type)) return `${actFolder}/Sound`;
-    return `${actFolder}/${sceneFolder}`;
-  }
-
   function iconForType(type) {
     if (type === 'image') return '🖼️';
     if (type === 'video') return '🎞️';
@@ -886,7 +873,7 @@
         type,
         filename: file.name,
         localPath: '',
-        targetFolder: getMediaTargetFolder(scene, type),
+        targetFolder: `${scene.folderName}/${group}`,
         status: 'Needs Assets',
         notes: '',
         size: file.size,
@@ -1053,12 +1040,12 @@
     const prefix = root ? `${root}/${epFolder}` : epFolder;
     const folders = [prefix, `${prefix}/Episode Effects`];
     data.acts.forEach(act => {
-      const actBase = `${prefix}/${act.folderName}`;
-      folders.push(actBase);
-      folders.push(`${actBase}/Misc`);
-      folders.push(`${actBase}/Sound`);
+      folders.push(`${prefix}/${act.folderName}`);
+      folders.push(`${prefix}/${act.folderName}/Misc`);
       act.scenes.forEach(scene => {
-        folders.push(`${actBase}/${scene.folderName}`);
+        const base = `${prefix}/${act.folderName}/${scene.folderName}`;
+        folders.push(base);
+        ['Images', 'Video', 'Audio', 'Blender', 'Notes', 'Exports'].forEach(child => folders.push(`${base}/${child}`));
       });
     });
     return folders;
