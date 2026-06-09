@@ -1,0 +1,38 @@
+Capsanoto v5.8.9 custom table toolbar icons
+
+Rollback anchor:
+- v5.8.8 table toolbar emoji/delete repair
+
+Files changed in edited-root package:
+- app.js
+- styles.css
+- editor.html
+- index.html
+- writing-room.html
+- assets/icons/table-delete-row.png
+- assets/icons/table-delete-column.png
+
+Change list:
+1. Cut the two icons from the supplied colbut-style image and saved them as:
+   - assets/icons/table-delete-row.png
+   - assets/icons/table-delete-column.png
+
+2. Replaced the delete-row and delete-column emoji toolbar buttons with the custom PNG icons.
+
+3. Removed the extra plus/minus visual clutter from add-row/add-column icons:
+   - Add row now uses ↕️
+   - Add column now uses ↔️
+   - Tooltips/aria labels still explain the exact action.
+
+4. Kept table structure tools grouped together and color swatches grouped at the end.
+
+5. Version/cache bumped to v5.8.9.
+
+Checks run:
+- node --check app.js
+- basic HTML parser check for editor.html, index.html, writing-room.html
+
+Rollback:
+- Replace these files with v5.8.8 copies if needed.
+
+Full package excludes old image assets, but includes the two new required table icon PNGs.

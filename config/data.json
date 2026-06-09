@@ -1,0 +1,280 @@
+{
+  "settings": {
+    "palette": [
+      "#bda170",
+      "#191711",
+      "#111111",
+      "#d88a64",
+      "#41096f",
+      "#881353",
+      "#2e2721",
+      "#2c2c2c",
+      "#ffffff",
+      "#6e4a2b"
+    ],
+    "fontSize": 14,
+    "align": "center",
+    "systemStyles": {
+      "sys-logo": {
+        "url": "https://github.com/cinaedvsstudios/forever-bound-wiki/blob/main/lantern%20logo1.png?raw=true",
+        "bgColor": "#000000",
+        "color": "#000000",
+        "name": "App Logo (Image)"
+      },
+      "sys-top-bar": {
+        "url": "https://raw.githubusercontent.com/cinaedvsstudios/forever-bound-wiki/refs/heads/main/bar.jpg",
+        "bgColor": "#000000",
+        "color": "#000000",
+        "name": "Top Bar (BG/URL)",
+        "fontSize": "70",
+        "shadowColor": "#191711",
+        "bgSize": "100%"
+      },
+      "sys-sidebar": {
+        "url": "https://raw.githubusercontent.com/cinaedvsstudios/forever-bound-wiki/refs/heads/main/leather.jpg",
+        "bgColor": "#000000",
+        "color": "#000000",
+        "name": "Top Bar (BG/URL)",
+        "fontSize": "175",
+        "shadowColor": "#2e2721"
+      },
+      "sys-edit-emoji": {
+        "text": "🪶",
+        "bgColor": "#000000",
+        "color": "#000000",
+        "fontColor": "#ffffff"
+      },
+      "sys-settings-emoji": {
+        "text": "👑",
+        "bgColor": "#000000",
+        "color": "#000000",
+        "fontColor": "#ffffff"
+      },
+      "sys-divider-line": {
+        "name": "Popup Dividers (Lines)",
+        "bgColor": "#bda170",
+        "color": "#d88a64",
+        "fontColor": "#111111",
+        "text": "#bda170"
+      },
+      "sys-add-div": {
+        "name": "🌐 Global Buttons",
+        "bgColor": "#2c2c2c",
+        "color": "#d88a64",
+        "fontColor": "#d88a64",
+        "bgSize": "100%",
+        "shadowColor": "#191711"
+      },
+      "sys-designer": {
+        "name": "🎨 Designer Button",
+        "text": "🏰 Designer",
+        "bgColor": "#191711",
+        "fontColor": "#881353",
+        "color": "#881353"
+      },
+      "sys-global-btn": {
+        "name": "🌐 Global Buttons",
+        "color": "#d88a64",
+        "fontColor": "#d88a64",
+        "bgColor": "#2c2c2c",
+        "shadowColor": "#191711"
+      },
+      "sys-global-bg": {
+        "name": "🌐 Global Buttons",
+        "bgColor": "#191711",
+        "color": "#d88a64",
+        "fontColor": "#d88a64"
+      },
+      "sys-modal-designer": {
+        "name": "🎨 Designer Modal",
+        "bgColor": "#191711",
+        "color": "#d88a64",
+        "shadowColor": "#111111"
+      },
+      "sys-popup-editor": {
+        "name": "✏️ Editor Popup",
+        "bgColor": "#191711",
+        "color": "#6e4a2b"
+      },
+      "sys-save-text": {
+        "name": "Save Status Indicator",
+        "text": "SAVING...",
+        "fontColor": "#191711"
+      },
+      "sys-edit-box": {
+        "name": "Mode Status Box",
+        "bgColor": "#111111",
+        "color": "#d88a64",
+        "fontColor": "#d88a64"
+      },
+      "sys-mod-delete": {
+        "name": "🗑️ Delete Mode",
+        "bgColor": "#881353",
+        "fontColor": "#ffffff",
+        "color": "#191711"
+      },
+      "sys-mod-folder": {
+        "name": "🗑️ Delete Mode",
+        "bgColor": "#2c2c2c",
+        "fontColor": "#ffffff",
+        "color": "#191711"
+      },
+      "sys-save": {
+        "name": "Save Layout Button",
+        "fontColor": "#111111",
+        "color": "#d88a64",
+        "bgColor": "#d88a64"
+      },
+      "sys-btn-delete": {
+        "name": "Designer: Apply",
+        "bgColor": "#41096f",
+        "color": "#111111",
+        "fontColor": "#ffffff"
+      },
+      "sys-btn-apply": {
+        "name": "Designer: Apply",
+        "bgColor": "#41096f",
+        "fontColor": "#ffffff",
+        "color": "#111111"
+      },
+      "sys-btn-cancel": {
+        "name": "Designer: Apply",
+        "bgColor": "#41096f",
+        "fontColor": "#ffffff",
+        "color": "#111111"
+      },
+      "sys-btn-sync": {
+        "name": "Designer: Apply",
+        "bgColor": "#41096f",
+        "fontColor": "#ffffff",
+        "color": "#111111"
+      },
+      "sys-edit-text": {
+        "name": "Status: EDIT",
+        "text": "EDIT",
+        "fontColor": "#d88a64"
+      },
+      "sys-ready-text": {
+        "name": "Status: READY",
+        "text": "READY",
+        "fontColor": "#881353"
+      },
+      "sys-ui-toggle": {
+        "name": "UI Toggle Button",
+        "color": "#41096f",
+        "fontColor": "#111111",
+        "shadowColor": "#111111",
+        "bgColor": "#881353"
+      },
+      "sys-reset": {
+        "name": "Reset Target Button",
+        "bgColor": "#41096f",
+        "color": "#41096f",
+        "fontColor": "#111111"
+      },
+      "sys-popup-save": {
+        "name": "Popup: Save & Sync",
+        "color": "#d88a64",
+        "bgSize": "100%"
+      },
+      "sys-add-btn": {
+        "name": "🌐 Global Buttons",
+        "bgSize": "100%",
+        "fontColor": "#d88a64",
+        "color": "#d88a64",
+        "bgColor": "#2c2c2c",
+        "shadowColor": "#191711"
+      },
+      "sys-add-fld": {
+        "name": "🌐 Global Buttons",
+        "bgSize": "100%",
+        "fontColor": "#d88a64",
+        "color": "#d88a64",
+        "bgColor": "#2c2c2c",
+        "shadowColor": "#191711"
+      },
+      "sys-add-lbl": {
+        "name": "🌐 Global Buttons",
+        "bgSize": "100%",
+        "fontColor": "#d88a64",
+        "color": "#d88a64",
+        "bgColor": "#2c2c2c",
+        "shadowColor": "#191711"
+      }
+    }
+  },
+  "items": [
+    {
+      "id": 1778123260394,
+      "type": "folder",
+      "name": "Season 1",
+      "desc": "Season 1 Episode Summaries",
+      "link": "https://docs.google.com/document/d/1AXn-FfNZopJXVMN2c5Zu_i65yVq57RhGT5GcTw0Yzjw/edit?tab=t.mamruepyoc27",
+      "placement": "side",
+      "parentId": null
+    },
+    {
+      "id": 1778123323485,
+      "type": "button",
+      "name": "Episode 01",
+      "desc": "",
+      "link": "https://docs.google.com/document/d/11-k9RfOi2QzF8g9V590PwmKdp8cnR6Vi0i-qRy_AN6Q/edit?usp=sharing",
+      "placement": "side",
+      "parentId": 1778123260394
+    },
+    {
+      "id": 1778123378118,
+      "type": "button",
+      "name": "Episode 02",
+      "desc": "",
+      "link": "https://docs.google.com/document/d/1HaXHBSZVmoPAjpkZ4RlsCiTWm9sX8zPdC0RLUACKGig/edit?usp=sharing",
+      "placement": "side",
+      "parentId": 1778123260394
+    },
+    {
+      "id": 1778123412135,
+      "type": "button",
+      "name": "Episode 03",
+      "desc": "",
+      "link": "https://docs.google.com/document/d/1bbVqiZ8RSx-C_RSMIBOrGugi5tzGfE0zaqeFgCheJO8/edit?usp=sharing",
+      "placement": "side",
+      "parentId": 1778123260394
+    },
+    {
+      "id": 1778123882143,
+      "type": "folder",
+      "name": "Season 2",
+      "desc": "Season 2 Episodes",
+      "link": "https://docs.google.com/document/d/1AXn-FfNZopJXVMN2c5Zu_i65yVq57RhGT5GcTw0Yzjw/edit?tab=t.w8iqm0y5avze",
+      "placement": "side",
+      "parentId": null
+    },
+    {
+      "id": 1778123927741,
+      "type": "folder",
+      "name": "Season 3 4 5",
+      "desc": "Season 3 4 5",
+      "link": "https://docs.google.com/document/d/1AXn-FfNZopJXVMN2c5Zu_i65yVq57RhGT5GcTw0Yzjw/edit?tab=t.mpvww1hozg2",
+      "placement": "side",
+      "parentId": null
+    },
+    {
+      "id": 1778192141620,
+      "type": "button",
+      "name": "Test",
+      "desc": "",
+      "link": "https://cinaedvsstudios.github.io/forever-bound-wiki/",
+      "placement": "top",
+      "parentId": null
+    },
+    {
+      "id": 1778355812930,
+      "type": "button",
+      "name": "Blank",
+      "desc": "https://www.lipsum.com/",
+      "link": "https://www.lipsum.com/",
+      "placement": "top",
+      "parentId": null
+    }
+  ]
+}
