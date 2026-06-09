@@ -1,11 +1,11 @@
-/* Capsanoto app.js v5.10.4 TCard/settings panel repair. */
+/* Capsanoto app.js v5.10.5 Subnoto/Specnoto module integration. */
 const STORAGE_KEY = "forever-bound-writing-room-v2";
 const AUTH_KEY = "forever-bound-authenticated";
 const AUTH_CONFIG_PATH = "config/auth.json";
 const CONTENT_PATH = "content/documents.json";
 const EDITOR_ENTRY = "editor.html";
 const AUTOSAVE_DELAY = 600;
-const DESIGN_KEY = "capsanoto-design-settings-v5-10-4-tcard-settings-panel-repair";
+const DESIGN_KEY = "capsanoto-design-settings-v5-10-5-module-integration";
 const HELP_KEY = "capsanoto-help-html-v1";
 const WRITING_ROOM_LAYOUT_KEY = "capsanoto-writing-room-layout-v5-8-6";
 const PANEL_LAYOUT_KEY = "capsanoto-floating-panel-layouts-v5-9-0";
@@ -26,7 +26,7 @@ const GOOGLE_DRIVE_API_ROOT = "https://www.googleapis.com/drive/v3";
 const GOOGLE_DRIVE_UPLOAD_ROOT = "https://www.googleapis.com/upload/drive/v3";
 const GOOGLE_DRIVE_ROOT_FOLDER_NAME = "Capsanoto";
 const GOOGLE_DRIVE_FOLDER_MIME = "application/vnd.google-apps.folder";
-const CAPSANOTO_THEME_VERSION = "purple-gold-cyan-leather-v5-10-4";
+const CAPSANOTO_THEME_VERSION = "purple-gold-cyan-leather-v5-10-5";
 const FILING_HIERARCHY_VERSION = 1;
 
 const CAPSANOTO_PALETTE = {
@@ -646,9 +646,8 @@ function bindEditorEvents() {
   els.imageButton.addEventListener("click", () => els.imageInput.click());
   els.imageInput.addEventListener("change", embedSelectedImage);
   els.emojiButton.addEventListener("click", showEmojiPicker);
-  els.searchButton?.addEventListener("click", () => setContextStatus("Specnoto search/find placeholder will be built later", "saved"));
-  els.subnotoButton?.addEventListener("click", () => openSubnotoWindow());
-  document.querySelector('.tool-menu-trigger[data-tool-name="Subnoto"]')?.addEventListener("click", openSubnotoWindow);
+  els.searchButton?.addEventListener("click", (event) => toggleCapsanotoModule("specnoto", event));
+  els.subnotoButton?.addEventListener("click", (event) => toggleCapsanotoModule("subnoto", event));
   els.emphasisButton.addEventListener("click", insertEmphasisBox);
   els.topHelpButton.addEventListener("click", () => toggleHelpPanel(true));
   els.settingsButton.addEventListener("click", () => toggleSettingsPanel(true));
@@ -3077,11 +3076,97 @@ function applyWritingSurfaceLayout() {
 }
 
 
-function openSubnotoWindow() {
-  setContextStatus("Subnoto window placeholder ready", "saved");
-  openCapsDialog("Subnoto", [
-    { name: "note", label: "Subnoto will be defined in the next phase.", value: "", readonly: true },
-  ]);
+const CAPSANOTO_MODULES = {
+  subnoto: {
+    label: "Subnoto",
+    globalName: "CapsanotoSubnoto",
+    entry: "modules/subnoto/subnoto.module.js",
+    initOptions: {},
+  },
+  specnoto: {
+    label: "Specnoto",
+    globalName: "CapsanotoSpecnoto",
+    entry: "modules/specnoto/specnoto.module.js",
+    initOptions: {
+      sourceSelector: "#editor, .editor[contenteditable='true'], [contenteditable='true']",
+      autoRestoreOpenState: false,
+    },
+  },
+};
+
+function capsanotoModuleDefinition(name) {
+  return CAPSANOTO_MODULES[name] || null;
+}
+
+function capsanotoModuleApi(name) {
+  const definition = capsanotoModuleDefinition(name);
+  return definition ? window[definition.globalName] : null;
+}
+
+function moduleScriptPresent(entry) {
+  return Boolean(document.querySelector(`script[src="${entry}"]`));
+}
+
+function moduleStatusMessage(name, message, status = "saved") {
+  const definition = capsanotoModuleDefinition(name);
+  setContextStatus(`${definition?.label || name}: ${message}`, status, status === "saved" ? 1800 : 2600);
+}
+
+function initCapsanotoModule(name) {
+  const definition = capsanotoModuleDefinition(name);
+  if (!definition) {
+    setContextStatus(`Unknown module: ${name}`, true, 2400);
+    return null;
+  }
+
+  const api = capsanotoModuleApi(name);
+  if (!api) {
+    const scriptHint = moduleScriptPresent(definition.entry)
+      ? "script tag is present, but the module API did not register"
+      : `missing script ${definition.entry}`;
+    moduleStatusMessage(name, scriptHint, true);
+    console.warn(`${definition.label} module unavailable: ${scriptHint}`);
+    return null;
+  }
+
+  try {
+    if (!api.__capsanotoIntegrated && typeof api.init === "function") {
+      api.init(definition.initOptions || {});
+      api.__capsanotoIntegrated = true;
+    }
+    return api;
+  } catch (error) {
+    moduleStatusMessage(name, "failed to initialise — see console", true);
+    console.error(`${definition.label} failed to initialise`, error);
+    return null;
+  }
+}
+
+function toggleCapsanotoModule(name, event) {
+  event?.preventDefault?.();
+  event?.stopPropagation?.();
+  event?.stopImmediatePropagation?.();
+
+  const definition = capsanotoModuleDefinition(name);
+  const api = initCapsanotoModule(name);
+  if (!definition || !api) return;
+
+  try {
+    if (typeof api.refresh === "function") api.refresh();
+    if (typeof api.toggle === "function") {
+      api.toggle();
+    } else if (typeof api.open === "function") {
+      api.open();
+    } else {
+      moduleStatusMessage(name, "loaded, but no toggle/open method was found", true);
+      console.warn(`${definition.label} module API`, api);
+      return;
+    }
+    moduleStatusMessage(name, "opened");
+  } catch (error) {
+    moduleStatusMessage(name, "failed to open — see console", true);
+    console.error(`${definition.label} failed to open`, error);
+  }
 }
 
 function startCabinetScrollDrag(event) {
@@ -6128,7 +6213,7 @@ function applyThemeToCurrentWritingRoom() {
 
 function runLayoutRecovery(reason = "") {
   document.body?.classList.add("capsanoto-v586-layout");
-  document.querySelectorAll(".app-version").forEach((node) => { node.textContent = "v5.10.4"; });
+  document.querySelectorAll(".app-version").forEach((node) => { node.textContent = "v5.10.5"; });
   try { updateWritingSurfaceMetrics(); } catch (error) { console.warn("Writing surface metric update failed", error); }
   try { updateWritingAssistRailPosition(); } catch (error) { console.warn("Writing assist rail update failed", error); }
   const toolbar = document.querySelector(".table-edit-toolbar");

@@ -3881,3 +3881,31 @@ button[data-favorite-color]:hover {
   max-height: 5.8rem;
   overflow: hidden;
 }
+
+
+/* Capsanoto v5.10.5 Subnoto / Specnoto module integration
+   No layout overhaul. Top-bar buttons now open the embedded module overlays loaded from /modules.
+*/
+
+button[data-capsanoto-module] {
+  position: relative;
+}
+
+button[data-capsanoto-module]::after {
+  content: "";
+  position: absolute;
+  right: .42rem;
+  bottom: .34rem;
+  width: .36rem;
+  height: .36rem;
+  border-radius: 999px;
+  background: #0070b6;
+  box-shadow: 0 0 10px rgba(0,112,182,.58);
+  opacity: .72;
+}
+
+button[data-capsanoto-module]:hover::after {
+  background: #b67300;
+  box-shadow: 0 0 12px rgba(182,115,0,.62);
+  opacity: 1;
+}
