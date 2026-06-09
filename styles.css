@@ -1179,7 +1179,7 @@ details.settings-card:not([open]) > *:not(summary), details.element-designer-car
 }
 
 
-/* Capsanoto v5.8.8 table toolbar emoji/delete repair */
+/* Capsanoto v5.8.9 custom table toolbar icons */
 .editable-table {
   position: relative;
 }
@@ -1205,7 +1205,7 @@ details.settings-card:not([open]) > *:not(summary), details.element-designer-car
 }
 
 
-/* Capsanoto v5.8.8 table toolbar emoji/delete repair */
+/* Capsanoto v5.8.9 custom table toolbar icons */
 .table-edit-toolbar {
   align-items: center;
   justify-content: flex-start;
@@ -1267,4 +1267,35 @@ details.settings-card:not([open]) > *:not(summary), details.element-designer-car
 .table-edit-toolbar [data-table-tool="delete-table"]:hover {
   background: var(--danger, #c55222);
   color: var(--caps-parchment);
+}
+
+
+/* Capsanoto v5.8.9 custom table toolbar icons */
+.table-edit-toolbar .table-tool-row {
+  gap: .26rem;
+}
+
+.table-edit-toolbar .table-tool-row::after {
+  content: "";
+  width: .22rem;
+}
+
+.table-tool-icon {
+  width: 1.35rem;
+  height: 1.35rem;
+  object-fit: contain;
+  display: block;
+  pointer-events: none;
+  image-rendering: auto;
+}
+
+.table-edit-toolbar button[data-table-tool="delete-row"],
+.table-edit-toolbar button[data-table-tool="delete-col"] {
+  background: color-mix(in srgb, var(--danger, #c55222) 30%, var(--button));
+  border-color: var(--danger, #c55222);
+}
+
+.table-edit-toolbar button[data-table-tool="delete-row"]:hover,
+.table-edit-toolbar button[data-table-tool="delete-col"]:hover {
+  background: color-mix(in srgb, var(--danger, #c55222) 65%, var(--button));
 }

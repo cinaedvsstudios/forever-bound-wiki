@@ -1,11 +1,11 @@
-/* Capsanoto app.js v5.8.8 table toolbar emoji/delete repair. */
+/* Capsanoto app.js v5.8.9 custom table toolbar icons. */
 const STORAGE_KEY = "forever-bound-writing-room-v2";
 const AUTH_KEY = "forever-bound-authenticated";
 const AUTH_CONFIG_PATH = "config/auth.json";
 const CONTENT_PATH = "content/documents.json";
 const EDITOR_ENTRY = "editor.html";
 const AUTOSAVE_DELAY = 600;
-const DESIGN_KEY = "capsanoto-design-settings-v5-8-8-table-toolbar-emoji-delete";
+const DESIGN_KEY = "capsanoto-design-settings-v5-8-9-custom-table-icons";
 const HELP_KEY = "capsanoto-help-html-v1";
 const WRITING_ROOM_LAYOUT_KEY = "capsanoto-writing-room-layout-v5-8-6";
 const FAVORITE_EMOJI_KEY = "capsanoto-favorite-emojis-v1";
@@ -24,7 +24,7 @@ const GOOGLE_DRIVE_API_ROOT = "https://www.googleapis.com/drive/v3";
 const GOOGLE_DRIVE_UPLOAD_ROOT = "https://www.googleapis.com/upload/drive/v3";
 const GOOGLE_DRIVE_ROOT_FOLDER_NAME = "Capsanoto";
 const GOOGLE_DRIVE_FOLDER_MIME = "application/vnd.google-apps.folder";
-const CAPSANOTO_THEME_VERSION = "warm-copper-clean-v5-8-8";
+const CAPSANOTO_THEME_VERSION = "warm-copper-clean-v5-8-9";
 const FILING_HIERARCHY_VERSION = 1;
 
 const CAPSANOTO_PALETTE = {
@@ -2747,10 +2747,10 @@ function showTableEditButton(table, open = false) {
     <span class="table-tool-row" aria-label="Table tools">
       <button type="button" data-table-tool="equalize" title="Equalise all column widths" aria-label="Equalise all column widths">⚖️</button>
       <button type="button" data-table-tool="wider" title="Make selected column wider" aria-label="Make selected column wider">↔️</button>
-      <button type="button" data-table-tool="add-row" title="Add row below selected cell" aria-label="Add row below selected cell">➕↕️</button>
-      <button type="button" data-table-tool="add-col" title="Add column after selected cell" aria-label="Add column after selected cell">➕↔️</button>
-      <button type="button" data-table-tool="delete-row" title="Delete selected row" aria-label="Delete selected row">➖↕️</button>
-      <button type="button" data-table-tool="delete-col" title="Delete selected column" aria-label="Delete selected column">➖↔️</button>
+      <button type="button" data-table-tool="add-row" title="Add row below selected cell" aria-label="Add row below selected cell">↕️</button>
+      <button type="button" data-table-tool="add-col" title="Add column after selected cell" aria-label="Add column after selected cell">↔️</button>
+      <button type="button" data-table-tool="delete-row" title="Delete selected row" aria-label="Delete selected row"><img src="assets/icons/table-delete-row.png" alt="" class="table-tool-icon"></button>
+      <button type="button" data-table-tool="delete-col" title="Delete selected column"><img src="assets/icons/table-delete-column.png" alt="" class="table-tool-icon"></button>
       <button type="button" data-table-tool="align" title="Cycle selected cell text alignment" aria-label="Cycle selected cell text alignment">📐</button>
       <button type="button" data-table-tool="delete-table" title="Delete entire table" aria-label="Delete entire table">🗑️</button>
       <input type="color" data-table-tool="header-bg" title="Header background colour" aria-label="Header background colour" value="#28133f">
@@ -5618,7 +5618,7 @@ function applyThemeToCurrentWritingRoom() {
 
 function runLayoutRecovery(reason = "") {
   document.body?.classList.add("capsanoto-v586-layout");
-  document.querySelectorAll(".app-version").forEach((node) => { node.textContent = "v5.8.8"; });
+  document.querySelectorAll(".app-version").forEach((node) => { node.textContent = "v5.8.9"; });
   try { updateWritingSurfaceMetrics(); } catch (error) { console.warn("Writing surface metric update failed", error); }
   try { updateWritingAssistRailPosition(); } catch (error) { console.warn("Writing assist rail update failed", error); }
   const toolbar = document.querySelector(".table-edit-toolbar");
