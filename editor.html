@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
 <title>Capsanoto</title>
-<link href="styles.css?v=5.9.8" rel="stylesheet"/>
+<link href="styles.css?v=5.9.9" rel="stylesheet"/>
 </head>
 <body class="is-unlocked">
 <main aria-labelledby="passwordTitle" class="password-screen" hidden="" id="passwordScreen">
@@ -23,7 +23,7 @@
 <main aria-label="Forever Bound writing editor" class="writer-shell" id="editorApp">
 <header aria-label="Capsanoto command bar" class="writer-header toolbar">
 <div class="document-controls">
-<strong class="app-name"><img alt="Capsanoto icon" src="https://raw.githubusercontent.com/cinaedvsstudios/forever-bound-wiki/refs/heads/main/iconcapsanoto.png"/><span class="brand-word">Capsanoto</span><span class="app-version">v5.9.8</span></strong>
+<strong class="app-name"><img alt="Capsanoto icon" src="https://raw.githubusercontent.com/cinaedvsstudios/forever-bound-wiki/refs/heads/main/iconcapsanoto.png"/><span class="brand-word">Capsanoto</span><span class="app-version">v5.9.9</span></strong>
 <label class="sr-only" for="documentSelect">Current document</label>
 <select hidden="" id="documentSelect" title="Document Switcher"></select>
 </div>
@@ -91,10 +91,11 @@
 <p class="eyebrow">Writing Room</p>
 <h2 id="writingRoomTitle">Writing Room</h2>
 </div>
-<div class="panel-header-actions"><button aria-label="New Document" class="icon-button" data-tool-name="Document Forge" id="newDocumentButton" title="New Document" type="button">📄</button><button aria-label="New Folder" class="icon-button" id="newFolderButton" title="New Folder" type="button">📁</button><button aria-label="New Tab" class="icon-button" id="newTabButton" title="New Tab" type="button">▱</button><button aria-label="Edit filing cabinet" aria-pressed="false" class="icon-button" id="editWritingRoomButton" type="button">✎</button><button aria-label="Save Writing Room panel default position and size" class="icon-button" hidden="" id="saveWritingRoomLayoutButton" title="Save default position and size" type="button">💾</button><button aria-label="Project Settings" class="icon-button" data-tool-name="Open Project Settings" id="projectSettingsButton" title="Project Settings" type="button">⚙</button><button aria-label="Close Writing Room" class="icon-button" id="closeWritingRoomPanel" type="button">×</button></div>
+<div class="panel-header-actions"><button aria-label="New Document" class="icon-button" data-tool-name="Document Forge" id="newDocumentButton" title="New Document" type="button">📄</button><button aria-label="New Folder" class="icon-button" id="newFolderButton" title="New Folder" type="button">📁</button><button aria-label="New Tab" class="icon-button" id="newTabButton" title="New Tab" type="button">▱</button><button aria-label="Edit filing cabinet" aria-pressed="false" class="icon-button" id="editWritingRoomButton" type="button">✎</button><button aria-label="Save Writing Room panel default position and size" class="icon-button" hidden="" id="saveWritingRoomLayoutButton" title="Save default position and size" type="button">💾</button><button aria-label="Project Settings" class="icon-button" data-tool-name="Open Project Settings" id="projectSettingsButton" title="Project Settings" type="button">⚙</button><button aria-label="Collapse Writing Room to compass bubble" class="icon-button" id="collapseWritingRoomPanel" title="Collapse Writing Room" type="button">🧭</button><button aria-label="Close Writing Room" class="icon-button" id="closeWritingRoomPanel" type="button">×</button></div>
 </header>
 <div class="writing-room-editbar" hidden="" id="writingRoomEditBar"></div><div class="writing-room-cards" id="writingRoomCards"></div>
 </aside>
+<button aria-label="Collapsed Writing Room — hover to preview, click to lock open" aria-expanded="false" aria-controls="writingRoomPanel" class="writing-room-collapse-bubble" hidden="" id="writingRoomCollapseBubble" title="Writing Room">🧭</button>
 <aside aria-label="Project Settings" class="project-settings-panel" hidden="" id="projectSettingsPanel">
 <header>
 <div>
@@ -768,6 +769,6 @@
 <h2 id="notes">Notes</h2>
 <p>Add internal references, links, and reusable TCards.</p>
 </template>
-<script src="app.js?v=5.9.8"></script>
+<script src="app.js?v=5.9.9"></script>
 </body>
 </html>

@@ -1,11 +1,11 @@
-/* Capsanoto app.js v5.9.8 title/color chip repair. */
+/* Capsanoto app.js v5.9.9 Writing Room collapse bubble. */
 const STORAGE_KEY = "forever-bound-writing-room-v2";
 const AUTH_KEY = "forever-bound-authenticated";
 const AUTH_CONFIG_PATH = "config/auth.json";
 const CONTENT_PATH = "content/documents.json";
 const EDITOR_ENTRY = "editor.html";
 const AUTOSAVE_DELAY = 600;
-const DESIGN_KEY = "capsanoto-design-settings-v5-9-8-title-color-chip-repair";
+const DESIGN_KEY = "capsanoto-design-settings-v5-9-9-writing-room-collapse-bubble";
 const HELP_KEY = "capsanoto-help-html-v1";
 const WRITING_ROOM_LAYOUT_KEY = "capsanoto-writing-room-layout-v5-8-6";
 const PANEL_LAYOUT_KEY = "capsanoto-floating-panel-layouts-v5-9-0";
@@ -26,7 +26,7 @@ const GOOGLE_DRIVE_API_ROOT = "https://www.googleapis.com/drive/v3";
 const GOOGLE_DRIVE_UPLOAD_ROOT = "https://www.googleapis.com/upload/drive/v3";
 const GOOGLE_DRIVE_ROOT_FOLDER_NAME = "Capsanoto";
 const GOOGLE_DRIVE_FOLDER_MIME = "application/vnd.google-apps.folder";
-const CAPSANOTO_THEME_VERSION = "purple-gold-cyan-leather-v5-9-8";
+const CAPSANOTO_THEME_VERSION = "purple-gold-cyan-leather-v5-9-9";
 const FILING_HIERARCHY_VERSION = 1;
 
 const CAPSANOTO_PALETTE = {
@@ -125,6 +125,9 @@ const state = {
   savedRange: null,
   dialogResolver: null,
   writingRoomDrag: null,
+  writingRoomCollapsed: false,
+  writingRoomPreviewExpanded: false,
+  writingRoomCollapseHoverTimer: null,
   panelDrag: null,
   filingEditMode: false,
   writingRoomName: "Writing Room",
@@ -311,6 +314,8 @@ const els = {
   writingRoomPanelHeader: document.querySelector("#writingRoomPanelHeader"),
   writingRoomTitle: document.querySelector("#writingRoomTitle"),
   closeWritingRoomPanel: document.querySelector("#closeWritingRoomPanel"),
+  collapseWritingRoomPanel: document.querySelector("#collapseWritingRoomPanel"),
+  writingRoomCollapseBubble: document.querySelector("#writingRoomCollapseBubble"),
   editWritingRoomButton: document.querySelector("#editWritingRoomButton"),
   saveWritingRoomLayoutButton: document.querySelector("#saveWritingRoomLayoutButton"),
   writingRoomEditBar: document.querySelector("#writingRoomEditBar"),
@@ -699,6 +704,12 @@ function bindEditorEvents() {
   els.saveFavoriteEmojiButton?.addEventListener("click", saveFavoriteEmojisFromSettings);
   els.writingRoomButton.addEventListener("click", () => toggleWritingRoomPanel());
   els.closeWritingRoomPanel.addEventListener("click", () => toggleWritingRoomPanel(false));
+  els.collapseWritingRoomPanel?.addEventListener("click", collapseWritingRoomPanel);
+  els.writingRoomCollapseBubble?.addEventListener("pointerdown", lockOpenWritingRoomFromBubble);
+  els.writingRoomCollapseBubble?.addEventListener("click", lockOpenWritingRoomFromBubble);
+  els.writingRoomCollapseBubble?.addEventListener("mouseenter", scheduleWritingRoomPreviewExpand);
+  els.writingRoomCollapseBubble?.addEventListener("mouseleave", handleWritingRoomBubbleLeave);
+  els.writingRoomPanel?.addEventListener("mouseleave", handleWritingRoomPreviewLeave);
   els.editWritingRoomButton.addEventListener("click", toggleFilingEditMode);
   els.saveWritingRoomLayoutButton?.addEventListener("click", saveWritingRoomPanelLayout);
   els.newFolderButton.addEventListener("click", () => createFilingGroup("folder"));
@@ -1963,9 +1974,98 @@ function openFilingCabinetSettingsMode() {
 }
 
 function toggleWritingRoomPanel(show = els.writingRoomPanel.hidden) {
+  clearTimeout(state.writingRoomCollapseHoverTimer);
+  state.writingRoomCollapsed = false;
+  state.writingRoomPreviewExpanded = false;
+  document.body.classList.remove("writing-room-is-collapsed", "writing-room-preview-expanded");
+  els.writingRoomPanel.classList.remove("is-collapse-preview");
   els.writingRoomPanel.hidden = !show;
+  if (els.writingRoomCollapseBubble) els.writingRoomCollapseBubble.hidden = true;
   els.writingRoomButton.setAttribute("aria-expanded", String(show));
-  if (show) { applyWritingRoomPanelLayout(); renderWritingRoomCards(); }
+  if (show) {
+    applyWritingRoomPanelLayout();
+    renderWritingRoomCards();
+  }
+}
+
+function collapseWritingRoomPanel() {
+  if (!els.writingRoomPanel || els.writingRoomPanel.hidden) return;
+  clearTimeout(state.writingRoomCollapseHoverTimer);
+  saveWritingRoomPanelLayout();
+  state.writingRoomCollapsed = true;
+  state.writingRoomPreviewExpanded = false;
+  document.body.classList.add("writing-room-is-collapsed");
+  document.body.classList.remove("writing-room-preview-expanded");
+  els.writingRoomPanel.classList.remove("is-collapse-preview");
+  els.writingRoomPanel.hidden = true;
+  if (els.writingRoomCollapseBubble) {
+    els.writingRoomCollapseBubble.hidden = false;
+    els.writingRoomCollapseBubble.setAttribute("aria-expanded", "false");
+    els.writingRoomCollapseBubble.focus({ preventScroll: true });
+  }
+  els.writingRoomButton.setAttribute("aria-expanded", "false");
+  setContextStatus("Writing Room collapsed — hover the compass to peek, click it to lock open", "saved");
+}
+
+function scheduleWritingRoomPreviewExpand() {
+  if (!state.writingRoomCollapsed || !els.writingRoomPanel) return;
+  clearTimeout(state.writingRoomCollapseHoverTimer);
+  state.writingRoomCollapseHoverTimer = setTimeout(previewExpandWritingRoom, 120);
+}
+
+function previewExpandWritingRoom() {
+  if (!state.writingRoomCollapsed || !els.writingRoomPanel) return;
+  state.writingRoomPreviewExpanded = true;
+  document.body.classList.add("writing-room-preview-expanded");
+  els.writingRoomPanel.hidden = false;
+  els.writingRoomPanel.classList.add("is-collapse-preview");
+  applyWritingRoomPanelLayout();
+  renderWritingRoomCards();
+  els.writingRoomCollapseBubble?.setAttribute("aria-expanded", "true");
+}
+
+function lockOpenWritingRoomFromBubble(event) {
+  event?.preventDefault?.();
+  event?.stopPropagation?.();
+  clearTimeout(state.writingRoomCollapseHoverTimer);
+  state.writingRoomCollapsed = false;
+  state.writingRoomPreviewExpanded = false;
+  document.body.classList.remove("writing-room-is-collapsed", "writing-room-preview-expanded");
+  els.writingRoomPanel.hidden = false;
+  els.writingRoomPanel.classList.remove("is-collapse-preview");
+  if (els.writingRoomCollapseBubble) els.writingRoomCollapseBubble.hidden = true;
+  applyWritingRoomPanelLayout();
+  renderWritingRoomCards();
+  els.writingRoomButton.setAttribute("aria-expanded", "true");
+  setContextStatus("Writing Room locked open", "saved");
+}
+
+function handleWritingRoomPreviewLeave(event) {
+  if (!state.writingRoomCollapsed || !state.writingRoomPreviewExpanded) return;
+  const next = event.relatedTarget;
+  if (next && (els.writingRoomPanel.contains(next) || els.writingRoomCollapseBubble?.contains(next))) return;
+  collapsePreviewWritingRoom();
+}
+
+function handleWritingRoomBubbleLeave(event) {
+  if (!state.writingRoomCollapsed || !state.writingRoomPreviewExpanded) return;
+  const next = event.relatedTarget;
+  if (next && (els.writingRoomPanel.contains(next) || els.writingRoomCollapseBubble?.contains(next))) return;
+  collapsePreviewWritingRoom();
+}
+
+function collapsePreviewWritingRoom() {
+  if (!state.writingRoomCollapsed || !els.writingRoomPanel) return;
+  clearTimeout(state.writingRoomCollapseHoverTimer);
+  state.writingRoomPreviewExpanded = false;
+  document.body.classList.remove("writing-room-preview-expanded");
+  els.writingRoomPanel.classList.remove("is-collapse-preview");
+  els.writingRoomPanel.hidden = true;
+  if (els.writingRoomCollapseBubble) {
+    els.writingRoomCollapseBubble.hidden = false;
+    els.writingRoomCollapseBubble.setAttribute("aria-expanded", "false");
+  }
+  els.writingRoomButton.setAttribute("aria-expanded", "false");
 }
 
 function toggleFilingEditMode() {
@@ -5854,7 +5954,7 @@ function applyThemeToCurrentWritingRoom() {
 
 function runLayoutRecovery(reason = "") {
   document.body?.classList.add("capsanoto-v586-layout");
-  document.querySelectorAll(".app-version").forEach((node) => { node.textContent = "v5.9.8"; });
+  document.querySelectorAll(".app-version").forEach((node) => { node.textContent = "v5.9.9"; });
   try { updateWritingSurfaceMetrics(); } catch (error) { console.warn("Writing surface metric update failed", error); }
   try { updateWritingAssistRailPosition(); } catch (error) { console.warn("Writing assist rail update failed", error); }
   const toolbar = document.querySelector(".table-edit-toolbar");

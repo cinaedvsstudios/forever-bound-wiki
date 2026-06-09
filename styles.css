@@ -3150,3 +3150,96 @@ input[type="color"] {
   background-color: var(--chip-color, var(--current-color, #615243)) !important;
   background-image: none !important;
 }
+
+
+/* Capsanoto v5.9.9 Writing Room collapse bubble
+   Rollback anchor: v5.9.8.
+   The Writing Room can collapse to a floating compass bubble. Hover previews it;
+   clicking the bubble locks the full panel open. X still closes permanently.
+*/
+
+#collapseWritingRoomPanel {
+  color: #fff0ce !important;
+  text-shadow: 0 3px 7px rgba(0,0,0,.72);
+}
+
+.writing-room-collapse-bubble {
+  position: fixed !important;
+  top: calc(var(--top-bar-height, 64px) + .85rem);
+  left: 1rem;
+  z-index: 12050 !important;
+  width: 3.25rem;
+  height: 3.25rem;
+  min-width: 3.25rem;
+  min-height: 3.25rem;
+  padding: 0 !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px !important;
+  border: 1px solid var(--caps-control-border-gold, #b67300) !important;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(255,240,206,.12) 0%, rgba(95,30,102,.84) 44%, rgba(16,10,9,.96) 100%) !important;
+  color: #fff0ce !important;
+  font-size: 1.5rem;
+  box-shadow:
+    0 18px 42px rgba(0,0,0,.72),
+    0 0 0 1px rgba(0,112,182,.48),
+    0 0 28px rgba(95,30,102,.50) !important;
+  cursor: pointer;
+  transform-origin: center;
+}
+
+.writing-room-collapse-bubble:hover,
+.writing-room-collapse-bubble:focus-visible {
+  border-color: var(--caps-selected-cyan, #0070b6) !important;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(255,240,206,.22) 0%, rgba(0,112,182,.54) 32%, rgba(95,30,102,.90) 62%, rgba(16,10,9,.96) 100%) !important;
+  box-shadow:
+    0 20px 52px rgba(0,0,0,.76),
+    0 0 0 1px rgba(0,112,182,.90),
+    0 0 32px rgba(0,112,182,.46),
+    0 0 34px rgba(95,30,102,.42) !important;
+  transform: scale(1.04);
+}
+
+body.writing-room-is-collapsed .writing-room-collapse-bubble {
+  animation: capsanoto-collapse-breathe 2.4s ease-in-out infinite;
+}
+
+body.writing-room-preview-expanded .writing-room-collapse-bubble {
+  animation: none;
+  opacity: .92;
+}
+
+@keyframes capsanoto-collapse-breathe {
+  0%, 100% {
+    box-shadow:
+      0 18px 42px rgba(0,0,0,.72),
+      0 0 0 1px rgba(182,115,0,.42),
+      0 0 24px rgba(95,30,102,.38);
+  }
+  50% {
+    box-shadow:
+      0 20px 48px rgba(0,0,0,.76),
+      0 0 0 1px rgba(0,112,182,.70),
+      0 0 32px rgba(0,112,182,.34),
+      0 0 32px rgba(95,30,102,.48);
+  }
+}
+
+.writing-room-panel.is-collapse-preview {
+  z-index: 12000 !important;
+  box-shadow:
+    0 30px 90px rgba(0,0,0,.78),
+    0 0 0 1px rgba(0,112,182,.62),
+    0 0 42px rgba(95,30,102,.44) !important;
+}
+
+body.writing-room-preview-expanded .writing-room-panel.is-collapse-preview {
+  pointer-events: auto;
+}
+
+body.writing-room-is-collapsed:not(.writing-room-preview-expanded) #writingRoomPanel[hidden] {
+  display: none !important;
+}
