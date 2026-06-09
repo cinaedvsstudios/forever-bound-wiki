@@ -1,11 +1,11 @@
-/* Capsanoto app.js v5.9.9 Writing Room collapse bubble. */
+/* Capsanoto app.js v5.10.1 window/favicon icon. */
 const STORAGE_KEY = "forever-bound-writing-room-v2";
 const AUTH_KEY = "forever-bound-authenticated";
 const AUTH_CONFIG_PATH = "config/auth.json";
 const CONTENT_PATH = "content/documents.json";
 const EDITOR_ENTRY = "editor.html";
 const AUTOSAVE_DELAY = 600;
-const DESIGN_KEY = "capsanoto-design-settings-v5-9-9-writing-room-collapse-bubble";
+const DESIGN_KEY = "capsanoto-design-settings-v5-10-1-window-icon";
 const HELP_KEY = "capsanoto-help-html-v1";
 const WRITING_ROOM_LAYOUT_KEY = "capsanoto-writing-room-layout-v5-8-6";
 const PANEL_LAYOUT_KEY = "capsanoto-floating-panel-layouts-v5-9-0";
@@ -26,7 +26,7 @@ const GOOGLE_DRIVE_API_ROOT = "https://www.googleapis.com/drive/v3";
 const GOOGLE_DRIVE_UPLOAD_ROOT = "https://www.googleapis.com/upload/drive/v3";
 const GOOGLE_DRIVE_ROOT_FOLDER_NAME = "Capsanoto";
 const GOOGLE_DRIVE_FOLDER_MIME = "application/vnd.google-apps.folder";
-const CAPSANOTO_THEME_VERSION = "purple-gold-cyan-leather-v5-9-9";
+const CAPSANOTO_THEME_VERSION = "purple-gold-cyan-leather-v5-10-1";
 const FILING_HIERARCHY_VERSION = 1;
 
 const CAPSANOTO_PALETTE = {
@@ -827,7 +827,81 @@ function bindEditorEvents() {
   });
 }
 
+
+function cleanDocumentId(value) {
+  const decoded = decodeURIComponent(String(value || "").trim());
+  const withoutHash = decoded.split("#")[0];
+  const withoutQuery = withoutHash.split("?")[0];
+  return slugify(withoutQuery || decoded);
+}
+
+function hasDirtyDocumentId(value) {
+  const decoded = decodeURIComponent(String(value || ""));
+  return /[?#&=]/.test(decoded) || decoded !== cleanDocumentId(decoded);
+}
+
+function uniqueCleanDocumentId(base, originalId = "") {
+  const cleanBase = cleanDocumentId(base);
+  let id = cleanBase || "document";
+  let index = 2;
+  const taken = () => (
+    state.documents.some((doc) => doc.id === id && doc.id !== originalId)
+    || state.trash.some((doc) => doc.id === id && doc.id !== originalId)
+    || state.deprecated.some((doc) => doc.id === id && doc.id !== originalId)
+  );
+  while (taken()) {
+    id = `${cleanBase}-${index}`;
+    index += 1;
+  }
+  return id;
+}
+
+function escapeRegExp(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function remapDocumentIdReferences(oldId, newId) {
+  if (!oldId || !newId || oldId === newId) return;
+  const cleanField = (value) => value === oldId ? newId : value;
+  [...state.documents, ...state.trash, ...state.deprecated].forEach((doc) => {
+    if (!doc) return;
+    doc.parentDocumentId = cleanField(doc.parentDocumentId);
+    if (doc.content && typeof doc.content === "string") {
+      const encodedOld = encodeURIComponent(oldId);
+      const encodedNew = encodeURIComponent(newId);
+      const replacements = [
+        [new RegExp(escapeRegExp(`doc=${encodedOld}`), "g"), `doc=${encodedNew}`],
+        [new RegExp(escapeRegExp(`doc=${oldId}`), "g"), `doc=${newId}`],
+      ];
+      replacements.forEach(([pattern, replacement]) => {
+        doc.content = doc.content.replace(pattern, replacement);
+      });
+    }
+  });
+  if (state.activeId === oldId) state.activeId = newId;
+}
+
+function sanitizeWorkspaceDocumentIds() {
+  const allDocs = [...state.documents, ...state.trash, ...state.deprecated].filter(Boolean);
+  const changes = [];
+  allDocs.forEach((doc) => {
+    if (!doc.id || !hasDirtyDocumentId(doc.id)) return;
+    const oldId = doc.id;
+    const newId = uniqueCleanDocumentId(oldId, oldId);
+    doc.id = newId;
+    remapDocumentIdReferences(oldId, newId);
+    changes.push(`${oldId} → ${newId}`);
+  });
+  return changes;
+}
+
+function cleanRouteDocumentId(value) {
+  return cleanDocumentId(value);
+}
+
+
 function createDocument(id = `doc-${Date.now()}`, title = "Untitled Document", options = {}) {
+  id = uniqueCleanDocumentId(id);
   const doc = {
     id,
     title,
@@ -866,15 +940,22 @@ function openFromRoute() {
 
 function applyRouteToState() {
   const route = parseRoute();
+  const cleanupChanges = sanitizeWorkspaceDocumentIds();
   const routeDocument = route.documentId ? findDocumentByRouteId(route.documentId) : null;
   if (routeDocument) {
     state.activeId = routeDocument.id;
   } else if (route.documentId) {
     const doc = createDocument(route.documentId, humanizeDocumentId(route.documentId));
     state.activeId = doc.id;
-    markDirty("Created document from URL");
+    markDirty("Created document from clean URL");
   }
   state.pendingBookmarkId = route.bookmarkId;
+  if (cleanupChanges.length) {
+    markDirty(`Cleaned document IDs: ${cleanupChanges.join(", ")}`);
+  }
+  if (route.routeWasDirty || cleanupChanges.length) {
+    requestAnimationFrame(() => updateUrl(route.bookmarkId));
+  }
 }
 
 function scrollToRouteBookmark() {
@@ -5954,7 +6035,7 @@ function applyThemeToCurrentWritingRoom() {
 
 function runLayoutRecovery(reason = "") {
   document.body?.classList.add("capsanoto-v586-layout");
-  document.querySelectorAll(".app-version").forEach((node) => { node.textContent = "v5.9.9"; });
+  document.querySelectorAll(".app-version").forEach((node) => { node.textContent = "v5.10.1"; });
   try { updateWritingSurfaceMetrics(); } catch (error) { console.warn("Writing surface metric update failed", error); }
   try { updateWritingAssistRailPosition(); } catch (error) { console.warn("Writing assist rail update failed", error); }
   const toolbar = document.querySelector(".table-edit-toolbar");
@@ -6044,6 +6125,7 @@ function exportWorkspace() {
 }
 
 function serializedWorkspace() {
+  sanitizeWorkspaceDocumentIds();
   return JSON.stringify({
     schemaVersion: 2,
     updatedAt: new Date().toISOString(),
@@ -6164,6 +6246,7 @@ function debugWorkspaceCounts() {
 }
 
 function debugFilingHierarchy() {
+  const cleanupChanges = sanitizeWorkspaceDocumentIds();
   const folderIds = new Set(state.filingGroups.map((group) => group.id));
   const tabIds = new Set(state.filingTabs.map((tab) => tab.id));
   const docIds = new Set(state.documents.map((doc) => doc.id));
@@ -6171,11 +6254,14 @@ function debugFilingHierarchy() {
   const badDocs = state.documents.filter((doc) => doc.filingTabId && !tabIds.has(doc.filingTabId));
   const badSubFiles = state.documents.filter((doc) => doc.parentDocumentId && !docIds.has(doc.parentDocumentId));
   const duplicateIds = state.documents.map((doc) => doc.id).filter((id, index, ids) => ids.indexOf(id) !== index);
+  const dirtyIds = state.documents.map((doc) => doc.id).filter(hasDirtyDocumentId);
+  if (cleanupChanges.length) markDirty(`Cleaned document IDs: ${cleanupChanges.join(", ")}`);
   return [
     `Tabs with missing folder: ${badTabs.length}`,
     `Files with missing tab: ${badDocs.length}`,
     `Sub files with missing parent: ${badSubFiles.length}`,
     `Duplicate file ids: ${duplicateIds.length ? duplicateIds.join(", ") : "none"}`,
+    `Dirty file ids: ${dirtyIds.length ? dirtyIds.join(", ") : "none"}`,
     `Filing edit mode: ${state.filingEditMode ? "unlocked" : "locked"}`,
   ];
 }
@@ -6263,8 +6349,12 @@ function debugImportReadiness() {
 
 function parseRoute() {
   const params = new URLSearchParams(location.search);
+  const rawDocumentId = params.get("doc") || "";
+  const documentId = rawDocumentId ? cleanRouteDocumentId(rawDocumentId) : "";
   return {
-    documentId: params.get("doc") || "",
+    documentId,
+    rawDocumentId,
+    routeWasDirty: Boolean(rawDocumentId && rawDocumentId !== documentId),
     bookmarkId: decodeURIComponent(location.hash.replace(/^#/, "")),
   };
 }
@@ -6273,7 +6363,7 @@ function documentUrl(documentId, bookmarkId = "") {
   const url = new URL(location.href);
   url.pathname = editorPathname();
   url.search = "";
-  url.searchParams.set("doc", documentId);
+  url.searchParams.set("doc", cleanDocumentId(documentId));
   url.hash = bookmarkId ? encodeURIComponent(bookmarkId) : "";
   return `${url.pathname}${url.search}${url.hash}`;
 }
@@ -6297,9 +6387,10 @@ function absoluteSectionUrl(documentId, bookmarkId) {
 }
 
 function findDocumentByRouteId(value) {
-  const decoded = decodeURIComponent(value);
-  return state.documents.find((item) => item.id === decoded)
-    ?? state.documents.find((item) => slugify(item.title) === slugify(decoded));
+  const decoded = decodeURIComponent(value || "");
+  const cleanId = cleanDocumentId(decoded);
+  return state.documents.find((item) => item.id === cleanId || item.id === decoded)
+    ?? state.documents.find((item) => slugify(item.title) === cleanId || slugify(item.title) === slugify(decoded));
 }
 
 async function copyBookmarkLink(bookmarkId) {
@@ -6393,7 +6484,7 @@ function uniqueBookmarkId(base) {
 }
 
 function humanizeDocumentId(value) {
-  return decodeURIComponent(value).replace(/[-_]+/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
+  return cleanDocumentId(value).replace(/[-_]+/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
 function slugify(value) {

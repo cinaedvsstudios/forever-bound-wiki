@@ -1,0 +1,18 @@
+{
+  "name": "Capsanoto",
+  "short_name": "Capsanoto",
+  "description": "Capsanoto writing room and project bible editor.",
+  "start_url": "./editor.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#100a09",
+  "theme_color": "#5f1e66",
+  "icons": [
+    {
+      "src": "iconcapsanoto.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -3243,3 +3243,13 @@ body.writing-room-preview-expanded .writing-room-panel.is-collapse-preview {
 body.writing-room-is-collapsed:not(.writing-room-preview-expanded) #writingRoomPanel[hidden] {
   display: none !important;
 }
+
+
+/* Capsanoto v5.10.0 route/document-id sanitizer
+   No visual changes in this pass. Route/workspace ID cleanup lives in app.js.
+*/
+
+
+/* Capsanoto v5.10.1 window/favicon icon
+   No visual CSS changes. HTML now declares iconcapsanoto.png as favicon/app icon.
+*/
