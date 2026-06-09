@@ -9,7 +9,7 @@
 </head>
 <body>
   <div class="app-shell">
-    <header class="topbar topbar-v3">
+    <header class="topbar">
       <div class="brand-block">
         <img class="app-logo" src="storyboarder.png" alt="Storyboarder logo" />
         <div>
@@ -18,71 +18,53 @@
         </div>
       </div>
 
-      <div class="top-control-strip" aria-label="Storyboarder controls">
-        <div class="custom-select episode-select-widget" id="episodeSelectWidget">
-          <button id="episodeSelectButton" type="button" class="custom-select-button" aria-haspopup="listbox" aria-expanded="false">Episode 1 — The Curse Begins ▾</button>
-          <div id="episodeSelectMenu" class="custom-select-menu hidden" role="listbox"></div>
+      <div class="top-controls" aria-label="Project and episode controls">
+        <button id="btnProject" type="button" class="project-pill" title="Open project settings">📚 <span id="projectNameLabel">Forever Bound</span></button>
+        <div class="custom-select" id="episodeDropdown" data-menu-id="episodeMenu">
+          <button id="episodeButton" type="button" class="select-button" aria-haspopup="listbox" aria-expanded="false">Episode 1 — The Curse Begins ▾</button>
+          <div id="episodeMenu" class="select-menu hidden" role="listbox"></div>
         </div>
-
-        <button id="btnLoadSample" type="button">🧪 Sample</button>
-        <label class="file-button">
-          📥 JSON
-          <input id="jsonInput" type="file" accept=".json,application/json" />
-        </label>
-        <label class="file-button subdued">
-          📜 Script
-          <input id="scriptInput" type="file" accept=".md,.markdown,text/markdown,text/plain" />
-        </label>
-        <button id="btnExport" type="button">📤 Export</button>
+        <button id="btnLoadSample" type="button" class="top-button">🧪 Sample</button>
+        <label class="top-button file-button">📥 Import<input id="jsonInput" type="file" accept=".json,application/json" /></label>
+        <label class="top-button file-button subdued">📝 Script<input id="scriptInput" type="file" accept=".md,.markdown,text/markdown,text/plain" /></label>
+        <button id="btnSave" type="button" class="top-button save-button">💾 Save</button>
       </div>
     </header>
 
-    <section class="episode-hero compact-hero compact-hero-v3">
-      <div class="episode-title-row compact-title-row compact-title-row-v3">
-        <div class="episode-title-block">
-          <div class="episode-meta-line">
-            <div class="episode-number" id="episodeNumber">Episode 01</div>
-            <div class="custom-status" id="episodeStatusWidget">
-              <button id="episodeStatusButton" type="button" class="status-pill" aria-haspopup="listbox" aria-expanded="false">Not Started ▾</button>
-              <div id="episodeStatusMenu" class="status-menu hidden" role="listbox"></div>
-            </div>
+    <section class="episode-hero">
+      <div class="hero-title-block">
+        <div class="episode-number-line">
+          <span id="episodeNumber">Episode 01</span>
+          <div class="custom-select status-select" id="episodeStatusWidget" data-menu-id="episodeStatusMenu">
+            <button id="episodeStatusButton" type="button" class="status-pill" aria-haspopup="listbox" aria-expanded="false">Not Started ▾</button>
+            <div id="episodeStatusMenu" class="select-menu hidden" role="listbox"></div>
           </div>
-          <h2 id="episodeTitle">The Curse Begins</h2>
         </div>
-
-        <nav class="jump-nav compact-jump-nav" id="jumpNav" aria-label="Episode jump navigator"></nav>
+        <h2 id="episodeTitle">The Curse Begins</h2>
       </div>
+      <nav class="jump-nav" id="jumpNav" aria-label="Episode jump navigator"></nav>
     </section>
 
     <div class="workspace">
-      <aside class="left-panel left-panel-v3">
-        <section class="panel-card icon-panel">
-          <div class="view-switch">
-            <button type="button" data-view-mode="overview">🧭 Overview</button>
-            <button type="button" data-view-mode="act">🎬 Acts</button>
-            <button type="button" data-view-mode="scene">🧩 Scenes</button>
+      <aside class="left-panel" aria-label="Storyboarder controls">
+        <button type="button" class="nav-button active" data-view-mode="overview">👁️ Overview</button>
+        <button type="button" class="nav-button" data-view-mode="act">🎬 Acts</button>
+        <button type="button" class="nav-button" data-view-mode="scene">🧩 Scenes</button>
+        <button id="btnFolders" type="button" class="nav-button">📁 Folders</button>
+        <button id="btnOpenEffectsLibrary" type="button" class="nav-button">✨ Effects</button>
+        <button id="btnTranslator" type="button" class="nav-button">🔤 Translator</button>
+        <button id="btnLipsync" type="button" class="nav-button">🎙️ Lipsync</button>
+        <button id="btnSettings" type="button" class="nav-button">⚙️ Settings</button>
+
+        <div class="search-card">
+          <input id="sceneSearch" type="search" placeholder="Search scenes..." />
+          <div class="custom-select full-select" id="statusFilterWidget" data-menu-id="statusFilterMenu">
+            <button id="statusFilterButton" type="button" class="select-button small-select" aria-haspopup="listbox" aria-expanded="false">All ▾</button>
+            <div id="statusFilterMenu" class="select-menu hidden" role="listbox"></div>
           </div>
+        </div>
 
-          <div class="left-divider"></div>
-
-          <button id="btnFolderPlan" type="button" class="wide-button">📂 Plan</button>
-          <button id="btnCreateFolders" type="button" class="wide-button">🗂️ Create</button>
-          <button id="btnOpenEffectsLibrary" type="button" class="wide-button">✨ Effects</button>
-          <button id="btnClearLocal" type="button" class="wide-button danger">🧹 Clear</button>
-        </section>
-
-        <section class="panel-card icon-panel filter-panel">
-          <input id="sceneSearch" type="search" placeholder="🔎 Search" />
-          <div class="custom-select filter-select-widget" id="statusFilterWidget">
-            <button id="statusFilterButton" type="button" class="custom-select-button" aria-haspopup="listbox" aria-expanded="false">🚦 All ▾</button>
-            <div id="statusFilterMenu" class="custom-select-menu hidden" role="listbox"></div>
-          </div>
-        </section>
-
-        <section class="panel-card icon-panel validation-card">
-          <button id="validationToggle" type="button" class="wide-button validation-toggle">⚠️ Issues</button>
-          <div id="validationList" class="validation-list compact-validation"></div>
-        </section>
+        <div class="validation-list" id="validationList"></div>
       </aside>
 
       <main class="scene-stage" id="sceneStage" tabindex="-1"></main>
@@ -93,27 +75,75 @@
     <div class="floating-header" id="scriptWindowHeader">
       <strong id="scriptWindowTitle">Script Preview</strong>
       <div class="floating-actions">
-        <button id="btnScriptPopout" type="button" title="Show full loaded script">Full script</button>
+        <button id="btnScriptPopout" type="button" title="Show full loaded script">Full</button>
         <button id="btnCloseScript" type="button" title="Close">×</button>
       </div>
     </div>
     <div class="floating-body" id="scriptPreview"></div>
   </div>
 
+  <div class="floating-window notes-window hidden" id="notesWindow" role="dialog" aria-label="Scene notes">
+    <div class="floating-header" id="notesWindowHeader">
+      <strong id="notesWindowTitle">Scene Notes</strong>
+      <div class="floating-actions">
+        <button id="btnCloseNotes" type="button" title="Close">×</button>
+      </div>
+    </div>
+    <div class="floating-body notes-body">
+      <textarea id="notesTextarea" placeholder="Production notes, ideas, problems, reminders..."></textarea>
+    </div>
+  </div>
+
+  <div class="modal-backdrop hidden" id="modalBackdrop"></div>
+
+  <section class="app-modal hidden" id="projectModal" role="dialog" aria-label="Project manager">
+    <header class="modal-header"><strong>📚 Project</strong><button type="button" data-close-modal="projectModal">×</button></header>
+    <div class="modal-body">
+      <label>Project name<input id="projectNameInput" type="text" placeholder="Forever Bound" /></label>
+      <label>Project root folder<input id="projectRootInput" type="text" placeholder="D:/Forever Bound/Storyboarder" /></label>
+      <div class="modal-actions">
+        <button id="btnNewProject" type="button">✨ New</button>
+        <label class="modal-button file-button">📥 Load<input id="projectInput" type="file" accept=".json,application/json" /></label>
+        <button id="btnApplyProject" type="button">✅ Apply</button>
+      </div>
+      <p class="hint">Project JSON links episodes together. Episode JSON still stores the scenes and attached production media.</p>
+    </div>
+  </section>
+
+  <section class="app-modal hidden" id="foldersModal" role="dialog" aria-label="Folders">
+    <header class="modal-header"><strong>📁 Folders</strong><button type="button" data-close-modal="foldersModal">×</button></header>
+    <div class="modal-body">
+      <p class="hint">This is the HDD folder plan for the current episode.</p>
+      <pre id="folderPlan" class="folder-plan"></pre>
+      <div class="modal-actions">
+        <button id="btnCopyFolders" type="button">📋 Copy</button>
+        <button id="btnCreateFolders" type="button">🗂️ Create</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="app-modal hidden" id="settingsModal" role="dialog" aria-label="Settings">
+    <header class="modal-header"><strong>⚙️ Settings</strong><button type="button" data-close-modal="settingsModal">×</button></header>
+    <div class="modal-body">
+      <div class="settings-grid">
+        <button id="btnExport" type="button">📤 Export JSON</button>
+        <button id="btnClearLocal" type="button" class="danger">🧹 Clear Draft</button>
+      </div>
+      <p class="hint">Export is a manual backup/download. Save is the normal HDD overwrite workflow once the HDD API is connected.</p>
+    </div>
+  </section>
+
   <div class="toast hidden" id="toast" role="status" aria-live="polite"></div>
 
   <template id="mediaTileTemplate">
     <article class="media-tile">
       <div class="media-preview"></div>
-      <div class="media-meta">
-        <strong class="media-label"></strong>
-        <span class="media-type"></span>
-      </div>
+      <div class="media-meta"><strong class="media-label"></strong><span class="media-type"></span></div>
       <div class="media-controls">
         <button type="button" data-media-action="play" title="Play">▶</button>
         <button type="button" data-media-action="stop" title="Stop">■</button>
         <button type="button" data-media-action="download" title="Download">⬇</button>
-        <button type="button" data-media-action="folder" title="Folder">📁</button>
+        <button type="button" data-media-action="folder" title="Open folder">📁</button>
         <button type="button" data-media-action="remove" title="Remove">×</button>
       </div>
     </article>

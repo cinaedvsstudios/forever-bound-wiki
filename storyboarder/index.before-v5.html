@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Storyboarder</title>
+  <link rel="icon" href="storyboarder.png" />
+  <link rel="stylesheet" href="storyboarder.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand-block">
+        <img class="app-logo" src="storyboarder.png" alt="Storyboarder logo" />
+        <div>
+          <div class="eyebrow">Capsanoto adjacent tool</div>
+          <h1>Storyboarder</h1>
+        </div>
+      </div>
+
+      <div class="episode-picker">
+        <label for="episodeSelect">Episode</label>
+        <select id="episodeSelect" aria-label="Episode selector"></select>
+      </div>
+
+      <div class="top-actions">
+        <button id="btnLoadSample" type="button">Load sample</button>
+        <label class="file-button">
+          Import JSON
+          <input id="jsonInput" type="file" accept=".json,application/json" />
+        </label>
+        <label class="file-button subdued">
+          Link script MD
+          <input id="scriptInput" type="file" accept=".md,.markdown,text/markdown,text/plain" />
+        </label>
+        <button id="btnExport" type="button">Export JSON</button>
+      </div>
+    </header>
+
+    <section class="episode-hero">
+      <div class="episode-title-row">
+        <div>
+          <div class="episode-number" id="episodeNumber">Episode 01</div>
+          <h2 id="episodeTitle">The Curse Begins</h2>
+        </div>
+        <div class="episode-status-wrap">
+          <label for="episodeStatus">Episode status</label>
+          <select id="episodeStatus"></select>
+        </div>
+      </div>
+
+      <nav class="jump-nav" id="jumpNav" aria-label="Episode jump navigator"></nav>
+    </section>
+
+    <div class="workspace">
+      <aside class="left-panel">
+        <section class="panel-card">
+          <h3>Controls</h3>
+          <button id="btnFolderPlan" type="button" class="wide-button">Show folder plan</button>
+          <button id="btnCreateFolders" type="button" class="wide-button">Create folders via HDD API</button>
+          <button id="btnClearLocal" type="button" class="wide-button danger">Clear local draft</button>
+        </section>
+
+        <section class="panel-card">
+          <h3>Find scenes</h3>
+          <input id="sceneSearch" type="search" placeholder="Search scene title, location, notes..." />
+          <label for="statusFilter">Status filter</label>
+          <select id="statusFilter"></select>
+        </section>
+
+        <section class="panel-card">
+          <h3>Episode effects</h3>
+          <div id="episodeEffects" class="effects-list"></div>
+          <button id="btnAddEpisodeEffect" type="button" class="wide-button small">Add effect</button>
+        </section>
+
+        <section class="panel-card validation-card">
+          <h3>Import validation</h3>
+          <div id="validationList" class="validation-list"></div>
+        </section>
+      </aside>
+
+      <main class="scene-stage" id="sceneStage" tabindex="-1"></main>
+    </div>
+  </div>
+
+  <div class="floating-window hidden" id="scriptWindow" role="dialog" aria-label="Script preview">
+    <div class="floating-header" id="scriptWindowHeader">
+      <strong id="scriptWindowTitle">Script Preview</strong>
+      <div class="floating-actions">
+        <button id="btnScriptPopout" type="button" title="Show full loaded script">Full script</button>
+        <button id="btnCloseScript" type="button" title="Close">×</button>
+      </div>
+    </div>
+    <div class="floating-body" id="scriptPreview"></div>
+  </div>
+
+  <div class="toast hidden" id="toast" role="status" aria-live="polite"></div>
+
+  <template id="mediaTileTemplate">
+    <article class="media-tile">
+      <div class="media-preview"></div>
+      <div class="media-meta">
+        <strong class="media-label"></strong>
+        <span class="media-type"></span>
+      </div>
+      <div class="media-controls">
+        <button type="button" data-media-action="play">▶</button>
+        <button type="button" data-media-action="stop">■</button>
+        <button type="button" data-media-action="download">⬇</button>
+        <button type="button" data-media-action="folder">📁</button>
+        <button type="button" data-media-action="remove">×</button>
+      </div>
+    </article>
+  </template>
+
+  <script src="storyboarder.js"></script>
+</body>
+</html>

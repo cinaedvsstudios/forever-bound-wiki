@@ -1,5 +1,5 @@
 {
-  "storyboarderVersion": "v1-prototype-clean",
+  "storyboarderVersion": "v1",
   "episode": {
     "episodeNumber": "1",
     "episodeTitle": "The Curse Begins",
@@ -12,7 +12,7 @@
         "id": "prologue",
         "label": "Prologue",
         "numberLabel": "P",
-        "shortDescription": "Cassander steals the Book of Thoth in Alexandria and transforms into Moravok, beginning the ancient threat.",
+        "shortDescription": "Cassander steals the Book of Thoth and becomes Moravok.",
         "thumbnail": "",
         "targetActId": "prologue"
       },
@@ -20,7 +20,7 @@
         "id": "act-1",
         "label": "Act 1",
         "numberLabel": "1",
-        "shortDescription": "Ostangavia’s Lantern Festival gives way to suspicion, dark rituals, Roman pressure, and Ivalio’s confession.",
+        "shortDescription": "The Lantern Festival, Nyx’s plan, the forest ritual, and the first revelations around Seraphis.",
         "thumbnail": "",
         "targetActId": "act-1"
       },
@@ -28,7 +28,7 @@
         "id": "act-2",
         "label": "Act 2",
         "numberLabel": "2",
-        "shortDescription": "Mel, Vitus, Greta, Erik, and Ivalio uncover Seraphis and Nyx’s connection to the soul-harvesting darkness.",
+        "shortDescription": "Ivalio’s investigation, the Oracle’s warning, the children’s transformation, and Varro’s mobilization.",
         "thumbnail": "",
         "targetActId": "act-2"
       },
@@ -36,7 +36,7 @@
         "id": "act-3",
         "label": "Act 3",
         "numberLabel": "3",
-        "shortDescription": "The town faces arrests, visions, execution, Nyx’s failed ritual, and the revelation of Mel and Luca’s curse.",
+        "shortDescription": "Mel prepares, Luca and Seraphis are arrested, and Nyx’s final ritual erupts at the execution grounds.",
         "thumbnail": "",
         "targetActId": "act-3"
       },
@@ -44,209 +44,51 @@
         "id": "epilogue",
         "label": "Epilogue",
         "numberLabel": "E",
-        "shortDescription": "",
+        "shortDescription": "The Oracle reveals the soul curse, Vitus returns as a spirit guide, and the found family regroups.",
         "thumbnail": "",
         "targetActId": "epilogue"
       }
     ]
   },
-  "episodeEffects": [
-    {
-      "effectId": "effect-one-sweet-charm",
-      "name": "One Sweet Charm motif / theme",
-      "type": "music",
-      "description": "Recurring episode theme used in the prologue, Mel scenes, Oracle scenes, and credits.",
-      "sourceUrl": "",
-      "localPath": "",
-      "usedInScenes": [
-        "prologue-scene-01",
-        "act-1-scene-01a",
-        "act-1-scene-01b",
-        "act-2-scene-07",
-        "act-2-scene-08",
-        "act-3-scene-08",
-        "act-3-scene-08a"
-      ],
-      "status": "Needs Assets",
-      "notes": ""
-    },
-    {
-      "effectId": "effect-night-without-end",
-      "name": "Night Without End festival/song motif",
-      "type": "music",
-      "description": "Lantern Festival musical motif and associated song material.",
-      "sourceUrl": "",
-      "localPath": "",
-      "usedInScenes": [
-        "act-1-scene-01b",
-        "act-1-scene-02",
-        "act-1-scene-02a"
-      ],
-      "status": "Needs Assets",
-      "notes": ""
-    },
-    {
-      "effectId": "effect-moravok-underworld",
-      "name": "Moravok / underworld visual treatment",
-      "type": "vfx",
-      "description": "Black oil, red sky, underworld dreamscape, and Moravok presence.",
-      "sourceUrl": "",
-      "localPath": "",
-      "usedInScenes": [
-        "act-1-scene-03",
-        "act-3-scene-02a",
-        "act-3-scene-05"
-      ],
-      "status": "Needs Assets",
-      "notes": ""
-    },
-    {
-      "effectId": "effect-spirit-lantern",
-      "name": "Spirit Lantern glow",
-      "type": "vfx",
-      "description": "Glowing lantern / colour shift motif tied to Mel, her mother, and the Oracle.",
-      "sourceUrl": "",
-      "localPath": "",
-      "usedInScenes": [
-        "act-1-scene-01b"
-      ],
-      "status": "Needs Assets",
-      "notes": ""
-    },
-    {
-      "effectId": "effect-nyx-dark-magic",
-      "name": "Nyx dark magic treatment",
-      "type": "vfx",
-      "description": "Smoke, beetle transformation, fire, shadow magic, curse energy.",
-      "sourceUrl": "",
-      "localPath": "",
-      "usedInScenes": [
-        "act-1-scene-02",
-        "act-1-scene-03",
-        "act-1-scene-04",
-        "act-1-scene-flight-to-the-river",
-        "act-2-scene-01",
-        "act-2-scene-04",
-        "act-2-scene-05",
-        "act-2-scene-08",
-        "act-2-scene-09a",
-        "act-2-scene-09b",
-        "act-3-scene-01",
-        "act-3-scene-02a",
-        "act-3-scene-03",
-        "act-3-scene-05",
-        "act-3-scene-05a",
-        "act-3-scene-06",
-        "act-3-scene-07a",
-        "act-3-scene-08",
-        "act-3-scene-08a"
-      ],
-      "status": "Needs Assets",
-      "notes": ""
-    },
-    {
-      "effectId": "effect-oracle-tree",
-      "name": "Oracle tree / Sylvara activation",
-      "type": "vfx",
-      "description": "Tree face, bark glow, runes, potion transfer, prophecy visuals.",
-      "sourceUrl": "",
-      "localPath": "",
-      "usedInScenes": [
-        "act-1-scene-02a",
-        "act-1-scene-06b",
-        "act-2-scene-04",
-        "act-2-scene-06",
-        "act-2-scene-07",
-        "act-2-scene-08",
-        "act-2-scene-09b",
-        "act-3-scene-01",
-        "act-3-scene-07a",
-        "act-3-scene-08"
-      ],
-      "status": "Needs Assets",
-      "notes": ""
-    },
-    {
-      "effectId": "effect-bat-children",
-      "name": "Bat-child transformation and flight",
-      "type": "vfx",
-      "description": "Greta and Erik transformed into bats and later returning as transformed children.",
-      "sourceUrl": "",
-      "localPath": "",
-      "usedInScenes": [
-        "act-1-scene-01a",
-        "act-1-scene-06b",
-        "act-2-scene-08",
-        "act-2-scene-09a",
-        "act-2-scene-09b",
-        "act-2-scene-10",
-        "act-3-scene-01",
-        "act-3-scene-02",
-        "act-3-scene-06",
-        "act-3-scene-07a",
-        "act-3-scene-08a"
-      ],
-      "status": "Needs Assets",
-      "notes": ""
-    },
-    {
-      "effectId": "effect-veridon-crystal",
-      "name": "Veridon crystal shield and shards",
-      "type": "vfx",
-      "description": "Crystal, shield, radiant shard magic, and battle pulse effects.",
-      "sourceUrl": "",
-      "localPath": "",
-      "usedInScenes": [
-        "act-2-scene-08",
-        "act-3-scene-01",
-        "act-3-scene-03",
-        "act-3-scene-06"
-      ],
-      "status": "Needs Assets",
-      "notes": ""
-    }
-  ],
+  "episodeEffects": [],
   "acts": [
     {
       "actId": "prologue",
       "actLabel": "Prologue",
       "actTitle": "The Theft of the Book of Thoth",
-      "shortDescription": "Cassander steals the Book of Thoth in Alexandria and transforms into Moravok, beginning the ancient threat.",
+      "shortDescription": "Cassander steals the Book of Thoth and becomes Moravok.",
       "folderName": "Prologue",
       "miscFolderName": "Misc",
       "scenes": [
         {
           "sceneId": "prologue-scene-01",
-          "sceneNumber": "P",
+          "sceneNumber": "1",
           "sceneLetter": "",
           "sceneTitle": "The Theft of the Book of Thoth",
           "section": "Prologue",
-          "slugLine": "EXTERIOR – LIBRARY OF ALEXANDRIA — SUNSET",
-          "location": "ERIOR — LIBRARY OF ALEXANDRIA",
+          "slugLine": "EXT. LIBRARY OF ALEXANDRIA — SUNSET",
+          "location": "LIBRARY OF ALEXANDRIA",
           "timeOfDay": "SUNSET",
           "characters": [
             "Cassander of Mytilene",
             "Priestly Scribe",
-            "Guard",
-            "Moravok (emerging)"
+            "Guard"
           ],
           "music": [
             "Egyptian-themed One Sweet Charm tune, shifting to cinematic ambience from eerie to action",
             "Continued Egyptian-themed One Sweet Charm, tension rising",
-            "Subtle tension, quickening pulse",
-            "Rising eerie ambience shifting into ominous crescendo"
+            "Subtle tension, quickening pulse"
           ],
           "sfx": [
             "Distant murmur of scholars, call to evening prayer, torch flickering",
             "Flickering torchlight, faint footsteps, soft whisper",
-            "Flickering torchlight, distant footsteps, whispered voices",
-            "Crackling firelight, whispering winds, deep inhuman echoes"
+            "Flickering torchlight, distant footsteps, whispered voices"
           ],
-          "scriptNotes": "Mood shifts from reverent to tense; key prop: Book of Thoth Atmosphere heavy with scent of parchment and oil lamps; focus on Cassander’s stealth and reverence Cassander’s escape; focus on shadow and silence; minimal dialogue Transformation sequence; symbolic fire and shadow motifs; fade to black Additional slug/sub-location headings: INTERIOR – RESTRICTED CHAMBER — SAME TIME",
-          "storySummary": "A golden glow spreads across the towering marble façade of the Library of Alexandria, its vast columns casting long shadows over the courtyard.",
+          "scriptNotes": "Mood shifts from reverent to tense; key prop: Book of Thoth Atmosphere heavy with scent of parchment and oil lamps; focus on Cassander’s stealth and reverence Cassander’s escape; focus on shadow and silence; minimal dialogue",
+          "storySummary": "Cassander steals the Book of Thoth from Alexandria and performs a dark ritual that transforms him into Moravok.",
           "scriptAnchor": "prologue-scene",
           "scriptHeadingText": "Prologue Scene",
-          "folderName": "Scene P - The Theft of the Book of Thoth",
+          "folderName": "Scene 01 - The Theft of the Book of Thoth",
           "status": "Not Started",
           "media": {
             "images": [],
@@ -265,7 +107,7 @@
       "actId": "act-1",
       "actLabel": "Act 1",
       "actTitle": "Encounters and Connections",
-      "shortDescription": "Ostangavia’s Lantern Festival gives way to suspicion, dark rituals, Roman pressure, and Ivalio’s confession.",
+      "shortDescription": "The Lantern Festival, Nyx’s plan, the forest ritual, and the first revelations around Seraphis.",
       "folderName": "Act 01",
       "miscFolderName": "Misc",
       "scenes": [
@@ -278,20 +120,14 @@
           "slugLine": "EXT. FOREST / OSTANGAVIAN TOWN / MEL’S HOUSE — Morning",
           "location": "FOREST / OSTANGAVIAN TOWN / MEL’S HOUSE",
           "timeOfDay": "Morning",
-          "characters": [
-            "Sylvara (voiceover)"
-          ],
-          "music": [
-            "One Sweet Charm — Cinematic, mythic"
-          ],
-          "sfx": [
-            "Gentle wind, distant night sounds"
-          ],
-          "scriptNotes": "Aerial shot transitioning from forest to town, ending outside Mel’s house; establishes setting and tone",
-          "storySummary": "In the land of Ostangavia, where ancient forces weave through every tree and stone, magic is as much a part of life as the air itself.",
+          "characters": [],
+          "music": [],
+          "sfx": [],
+          "scriptNotes": "Series music theme with an Aerial shot transitioning from forest to outside Mel’s house; establishes setting and tone",
+          "storySummary": "A brief visual pass establishes the forest, Ostangavia, and Mel’s house before the story begins.",
           "scriptAnchor": "scene-1a-world-pov",
           "scriptHeadingText": "Scene 1a - WORLD POV",
-          "folderName": "Scene 01A - WORLD POV",
+          "folderName": "Scene 01A - World Pov",
           "status": "Not Started",
           "media": {
             "images": [],
@@ -305,17 +141,16 @@
           "notes": ""
         },
         {
-          "sceneId": "act-1-scene-01b",
+          "sceneId": "act-1-scene-01a-2",
           "sceneNumber": "1",
-          "sceneLetter": "B",
+          "sceneLetter": "A",
           "sceneTitle": "A Night Without End (Song)",
           "section": "Act 1",
           "slugLine": "INT. MEL’S COTTAGE — NIGHT",
           "location": "MEL’S COTTAGE",
           "timeOfDay": "NIGHT",
           "characters": [
-            "Mel",
-            "Sylvara (voiceover)"
+            "Mel"
           ],
           "music": [
             "One Sweet Charm — Cinematic, mythic"
@@ -324,10 +159,10 @@
             "Soft crackling fire, gentle night sounds"
           ],
           "scriptNotes": "Setting establishes warmth and quiet longing; key prop: glowing spirit lantern",
-          "storySummary": "Verse 1 — Setting the Scene Soft, warm light filters through the small windows. The camera glides across the modest, lived-in room, lingering on handmade lanterns and crafting tools scattered on the wooden table. Close-up, Mel’s face",
-          "scriptAnchor": "scene-1b-a-night-without-end-song",
-          "scriptHeadingText": "Scene 1b: A Night Without End (Song)",
-          "folderName": "Scene 01B - A Night Without End (Song)",
+          "storySummary": "Mel prepares for the Lantern Festival, singing of her love for Ostangavia, her mother’s legacy, and the hope of the night ahead.",
+          "scriptAnchor": "scene-1a-a-night-without-end-song",
+          "scriptHeadingText": "Scene 1a: A Night Without End (Song)",
+          "folderName": "Scene 01A - A Night Without End (Song)",
           "status": "Not Started",
           "media": {
             "images": [],
@@ -347,25 +182,22 @@
           "sceneTitle": "Annual Lantern Festival",
           "section": "Act 1",
           "slugLine": "EXT. TOWN SQUARE — OSTANGAVIA, 525 CE (YEAR OF THE LANTERN FESTIVAL)",
-          "location": "TOWN SQUARE — OSTANGAVIA, 525 CE (YEAR OF THE LANTERN FESTIVAL)",
-          "timeOfDay": "",
+          "location": "TOWN SQUARE",
+          "timeOfDay": "OSTANGAVIA, 525 CE (YEAR OF THE LANTERN FESTIVAL)",
           "characters": [
             "Mel (as Ameldra)",
             "Luca",
-            "Town Officials",
-            "Young Ameldra"
+            "Town Officials"
           ],
           "music": [
             "Medieval version of Night Without End tune (fades to low, mingling with ambient crowd noise)",
-            "as the lantern rises [https://suno.com/s/6AImo4y2qShmdeOP](https://suno.com/s/6AImo4y2qShmdeOP)",
-            "Orchestral instrumental version of I Claim My True Name"
+            "as the lantern rises"
           ],
           "sfx": [
-            "Lanterns flickering, crowd murmurs, faint church bells ringing",
-            "Forest ambience, trees rustling, bear growl, pounding bear footsteps"
+            "Lanterns flickering, crowd murmurs, faint church bells ringing"
           ],
-          "scriptNotes": "Festive atmosphere; centerpiece: grand stone fountain carved with symbols of light and nature Tone is tense and innocent; a formative memory for Mel. Important motif: fear meeting fate. Additional slug/sub-location headings: EXT. OSTANGAVIAN FOREST — DAY (FLASHBACK)",
-          "storySummary": "The town square is alive with the Lantern Festival. Lanterns of all shapes and sizes float above the crowd, casting a warm glow on the festive scene. Medieval music played by minstrels fills the air as townspeople celebrate, their spirits high.",
+          "scriptNotes": "Festive atmosphere; centerpiece: grand stone fountain carved with symbols of light and nature",
+          "storySummary": "Mel and Luca celebrate the Lantern Festival while memories of Mel’s mother, rumors of Nyx, and Seraphis’s uneasy presence darken the evening.",
           "scriptAnchor": "scene-2-annual-lantern-festival",
           "scriptHeadingText": "Scene 2: Annual Lantern Festival",
           "folderName": "Scene 02 - Annual Lantern Festival",
@@ -395,13 +227,13 @@
             "Luca"
           ],
           "music": [
-            "Medieval version of Night Without End tune (fading low beneath crowd ambience) [https://suno.com/s/q9HMSniaWAWlHYkJ](https://suno.com/s/q9HMSniaWAWlHYkJ)"
+            "Medieval version of Night Without End tune (fading low beneath crowd ambience)"
           ],
           "sfx": [
             "Lanterns fluttering, murmurs of townsfolk"
           ],
           "scriptNotes": "Scene resumes in the present; reflective and intimate tone amid festival backdrop",
-          "storySummary": "It really unsettled everyone in town. People started to treat them as outcasts, and they moved into an old house in the woods, away from everyone. I never really saw her again after that. Oh, if you add it to the oil, it gives the flame a pale violet glow.",
+          "storySummary": "Mel explains how Nyx’s childhood magic frightened the town, then the present-day festival resumes as Mel senses something wrong.",
           "scriptAnchor": "scene-2a-flashback-ends",
           "scriptHeadingText": "Scene 2a: Flashback Ends",
           "folderName": "Scene 02A - Flashback Ends",
@@ -436,8 +268,8 @@
             "Bubbling pot, slime-like stirring sounds"
           ],
           "scriptNotes": "Nyx alone, brewing potion; tone is bitter, reflective, and simmering with malice",
-          "storySummary": "(muttering to herself) Vile peasants. They toast to ‘life’ and ‘love’ as if either holds meaning. Clutching shadows while the world decays. They forget so easily. That is their gift… and their curse.",
-          "scriptAnchor": "scene-3-nyxs-plan",
+          "storySummary": "Nyx prepares a potion under Moravok’s pressure, confirming the soul harvest and her determination to complete the ritual.",
+          "scriptAnchor": "scene-3-nyx-s-plan",
           "scriptHeadingText": "Scene 3: Nyx’s Plan",
           "folderName": "Scene 03 - Nyx’s Plan",
           "status": "Not Started",
@@ -469,17 +301,17 @@
             "Nyx"
           ],
           "music": [
-            "Something is Happening — [Suno Link](https://suno.com/s/n8ARyzqgmEqwvc2q)",
+            "Something is Happening",
             "Faint continuation of \"Something is Happening\" — low, pulsing tones",
-            "Epic Evil — [Link](https://suno.com/s/k3k9YEpKirOty9vO)"
+            "Epic Evil"
           ],
           "sfx": [
             "Faint echoes of festival music, soft wind through trees",
             "Distant rustling leaves, creaking branches, faint owl cry",
             "Plants rustling, soul-sucking magic, footsteps in soil"
           ],
-          "scriptNotes": "Light, energetic tone with hints of tension beneath; begins to shift away from town warmth toward forest mystery Mood begins to shift from curious to foreboding; first hint of threat from Roman presence Ritual soul-taking in progress. Green soul energy should glow faintly; moment is mythic and unsettling. Additional slug/sub-location headings: EXT. TRANSITION TO FOREST — NIGHTFALL; EXT. FOREST EDGE — NIGHT",
-          "storySummary": "Come on, Erik. We need to hurry before we miss the whole festival. Erik runs toward Greta, face flushed with enthusiasm, holding a small flower. Got it! Three down, two to go. I am definitely the herb-master!",
+          "scriptNotes": "Light, energetic tone with hints of tension beneath; begins to shift away from town warmth toward forest mystery Mood begins to shift from curious to foreboding; first hint of threat from Roman presence Ritual soul-taking in progress. Green soul energy should glow faintly; moment is mythic and unsettling.",
+          "storySummary": "Greta and Erik witness Seraphis and Nyx harvesting a Roman soldier’s soul, then flee when Nyx discovers them.",
           "scriptAnchor": "scene-4-forest-ritual",
           "scriptHeadingText": "Scene 4: Forest Ritual",
           "folderName": "Scene 04 - Forest Ritual",
@@ -515,7 +347,7 @@
             "Distant river, breathless panting, wind through trees"
           ],
           "scriptNotes": "Scene shifts to regrouping. Kids' dynamic resurfaces. Information revealed: Seraphis and Luca are linked.",
-          "storySummary": "The children run over a small hill and stop breathless near a bridge by the river, at the edge of town. Make so much noise a witch finds us.\" You are the one who was taking forever!\"",
+          "storySummary": "Greta and Erik escape to the river, realize Seraphis is connected to the witch, and Nyx and Seraphis place another soul in the hidden box.",
           "scriptAnchor": "scene-flight-to-the-river",
           "scriptHeadingText": "Scene: Flight to the River",
           "folderName": "Scene - Flight to the River",
@@ -545,13 +377,13 @@
             "Ivalio"
           ],
           "music": [
-            "Brief regal theme, fading to silence as scene begins [https://suno.com/s/xERQM6JeYTCu1cJx](https://suno.com/s/xERQM6JeYTCu1cJx)"
+            "Brief regal theme, fading to silence as scene begins"
           ],
           "sfx": [
             "Papers rustling, distant murmurs of the castle"
           ],
           "scriptNotes": "Setting is austere and practical. Focus on political tension and looming conflict.",
-          "storySummary": "The chamber where administrative tasks and meetings are held. The space is functional but not overly decorated, with maps, documents, and various administrative tools.",
+          "storySummary": "Luca and Ivalio discuss Seraphis and the disappearances before Varro arrives to threaten Luca over the missing Roman soldiers.",
           "scriptAnchor": "scene-5a-roman-investigation",
           "scriptHeadingText": "Scene 5a: Roman Investigation",
           "folderName": "Scene 05A - Roman Investigation",
@@ -571,7 +403,7 @@
           "sceneId": "act-1-scene-05b",
           "sceneNumber": "5",
           "sceneLetter": "B",
-          "sceneTitle": "OSTANGAVIAN COURTYARD",
+          "sceneTitle": "Children’s Grievances",
           "section": "Act 1",
           "slugLine": "EXT. OSTANGAVIAN COURTYARD — DAY",
           "location": "OSTANGAVIAN COURTYARD",
@@ -589,10 +421,10 @@
             "Soft crowd noise outside, children playing"
           ],
           "scriptNotes": "Juxtaposition of innocent play and dark threats; tension rising.",
-          "storySummary": "As Tribunus Varro heads down the staircase, he walks through the hallway and exits into the courtyard. The children—Erik, Greta, and two others—are huddled together near the edge of the festivities, their earlier chant turning into a mix of anger and fear.",
+          "storySummary": "Children protest Roman cruelty in the courtyard, Varro dismisses them, and Greta and Erik warn Father Vitus about Seraphis in the forest.",
           "scriptAnchor": "scene-5b-ext-courtyard",
           "scriptHeadingText": "Scene 5b: EXT. Courtyard",
-          "folderName": "Scene 05B - OSTANGAVIAN COURTYARD",
+          "folderName": "Scene 05B - Children’s Grievances",
           "status": "Not Started",
           "media": {
             "images": [],
@@ -619,13 +451,13 @@
             "Father Vitus"
           ],
           "music": [
-            "Confessional track [https://suno.com/s/uDRvycBX2ob912pK](https://suno.com/s/uDRvycBX2ob912pK)"
+            "Confessional track"
           ],
           "sfx": [
             "Flickering candle flames, distant festival echoes"
           ],
           "scriptNotes": "Atmosphere is solemn and reflective; mood weighs heavy with tension and guilt.",
-          "storySummary": "The church is dimly lit, candles casting flickering shadows across the stone walls. The gentle scent of incense fills the air, creating reverence and tranquillity. IVALIO sits on a worn pew, posture tense and anxious, waiting for FATHER VITUS. IVALIO greets FATHER VITUS.",
+          "storySummary": "Ivalio confesses to Father Vitus that he stole Marika’s magical dress and fears his sin has corrupted Seraphis.",
           "scriptAnchor": "scene-6-church-meeting",
           "scriptHeadingText": "Scene 6: Church Meeting",
           "folderName": "Scene 06 - Church Meeting",
@@ -645,9 +477,9 @@
           "sceneId": "act-1-scene-06a",
           "sceneNumber": "6",
           "sceneLetter": "A",
-          "sceneTitle": "TAVERN MOESIA",
+          "sceneTitle": "Tavern Moesia",
           "section": "Act 1",
-          "slugLine": "Scene 6a INT. TAVERN MOESIA — NIGHT",
+          "slugLine": "INT. TAVERN MOESIA — NIGHT",
           "location": "TAVERN MOESIA",
           "timeOfDay": "NIGHT",
           "characters": [
@@ -656,16 +488,16 @@
             "Bard"
           ],
           "music": [
-            "Festive Balkan tavern music [https://suno.com/s/Vp3AUjLoya2aELK4](https://suno.com/s/Vp3AUjLoya2aELK4)"
+            "Festive Balkan tavern music"
           ],
           "sfx": [
             "Murmurs of conversation, candle flickering, faint bard melody"
           ],
           "scriptNotes": "Warm, lively atmosphere contrasting with the tense focus of young Ivalio.",
-          "storySummary": "The scene shifts to a dimly lit tavern in Moesia, filled with conversation hum and flickering candlelight. Young IVALIO, unscarred and alert, sits at the bar, eyes fixed on a local man speaking in hushed tones.",
+          "storySummary": "In Ivalio’s memory, a local man tempts young Ivalio with the idea of stealing Marika’s dress to bind her love.",
           "scriptAnchor": "scene-6a-int-tavern-moesia-night",
           "scriptHeadingText": "Scene 6a INT. TAVERN MOESIA — NIGHT",
-          "folderName": "Scene 06A - TAVERN MOESIA",
+          "folderName": "Scene 06A - Tavern Moesia",
           "status": "Not Started",
           "media": {
             "images": [],
@@ -682,9 +514,9 @@
           "sceneId": "act-1-scene-06b",
           "sceneNumber": "6",
           "sceneLetter": "B",
-          "sceneTitle": "LAKE",
+          "sceneTitle": "Lake",
           "section": "Act 1",
-          "slugLine": "Scene 6b EXT. LAKE — DAWN",
+          "slugLine": "EXT. LAKE — DAWN",
           "location": "LAKE",
           "timeOfDay": "DAWN",
           "characters": [
@@ -692,16 +524,16 @@
             "Ivalio"
           ],
           "music": [
-            "“In the Fields” [https://suno.com/s/jjID2cMlM6WZ2srU](https://suno.com/s/jjID2cMlM6WZ2srU) (stops suddenly when she is shocked), then “You Stole the Dress” [https://suno.com/s/CSI2YMu4O9kK56uc](https://suno.com/s/CSI2YMu4O9kK56uc)"
+            "“In the Fields” (stops suddenly when she is shocked), then “You Stole the Dress”"
           ],
           "sfx": [
             "Gentle water lapping, birds stirring, trees whispering"
           ],
           "scriptNotes": "Tone is serene, almost sacred. The stillness should contrast sharply with the shock to come.",
-          "storySummary": "A still lake shimmers under the first light. Mist coils over the water. Birds stir. Trees whisper. MARIKA wades alone, radiant in the morning hush— her long hair drifting like dark silk.",
+          "storySummary": "Young Ivalio steals Marika’s dress from the lake, forcing a magical bond that horrifies and subdues her.",
           "scriptAnchor": "scene-6b-ext-lake-dawn",
           "scriptHeadingText": "Scene 6b EXT. LAKE — DAWN",
-          "folderName": "Scene 06B - LAKE",
+          "folderName": "Scene 06B - Lake",
           "status": "Not Started",
           "media": {
             "images": [],
@@ -718,9 +550,9 @@
           "sceneId": "act-1-scene-06b-2",
           "sceneNumber": "6",
           "sceneLetter": "B",
-          "sceneTitle": "RETURN TO: CHURCH INTERIOR – PRESENT TIME",
+          "sceneTitle": "Return to Church Interior",
           "section": "Act 1",
-          "slugLine": "INT. CHURCH INTERIOR – NIGHT",
+          "slugLine": "INT. CHURCH INTERIOR — NIGHT",
           "location": "CHURCH INTERIOR",
           "timeOfDay": "NIGHT",
           "characters": [
@@ -728,19 +560,17 @@
             "Father Vitus"
           ],
           "music": [
-            "“You Stole the Dress” [https://suno.com/s/CSI2YMu4O9kK56uc](https://suno.com/s/CSI2YMu4O9kK56uc) (begins when Ivalio mentions the child)",
-            "“Mysterious Magic” [https://suno.com/s/vwZiIbfe1qk3Xedr](https://suno.com/s/vwZiIbfe1qk3Xedr) (when he speaks of her hair)",
-            "The song from earlier echoes faintly, melancholic and distant"
+            "“You Stole the Dress” (begins when Ivalio mentions the child)",
+            "“Mysterious Magic” (when he speaks of her hair)"
           ],
           "sfx": [
-            "Soft candle flicker, faint wind through stone",
-            "Footsteps on stone, soft echo, candle flicker"
+            "Soft candle flicker, faint wind through stone"
           ],
-          "scriptNotes": "Dialogue should be fragile, loaded with regret and quiet dread. Mood is contemplative, urgent. Vitus begins to uncover buried truths. Additional slug/sub-location headings: INT. CHURCH CRYPT — NIGHT",
-          "storySummary": "Flickering candlelight casts long shadows. IVALIO sits hunched, trembling, haunted by his confession. FATHER VITUS watches silently, solemn and steady.",
+          "scriptNotes": "Dialogue should be fragile, loaded with regret and quiet dread.",
+          "storySummary": "Back in the church, Ivalio admits the consequences of stealing Marika’s will and Father Vitus realizes Seraphis’s origin is not mortal.",
           "scriptAnchor": "scene-6b-return-to-church-interior-present-time",
           "scriptHeadingText": "Scene 6b RETURN TO: CHURCH INTERIOR – PRESENT TIME",
-          "folderName": "Scene 06B - RETURN TO - CHURCH INTERIOR – PRESENT TIME",
+          "folderName": "Scene 06B - Return to Church Interior",
           "status": "Not Started",
           "media": {
             "images": [],
@@ -759,7 +589,7 @@
           "sceneLetter": "C",
           "sceneTitle": "Suspicion in the Lamplight",
           "section": "Act 1",
-          "slugLine": "INT. IVALIO’S HOME – LATER THAT EVENING",
+          "slugLine": "INT. IVALIO’S HOME — LATER THAT EVENING",
           "location": "IVALIO’S HOME",
           "timeOfDay": "LATER THAT EVENING",
           "characters": [
@@ -767,13 +597,13 @@
             "Seraphis"
           ],
           "music": [
-            "Low drone [[https://suno.com/s/wWf5JeFdVTlFJoTs](https://suno.com/s/wWf5JeFdVTlFJoTs)]"
+            "Low drone \\["
           ],
           "sfx": [
             "Fireplace crackling, soft door creak, faint night ambience"
           ],
           "scriptNotes": "Tone is tense, intimate. A father's doubt takes root.",
-          "storySummary": "IVALIO returns home, pale and worn. The modest room glows softly from oil lamps. IVALIO slumps into a worn chair by the hearth, eyes haunted, thoughts racing.",
+          "storySummary": "Ivalio returns home shaken and begins to suspect Seraphis after seeing a childhood drawing of Moravok.",
           "scriptAnchor": "scene-6c-suspicion-in-the-lamplight",
           "scriptHeadingText": "Scene 6c: Suspicion in the Lamplight",
           "folderName": "Scene 06C - Suspicion in the Lamplight",
@@ -795,20 +625,20 @@
           "sceneLetter": "D",
           "sceneTitle": "Dark Bloodlines",
           "section": "Act 1",
-          "slugLine": "INT. CHURCH CRYPT – NIGHT",
+          "slugLine": "INT. CHURCH CRYPT — NIGHT",
           "location": "CHURCH CRYPT",
           "timeOfDay": "NIGHT",
           "characters": [
             "Father Vitus"
           ],
           "music": [
-            "It Just Can't Be [[https://suno.com/s/xzeEXf9tZYpkwIvJ](https://suno.com/s/xzeEXf9tZYpkwIvJ)]"
+            "It Just Can't Be \\["
           ],
           "sfx": [
             "Candle flicker, quill scratching, distant creaking wood"
           ],
           "scriptNotes": "Tone is tense and revelatory; the truth shakes Father Vitus to his core.",
-          "storySummary": "(muttering as he reads aloud) Sylphians… yes… nymph and mortal… born of both… highly susceptible to evil… malevolent by nature… their blood can serve as a conduit to amplify powers from the underworld. He pauses, voice shaking as dread settles.",
+          "storySummary": "Father Vitus researches Sylphian bloodlines and realizes Seraphis may serve as a conduit for underworld power.",
           "scriptAnchor": "scene-6d-dark-bloodlines",
           "scriptHeadingText": "Scene 6d: Dark Bloodlines",
           "folderName": "Scene 06D - Dark Bloodlines",
@@ -829,8 +659,8 @@
     {
       "actId": "act-2",
       "actLabel": "Act 2",
-      "actTitle": "",
-      "shortDescription": "Mel, Vitus, Greta, Erik, and Ivalio uncover Seraphis and Nyx’s connection to the soul-harvesting darkness.",
+      "actTitle": "The Rise of Darkness",
+      "shortDescription": "Ivalio’s investigation, the Oracle’s warning, the children’s transformation, and Varro’s mobilization.",
       "folderName": "Act 02",
       "miscFolderName": "Misc",
       "scenes": [
@@ -849,13 +679,13 @@
             "Greta"
           ],
           "music": [
-            "The Wench [[https://suno.com/s/7zwsBFOQO4BuDnGv](https://suno.com/s/7zwsBFOQO4BuDnGv)]"
+            "The Wench \\["
           ],
           "sfx": [
             "Horse snorting, shovel squelch, distant chatter"
           ],
           "scriptNotes": "A brief, grounded moment before the narrative darkens—anchoring tone with levity and foreshadowing.",
-          "storySummary": "Faint amber light filters through narrow alleyways. The scent of earth and manure hangs thick in the cooling air. MERDEHA, fat and brash, digs a shovel deep into a steaming pile of horse dung, grinning with mischief. Mmm, that is a nice big one, innit?",
+          "storySummary": "Merdeha warns Greta and Erik that Nyx and Seraphis were shaped by rejection and that a darkness is brewing.",
           "scriptAnchor": "scene-1-the-rise-of-darkness-begins",
           "scriptHeadingText": "Scene 1: The Rise of Darkness Begins",
           "folderName": "Scene 01 - The Rise of Darkness Begins",
@@ -881,16 +711,17 @@
           "location": "IVALIO’S HOME",
           "timeOfDay": "EVENING",
           "characters": [
-            "Ivalio"
+            "Ivalio",
+            "Seraphis"
           ],
           "music": [
-            "(optional, low underscore): Uneasy string drone or Suspicion Begins motif"
+            "Uneasy string drone or Suspicion Begins motif"
           ],
           "sfx": [
             "Storm building, distant thunder, leaves rustling"
           ],
           "scriptNotes": "",
-          "storySummary": "MUSIC (optional, low underscore): Uneasy string drone or Suspicion Begins motif The sky darkens. Heavy clouds gather above, and the wind whispers a warning. Raindrops begin to fall — hesitant, scattered.",
+          "storySummary": "Ivalio watches Seraphis leave during a storm and decides to follow him into the night.",
           "scriptAnchor": "scene-2-the-suspicion-grows",
           "scriptHeadingText": "Scene 2: The Suspicion Grows",
           "folderName": "Scene 02 - The Suspicion Grows",
@@ -910,9 +741,9 @@
           "sceneId": "act-2-scene-02a",
           "sceneNumber": "2",
           "sceneLetter": "A",
-          "sceneTitle": "OSTANGAVIAN TOWN",
+          "sceneTitle": "Ostangavian Town",
           "section": "Act 2",
-          "slugLine": "Scene 2a EXT. OSTANGAVIAN TOWN — NIGHT",
+          "slugLine": "EXT. OSTANGAVIAN TOWN — NIGHT",
           "location": "OSTANGAVIAN TOWN",
           "timeOfDay": "NIGHT",
           "characters": [
@@ -927,10 +758,10 @@
             "Rain intensifying, distant thunder, soft footfalls on wet stone"
           ],
           "scriptNotes": "Transitional moment—mood is hushed and tense; Mel’s intuition stirs",
-          "storySummary": "Rain falls heavier now. Ivalio moves stealthily, following Seraphis’s path through slick streets. Seraphis approaches a worn wooden bridge over the river. From the woods, MEL emerges, steady and calm.",
+          "storySummary": "Mel encounters Seraphis and then Ivalio, who sends her to Father Vitus before following his son into the forest.",
           "scriptAnchor": "scene-2a-ext-ostangavian-town-night",
           "scriptHeadingText": "Scene 2a EXT. OSTANGAVIAN TOWN — NIGHT",
-          "folderName": "Scene 02A - OSTANGAVIAN TOWN",
+          "folderName": "Scene 02A - Ostangavian Town",
           "status": "Not Started",
           "media": {
             "images": [],
@@ -947,23 +778,24 @@
           "sceneId": "act-2-scene-02b",
           "sceneNumber": "2",
           "sceneLetter": "B",
-          "sceneTitle": "DARK FOREST",
+          "sceneTitle": "Dark Forest",
           "section": "Act 2",
-          "slugLine": "Scene 2b EXT. DARK FOREST — NIGHT",
+          "slugLine": "EXT. DARK FOREST — NIGHT",
           "location": "DARK FOREST",
           "timeOfDay": "NIGHT",
           "characters": [
+            "Ivalio",
             "Seraphis"
           ],
           "music": [
-            "Urgency and dread [https://suno.com/s/2Itr8lagr2PDLse5](https://suno.com/s/2Itr8lagr2PDLse5)"
+            "Urgency and dread"
           ],
           "sfx": [],
           "scriptNotes": "",
-          "storySummary": "Moonlight pierces the dense canopy, casting fractured shadows over the ancient, weather-beaten cottage. Behind it, the Evil Tree stands vast and ominous, its massive trunk scarred by a peculiar knot. Ivalio hides in the shadows, breath shallow, eyes fixed on Seraphis.",
+          "storySummary": "Ivalio follows Seraphis to the Evil Tree and watches him open a hidden door in its bark.",
           "scriptAnchor": "scene-2b-ext-dark-forest-night",
           "scriptHeadingText": "Scene 2b EXT. DARK FOREST — NIGHT",
-          "folderName": "Scene 02B - DARK FOREST",
+          "folderName": "Scene 02B - Dark Forest",
           "status": "Not Started",
           "media": {
             "images": [],
@@ -990,13 +822,13 @@
             "Luca"
           ],
           "music": [
-            "Ostangavia 2 — [https://suno.com/s/KVVtuQYchMC9YrOe](https://suno.com/s/KVVtuQYchMC9YrOe)"
+            "Ostangavia 2"
           ],
           "sfx": [
             "Storm, hearth crackling"
           ],
           "scriptNotes": "Intimate, tense atmosphere; focus on emotional undercurrents between Mel and Luca",
-          "storySummary": "The hearth crackles warmly, casting flickering shadows over shelves lined with herbs and potions. A small table sits near the fire, a steaming teapot resting on it. Mel and Luca sit opposite each other. Luca stirs his tea slowly, worry tightening his features.",
+          "storySummary": "At Mel’s home, Greta and Erik bring Merdeha’s warning, and Mel decides they must consult Father Vitus through the tunnels.",
           "scriptAnchor": "scene-3-mistrust-spreads",
           "scriptHeadingText": "Scene 3: Mistrust Spreads",
           "folderName": "Scene 03 - Mistrust Spreads",
@@ -1016,28 +848,26 @@
           "sceneId": "act-2-scene-04",
           "sceneNumber": "4",
           "sceneLetter": "",
-          "sceneTitle": "CHURCH CRYPT",
+          "sceneTitle": "Church Crypt",
           "section": "Act 2",
           "slugLine": "INT. CHURCH CRYPT — NIGHT",
           "location": "CHURCH CRYPT",
           "timeOfDay": "NIGHT",
           "characters": [
-            "Father Vitus",
             "Mel",
+            "Father Vitus",
             "Erik",
             "Greta"
           ],
           "music": [
-            "In the church crypt [https://suno.com/s/1LAPVXPD37oXAfRH](https://suno.com/s/1LAPVXPD37oXAfRH)"
+            "In the church crypt"
           ],
-          "sfx": [
-            "SFX only: sharp clatter of shields, echoing metal, followed by low reverb silence; voices echo"
-          ],
+          "sfx": [],
           "scriptNotes": "",
-          "storySummary": "(SFX only: sharp clatter of shields, echoing metal, followed by low reverb silence. Voices echo) Mel crawls out of a narrow tunnel, accidentally knocking over a stand of shields and swords with a sharp crash. (startled, holding a candle)",
+          "storySummary": "Mel, Greta, and Erik reach Father Vitus through the crypt and piece together Seraphis’s possible Sylphian corruption.",
           "scriptAnchor": "scene-4-int-church-crypt-night",
           "scriptHeadingText": "Scene 4 - INT. CHURCH CRYPT — NIGHT",
-          "folderName": "Scene 04 - CHURCH CRYPT",
+          "folderName": "Scene 04 - Church Crypt",
           "status": "Not Started",
           "media": {
             "images": [],
@@ -1063,13 +893,13 @@
             "Ivalio"
           ],
           "music": [
-            "It Just Can’t Be — [https://suno.com/s/xzeEXf9tZYpkwIvJ](https://suno.com/s/xzeEXf9tZYpkwIvJ)"
+            "It Just Can’t Be"
           ],
           "sfx": [
             "Rusted lantern clang, faint glowing sigils"
           ],
           "scriptNotes": "Atmosphere is heavy with dread and dark magic; key moment of discovery",
-          "storySummary": "Ivalio approaches a gnarled knot in the ancient bark. His hand presses against it; he murmurs a low incantation. The bark shifts, revealing a narrow door. He descends a dark, winding staircase.",
+          "storySummary": "Ivalio discovers the hidden chamber beneath the Evil Tree and is murdered by Seraphis under Nyx’s command.",
           "scriptAnchor": "scene-5-the-evil-tree-chamber",
           "scriptHeadingText": "Scene 5: The Evil Tree Chamber",
           "folderName": "Scene 05 - The Evil Tree Chamber",
@@ -1103,13 +933,13 @@
             "Seraphis"
           ],
           "music": [
-            "In the Fields — [https://suno.com/s/jjID2cMlM6WZ2srU](https://suno.com/s/jjID2cMlM6WZ2srU)"
+            "In the Fields"
           ],
           "sfx": [
             "Calm breeze, soft footsteps on grass"
           ],
           "scriptNotes": "Quiet tension beneath a peaceful setting; Mel’s doubt surfaces subtly",
-          "storySummary": "Mel walks steadily through the town square toward the forest, Erik and Greta close behind. The air is calm, the late sun casting long shadows. At the edge of the field, Luca and Caelum sort bows and arrows. Seraphis arranges targets at the far end.",
+          "storySummary": "Mel passes Luca and Seraphis at archery practice, sensing something wrong as she heads toward the Oracle.",
           "scriptAnchor": "scene-6-the-archery-field",
           "scriptHeadingText": "Scene 6: The Archery Field",
           "folderName": "Scene 06 - The Archery Field",
@@ -1139,14 +969,14 @@
             "Sylvara (Oracle)"
           ],
           "music": [
-            "Mysterious magic https://suno.com/s/vwZiIbfe1qk3Xedr",
+            "Mysterious magic",
             "One Sweet Charm — slow, haunting, ethereal"
           ],
           "sfx": [
             "Whispering forest, soft rustling leaves, distant owl calls"
           ],
           "scriptNotes": "Mystical and reverent atmosphere; symbolic setting of ancient power",
-          "storySummary": "The Oracle’s dwelling is an ancient, massive tree with gnarled branches and roots that twist in intricate patterns. The air around the tree hums with latent magic, and faint whispers of the forest create a serene yet mysterious atmosphere.",
+          "storySummary": "Mel reaches Sylvara’s tree and performs the One Sweet Charm song-spell to awaken the Oracle.",
           "scriptAnchor": "scene-7-one-sweet-charm",
           "scriptHeadingText": "Scene 7: One Sweet Charm",
           "folderName": "Scene 07 - One Sweet Charm",
@@ -1176,15 +1006,14 @@
             "Sylvara (Oracle)"
           ],
           "music": [
-            "One Sweet Charm — cinematic",
-            "Mysterious magic https://suno.com/s/vwZiIbfe1qk3Xedr"
+            "One Sweet Charm — cinematic"
           ],
           "sfx": [
             "Lantern flame crackling, ethereal glow, whispering wind through leaves"
           ],
           "scriptNotes": "Mystical tension; symbolic interplay of light and shadow; prophecy delivered",
-          "storySummary": "MEL lights the lantern; the flame burns a deep, otherworldly purple. Sylvara Activation: The bark’s lines and knots ripple and glow, shifting into a visage. SYLVARA’S voice flows like wind through leaves—calm, ancient, and steady.",
-          "scriptAnchor": "scene-8-the-oracles-revelation",
+          "storySummary": "Sylvara confirms Nyx and Seraphis are bound to underworld magic and gives Mel a potion formula and prophecy.",
+          "scriptAnchor": "scene-8-the-oracle-s-revelation",
           "scriptHeadingText": "Scene 8: The Oracle's Revelation",
           "folderName": "Scene 08 - The Oracle's Revelation",
           "status": "Not Started",
@@ -1215,13 +1044,13 @@
             "NYX"
           ],
           "music": [
-            "Urgency and Dread — [https://suno.com/s/2Itr8lagr2PDLse5](https://suno.com/s/2Itr8lagr2PDLse5)"
+            "Urgency and Dread"
           ],
           "sfx": [
             "Panting breaths, church door creaking, distant insect wings"
           ],
           "scriptNotes": "High tension; sudden urgency; introduction of supernatural threat",
-          "storySummary": "Greta and Erik sprint over the bridge from the forest, panting. Behind them, a large black beetle glides through the air—too smooth, too fast. GRETA & ERIK (calling out) Father! Father Vitus!",
+          "storySummary": "Nyx ambushes Greta and Erik outside the church, transforming them into bats before cursing the church threshold.",
           "scriptAnchor": "scene-9a-the-church-steps",
           "scriptHeadingText": "Scene 9A: The Church Steps",
           "folderName": "Scene 09A - The Church Steps",
@@ -1258,7 +1087,7 @@
             "Quiet fluttering, hesitant wing flaps, tense breathing"
           ],
           "scriptNotes": "Emotional vulnerability; physical transformation as metaphor for loss and fear",
-          "storySummary": "The children, now bats, settle near the pews. Father Vitus approaches, shaken. By the saints—what has she done?… she twisted your forms. Right place, wrong time.",
+          "storySummary": "Inside the church, Greta and Erik process their transformation while Father Vitus prepares supplies and explains the danger of Nyx’s mark.",
           "scriptAnchor": "scene-9b-the-church",
           "scriptHeadingText": "Scene 9B: The Church",
           "folderName": "Scene 09B - The Church",
@@ -1295,7 +1124,7 @@
             "Dust settling, creaking wood, soft footsteps"
           ],
           "scriptNotes": "Transition to secret passage; sense of foreboding and resolve",
-          "storySummary": "Dust. Relics. Cobwebs. Vitus lifts an old wooden panel. A narrow tunnel yawns beneath. May the saints bless my bones… but this is the way. He steps into the dark, lantern casting long shadows. Greta and Erik follow.",
+          "storySummary": "Father Vitus leads Greta and Erik into the hidden basement tunnel toward Mel.",
           "scriptAnchor": "scene-9c-the-church-basement",
           "scriptHeadingText": "Scene 9C: The Church Basement",
           "folderName": "Scene 09C - The Church Basement",
@@ -1336,8 +1165,8 @@
             "Soft rustle of reports, door opening",
             "Metal clashing, armor donning, soldiers snapping to attention"
           ],
-          "scriptNotes": "Heightened urgency; arrival of critical news; looming threat Political tension; command hierarchy established Mobilization; anticipation of confrontation Additional slug/sub-location headings: INT. DUKE MARCOMIR’S CHAMBER — CONTINUOUS; INT. BARRACKS — MOMENTS LATER",
-          "storySummary": "The sun sinks low. Shadows stretch long and dark. A lone horse gallops, foam flecking its flanks, urgency driving it forward. The forest parts before the looming gates of Sumelocenna. The horse neighs sharply, stamping. Guards at the gate turn alert.",
+          "scriptNotes": "Heightened urgency; arrival of critical news; looming threat Political tension; command hierarchy established Mobilization; anticipation of confrontation",
+          "storySummary": "Varro receives Father Vitus’s warning, takes authority from Duke Marcomir, and mobilizes soldiers to capture Seraphis.",
           "scriptAnchor": "scene-10-the-forest-and-city-gates-of-sumelocenna",
           "scriptHeadingText": "Scene 10: The Forest and City Gates of Sumelocenna",
           "folderName": "Scene 10 - The Forest and City Gates of Sumelocenna",
@@ -1359,7 +1188,7 @@
       "actId": "act-3",
       "actLabel": "Act 3",
       "actTitle": "Curses and Consequences",
-      "shortDescription": "The town faces arrests, visions, execution, Nyx’s failed ritual, and the revelation of Mel and Luca’s curse.",
+      "shortDescription": "Mel prepares, Luca and Seraphis are arrested, and Nyx’s final ritual erupts at the execution grounds.",
       "folderName": "Act 03",
       "miscFolderName": "Misc",
       "scenes": [
@@ -1377,13 +1206,13 @@
             "Capra Lactaria"
           ],
           "music": [
-            "Threads of the Loom —https://suno.com/s/U8GyRS19ghtQfxgB"
+            "Threads of the Loom"
           ],
           "sfx": [
             "Soft bleating, quiet mixing sounds"
           ],
           "scriptNotes": "Mel’s frustration and mounting pressure; subtle supernatural presence",
-          "storySummary": "Mel, tense, to herself as she mixes a potion. Almost complete... only the holy water remains. (She reaches for the bottle — empty. Her jaw tightens.)",
+          "storySummary": "Mel, Father Vitus, Greta, and Erik complete the Oracle’s potion, summon the Veridon crystal, and decide to confront Nyx.",
           "scriptAnchor": "scene-1-putting-it-together",
           "scriptHeadingText": "Scene 1: Putting It Together",
           "folderName": "Scene 01 - Putting It Together",
@@ -1415,14 +1244,14 @@
             "Guards"
           ],
           "music": [
-            "In the fields https://suno.com/s/jjID2cMlM6WZ2srU",
-            "Take them away https://suno.com/s/72gOb8MOgX7qbqU7"
+            "In the fields",
+            "Take them away"
           ],
           "sfx": [
             "Bowstring twang, footsteps approaching"
           ],
           "scriptNotes": "Contrast between Luca’s light energy and Seraphis’s restrained demeanor; impending disruption",
-          "storySummary": "The archery field hums with soft conversation and scattered laughter. Luca is animated, bow in hand, while SERAPHIS stands nearby—present, but distant. He adjusts his grip on the bowstring with mechanical focus. You will never best me, Sera.",
+          "storySummary": "Varro arrests Seraphis and Luca at the archery field, using Argentata weapons and dragging both to the keep.",
           "scriptAnchor": "scene-2-arrest-of-seraphis-and-luca",
           "scriptHeadingText": "Scene 2: Arrest of Seraphis and Luca",
           "folderName": "Scene 02 - Arrest of Seraphis and Luca",
@@ -1458,10 +1287,10 @@
             "Slow bubbling of black oil, faint chains rattling"
           ],
           "scriptNotes": "Surreal, oppressive atmosphere; symbolic imprisonment and temptation",
-          "storySummary": "In the black of his vision, Seraphis stands alone in a shadowy realm above a sea of black oil. Moravok rises slowly out of the oil below. You begged to serve me, Seraphis. Now you dangle in chains like a caught lamb.",
+          "storySummary": "Seraphis faces Moravok in a vision and is condemned for his failure after the arrest.",
           "scriptAnchor": "scene-2a-seraphis-vision-scene-underworld-dreamscape",
           "scriptHeadingText": "Scene 2a: Seraphis Vision Scene — Underworld Dreamscape",
-          "folderName": "Scene 02A - Seraphis Vision Scene — Underworld Dreamscape",
+          "folderName": "Scene 02A - Seraphis Vision Scene",
           "status": "Not Started",
           "media": {
             "images": [],
@@ -1488,13 +1317,13 @@
             "Man"
           ],
           "music": [
-            "Erik is sneaking https://suno.com/s/H5oBPwQGRtqqg2GK"
+            "Erik is sneaking"
           ],
           "sfx": [
             "Candle flicker, curtain rustle, hurried footsteps"
           ],
           "scriptNotes": "Hidden secrets behind curtains; contrast between nervous man and confident Merdeha",
-          "storySummary": "The dim church interior flickers with candlelight. Two side areas are veiled behind heavy red curtains. One curtain rustles. A MAN stumbles out, looking around nervously, then rushes off. From the second curtain, MERDEHA emerges. She wipes her mouth, chuckles softly to herself.",
+          "storySummary": "Mel’s group reaches the church, learns Luca and Seraphis were seized, and Mel breaks Nyx’s tracking spell.",
           "scriptAnchor": "scene-3-church-tunnels-and-inside-church",
           "scriptHeadingText": "Scene 3: Church Tunnels and Inside Church",
           "folderName": "Scene 03 - Church Tunnels and Inside Church",
@@ -1525,13 +1354,13 @@
             "Sera"
           ],
           "music": [
-            "Far from home https://suno.com/s/k6zR3dqCO8eun6nT"
+            "Far from home"
           ],
           "sfx": [
             "Torch flicker, distant footsteps, faint clinking of chains"
           ],
           "scriptNotes": "Atmosphere heavy with captivity and anticipation",
-          "storySummary": "Dim torchlight flickers along the cold stone walls. The corridor stretches long and narrow, echoing with distant footsteps. CAELUM RORIC approaches a heavy iron-barred cell. Inside, LUCA sits chained, tense but alert. SERA lies unconscious on a cot. Luca.",
+          "storySummary": "Caelum secretly reaches Luca in the keep, loosens his chains, and prepares him for escape.",
           "scriptAnchor": "scene-4-keep-corridor",
           "scriptHeadingText": "Scene 4: Keep Corridor",
           "folderName": "Scene 04 - Keep Corridor",
@@ -1562,13 +1391,13 @@
             "Moravok"
           ],
           "music": [
-            "Generic Bad Guys https://suno.com/s/4QGj0JS9MgGvC1l5"
+            "Generic Bad Guys"
           ],
           "sfx": [
             "Bubbling oil, water rippling, heavy footsteps in sludge"
           ],
           "scriptNotes": "Surreal, spectral atmosphere; tension between Moravok and Seraphis",
-          "storySummary": "A vast oil-slicked sea stretches to the horizon. Red clouds churn in a bruised sky. The air is thick, still. Ripples form without wind. NYX and SERAPHIS stand knee-deep in the black water. Both appear spectral, dreamlike. Seraphis has chains on.",
+          "storySummary": "Nyx and Moravok share a dark vision in the underworld, where Moravok orders her to finish the ritual amid the execution chaos.",
           "scriptAnchor": "scene-5-underworld-dreamscape",
           "scriptHeadingText": "Scene 5: Underworld Dreamscape",
           "folderName": "Scene 05 - Underworld Dreamscape",
@@ -1603,8 +1432,8 @@
             "Candle snuffing, shattering pottery, fruit rolling on wood floor"
           ],
           "scriptNotes": "Nyx’s rage and frustration visually expressed; confined, tense space",
-          "storySummary": "A gust of wind snuffs out a candle. Shadows stretch. NYX trembles with rage. She rises, grabs a clay pot, and hurls it at the wall. Fruit tumbles across the floor. (muttering, furious)",
-          "scriptAnchor": "scene-5a-nyxs-house-after-the-vision",
+          "storySummary": "Nyx rages at Moravok’s contempt, claims her true name, and gathers the soul-box, scroll, and Ushabti for the final spell.",
+          "scriptAnchor": "scene-5a-nyx-s-house-after-the-vision",
           "scriptHeadingText": "Scene 5a: Nyx’s House After the Vision",
           "folderName": "Scene 05A - Nyx’s House After the Vision",
           "status": "Not Started",
@@ -1623,7 +1452,7 @@
           "sceneId": "act-3-scene-06",
           "sceneNumber": "6",
           "sceneLetter": "",
-          "sceneTitle": "Castle Courtyard / Execution Grounds",
+          "sceneTitle": "Castle Courtyard",
           "section": "Act 3",
           "slugLine": "EXT. CASTLE COURTYARD — DAY",
           "location": "CASTLE COURTYARD",
@@ -1635,13 +1464,13 @@
             "Villagers"
           ],
           "music": [
-            "Take them away https://suno.com/s/72gOb8MOgX7qbqU7"
+            "Take them away"
           ],
           "sfx": [
             "Murmurs of crowd, distant birds, chains rattling"
           ],
           "scriptNotes": "Tense atmosphere; public spectacle; subtle movement by Caelum",
-          "storySummary": "The courtyard is crowded with a few hundred villagers, tense but quiet. Seraphis is chained to the chopping block center stage. Luca stands restrained at the back of the platform.",
+          "storySummary": "Seraphis is executed, Caelum helps Luca escape, Nyx attacks the courtyard, and Mel defeats her at terrible cost.",
           "scriptAnchor": "scene-6-castle-courtyard-execution-grounds",
           "scriptHeadingText": "Scene 6: Castle Courtyard / Execution Grounds",
           "folderName": "Scene 06 - Castle Courtyard",
@@ -1671,16 +1500,16 @@
             "Luca"
           ],
           "music": [
-            "Somber reflection — [https://suno.com/s/EFuD0F2NuwHHUrnt](https://suno.com/s/EFuD0F2NuwHHUrnt)"
+            "Somber reflection"
           ],
           "sfx": [
             "Soft ambient natural sounds"
           ],
           "scriptNotes": "Montage over music of scenes showing loss and quiet moments; tone is mournful yet intimate",
-          "storySummary": "A montage unfolds over music: The grave of Father Vitus—a simple earth mound marked with a wooden cross, silent and solemn. The graves of the two children—separate but side by side, quiet and somber.",
-          "scriptAnchor": "scene-7-mels-cottage-the-aftermath",
+          "storySummary": "A somber montage shows graves, grief, and the survivors absorbing the losses after the battle.",
+          "scriptAnchor": "scene-7-mel-s-cottage-the-aftermath",
           "scriptHeadingText": "Scene 7: Mel’s Cottage — The Aftermath",
-          "folderName": "Scene 07 - Mel’s Cottage — The Aftermath",
+          "folderName": "Scene 07 - Mel’s Cottage",
           "status": "Not Started",
           "media": {
             "images": [],
@@ -1707,91 +1536,16 @@
             "Luca"
           ],
           "music": [
-            "Aftermath — [https://suno.com/s/w8lrxpsGj9BZHOc5t](https://suno.com/s/w8lrxpsGj9BZHOc5t)"
+            "Aftermath"
           ],
           "sfx": [
             "Soft breeze, distant goat bleating"
           ],
           "scriptNotes": "Mood is contemplative and tender; focus on unspoken emotions",
-          "storySummary": "The silence is deep and soft, like breath after weeping. LUCA stands by the window, gazing out at the goat in the yard. MEL pauses, watching him. I have looked through everything I could find.",
-          "scriptAnchor": "scene-7a-mels-cottage-afternoon",
+          "storySummary": "Mel and Luca examine Nyx’s broken spells, Caelum is made steward, and Capra Lactaria signals they must return to the Oracle.",
+          "scriptAnchor": "scene-7a-mel-s-cottage-afternoon",
           "scriptHeadingText": "Scene 7a: Mel’s Cottage — Afternoon",
-          "folderName": "Scene 07A - Mel’s Cottage — Afternoon",
-          "status": "Not Started",
-          "media": {
-            "images": [],
-            "videos": [],
-            "audio": [],
-            "blender": [],
-            "other": []
-          },
-          "sceneEffects": [],
-          "productionChecklist": [],
-          "notes": ""
-        },
-        {
-          "sceneId": "act-3-scene-08",
-          "sceneNumber": "8",
-          "sceneLetter": "",
-          "sceneTitle": "The Oracle’s Tree",
-          "section": "Act 3",
-          "slugLine": "EXT. SYLVARA’S GROVE — NIGHT",
-          "location": "SYLVARA’S GROVE",
-          "timeOfDay": "NIGHT",
-          "characters": [
-            "Mel"
-          ],
-          "music": [
-            "One sweet charm cinematic yet magical"
-          ],
-          "sfx": [
-            "Lantern flame flickering, subtle hum from the tree"
-          ],
-          "scriptNotes": "Atmosphere is sacred and still; focus on reverence and anticipation",
-          "storySummary": "MEL sits before the ORACLE TREE. A purple flame burns steady in the lantern beside her. The bark of the ancient tree pulses faintly with energy. You stand between what has been… and what must be.",
-          "scriptAnchor": "scene-8-the-oracles-tree",
-          "scriptHeadingText": "Scene 8: The Oracle’s Tree",
-          "folderName": "Scene 08 - The Oracle’s Tree",
-          "status": "Not Started",
-          "media": {
-            "images": [],
-            "videos": [],
-            "audio": [],
-            "blender": [],
-            "other": []
-          },
-          "sceneEffects": [],
-          "productionChecklist": [],
-          "notes": ""
-        },
-        {
-          "sceneId": "act-3-scene-08a",
-          "sceneNumber": "8",
-          "sceneLetter": "A",
-          "sceneTitle": "Return to the Church",
-          "section": "Act 3",
-          "slugLine": "EXT. OSTANGAVIA TOWN BRIDGE / CHURCH — NIGHT",
-          "location": "OSTANGAVIA TOWN BRIDGE / CHURCH",
-          "timeOfDay": "NIGHT",
-          "characters": [
-            "Mel",
-            "Luca",
-            "Greta",
-            "Erik",
-            "Transformed Children"
-          ],
-          "music": [
-            "One sweet resolution -https://suno.com/s/6ETApoTHDArFXfat",
-            "ONE SWEET CHARM INSTRUMENTAL PLAYS"
-          ],
-          "sfx": [
-            "Footsteps on stone, wings fluttering, distant church bell"
-          ],
-          "scriptNotes": "Tone is eerie but turning tender; visual symmetry with earlier bridge scene; transformation moment is key",
-          "storySummary": "We transition to the bridge to town as the team walks over it, their silhouettes passing across the arched bridge at the edge of town as they near the church gates— They stop on the other side. Perched on the church stairs—waiting—are the transformed children, still in bat form.",
-          "scriptAnchor": "scene-8a-return-to-the-church",
-          "scriptHeadingText": "Scene 8a: Return to the Church",
-          "folderName": "Scene 08A - Return to the Church",
+          "folderName": "Scene 07A - Mel’s Cottage",
           "status": "Not Started",
           "media": {
             "images": [],
@@ -1809,11 +1563,86 @@
     {
       "actId": "epilogue",
       "actLabel": "Epilogue",
-      "actTitle": "",
-      "shortDescription": "Final reflection and setup for the ongoing curse.",
+      "actTitle": "The Truth of Luca",
+      "shortDescription": "The Oracle reveals the soul curse, Vitus returns as a spirit guide, and the found family regroups.",
       "folderName": "Epilogue",
       "miscFolderName": "Misc",
-      "scenes": []
+      "scenes": [
+        {
+          "sceneId": "epilogue-scene-08",
+          "sceneNumber": "8",
+          "sceneLetter": "",
+          "sceneTitle": "The Oracle’s Tree",
+          "section": "Epilogue",
+          "slugLine": "EXT. SYLVARA’S GROVE — NIGHT",
+          "location": "SYLVARA’S GROVE",
+          "timeOfDay": "NIGHT",
+          "characters": [
+            "Mel"
+          ],
+          "music": [
+            "One sweet charm cinematic yet magical"
+          ],
+          "sfx": [
+            "Lantern flame flickering, subtle hum from the tree"
+          ],
+          "scriptNotes": "Atmosphere is sacred and still; focus on reverence and anticipation",
+          "storySummary": "Sylvara reveals that Luca’s soul and Mel’s fate are bound by the failed spells, and Vitus returns as a spirit guide.",
+          "scriptAnchor": "scene-8-the-oracle-s-tree",
+          "scriptHeadingText": "Scene 8: The Oracle’s Tree",
+          "folderName": "Scene 08 - The Oracle’s Tree",
+          "status": "Not Started",
+          "media": {
+            "images": [],
+            "videos": [],
+            "audio": [],
+            "blender": [],
+            "other": []
+          },
+          "sceneEffects": [],
+          "productionChecklist": [],
+          "notes": ""
+        },
+        {
+          "sceneId": "epilogue-scene-08a",
+          "sceneNumber": "8",
+          "sceneLetter": "A",
+          "sceneTitle": "Return to the Church",
+          "section": "Epilogue",
+          "slugLine": "EXT. OSTANGAVIA TOWN BRIDGE / CHURCH — NIGHT",
+          "location": "OSTANGAVIA TOWN BRIDGE / CHURCH",
+          "timeOfDay": "NIGHT",
+          "characters": [
+            "Mel",
+            "Luca",
+            "Greta",
+            "Erik",
+            "Transformed Children"
+          ],
+          "music": [
+            "One sweet resolution"
+          ],
+          "sfx": [
+            "Footsteps on stone, wings fluttering, distant church bell"
+          ],
+          "scriptNotes": "Tone is eerie but turning tender; visual symmetry with earlier bridge scene; transformation moment is key",
+          "storySummary": "Mel, Luca, Vitus, Greta, Erik, and Capra reunite at the church, accepting that the fight continues while they remain together.",
+          "scriptAnchor": "scene-8a-return-to-the-church",
+          "scriptHeadingText": "Scene 8a: Return to the Church",
+          "folderName": "Scene 08A - Return to the Church",
+          "status": "Not Started",
+          "media": {
+            "images": [],
+            "videos": [],
+            "audio": [],
+            "blender": [],
+            "other": []
+          },
+          "sceneEffects": [],
+          "productionChecklist": [],
+          "notes": ""
+        }
+      ]
     }
   ]
 }
