@@ -3061,3 +3061,92 @@ button:hover {
 .active-color-preview {
   box-shadow: 0 8px 18px rgba(0,0,0,.58), 0 0 0 1px rgba(182,115,0,.20) !important;
 }
+
+
+/* Capsanoto v5.9.8 title/color chip repair
+   Rollback anchor: v5.9.7.
+   - The document title strip now matches the top colour of the left writing rail.
+   - The title input no longer draws an accidental black input box.
+   - Settings colour chips and hex preview pills show the actual selected colour, not the generic button gradient.
+*/
+
+:root {
+  --caps-rail-top-purple: #4a1760;
+  --caps-rail-mid-purple: #5f1e66;
+  --caps-title-rail-match-gradient: linear-gradient(90deg, #4a1760 0%, #5f1e66 26%, rgba(95,30,102,.72) 48%, rgba(28,18,14,.88) 100%);
+}
+
+/* Match title bar to the top of the left writing rail */
+.title-strip,
+.writing-surface-shell .title-strip {
+  background: var(--caps-title-rail-match-gradient) !important;
+  border-bottom: 1px solid rgba(182,115,0,.48) !important;
+  box-shadow: 0 14px 32px rgba(0,0,0,.50), inset 0 1px 0 rgba(255,240,206,.07) !important;
+}
+
+/* Remove the accidental generic input field look from the document title */
+.title-strip .title-input,
+.title-input {
+  background: transparent !important;
+  background-image: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  color: #fff0ce !important;
+  text-shadow: 0 4px 8px rgba(0,0,0,.88), 0 0 12px rgba(182,115,0,.25) !important;
+}
+
+.title-strip .title-input:focus,
+.title-input:focus {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  outline: 0 !important;
+}
+
+/* Colour tools must show the real colours, not the global button gradient */
+.current-color-box {
+  background: var(--current-color, #615243) !important;
+  background-image: none !important;
+  color: var(--current-text, #fff0ce) !important;
+  border-color: rgba(182,115,0,.70) !important;
+  text-shadow: 0 1px 3px rgba(0,0,0,.75) !important;
+  box-shadow: 0 10px 22px rgba(0,0,0,.58), 0 0 0 1px rgba(182,115,0,.28) !important;
+}
+
+.favorite-colors button,
+button[data-favorite-color] {
+  background: var(--favorite-color, #615243) !important;
+  background-image: none !important;
+  color: var(--favorite-text, #fff0ce) !important;
+  border-color: rgba(182,115,0,.70) !important;
+  text-shadow: 0 1px 3px rgba(0,0,0,.72) !important;
+  font-weight: 800 !important;
+  box-shadow: 0 9px 18px rgba(0,0,0,.56), 0 0 0 1px rgba(182,115,0,.20) !important;
+}
+
+.favorite-colors button:hover,
+button[data-favorite-color]:hover {
+  background: var(--favorite-color, #615243) !important;
+  background-image: none !important;
+  border-color: var(--caps-selected-cyan, #0070b6) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 13px 24px rgba(0,0,0,.64), 0 0 0 1px rgba(0,112,182,.75), 0 0 16px rgba(0,112,182,.34) !important;
+}
+
+/* Keep actual native colour inputs visibly truthful too */
+.design-controls input[type="color"],
+.tcard-style-grid input[type="color"],
+.table-tool-row input[type="color"],
+input[type="color"] {
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: 0 8px 16px rgba(0,0,0,.48) !important;
+}
+
+/* If a colour chip class is used elsewhere, preserve the true swatch colour */
+.color-chip,
+.active-color-preview {
+  background-color: var(--chip-color, var(--current-color, #615243)) !important;
+  background-image: none !important;
+}

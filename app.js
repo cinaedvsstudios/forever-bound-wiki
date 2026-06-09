@@ -1,11 +1,11 @@
-/* Capsanoto app.js v5.9.7 brightness/bookmark/accent refinement. */
+/* Capsanoto app.js v5.9.8 title/color chip repair. */
 const STORAGE_KEY = "forever-bound-writing-room-v2";
 const AUTH_KEY = "forever-bound-authenticated";
 const AUTH_CONFIG_PATH = "config/auth.json";
 const CONTENT_PATH = "content/documents.json";
 const EDITOR_ENTRY = "editor.html";
 const AUTOSAVE_DELAY = 600;
-const DESIGN_KEY = "capsanoto-design-settings-v5-9-7-brightness-bookmark-accent";
+const DESIGN_KEY = "capsanoto-design-settings-v5-9-8-title-color-chip-repair";
 const HELP_KEY = "capsanoto-help-html-v1";
 const WRITING_ROOM_LAYOUT_KEY = "capsanoto-writing-room-layout-v5-8-6";
 const PANEL_LAYOUT_KEY = "capsanoto-floating-panel-layouts-v5-9-0";
@@ -26,7 +26,7 @@ const GOOGLE_DRIVE_API_ROOT = "https://www.googleapis.com/drive/v3";
 const GOOGLE_DRIVE_UPLOAD_ROOT = "https://www.googleapis.com/upload/drive/v3";
 const GOOGLE_DRIVE_ROOT_FOLDER_NAME = "Capsanoto";
 const GOOGLE_DRIVE_FOLDER_MIME = "application/vnd.google-apps.folder";
-const CAPSANOTO_THEME_VERSION = "purple-gold-cyan-leather-v5-9-7";
+const CAPSANOTO_THEME_VERSION = "purple-gold-cyan-leather-v5-9-8";
 const FILING_HIERARCHY_VERSION = 1;
 
 const CAPSANOTO_PALETTE = {
@@ -5225,11 +5225,23 @@ function moveSettingsSearch(direction) {
   updateSettingsSearchCount();
 }
 
+function readableTextColorForHex(value) {
+  const color = normalizeHexColor(value);
+  if (!color) return "#fff0ce";
+  const red = parseInt(color.slice(1, 3), 16);
+  const green = parseInt(color.slice(3, 5), 16);
+  const blue = parseInt(color.slice(5, 7), 16);
+  const luminance = (0.2126 * red + 0.7152 * green + 0.0722 * blue) / 255;
+  return luminance > 0.58 ? "#100a09" : "#fff0ce";
+}
+
 function renderFavoriteColors() {
   if (!els.favoriteColors) return;
-  els.favoriteColors.innerHTML = state.favoriteColors.map((color, index) => (
-    `<button type="button" draggable="true" data-favorite-index="${index}" data-favorite-color="${escapeAttr(color)}" aria-label="Use ${escapeAttr(color)}" style="--favorite-color:${escapeAttr(color)}">${escapeHtml(color)}</button>`
-  )).join("");
+  els.favoriteColors.innerHTML = state.favoriteColors.map((color, index) => {
+    const safeColor = normalizeHexColor(color) || "#000000";
+    const textColor = readableTextColorForHex(safeColor);
+    return `<button type="button" draggable="true" data-favorite-index="${index}" data-favorite-color="${escapeAttr(safeColor)}" aria-label="Use ${escapeAttr(safeColor)}" style="--favorite-color:${escapeAttr(safeColor)};--favorite-text:${escapeAttr(textColor)}">${escapeHtml(safeColor)}</button>`;
+  }).join("");
 }
 
 function openNativeColorPicker(input) {
@@ -5266,6 +5278,7 @@ function updateCurrentColorBox(value) {
   els.currentColorBox.textContent = color;
   els.currentColorBox.dataset.currentColor = color;
   els.currentColorBox.style.setProperty("--current-color", color);
+  els.currentColorBox.style.setProperty("--current-text", readableTextColorForHex(color));
 }
 
 function applyHexToActiveColor(value) {
@@ -5841,7 +5854,7 @@ function applyThemeToCurrentWritingRoom() {
 
 function runLayoutRecovery(reason = "") {
   document.body?.classList.add("capsanoto-v586-layout");
-  document.querySelectorAll(".app-version").forEach((node) => { node.textContent = "v5.9.7"; });
+  document.querySelectorAll(".app-version").forEach((node) => { node.textContent = "v5.9.8"; });
   try { updateWritingSurfaceMetrics(); } catch (error) { console.warn("Writing surface metric update failed", error); }
   try { updateWritingAssistRailPosition(); } catch (error) { console.warn("Writing assist rail update failed", error); }
   const toolbar = document.querySelector(".table-edit-toolbar");
