@@ -1,11 +1,11 @@
-/* Capsanoto app.js v5.10.3 sister-app pill panel styling. */
+/* Capsanoto app.js v5.10.4 TCard/settings panel repair. */
 const STORAGE_KEY = "forever-bound-writing-room-v2";
 const AUTH_KEY = "forever-bound-authenticated";
 const AUTH_CONFIG_PATH = "config/auth.json";
 const CONTENT_PATH = "content/documents.json";
 const EDITOR_ENTRY = "editor.html";
 const AUTOSAVE_DELAY = 600;
-const DESIGN_KEY = "capsanoto-design-settings-v5-10-3-sister-pill-style";
+const DESIGN_KEY = "capsanoto-design-settings-v5-10-4-tcard-settings-panel-repair";
 const HELP_KEY = "capsanoto-help-html-v1";
 const WRITING_ROOM_LAYOUT_KEY = "capsanoto-writing-room-layout-v5-8-6";
 const PANEL_LAYOUT_KEY = "capsanoto-floating-panel-layouts-v5-9-0";
@@ -26,7 +26,7 @@ const GOOGLE_DRIVE_API_ROOT = "https://www.googleapis.com/drive/v3";
 const GOOGLE_DRIVE_UPLOAD_ROOT = "https://www.googleapis.com/upload/drive/v3";
 const GOOGLE_DRIVE_ROOT_FOLDER_NAME = "Capsanoto";
 const GOOGLE_DRIVE_FOLDER_MIME = "application/vnd.google-apps.folder";
-const CAPSANOTO_THEME_VERSION = "purple-gold-cyan-leather-v5-10-3";
+const CAPSANOTO_THEME_VERSION = "purple-gold-cyan-leather-v5-10-4";
 const FILING_HIERARCHY_VERSION = 1;
 
 const CAPSANOTO_PALETTE = {
@@ -787,6 +787,7 @@ function bindEditorEvents() {
 
   els.blockButton.addEventListener("click", () => { saveSelectionRange(); toggleBlockPanel(true); });
   els.closeBlockPanel.addEventListener("click", () => toggleBlockPanel(false));
+  els.popoutBlockPanel?.addEventListener("click", toggleBlockPanelPopout);
   els.saveBlockButton.addEventListener("click", saveBlock);
   [els.blockBgInput, els.blockBorderInput, els.blockTextInput, els.blockHeadingInput, els.blockTextSizeInput].forEach((input) => {
     input?.addEventListener("input", updateSelectedTCardStyleFromPanel);
@@ -3468,9 +3469,25 @@ function hydrateIconButtons() {
 
 function toggleBlockPanel(show) {
   els.blockPanel.hidden = !show;
+  if (!show) els.blockPanel.classList.remove("is-expanded-window");
+  els.popoutBlockPanel?.setAttribute("aria-pressed", String(els.blockPanel.classList.contains("is-expanded-window")));
   if (show) {
     applyPanelLayout(els.blockPanel);
     els.blockIdInput.focus();
+  }
+}
+
+function toggleBlockPanelPopout() {
+  if (!els.blockPanel || els.blockPanel.hidden) return;
+  const expanded = els.blockPanel.classList.toggle("is-expanded-window");
+  els.popoutBlockPanel?.setAttribute("aria-pressed", String(expanded));
+  els.popoutBlockPanel?.setAttribute("title", expanded ? "Return TCard panel to floating size" : "Pop out TCard panel");
+  if (expanded) {
+    els.blockContentInput?.focus();
+    setContextStatus("TCard panel popped out", "saved");
+  } else {
+    applyPanelLayout(els.blockPanel);
+    setContextStatus("TCard panel returned to floating size", "saved");
   }
 }
 
@@ -3744,7 +3761,7 @@ function commitInlineTCardEdit(id = state.inlineTCardEditId) {
 function updateInlineTCardButtonState() {
   if (!els.editBlockInlineButton) return;
   const isEditing = Boolean(state.inlineTCardEditId);
-  els.editBlockInlineButton.textContent = isEditing ? "Change" : "Edit TCard";
+  els.editBlockInlineButton.textContent = isEditing ? "🔁 Change" : "✏️ Edit";
   els.editBlockInlineButton.classList.toggle("is-flashing", isEditing);
   els.editBlockInlineButton.setAttribute("aria-pressed", String(isEditing));
 }
@@ -6111,7 +6128,7 @@ function applyThemeToCurrentWritingRoom() {
 
 function runLayoutRecovery(reason = "") {
   document.body?.classList.add("capsanoto-v586-layout");
-  document.querySelectorAll(".app-version").forEach((node) => { node.textContent = "v5.10.3"; });
+  document.querySelectorAll(".app-version").forEach((node) => { node.textContent = "v5.10.4"; });
   try { updateWritingSurfaceMetrics(); } catch (error) { console.warn("Writing surface metric update failed", error); }
   try { updateWritingAssistRailPosition(); } catch (error) { console.warn("Writing assist rail update failed", error); }
   const toolbar = document.querySelector(".table-edit-toolbar");

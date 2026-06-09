@@ -1,0 +1,10 @@
+{
+  "module": "Specnoto",
+  "converted_for": "Capsanoto",
+  "version": "1.0-capsanoto",
+  "entry": "modules/specnoto/specnoto.module.js",
+  "global_api": "window.CapsanotoSpecnoto",
+  "button_selector": "[data-capsanoto-tool=\"specnoto\"], #specnotoButton",
+  "storage": "localStorage/sessionStorage",
+  "chrome_extension_dependencies_removed": true
+}

@@ -10,7 +10,7 @@
 <link href="iconcapsanoto.png" rel="apple-touch-icon"/>
 <link href="manifest.webmanifest" rel="manifest"/>
 <meta content="#5f1e66" name="theme-color"/>
-<link href="styles.css?v=5.10.3" rel="stylesheet"/>
+<link href="styles.css?v=5.10.4" rel="stylesheet"/>
 </head>
 <body class="is-unlocked">
 <main aria-labelledby="passwordTitle" class="password-screen" hidden="" id="passwordScreen">
@@ -28,7 +28,7 @@
 <main aria-label="Forever Bound writing editor" class="writer-shell" id="editorApp">
 <header aria-label="Capsanoto command bar" class="writer-header toolbar">
 <div class="document-controls">
-<strong class="app-name"><img alt="Capsanoto icon" src="https://raw.githubusercontent.com/cinaedvsstudios/forever-bound-wiki/refs/heads/main/iconcapsanoto.png"/><span class="brand-word">Capsanoto</span><span class="app-version">v5.10.3</span></strong>
+<strong class="app-name"><img alt="Capsanoto icon" src="https://raw.githubusercontent.com/cinaedvsstudios/forever-bound-wiki/refs/heads/main/iconcapsanoto.png"/><span class="brand-word">Capsanoto</span><span class="app-version">v5.10.4</span></strong>
 <label class="sr-only" for="documentSelect">Current document</label>
 <select hidden="" id="documentSelect" title="Document Switcher"></select>
 </div>
@@ -747,7 +747,7 @@
 <div>
 <h2>Transclusion Cards</h2>
 </div>
-<button aria-label="Close TCards" id="closeBlockPanel" type="button">×</button>
+<div class="panel-header-actions"><button aria-label="Pop out TCards" aria-pressed="false" id="popoutBlockPanel" title="Pop out TCard panel" type="button">⛶</button><button aria-label="Close TCards" id="closeBlockPanel" type="button">×</button></div>
 </header>
 <p class="panel-help">Create reusable TCards with IDs like <code>Character-Name</code>, <code>Item-Name</code>, <code>Location-Name</code>, or <code>Mechanic-Name</code>. Reference them in files with <code>{{Canon-Example}}</code>.</p>
 <label>TCard ID <input id="blockIdInput" placeholder="Canon-Example" type="text"/></label>
@@ -760,10 +760,10 @@
 <label>Text Size <input id="blockTextSizeInput" max="28" min="10" type="number" value="14"/></label>
 </div>
 <div class="block-actions">
-<button id="saveBlockButton" type="button">Save TCard</button>
-<button id="insertBlockRefButton" type="button">Insert TCard</button>
-<button id="deleteBlockButton" type="button">Delete</button>
-<button id="editBlockInlineButton" type="button">Edit TCard</button>
+<button id="saveBlockButton" type="button">💾 Save</button>
+<button id="insertBlockRefButton" type="button">➕ Insert</button>
+<button id="deleteBlockButton" type="button">🗑️ Delete</button>
+<button id="editBlockInlineButton" type="button">✏️ Edit</button>
 </div>
 <div class="block-list" id="blockList"></div>
 </aside>
@@ -774,6 +774,6 @@
 <h2 id="notes">Notes</h2>
 <p>Add internal references, links, and reusable TCards.</p>
 </template>
-<script src="app.js?v=5.10.3"></script>
+<script src="app.js?v=5.10.4"></script>
 </body>
 </html>
