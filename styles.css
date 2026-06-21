@@ -3909,14 +3909,17 @@ button[data-capsanoto-module]:hover::after {
   box-shadow: 0 0 12px rgba(182,115,0,.62);
   opacity: 1;
 }
-
-
-/* Capsanoto app switcher: one extra desktop command cell after Specnoto.
-   The displayed app version remains v5.10.5. The stylesheet query string in
-   index.html is cache-busted so the new nine-cell grid loads immediately. */
+/* Capsanoto v5.10.7 — unified Apps switcher.
+   Rollback anchor: v5.10.5 before the Apps-switcher pass.
+   The command bar has nine ordered cells:
+   Room → status → Format → Insert → Subnoto → Specnoto → Apps → Help → Settings.
+   Format and Insert retain the original flexible command width; only the
+   status cell is narrowed to make space for the added Apps cell. */
 @media (min-width: 1101px) {
   .top-command-menus.unified-command-bar {
-    grid-template-columns: 6.8rem 8rem minmax(6.8rem, 1fr) minmax(6.8rem, 1fr) repeat(5, 6.8rem);
+    grid-template-columns: 6.8rem 7.4rem minmax(190px, 1fr) minmax(190px, 1fr) repeat(5, 6.8rem);
+    grid-template-rows: 3.15rem;
+    grid-auto-flow: row;
   }
 
   .command-status.context-status {
@@ -3933,21 +3936,21 @@ button[data-capsanoto-module]:hover::after {
 .tool-menu-panel.app-switcher-panel .app-switcher-link {
   min-width: 0;
   min-height: 3.05rem;
-  padding: .55rem .65rem;
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  border: 1px solid rgba(141,67,160,.72);
+  padding: .55rem .65rem;
+  border: 1px solid rgba(141, 67, 160, .72);
   border-radius: 12px;
   background: var(--caps-control-radial, var(--button));
-  color: rgba(199,176,142,.92) !important;
+  color: rgba(199, 176, 142, .92) !important;
   font-size: .7rem;
   font-weight: 500;
   letter-spacing: .08em;
   line-height: 1.05;
   text-align: left;
   text-decoration: none !important;
-  box-shadow: 0 8px 20px rgba(0,0,0,.48), 0 1px 0 rgba(255,240,206,.05) inset;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, .48), 0 1px 0 rgba(255, 240, 206, .05) inset;
 }
 
 .tool-menu-panel.app-switcher-panel .app-switcher-link:hover,
@@ -3963,32 +3966,4 @@ button[data-capsanoto-module]:hover::after {
   font-size: inherit;
   font-weight: inherit !important;
   letter-spacing: inherit;
-}
-
-
-/* Capsanoto v5.10.6 — final, cache-safe Apps-switcher layout.
-   Rollback anchor: v5.10.5 app-switcher pass. */
-@media (min-width: 1101px) {
-  .top-command-menus.unified-command-bar {
-    grid-template-columns: 6.8rem 7.4rem minmax(0, 1fr) minmax(0, 1fr) repeat(5, 6.8rem) !important;
-    grid-template-rows: 3.15rem !important;
-    grid-auto-flow: column !important;
-    grid-auto-columns: 6.8rem !important;
-  }
-
-  .top-command-menus.unified-command-bar > .tool-menu[data-menu-kind="apps"] {
-    display: block !important;
-    grid-column: 7 !important;
-    grid-row: 1 !important;
-    min-width: 0 !important;
-  }
-
-  .top-command-menus.unified-command-bar > #topHelpButton { grid-column: 8 !important; grid-row: 1 !important; }
-  .top-command-menus.unified-command-bar > #settingsButton { grid-column: 9 !important; grid-row: 1 !important; }
-}
-
-.tool-menu-panel.app-switcher-panel {
-  grid-template-columns: 1fr !important;
-  width: 14rem !important;
-  min-width: 14rem !important;
 }
