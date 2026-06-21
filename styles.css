@@ -3909,26 +3909,31 @@ button[data-capsanoto-module]:hover::after {
   box-shadow: 0 0 12px rgba(182,115,0,.62);
   opacity: 1;
 }
-/* Capsanoto v5.10.7 — unified Apps switcher.
-   Rollback anchor: v5.10.5 before the Apps-switcher pass.
-   The command bar has nine ordered cells:
+
+/* Capsanoto v5.10.8 — primary Apps switcher layout.
+   One source of truth for the nine desktop command cells:
    Room → status → Format → Insert → Subnoto → Specnoto → Apps → Help → Settings.
-   Format and Insert retain the original flexible command width; only the
-   status cell is narrowed to make space for the added Apps cell. */
+   The status cell is the only flexible cell. */
 @media (min-width: 1101px) {
   .top-command-menus.unified-command-bar {
-    grid-template-columns: 6.8rem 7.4rem minmax(190px, 1fr) minmax(190px, 1fr) repeat(5, 6.8rem);
-    grid-template-rows: 3.15rem;
-    grid-auto-flow: row;
+    grid-template-columns: 6.8rem minmax(11rem, 1fr) repeat(7, 6.8rem) !important;
+    grid-template-rows: 3.15rem !important;
+    grid-auto-flow: row !important;
   }
 
-  .command-status.context-status {
-    min-width: 0;
-  }
+  .top-command-menus.unified-command-bar > #writingRoomButton { grid-column: 1; grid-row: 1; }
+  .top-command-menus.unified-command-bar > #contextStatus { grid-column: 2; grid-row: 1; min-width: 0; }
+  .top-command-menus.unified-command-bar > .tool-menu[data-menu-kind="format"] { grid-column: 3; grid-row: 1; }
+  .top-command-menus.unified-command-bar > .tool-menu[data-menu-kind="insert"] { grid-column: 4; grid-row: 1; }
+  .top-command-menus.unified-command-bar > #subnotoButton { grid-column: 5; grid-row: 1; }
+  .top-command-menus.unified-command-bar > #searchButton { grid-column: 6; grid-row: 1; }
+  .top-command-menus.unified-command-bar > .tool-menu[data-menu-kind="apps"] { grid-column: 7; grid-row: 1; min-width: 0; }
+  .top-command-menus.unified-command-bar > #topHelpButton { grid-column: 8; grid-row: 1; }
+  .top-command-menus.unified-command-bar > #settingsButton { grid-column: 9; grid-row: 1; }
 }
 
 .tool-menu-panel.app-switcher-panel {
-  grid-template-columns: 1fr;
+  grid-template-columns: 1fr !important;
   width: 14rem;
   min-width: 14rem;
 }
