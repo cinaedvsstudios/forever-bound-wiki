@@ -3964,3 +3964,31 @@ button[data-capsanoto-module]:hover::after {
   font-weight: inherit !important;
   letter-spacing: inherit;
 }
+
+
+/* Capsanoto v5.10.6 — final, cache-safe Apps-switcher layout.
+   Rollback anchor: v5.10.5 app-switcher pass. */
+@media (min-width: 1101px) {
+  .top-command-menus.unified-command-bar {
+    grid-template-columns: 6.8rem 7.4rem minmax(0, 1fr) minmax(0, 1fr) repeat(5, 6.8rem) !important;
+    grid-template-rows: 3.15rem !important;
+    grid-auto-flow: column !important;
+    grid-auto-columns: 6.8rem !important;
+  }
+
+  .top-command-menus.unified-command-bar > .tool-menu[data-menu-kind="apps"] {
+    display: block !important;
+    grid-column: 7 !important;
+    grid-row: 1 !important;
+    min-width: 0 !important;
+  }
+
+  .top-command-menus.unified-command-bar > #topHelpButton { grid-column: 8 !important; grid-row: 1 !important; }
+  .top-command-menus.unified-command-bar > #settingsButton { grid-column: 9 !important; grid-row: 1 !important; }
+}
+
+.tool-menu-panel.app-switcher-panel {
+  grid-template-columns: 1fr !important;
+  width: 14rem !important;
+  min-width: 14rem !important;
+}

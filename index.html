@@ -10,7 +10,29 @@
 <link href="iconcapsanoto.png" rel="apple-touch-icon"/>
 <link href="manifest.webmanifest" rel="manifest"/>
 <meta content="#5f1e66" name="theme-color"/>
-<link href="styles.css?v=5.10.5-appswitcher1" rel="stylesheet"/>
+<link href="styles.css?v=5.10.6" rel="stylesheet"/>
+
+<style id="capsanoto-app-switcher-layout-v5-10-6">
+/* Capsanoto v5.10.6 — nine-cell command bar and Apps switcher. */
+@media (min-width: 1101px) {
+  .top-command-menus.unified-command-bar {
+    grid-template-columns: 6.8rem 7.4rem minmax(0, 1fr) minmax(0, 1fr) repeat(5, 6.8rem) !important;
+    grid-template-rows: 3.15rem !important;
+    grid-auto-flow: column !important;
+    grid-auto-columns: 6.8rem !important;
+  }
+
+  .top-command-menus.unified-command-bar > .tool-menu[data-menu-kind="apps"] {
+    display: block !important;
+    grid-column: 7 !important;
+    grid-row: 1 !important;
+    min-width: 0 !important;
+  }
+
+  .top-command-menus.unified-command-bar > #topHelpButton { grid-column: 8 !important; grid-row: 1 !important; }
+  .top-command-menus.unified-command-bar > #settingsButton { grid-column: 9 !important; grid-row: 1 !important; }
+}
+</style>
 </head>
 <body class="is-unlocked">
 <main aria-labelledby="passwordTitle" class="password-screen" hidden="" id="passwordScreen">
@@ -28,7 +50,7 @@
 <main aria-label="Forever Bound writing editor" class="writer-shell" id="editorApp">
 <header aria-label="Capsanoto command bar" class="writer-header toolbar">
 <div class="document-controls">
-<strong class="app-name"><img alt="Capsanoto icon" src="https://raw.githubusercontent.com/cinaedvsstudios/forever-bound-wiki/refs/heads/main/iconcapsanoto.png"/><span class="brand-word">Capsanoto</span><span class="app-version">v5.10.5</span></strong>
+<strong class="app-name"><img alt="Capsanoto icon" src="https://raw.githubusercontent.com/cinaedvsstudios/forever-bound-wiki/refs/heads/main/iconcapsanoto.png"/><span class="brand-word">Capsanoto</span><span class="app-version">v5.10.6</span></strong>
 <label class="sr-only" for="documentSelect">Current document</label>
 <select hidden="" id="documentSelect" title="Document Switcher"></select>
 </div>
@@ -784,6 +806,6 @@
 </template>
 <script src="modules/specnoto/specnoto.module.js"></script>
 <script src="modules/subnoto/subnoto.module.js"></script>
-<script src="app.js?v=5.10.5"></script>
+<script src="app.js?v=5.10.6"></script>
 </body>
 </html>
