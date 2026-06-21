@@ -724,7 +724,7 @@ details.settings-card:not([open]) > *:not(summary), details.element-designer-car
 
 .top-command-menus.unified-command-bar {
   display: grid;
-  grid-template-columns: 6.8rem minmax(13rem, 1fr) repeat(6, 6.8rem);
+  grid-template-columns: 6.8rem 8rem minmax(6.8rem, 1fr) minmax(6.8rem, 1fr) repeat(5, 6.8rem);
   gap: 0;
   justify-self: stretch;
   align-items: stretch;
@@ -2446,6 +2446,47 @@ button:focus-visible,
 .tool-menu-panel button:hover,
 .tool-menu-panel button:focus-visible {
   background: var(--caps-control-radial-hover) !important;
+}
+
+.tool-menu-panel.app-switcher-panel {
+  grid-template-columns: 1fr;
+  width: 14rem;
+  min-width: 14rem;
+}
+
+.tool-menu-panel.app-switcher-panel .app-switcher-link {
+  min-width: 0;
+  min-height: 3.05rem;
+  padding: .55rem .65rem;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  border: 1px solid rgba(141,67,160,.72);
+  border-radius: 12px;
+  background: var(--caps-control-radial);
+  color: rgba(199,176,142,.92) !important;
+  font-size: .7rem;
+  font-weight: 500;
+  letter-spacing: .08em;
+  line-height: 1.05;
+  text-align: left;
+  text-decoration: none !important;
+  box-shadow: 0 8px 20px rgba(0,0,0,.48), 0 1px 0 rgba(255,240,206,.05) inset;
+}
+
+.tool-menu-panel.app-switcher-panel .app-switcher-link:hover,
+.tool-menu-panel.app-switcher-panel .app-switcher-link:focus-visible {
+  background: var(--caps-control-radial-hover);
+  border-color: var(--caps-purple-outline);
+  color: var(--caps-highlight-cream) !important;
+  outline: none;
+}
+
+.tool-menu-panel.app-switcher-panel .app-switcher-link .menu-tool-label {
+  color: inherit !important;
+  font-size: inherit;
+  font-weight: inherit !important;
+  letter-spacing: inherit;
 }
 
 /* Tables: defaults visually match the rest of the app */
