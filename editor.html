@@ -10,7 +10,8 @@
 <link href="iconcapsanoto.png" rel="apple-touch-icon"/>
 <link href="manifest.webmanifest" rel="manifest"/>
 <meta content="#5f1e66" name="theme-color"/>
-<link href="styles.css?v=5.10.8" rel="stylesheet"/>
+<link href="styles.css?v=5.11.0" rel="stylesheet"/>
+<link href="project-setup.css?v=5.11.0" rel="stylesheet"/>
 </head>
 <body class="is-unlocked">
 <main aria-labelledby="passwordTitle" class="password-screen" hidden="" id="passwordScreen">
@@ -124,24 +125,7 @@
 <div class="project-status-card" id="projectInfoStatus">Current Writing Room project status will appear here.</div>
 <p class="panel-help">Project Settings controls the storage for this Writing Room. App appearance still lives in normal Settings.</p>
 </section>
-<section class="project-settings-section">
-<h3>Online Storage — Google Drive Primary</h3>
-<p class="panel-help">Connect a Google account so Capsanoto can use Google Drive as the primary online storage for this Writing Room. Create Online Project and Sync Now now create/update the visible Google Drive project folder and upload the project JSON, TCard library, and Markdown files.</p>
-<div class="project-action-row">
-<button id="connectGoogleDriveButton" type="button">Connect Google Account</button>
-<button id="switchGoogleDriveButton" type="button">Switch Google Account</button>
-<button id="disconnectGoogleDriveButton" type="button">Disconnect</button>
-</div>
-<div class="project-action-row">
-<button id="createOnlineProjectButton" type="button">Create Online Project</button>
-<button id="openOnlineProjectButton" type="button">Open Online Project</button>
-<button id="syncOnlineProjectButton" type="button">Sync Now</button>
-<button id="checkOnlineStatusButton" type="button">Check Online Status</button>
-<button id="openGoogleDriveFolderButton" type="button">Open in Drive</button>
-<button id="copyGoogleDriveFolderLinkButton" type="button">Copy Drive Link</button>
-</div>
-<div class="project-status-card" id="googleDriveStatus">Google Drive is not connected.</div>
-</section>
+<section class="project-settings-section" id="dropboxStorageSection"><h3>Dropbox · access on other devices</h3><div id="dropboxStorageControls"></div></section>
 <section class="project-settings-section">
 <h3>Local Backup Folder — HDD Mirror</h3>
 <p class="panel-help">Choose or create a local folder as an offline backup/mirror. This uses browser folder permissions in Chrome/Edge.</p>
@@ -158,13 +142,13 @@
 <section class="project-settings-section">
 <h3>Project Actions</h3>
 <div class="project-action-row">
-<button id="newProjectPlaceholderButton" type="button">New Writing Room</button>
-<button id="openProjectPlaceholderButton" type="button">Open / Switch Online</button>
-<button id="duplicateProjectPlaceholderButton" type="button">Duplicate Online</button>
+<button id="newProjectPlaceholderButton" type="button">New project wizard</button>
+
+
 <button id="downloadProjectBackupButton" type="button">Download Project Backup</button>
 <button id="projectImportBackupButton" type="button">Import Project Backup</button>
 </div>
-<p class="panel-help">Use these project-level actions to start a fresh local Writing Room, switch to an online Google Drive Writing Room, duplicate the current Writing Room online, or download a complete Capsanoto project backup. Storage order remains Google Drive primary, HDD backup, and localStorage emergency draft.</p>
+<p class="panel-help">Create a project, add files one at a time, and download a complete backup. Browser autosave is local to this browser and device. Google Docs imports are independent copies; Dropbox can sync them across devices.</p>
 </section>
 </aside>
 <nav aria-label="Document bookmarks" class="bookmark-bar" hidden="" id="bookmarkBar"></nav>
@@ -499,7 +483,7 @@
 </aside>
 </div>
 </section>
-<section class="settings-section settings-card" data-settings-section="import" hidden=""><h3>Import File</h3><p class="panel-help">Import a full Capsanoto .caps.json Writing Room backup that was created with Download Project Backup. This replaces the current local Writing Room after confirmation, keeps the Google account connection, and clears the online project folder link until you sync again.</p><div class="import-placeholder-grid"><div class="import-primary-buttons"><button id="importProjectBackupButton" type="button">Import Caps Project Backup</button><button disabled="" type="button">Import TCards</button><button disabled="" type="button">Import Single Markdown File</button><button disabled="" type="button">Import Images / Assets</button><div class="import-mini-buttons"><button disabled="" type="button">JSON</button><button disabled="" type="button">HTML</button><button disabled="" type="button">TXT</button><button disabled="" type="button">Word</button><button disabled="" type="button">Images</button><button disabled="" type="button">TBA</button></div></div><div class="import-preview-box"><strong>Import preview</strong><br/>Choose a .caps.json backup. Capsanoto will show the Writing Room name, file count, TCard count, and exported date before replacing the current local Writing Room.</div></div><input accept="application/json,.json,.caps" hidden="" id="importProjectBackupInput" type="file"/></section>
+<section class="settings-section settings-card" data-settings-section="import" hidden><h3>Import documents</h3><p class="panel-help">Copy one downloaded Word file or Google Doc into this project. Preview and select tabs before import.</p><button data-open-file-import type="button">Add a document</button><h3>Restore a project backup</h3><p class="panel-help">A complete .caps.json backup opens as a project. Your previous working copy is kept for recovery.</p><button id="importProjectBackupButton" type="button">Import Project Backup</button><input accept="application/json,.json,.caps" hidden id="importProjectBackupInput" type="file"></section>
 <section class="settings-section settings-card" data-settings-section="emoji" hidden="">
 <h3>Emoji Favorites</h3>
 <p class="panel-help">Edit the favourite emojis shown at the top of the Emoji Spark window. Separate each emoji with a space.</p>
@@ -531,7 +515,7 @@
 
 <section class="settings-section settings-card" data-settings-section="folder-mode" hidden="">
 <h3>Local Backup Folder</h3>
-<p class="panel-help">Local Backup Folder keeps a hard-drive Markdown mirror of the active Writing Room. Google Drive is the intended primary online storage; browser localStorage remains the emergency draft backup while editing.</p>
+<p class="panel-help">Local Backup Folder keeps a hard-drive copy of the project, including original editor content and Markdown files. Browser autosave uses this browser’s database. Connect Dropbox in Room → Project Settings for access on other devices.</p>
 <div class="folder-mode-actions">
 <button id="createFolderProjectButton" type="button">Create New Writing Room Folder</button>
 <button id="openFolderProjectButton" type="button">Open Writing Room Folder</button>
@@ -598,7 +582,7 @@
 <div class="panel-header-actions"><button aria-label="Edit help" aria-pressed="false" class="icon-button" id="helpEditButton" type="button">✎</button><button aria-label="Close help" class="icon-button" id="closeHelpPanel" type="button">×</button></div>
 </header>
 <section>
-<h3>1. What Capsanoto Is</h3>
+<h3>Start here · importing your first document</h3><ol><li>Choose <strong>New project</strong> and name the collection, for example Forever Bound.</li><li>Choose one .docx download, a Google Docs source package, or the direct read-only Google Docs importer.</li><li>Preview the tabs and select what to copy. Each selected tab becomes a file; nested tabs become sub files.</li><li>Use <strong>Room</strong> to browse the imported files. Use <strong>Add file</strong> to bring in another document later.</li><li>Use <strong>Room → Project Settings → Download Project Backup</strong> for a complete portable copy. Keep your originals until you have checked text, formatting, and embedded content.</li></ol><p>Browser autosave is temporary storage for this device. Dropbox keeps a project copy online when you connect and sync; it does not modify your Google Docs. For another device, connect the same Dropbox account and choose Open from Dropbox. If another device has changed a cloud copy, sync stops so you can review it. Live collaboration and automatic text merging are not supported.</p><p>Images and other embedded Google objects may appear as placeholders in direct imports. Word downloads can retain embedded images but may change layout and tab organization. Comments and suggestions are not migrated.</p></section><section><h3>1. What Capsanoto Is</h3>
 <p>Capsanoto is a lightweight structured writing environment for lore-heavy writing, long-form worldbuilding, scripts, novels, pitch material, and linked narrative documents.</p>
 <p>It is built for human writing first: quick editing, readable files, local autosave, portable downloads, and simple structure without turning the app into a heavy database or wiki system.</p>
 </section>
@@ -692,7 +676,7 @@
 <dl>
 <dt>Document title</dt><dd>The title field edits the current file title.</dd>
 <dt>Writing area</dt><dd>The main editable page supports browser rich-text editing, headings, links, images, tables, TCards, and emphasis boxes.</dd>
-<dt>Local autosave</dt><dd>Capsanoto currently saves locally in the browser using localStorage. This is the active safety layer.</dd>
+<dt>Local autosave</dt><dd>Capsanoto saves project documents to this browser’s IndexedDB database. A browser copy is tied to this device and site address. Download backups or sync to Dropbox before clearing browser data or moving devices.</dd>
 <dt>GitHub sync</dt><dd>No GitHub sync engine is currently integrated in this browser app. Future sync should not block writing; if sync fails, local changes should remain safe.</dd>
 <dt>Status messages</dt><dd>The status box should show messages such as <strong>Saving locally…</strong>, <strong>Autosaved locally</strong>, <strong>Syncing to GitHub…</strong>, <strong>Synced to GitHub</strong>, and <strong>Sync failed — saved locally</strong> when those systems exist.</dd>
 </dl>
@@ -711,7 +695,7 @@
 </section>
 <section>
 <h3>12. Design Settings</h3>
-<p>Settings → Design controls app styling such as fonts, colours, borders, shadows, top bar height, Writing Room window styling, Settings styling, Help styling, writing area controls, table defaults, TCard styling, and scrollbars where implemented.</p><p>Design has three layers: Capsanoto default theme tokens in the code, the active Writing Room project theme saved in <code>capsanoto.project.json</code>, and temporary local unsaved changes while editing the settings. When you save design settings, they become part of the Writing Room project and will travel with HDD backup and Google Drive sync.</p>
+<p>Settings → Design controls app styling such as fonts, colours, borders, shadows, top bar height, Writing Room window styling, Settings styling, Help styling, writing area controls, table defaults, TCard styling, and scrollbars where implemented.</p><p>Design has three layers: Capsanoto default theme tokens in the code, the active Writing Room project theme saved in <code>capsanoto.project.json</code>, and temporary local unsaved changes while editing the settings. When you save design settings, they become part of the Writing Room project and will travel with project backups and Dropbox sync.</p>
 <p>Recommended font stack: <code>Arial, Helvetica, sans-serif</code>. Courier New is reserved for code-like/monospace text.</p>
 </section>
 <section>
@@ -736,7 +720,7 @@
 <dt>Styles</dt><dd><code>styles.css</code> controls the theme, layouts, panels, typography, and CSS variables.</dd>
 <dt>Starter files</dt><dd><code>content/documents.json</code> seeds first-run content. <code>config/auth.json</code> remains for future preview auth work.</dd>
 <dt>Local storage keys</dt><dd><code>forever-bound-writing-room-v2</code> stores files/TCards, <code>capsanoto-design-settings-v5-clean</code> stores design settings, <code>capsanoto-help-html-v1</code> stores edited Help text, and <code>capsanoto-writing-room-layout-v1</code> stores Filing Cabinet position/size, and selected deprecated paragraph history is stored inside the Writing Room data.</dd>
-<dt>Save audit</dt><dd>Current save behaviour is local-first. File edits, TCard edits, Filing Cabinet changes, and design settings save to browser localStorage. A durable GitHub sync system is not currently present in the app code.</dd>
+<dt>Save audit</dt><dd>Document edits, TCards, and project structure save to the browser’s IndexedDB database. Small appearance preferences also use localStorage. Dropbox sync is optional and uses revision checks to stop conflicting overwrites. Google Docs is an import source only.</dd>
 <dt>Versioning rule</dt><dd>Use <code>v1</code> as the first version, then <code>v1.1</code>, <code>v1.2</code>, and so on for future updates.</dd>
 </dl>
 </section>
@@ -784,6 +768,10 @@
 </template>
 <script src="modules/specnoto/specnoto.module.js"></script>
 <script src="modules/subnoto/subnoto.module.js"></script>
-<script src="app.js?v=5.10.8"></script>
+<script src="vendor/purify.min.js"></script>
+<script src="vendor/mammoth.browser.min.js"></script>
+<script src="project-setup.js?v=5.11.0"></script>
+<script src="dropbox-storage.js?v=5.11.0"></script>
+<script src="app.js?v=5.11.0"></script>
 </body>
 </html>

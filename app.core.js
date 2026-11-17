@@ -476,6 +476,8 @@ async function startEditor() {
   updateContextStatus();
   startFolderModeReminderLoop();
   updateFolderModeStatus();
+  initializeProjectSetup();
+  await initializeDropboxStorage();
 }
 
 function showPasswordScreen(message = "") {
@@ -493,7 +495,7 @@ function setPasswordFormState(enabled, message = "") {
 function showEditorStartupError(error) {
   setAuthVisibility(true);
   const message = error?.message || "Unknown startup error";
-  els.editor.innerHTML = `<h1>Capsanoto startup issue</h1><p>The editor is unlocked, but startup hit an error:</p><pre>${escapeHtml(message)}</pre><p>Try refreshing. If this keeps happening, use Reset Local Save in Settings.</p>`;
+  els.editor.innerHTML = `<h1>Capsanoto startup issue</h1><p>The editor is unlocked, but startup hit an error:</p><pre>${escapeHtml(message)}</pre><p>Your saved data has been kept. Close other Capsanoto tabs and try refreshing. Do not reset browser storage before recovering your data.</p>`;
   setStatus("Startup issue", "dirty");
 }
 
@@ -519,10 +521,15 @@ function isAuthenticated() {
 }
 
 async function loadWorkspace() {
-  const saved = localStorage.getItem(STORAGE_KEY);
+  const saved = await readWorkspaceSnapshot();
+  firstWorkspaceRun = !saved;
   if (saved) {
     try {
       const payload = JSON.parse(saved);
+      if (!Array.isArray(payload.documents) || payload.documents.some((doc) => !doc || typeof doc.id !== "string" || typeof doc.content !== "string")) throw new Error("Saved project data is unreadable. The original save has been preserved.");
+      state.projectId = payload.projectId || crypto.randomUUID();
+      state.activeId = payload.activeId;
+      state.dropboxAutoSync = Boolean(payload.dropboxAutoSync);
       state.documents = Array.isArray(payload.documents) ? payload.documents : [];
       state.blocks = payload.blocks && typeof payload.blocks === "object" ? payload.blocks : {};
       state.writingRoomName = payload.writingRoomName || state.writingRoomName;
@@ -532,16 +539,14 @@ async function loadWorkspace() {
       state.deprecated = Array.isArray(payload.deprecated) ? payload.deprecated : [];
       state.deprecatedParagraphs = Array.isArray(payload.deprecatedParagraphs) ? payload.deprecatedParagraphs : [];
       if (payload.designSettings && typeof payload.designSettings === "object") setProjectDesignSettings(payload.designSettings, { persistLocal: true });
-      if (payload.designSettings && typeof payload.designSettings === "object") setProjectDesignSettings(payload.designSettings, { persistLocal: true });
     } catch (error) {
-      console.warn("Ignoring unreadable local Capsanoto Writing Room", error);
-      localStorage.removeItem(STORAGE_KEY);
-      state.documents = [];
-      state.blocks = {};
+      showStorageWarning(`Could not read the saved project. Download its original data before resetting this browser. ${error.message}`);
+      document.querySelector('#storageWarning button').onclick = () => downloadFile('Capsanoto-original-save.json', saved, 'application/json');
+      throw new Error(`Could not open the saved project. Its data has been preserved. ${error.message}`);
     }
   }
 
-  if (!state.documents.length) {
+  if (!saved) {
     const payload = await loadStarterWorkspace();
     state.documents = Array.isArray(payload.documents) ? payload.documents : [];
     state.blocks = payload.blocks && typeof payload.blocks === "object" ? payload.blocks : {};
@@ -551,13 +556,13 @@ async function loadWorkspace() {
     state.trash = Array.isArray(payload.trash) ? payload.trash : [];
     state.deprecated = Array.isArray(payload.deprecated) ? payload.deprecated : [];
     state.deprecatedParagraphs = Array.isArray(payload.deprecatedParagraphs) ? payload.deprecatedParagraphs : [];
-    persistNow("Loaded starter Writing Room");
+    await persistNow("Loaded starter Writing Room");
   }
 
   const legacyStarterCleaned = legacyStarterTCardCleanup();
   normalizeFilingHierarchy();
   if (!state.documents.length) createDocument();
-  state.activeId = state.documents[0].id;
+  state.activeId = state.documents.some((doc) => doc.id === state.activeId) ? state.activeId : state.documents[0].id;
   if (legacyStarterCleaned) persistNow("Cleaned starter TCard examples");
 }
 
@@ -830,15 +835,17 @@ function bindEditorEvents() {
 }
 
 
+function safeDecodeDocumentId(value) { try { return decodeURIComponent(value); } catch { return value; } }
+
 function cleanDocumentId(value) {
-  const decoded = decodeURIComponent(String(value || "").trim());
+  const decoded = safeDecodeDocumentId(String(value || "").trim());
   const withoutHash = decoded.split("#")[0];
   const withoutQuery = withoutHash.split("?")[0];
   return slugify(withoutQuery || decoded);
 }
 
 function hasDirtyDocumentId(value) {
-  const decoded = decodeURIComponent(String(value || ""));
+  const decoded = safeDecodeDocumentId(String(value || ""));
   return /[?#&=]/.test(decoded) || decoded !== cleanDocumentId(decoded);
 }
 
@@ -1101,7 +1108,7 @@ function renderActiveDocument() {
   els.titleInput.value = doc.title;
   els.tagsInput.value = (doc.tags ?? []).join(", ");
   state.suppressInput = true;
-  els.editor.innerHTML = renderTransclusions(doc.content);
+  els.editor.innerHTML = renderTransclusions(safeDocumentHtml(doc.content));
   ensureHeadingIds();
   state.suppressInput = false;
 }
@@ -3891,26 +3898,33 @@ function markDirty(message = "Saving locally") {
   const safeMessage = message && message.trim() ? message : "Saving locally";
   setStatus(safeMessage, "dirty");
   clearTimeout(state.saveTimer);
-  state.saveTimer = setTimeout(() => persistNow("Autosaved locally"), AUTOSAVE_DELAY);
+  state.saveTimer = setTimeout(() => { state.saveTimer = null; void persistNow("Saved in this browser"); }, AUTOSAVE_DELAY);
 }
 
-function persistNow(message = "Autosaved locally") {
+async function persistNow(message = "Saved in this browser") {
+  clearTimeout(state.saveTimer);
+  state.saveTimer = null;
   const now = new Date().toISOString();
   const doc = activeDocument();
   if (doc) doc.localDraftAt = now;
-  localStorage.setItem(STORAGE_KEY, serializedWorkspace());
-  setStatus(message || "Autosaved locally", "saved");
+  try {
+    await writeWorkspaceSnapshot();
+    setStatus(message || "Saved in this browser", "saved");
+  } catch (error) {
+    console.error("Browser save failed", error);
+    setStatus("Not saved — download a backup", "dirty");
+    return false;
+  }
   if (state.folderMode.enabled && state.folderMode.directoryHandle) {
-    void saveFolderModeSnapshot("Saved to disk").catch((error) => {
-      console.warn("Folder Mode disk save failed", error);
-      setStatus("Disk save failed — local backup kept", "dirty");
-      updateFolderModeStatus("Disk save failed — local backup kept");
+    void saveFolderModeSnapshot("Saved to backup folder").catch((error) => {
+      console.warn("Backup folder save failed", error);
+      setStatus("Folder backup failed — browser copy saved", "dirty");
+      updateFolderModeStatus(error.message || "Folder backup failed");
     });
   }
+  scheduleDropboxSync();
+  return true;
 }
-
-
-
 
 /* Project Settings + Google Drive account shell. */
 function loadGoogleDriveStorageState() {
@@ -3961,19 +3975,19 @@ function toggleProjectSettingsPanel(show = null) {
   if (shouldShow) {
     toggleSettingsPanel(false);
     updateProjectSettingsStatus();
-    setContextStatus("Project Settings: Google Drive primary, HDD backup, local emergency draft", "saved");
+    setContextStatus("Project storage: browser autosave, backup folder, and Dropbox", "saved");
   }
 }
 
 function updateProjectSettingsStatus(message = "") {
   const active = activeDocument?.();
-  const storageMode = state.googleDrive.connected ? "Google Drive primary · HDD backup optional · localStorage emergency draft" : "Google Drive not connected · HDD backup/local draft available";
+  const storageMode = "Browser autosave · optional HDD mirror · optional Dropbox sync";
   if (els.projectInfoStatus) {
     const disk = state.folderMode.lastDiskSaveAt ? new Date(state.folderMode.lastDiskSaveAt).toLocaleString() : "never";
-    const online = state.googleDrive.lastSyncAt ? new Date(state.googleDrive.lastSyncAt).toLocaleString() : (state.googleDrive.connectedAt ? `connected ${new Date(state.googleDrive.connectedAt).toLocaleString()}` : "not connected");
+    const online = dropboxConnection ? dropboxStatus : "Dropbox not connected";
     const design = state.designSettings && Object.keys(state.designSettings).length ? "Writing Room theme active" : "Default theme";
-    const onlineProject = state.googleDrive.projectName ? `Google project: ${state.googleDrive.projectName}` : "Google project: none selected";
-    els.projectInfoStatus.innerHTML = `<strong>${escapeHtml(state.writingRoomName || "Writing Room")}</strong><br>Active file: ${escapeHtml(active?.title || "No active file")}<br>Storage: ${escapeHtml(storageMode)}<br>${escapeHtml(onlineProject)}<br>Design: ${escapeHtml(design)}<br>Last online sync: ${escapeHtml(online)}<br>Last HDD backup: ${escapeHtml(disk)}`;
+    const onlineProject = "Google Docs is an import source only";
+    els.projectInfoStatus.innerHTML = `<strong>${escapeHtml(state.writingRoomName || "Writing Room")}</strong><br>Active file: ${escapeHtml(active?.title || "No active file")}<br>Storage: ${escapeHtml(storageMode)}<br>${escapeHtml(onlineProject)}<br>Design: ${escapeHtml(design)}<br>Dropbox: ${escapeHtml(online)}<br>Last HDD backup: ${escapeHtml(disk)}`;
   }
   if (els.googleDriveStatus) {
     const expires = state.googleDrive.expiresAt ? new Date(state.googleDrive.expiresAt).toLocaleString() : "not available";
@@ -4332,7 +4346,7 @@ async function syncGoogleDriveProject(options = {}) {
     state.googleDrive.lastSyncAt = now;
     state.googleDrive.lastStatus = `Synced ${docsToWrite.length} file${docsToWrite.length === 1 ? "" : "s"} to Google Drive.`;
     saveGoogleDriveStorageState();
-    localStorage.setItem(STORAGE_KEY, serializedWorkspace());
+    await writeWorkspaceSnapshot();
     updateProjectSettingsStatus(state.googleDrive.lastStatus);
     setStatus("Synced to Google Drive", "saved");
   } catch (error) {
@@ -4489,6 +4503,8 @@ async function loadGoogleDriveProject(projectFolder) {
   setStatus("Opening Google Drive project…", "dirty");
   const projectText = await readGoogleDriveTextFile(projectFolder.id, "capsanoto.project.json");
   const project = JSON.parse(projectText);
+  await prepareProjectReplacement();
+  state.projectId = project.projectId || crypto.randomUUID();
   state.writingRoomName = project.writingRoomName || project.googleDrive?.projectName || projectFolder.name || "Writing Room";
   state.filingGroups = Array.isArray(project.filingGroups) ? project.filingGroups : defaultFilingGroups();
   state.filingTabs = Array.isArray(project.filingTabs) ? project.filingTabs : [];
@@ -4530,7 +4546,7 @@ async function loadGoogleDriveProject(projectFolder) {
   state.googleDrive.lastSyncAt = project.updatedAt || new Date().toISOString();
   state.googleDrive.lastStatus = `Opened online project: ${state.googleDrive.projectName}`;
   saveGoogleDriveStorageState();
-  localStorage.setItem(STORAGE_KEY, serializedWorkspace());
+  await writeWorkspaceSnapshot();
   renderAll();
   updateUrl();
   updateProjectSettingsStatus(state.googleDrive.lastStatus);
@@ -4543,6 +4559,7 @@ function resetWritingRoomState(projectName) {
   const safeName = projectName?.trim() || "Untitled Writing Room";
   const documentId = `doc-${slugify(safeName || "writing-room")}-${Date.now()}`;
   state.writingRoomName = safeName;
+  state.dropboxAutoSync = false;
   state.documents = [{
     id: documentId,
     title: "New Lore Document",
@@ -4573,27 +4590,7 @@ function resetWritingRoomState(projectName) {
   state.googleDrive.lastStatus = state.googleDrive.accessToken ? "New Writing Room is local until Create Online Project or Sync Now is used." : state.googleDrive.lastStatus;
 }
 
-async function createNewWritingRoomProject() {
-  try {
-    const result = await openCapsDialog("New Writing Room", [
-      { html: "<p>This creates a fresh local Writing Room in the current browser. It does not delete Google Drive or HDD backup files. Sync or backup when you are ready.</p>" },
-      { name: "projectName", label: "Writing Room name", value: "New Writing Room", placeholder: "Forever Bound" },
-      { name: "confirm", checkbox: true, label: "Create a new blank Writing Room and replace the currently open local workspace.", footer: true },
-    ]);
-    if (!result?.projectName || result.confirm !== "on") return;
-    syncEditorToDocument();
-    resetWritingRoomState(result.projectName);
-    localStorage.setItem(STORAGE_KEY, serializedWorkspace());
-    saveGoogleDriveStorageState();
-    renderAll();
-    updateUrl();
-    updateProjectSettingsStatus("New Writing Room created locally. Use Create Online Project, Sync Now, or Sync Backup Folder when ready.");
-    setStatus("New Writing Room created", "saved");
-  } catch (error) {
-    console.error(error);
-    setStatus("New Writing Room failed", "dirty");
-  }
-}
+async function createNewWritingRoomProject() { openProjectSetup("new"); }
 
 async function duplicateGoogleDriveProject() {
   try {
@@ -4713,27 +4710,35 @@ async function previewAndImportProjectBackup(payload, sourceName = "Capsanoto ba
     { name: "confirm", checkbox: true, label: "Replace the current local Writing Room with this imported backup.", footer: true },
   ]);
   if (result?.confirm !== "on") return;
-  importProjectBackupPayload(payload);
+  await importProjectBackupPayload(payload);
 }
 
-function importProjectBackupPayload(payload) {
+async function importProjectBackupPayload(payload) {
   const project = backupProjectPayload(payload);
   const markdownFiles = backupMarkdownFiles(payload);
   const importedDocs = [];
   const markdownById = new Map(markdownFiles.map((item) => [item.id || item.path || item.title, item]));
+  const metadataById = new Map((project.documents || []).map((item) => [item.id, item]));
   if (markdownFiles.length) {
     markdownFiles.forEach((item, index) => {
       const fallback = {
+        ...metadataById.get(item.id),
         id: item.id || `doc-import-${Date.now()}-${index}`,
         title: item.title || item.path || `Imported File ${index + 1}`,
         diskPath: item.path || "",
       };
       const doc = capsMarkdownToDocument(item.markdown || "", fallback);
+      if (typeof fallback.content === "string") doc.content = safeDocumentHtml(fallback.content);
       doc.id = doc.id || fallback.id;
       doc.title = doc.title || fallback.title;
       doc.diskPath = doc.diskPath || fallback.diskPath;
       importedDocs.push(doc);
     });
+    for (const item of project.documents || []) {
+      if (importedDocs.some((doc) => doc.id === item.id)) continue;
+      if (typeof item.content !== 'string') throw new Error(`The backup is missing Markdown content for ${item.title || item.id}. The current project is unchanged.`);
+      importedDocs.push({ ...item });
+    }
   } else if (Array.isArray(project.documents)) {
     project.documents.forEach((item, index) => {
       const doc = { ...item };
@@ -4741,12 +4746,19 @@ function importProjectBackupPayload(payload) {
       if (markdownItem?.markdown) Object.assign(doc, capsMarkdownToDocument(markdownItem.markdown, doc));
       if (!doc.id) doc.id = `doc-import-${Date.now()}-${index}`;
       if (!doc.title) doc.title = `Imported File ${index + 1}`;
-      if (!doc.content) doc.content = `<h1>${escapeHtml(doc.title)}</h1><p>Imported file content was not included in this backup.</p>`;
+      if (typeof doc.content !== 'string') throw new Error(`The backup does not include content for ${doc.title}. Import a complete backup containing its Markdown files.`);
       importedDocs.push(doc);
     });
   }
+  if (!importedDocs.length) throw new Error("The backup contains no documents.");
+  validateImportedDocuments(importedDocs);
+  await prepareProjectReplacement();
+  const previous = serializedWorkspace();
+  try {
+  state.dropboxAutoSync = false;
+  state.projectId = /^[\w-]{1,100}$/.test(project.projectId || '') ? project.projectId : crypto.randomUUID();
   state.writingRoomName = project.writingRoomName || payload.projectName || payload.name || "Imported Writing Room";
-  state.documents = importedDocs;
+  state.documents = importedDocs.map((doc) => ({ ...doc, content: safeDocumentHtml(doc.content) }));
   state.blocks = backupTcardBlocks(payload, project);
   state.filingGroups = Array.isArray(project.filingGroups) ? project.filingGroups : defaultFilingGroups();
   state.filingTabs = Array.isArray(project.filingTabs) ? project.filingTabs : [];
@@ -4764,13 +4776,15 @@ function importProjectBackupPayload(payload) {
   state.googleDrive.projectFolderId = "";
   state.googleDrive.projectName = "";
   state.googleDrive.lastSyncAt = "";
-  state.googleDrive.lastStatus = state.googleDrive.accessToken ? "Imported backup locally. Use Create Online Project or Sync Now to upload it to Google Drive." : "Imported backup locally. Connect Google Account if you want to sync it online.";
+  state.googleDrive.lastStatus = "Imported independent project copy. Download a backup or connect Dropbox.";
   saveGoogleDriveStorageState();
-  localStorage.setItem(STORAGE_KEY, serializedWorkspace());
+  await writeWorkspaceSnapshot();
   renderAll();
   updateUrl();
   updateProjectSettingsStatus(state.googleDrive.lastStatus);
   setStatus("Imported Writing Room backup", "saved");
+  renderDropboxStorage();
+  } catch (error) { restoreWorkspaceObject(JSON.parse(previous)); renderAll(); throw error; }
 }
 
 function projectStoragePlaceholder(message) {
@@ -4831,9 +4845,10 @@ function folderModeStructureText() {
 async function restoreFolderModeHandle() {
   if (!folderModeSupported()) return;
   try {
-    const handle = await readFolderModeHandle();
-    if (!handle) return;
-    const allowed = await verifyFilePermission(handle, false);
+    const record = await readFolderModeHandle();
+    if (!record?.handle || record.projectId !== state.projectId) return;
+    const handle = record.handle;
+    const allowed = (await handle.queryPermission({ mode: 'readwrite' })) === 'granted';
     state.folderMode.directoryHandle = handle;
     state.folderMode.enabled = Boolean(allowed);
     state.folderMode.projectName = handle.name || "Writing Room Folder";
@@ -4865,7 +4880,7 @@ async function storeFolderModeHandle(handle) {
   const db = await openFolderModeDb();
   return new Promise((resolve, reject) => {
     const tx = db.transaction(FOLDER_MODE_STORE, "readwrite");
-    tx.objectStore(FOLDER_MODE_STORE).put(handle, FOLDER_MODE_HANDLE_KEY);
+    tx.objectStore(FOLDER_MODE_STORE).put(handle ? { handle, projectId: state.projectId } : null, FOLDER_MODE_HANDLE_KEY);
     tx.oncomplete = () => resolve();
     tx.onerror = () => reject(tx.error);
   });
@@ -4890,6 +4905,7 @@ async function createNewWritingRoomFolder() {
       setStatus("Folder permission was not granted", "dirty");
       return;
     }
+    for await (const entry of directoryHandle.values()) throw new Error("Choose an empty folder for a new backup. Use Open Backup Folder for an existing project.");
     state.folderMode.directoryHandle = directoryHandle;
     state.folderMode.enabled = true;
     state.folderMode.projectName = directoryHandle.name || state.writingRoomName || "Writing Room";
@@ -4907,75 +4923,43 @@ async function createNewWritingRoomFolder() {
 }
 
 async function openWritingRoomFolder() {
-  if (!folderModeSupported()) {
-    setStatus("Folder Mode needs Chrome or Edge", "dirty");
-    updateFolderModeStatus("Folder Mode is not supported in this browser.");
-    return;
-  }
+  if (!folderModeSupported()) { setStatus("Folder backup needs Chrome or Edge", "dirty"); return; }
   try {
-    const directoryHandle = await window.showDirectoryPicker({ mode: "readwrite" });
-    if (!(await verifyFilePermission(directoryHandle, true))) {
-      setStatus("Folder permission was not granted", "dirty");
-      return;
-    }
-    state.folderMode.directoryHandle = directoryHandle;
+    const handle = await window.showDirectoryPicker({ mode: "readwrite" });
+    if (!(await verifyFilePermission(handle, true))) return;
+    await loadWritingRoomFromFolder(handle);
+    await storeFolderModeHandle(handle);
+    state.folderMode.directoryHandle = handle;
     state.folderMode.enabled = true;
-    state.folderMode.projectName = directoryHandle.name || "Writing Room Folder";
-    await storeFolderModeHandle(directoryHandle);
-    await loadWritingRoomFromFolder(directoryHandle);
-    localStorage.setItem(STORAGE_KEY, serializedWorkspace());
-    renderAll();
-    updateFolderModeStatus("Opened Writing Room folder from disk.");
-    setStatus("Opened Writing Room folder", "saved");
+    state.folderMode.projectName = handle.name;
+    renderAll(); updateUrl(); updateProjectSettingsStatus();
+    updateFolderModeStatus("Opened backup folder. Browser copy saved.");
+    setStatus("Opened backup folder", "saved");
   } catch (error) {
-    if (error?.name === "AbortError") return;
-    console.error(error);
-    setStatus("Could not open Writing Room folder", "dirty");
-    updateFolderModeStatus(error.message || "Could not open Writing Room folder.");
+    if (error.name === "AbortError") return;
+    updateFolderModeStatus(error.message);
+    setStatus("Could not open backup folder — current project kept", "dirty");
   }
 }
 
 async function loadWritingRoomFromFolder(directoryHandle) {
   const project = await readJsonFromDirectory(directoryHandle, "capsanoto.project.json");
-  if (!project?.documents) {
-    const create = confirm("This folder does not contain a Capsanoto project file. Create one here from the current Writing Room?");
-    if (!create) return;
-    await prepareDocumentsForFolderMode();
-    await saveFolderModeSnapshot("Writing Room folder created", { force: true, writeAll: true });
-    return;
-  }
-  state.writingRoomName = project.writingRoomName || directoryHandle.name || "Writing Room";
-  state.filingGroups = Array.isArray(project.filingGroups) ? project.filingGroups : defaultFilingGroups();
-  state.filingTabs = Array.isArray(project.filingTabs) ? project.filingTabs : [];
-  state.trash = Array.isArray(project.trash) ? project.trash : [];
-  state.deprecated = Array.isArray(project.deprecated) ? project.deprecated : [];
-  state.deprecatedParagraphs = Array.isArray(project.deprecatedParagraphs) ? project.deprecatedParagraphs : [];
-  if (project.designSettings && typeof project.designSettings === "object") {
-    setProjectDesignSettings(project.designSettings, { persistLocal: true });
-    applySavedDesignSettings();
-    loadDesignForm();
-  }
-  state.documents = [];
-  const tcardPayload = await readJsonFromDirectory(directoryHandle, "tcards.json").catch(() => null);
-  state.blocks = tcardPayload?.blocks && typeof tcardPayload.blocks === "object" ? tcardPayload.blocks : (project.blocks || {});
-  for (const docMeta of project.documents || []) {
-    const doc = { ...docMeta };
-    if (doc.diskPath) {
-      try {
-        const md = await readTextFileAtPath(directoryHandle, doc.diskPath);
-        const parsed = capsMarkdownToDocument(md, doc);
-        Object.assign(doc, parsed);
-        doc.diskSavedAt = doc.diskSavedAt || new Date().toISOString();
-      } catch (error) {
-        console.warn(`Could not read ${doc.diskPath}`, error);
-        doc.content = doc.content || `<h1>${escapeHtml(doc.title || "Missing File")}</h1><p>Capsanoto could not read this Markdown file from disk.</p>`;
-      }
+  if (!Array.isArray(project?.documents) || !project.documents.length) throw new Error("Choose a folder with an existing Capsanoto project, or create a new backup in an empty folder.");
+  const documents = [];
+  for (const meta of project.documents) {
+    let doc = { ...meta };
+    if (typeof meta.content !== "string") {
+      if (!meta.diskPath) throw new Error("A document has no content or Markdown file path. The current project was kept.");
+      doc = capsMarkdownToDocument(await readTextFileAtPath(directoryHandle, meta.diskPath), meta);
     }
-    state.documents.push(doc);
+    doc.content = safeDocumentHtml(doc.content);
+    documents.push(doc);
   }
-  normalizeFilingHierarchy();
-  if (!state.documents.length) createDocument();
-  state.activeId = project.activeId && state.documents.some((doc) => doc.id === project.activeId) ? project.activeId : state.documents[0].id;
+  const tcards = await readJsonFromDirectory(directoryHandle, "tcards.json").catch((error) => {
+    if (project.blocks) return { blocks: project.blocks };
+    throw new Error("The TCard library could not be read. The current project was kept.");
+  });
+  await importProjectBackupPayload({ ...project, documents, blocks: tcards.blocks || {} });
   state.folderMode.lastDiskSaveAt = project.updatedAt || "";
 }
 
@@ -5059,28 +5043,44 @@ async function syncLocalBackupFolder() {
   }
 }
 
-async function saveFolderModeSnapshot(message = "Saved to disk", options = {}) {
-  if (!state.folderMode.enabled || !state.folderMode.directoryHandle || state.folderMode.writeInProgress) return;
-  state.folderMode.writeInProgress = true;
-  try {
-    const handle = state.folderMode.directoryHandle;
-    if (!(await verifyFilePermission(handle, true))) throw new Error("Folder permission was not granted.");
-    await prepareDocumentsForFolderMode({ rebuildPaths: Boolean(options.writeAll) });
-    const active = activeDocument();
-    const docsToWrite = options.writeAll ? state.documents : (active ? [active] : []);
-    for (const doc of docsToWrite) await writeDocumentMarkdown(handle, doc);
-    await writeJsonToDirectory(handle, "tcards.json", { schemaVersion: 1, updatedAt: new Date().toISOString(), blocks: state.blocks });
-    await writeJsonToDirectory(handle, "filing-manifest.json", filingManifest());
-    await writeJsonToDirectory(handle, "capsanoto.project.json", folderModeProjectPayload());
-    const now = new Date().toISOString();
-    docsToWrite.forEach((doc) => { doc.diskSavedAt = now; });
-    state.folderMode.lastDiskSaveAt = now;
-    localStorage.setItem(STORAGE_KEY, serializedWorkspace());
-    setStatus(message || "Saved to disk", "saved");
-    updateFolderModeStatus(message || "Saved to disk");
-  } finally {
-    state.folderMode.writeInProgress = false;
+async function saveFolderModeSnapshot(message = "Saved to backup folder", options = {}) {
+  if (!state.folderMode.enabled || !state.folderMode.directoryHandle) return;
+  if (state.folderMode.writeInProgress) {
+    state.folderMode.pendingWrite = true;
+    return state.folderMode.savePromise;
   }
+  state.folderMode.writeInProgress = true;
+  const operation = (async () => {
+    try {
+      do {
+        state.folderMode.pendingWrite = false;
+        await prepareDocumentsForFolderMode();
+        const handle = state.folderMode.directoryHandle;
+        const project = JSON.parse(JSON.stringify(folderModeProjectPayload()));
+        const blocks = JSON.parse(JSON.stringify(state.blocks));
+        const manifest = filingManifest();
+        if (!(await verifyFilePermission(handle, true))) throw new Error("Backup folder permission was not granted.");
+        // A snapshot includes every file, so switching documents cannot omit an earlier edit.
+        for (const doc of project.documents) await writeDocumentMarkdown(handle, doc);
+        await writeJsonToDirectory(handle, "tcards.json", { schemaVersion: 1, blocks });
+        await writeJsonToDirectory(handle, "filing-manifest.json", manifest);
+        project.blocks = blocks;
+        // Publish the complete index last. It also contains original HTML for lossless recovery.
+        await writeJsonToDirectory(handle, "capsanoto.project.json", project);
+        const now = new Date().toISOString();
+        for (const saved of project.documents) {
+          const live = state.documents.find((doc) => doc.id === saved.id);
+          if (live && live.content === saved.content && live.updatedAt === saved.updatedAt) live.diskSavedAt = now;
+          else state.folderMode.pendingWrite = true;
+        }
+        state.folderMode.lastDiskSaveAt = now;
+        await writeWorkspaceSnapshot();
+      } while (state.folderMode.pendingWrite);
+      setStatus(message, "saved"); updateFolderModeStatus(message);
+    } finally { state.folderMode.writeInProgress = false; }
+  })();
+  state.folderMode.savePromise = operation;
+  return operation;
 }
 
 function filingManifest() {
@@ -5104,13 +5104,13 @@ function filingManifest() {
           .map((doc, fileIndex) => ({
             id: doc.id,
             title: doc.title,
-            type: documentType(doc),
+            type: documentFileType(doc),
             order: fileIndex,
             path: doc.diskPath || suggestedMarkdownPath(doc),
             subFiles: childDocuments(doc.id).map((child, childIndex) => ({
               id: child.id,
               title: child.title,
-              type: documentType(child),
+              type: documentFileType(child),
               order: childIndex,
               path: child.diskPath || suggestedMarkdownPath(child),
             })),
@@ -5137,7 +5137,9 @@ function folderModeProjectPayload() {
     activeId: state.activeId,
     filingGroups: state.filingGroups,
     filingTabs: state.filingTabs,
+    projectId: state.projectId,
     documents: state.documents.map((doc) => ({
+      ...doc,
       id: doc.id,
       title: doc.title,
       tags: doc.tags || [],
@@ -5235,7 +5237,7 @@ function capsMarkdownToDocument(markdown, fallback = {}) {
 }
 
 function parseCapsFrontMatter(markdown) {
-  const text = String(markdown || "");
+  const text = String(markdown || "").replace(/^\uFEFF/, "").replace(/\r\n?/g, "\n");
   if (!text.startsWith("---\n")) return { meta: {}, body: text };
   const end = text.indexOf("\n---", 4);
   if (end < 0) return { meta: {}, body: text };
@@ -6286,9 +6288,12 @@ function applyDesignSettings(settings) {
   applyExtraDesignSettings(settings);
 }
 
-function resetLocalWorkspace() {
-  localStorage.removeItem(STORAGE_KEY);
-  location.reload();
+async function resetLocalWorkspace() {
+  await prepareProjectReplacement();
+  resetWritingRoomState("New Writing Room");
+  state.projectId = crypto.randomUUID();
+  await writeWorkspaceSnapshot();
+  renderAll(); updateUrl();
 }
 
 function exportWorkspace() {
@@ -6309,6 +6314,9 @@ function serializedWorkspace() {
     schemaVersion: 2,
     updatedAt: new Date().toISOString(),
     writingRoomName: state.writingRoomName,
+    projectId: state.projectId,
+    activeId: state.activeId,
+    dropboxAutoSync: Boolean(state.dropboxAutoSync),
     documents: state.documents,
     blocks: state.blocks,
     filingGroups: state.filingGroups,
