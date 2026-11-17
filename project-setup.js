@@ -70,9 +70,9 @@ function writeWorkspaceSnapshot() {
           for (const [hash, text] of bodies) records.put(text, documentBodyKey(hash));
           const record = { json: indexJson, storageFormat: 'document-files-v1', revision: workspaceRevision + 1, projectId, name, savedAt: new Date().toISOString() };
           records.put(record, 'active');
-          records.put(record, `project:${projectId}`);
-          // Prune only unreferenced local cache records in this same atomic transaction.
-          pruneUnreferencedDocumentBodies(records);
+          records.put(record, workspaceProjectKey(projectId, captured.workspaceAccountId));
+          // Save drafts, attach confirmed cloud links, and evict disposable copies atomically.
+          pruneDocumentBodyCache(records, activeIndex => Object.assign(index, activeIndex));
         };
         tx.oncomplete = () => { workspaceRevision++; resolve(); };
         tx.onerror = () => reject(tx.error);
@@ -165,8 +165,9 @@ function initializeProjectSetup() {
   const actions = document.createElement('div');
   actions.id = 'projectActions';
   actions.className = 'project-actions';
-  actions.innerHTML = '<div class="project-action-buttons" role="group" aria-label="Project controls"><button type="button" id="startProjectSetup">New project</button><button type="button" id="addProjectFile">Add file</button><button type="button" id="openSavedProject">Open project</button><button type="button" id="quickDropboxSync">Connect Dropbox</button></div><div class="project-save-status"><span id="bottomDropboxStatus" role="status" aria-live="polite"></span></div>';
+  actions.innerHTML = '<div class="project-action-buttons" role="group" aria-label="Project controls"><button type="button" id="workspaceSettings">Workspace settings</button><button type="button" id="addProjectFile">Add file</button><button type="button" id="openSavedProject">Open project</button><button type="button" id="quickDropboxSync">Connect Dropbox</button></div><div class="project-save-status"><span id="bottomDropboxStatus" role="status" aria-live="polite"></span></div>';
   els.documentEndBar.append(actions);
+  initializeProjectLibrary();
   initializeProjectSettingsViews();
   els.saveStatus.setAttribute('role', 'status');
   els.saveStatus.setAttribute('aria-live', 'polite');
@@ -174,10 +175,13 @@ function initializeProjectSetup() {
   document.getElementById('quickDropboxSync').onclick = () => {
     if (!document.getElementById('rememberDropbox')) renderDropboxStorage();
     const valid = dropboxConnection && dropboxConnection.expiresAt > Date.now() + 10000;
-    return dropboxAction(valid ? syncDropboxProject : connectDropbox);
+    if (!valid) return connectAndBrowseProjects();
+    if (state.workspaceAccountId && state.workspaceAccountId !== dropboxConnection.accountId) return openSavedProject();
+    return dropboxAction(() => syncWorkspaceProjects({ manual: true }));
   };
   renderBottomDropboxControl();
-  document.getElementById('startProjectSetup').onclick = () => openProjectSetup('new');
+  document.getElementById('startProjectSetup').onclick = () => { document.getElementById('projectLibraryDialog').close(); openProjectSetup('new'); };
+  document.getElementById('workspaceSettings').onclick = openSavedProject;
   document.getElementById('addProjectFile').onclick = () => openProjectSetup('add');
   document.querySelectorAll('[data-open-file-import]').forEach((button) => { button.onclick = () => openProjectSetup('add'); });
   document.getElementById('openSavedProject').onclick = openSavedProject;
@@ -263,6 +267,11 @@ function renderProjectSetup() {
   document.getElementById('setupNext').textContent = session.step === 3 ? (session.mode === 'new' ? 'Create project and import' : session.source?.format === 'word' ? 'Import document' : 'Import selected tabs') : 'Continue';
   if (session.step === 1) {
     body.innerHTML = '<p class="setup-step">Step 1 of 3 · Your collection</p><p>A project holds documents under one theme: scripts, bible, characters, and notes.</p><label>Project name<input id="setupName" placeholder="Forever Bound" maxlength="120" required></label><p class="setup-note">Your current project stays available in Open project. Start with one source document; add more whenever you are ready.</p>';
+    body.insertAdjacentHTML('beforeend', '<section class="returning-project"><h4>Already set up on another device?</h4><p>Connect the Dropbox account where your projects are saved. Your projects will appear in Open project; you do not need to download them.</p><button type="button" id="setupExistingAccount">Sign in to Dropbox and open my projects</button></section>');
+    document.getElementById('setupExistingAccount').onclick = () => {
+      if (dropboxConnection && dropboxConnection.expiresAt > Date.now() + 10000) { document.getElementById('projectSetupDialog').close(); return openSavedProject(); }
+      return connectAndBrowseProjects();
+    };
     body.querySelector('input').value = session.name;
     body.querySelector('input').focus();
   } else if (session.step === 2) {
@@ -539,6 +548,7 @@ async function commitProjectImport(session) {
     if (session.mode === 'new') {
       resetWritingRoomState(session.name);
       state.projectId = crypto.randomUUID();
+      state.workspaceAccountId = dropboxConnection?.accountId || ''; state.cloudSyncPaused = false;
       state.documents = [];
       state.filingGroups = [];
       state.filingTabs = [];
@@ -576,33 +586,9 @@ async function commitProjectImport(session) {
 function restoreWorkspaceObject(project) {
   state.projectId = /^[\w-]{1,100}$/.test(project.projectId || '') ? project.projectId : crypto.randomUUID();
   state.dropboxAutoSync = Boolean(project.dropboxAutoSync);
+  state.workspaceAccountId = project.workspaceAccountId || '';
+  state.cloudSyncPaused = Boolean(project.cloudSyncPaused);
   for (const key of ['writingRoomName', 'documents', 'blocks', 'filingGroups', 'filingTabs', 'trash', 'deprecated', 'deprecatedParagraphs']) if (project[key] !== undefined) state[key] = project[key];
   normalizeFilingHierarchy();
   state.activeId = state.documents.some((doc) => doc.id === project.activeId) ? project.activeId : state.documents[0]?.id;
-}
-
-async function openSavedProject() {
-  try {
-    const projects = await listSavedProjectIndexes();
-    const result = await openCapsDialog('Open a saved project', [
-      { html: '<p>These projects are saved in this browser. Use Import Project Backup to open a downloaded copy from another device.</p>' },
-      { name: 'projectId', label: 'Project', options: projects.map((item) => ({ value: item.projectId, label: item.name || 'Untitled project' })), value: state.projectId },
-    ]);
-    if (!result?.projectId || result.projectId === state.projectId) return;
-    const project = JSON.parse(projects.find((item) => item.projectId === result.projectId).json);
-    if (!await chooseProjectDocument(project)) return;
-    await ensureDocumentContent(project.documents.find((doc) => doc.id === project.activeId));
-    await prepareProjectReplacement();
-    const previous = serializedWorkspace();
-    try {
-      restoreWorkspaceObject(project);
-      state.googleDrive.projectFolderId = '';
-      state.googleDrive.projectName = '';
-      if (project.designSettings) setProjectDesignSettings(project.designSettings);
-      await ensureDocumentContent(activeDocument());
-      await writeWorkspaceSnapshot();
-    } catch (error) { restoreWorkspaceObject(JSON.parse(previous)); throw error; }
-    renderAll(); updateUrl(); updateProjectSettingsStatus();
-    setStatus('Opened saved project', 'saved');
-  } catch (error) { showStorageWarning(error.message); }
 }

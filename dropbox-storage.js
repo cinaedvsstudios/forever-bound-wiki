@@ -17,10 +17,21 @@ async function initializeDropboxStorage() {
   await restoreDropboxConnection();
   dropboxStatus = dropboxConnection ? (dropboxConnection.expiresAt > Date.now() ? 'Ready to sync.' : 'Sign-in expired. Reconnect to sync.') : 'Not connected. Edits still save in this browser.';
   renderDropboxStorage();
+  if (!state.workspaceAccountId && dropboxConnection) {
+    const account = dropboxConnection.accountId;
+    const linked = state.documents.some(doc => doc._body?.accountId === account) && state.documents.every(doc => !doc._body?.accountId || doc._body.accountId === account);
+    if (linked && await workspaceRecord(dropboxBindingKey())) { state.workspaceAccountId = account; await writeWorkspaceSnapshot(); }
+  }
+  scheduleDropboxSync({ reset: true });
+  if (dropboxConnection?.expiresAt > Date.now() + 10000) {
+    try { await refreshDropboxProjects(); } catch { /* Browser and cached project lists remain available offline. */ }
+  }
 }
 
 async function restoreDropboxConnection() {
   dropboxConnection = await workspaceRecord('dropbox-connection') || null;
+  await restoreDropboxCatalogue();
+  await restoreWorkspacePreferences();
 }
 
 function dropboxRedirectUrl() { return new URL('dropbox-callback.html', location.href).href; }
@@ -31,7 +42,7 @@ function renderDropboxStorage() {
   if (!container) return;
   const connected = Boolean(dropboxConnection);
   const valid = connected && dropboxConnection.expiresAt > Date.now() + 10000;
-  container.innerHTML = `<div class="storage-account"><span class="storage-provider">Dropbox</span><strong>${escapeHtml(connected ? dropboxConnection.label || 'Connected account' : 'Connect your storage account')}</strong></div><p class="storage-description">${connected ? 'Your project uses separate document files and a small index in this account’s Apps/Capsanoto folder. Documents load when you open them; visited files are cached here for offline use.' : 'Keep a project copy online and open it on another device. Use the account where you want to store your writing.'}</p><p id="dropboxStatus" class="storage-sync-status" role="status"></p><div class="storage-main-actions"><button type="button" id="connectDropbox" ${valid ? 'hidden' : ''}>${connected ? 'Reconnect Dropbox' : 'Connect Dropbox'}</button><button type="button" id="syncDropbox" ${connected ? '' : 'hidden'} ${valid ? '' : 'disabled'}>Sync now</button><button type="button" id="openDropboxProject" ${connected ? '' : 'hidden'} ${valid ? '' : 'disabled'}>Open another project</button></div><label class="storage-option" ${connected ? '' : 'hidden'}><input type="checkbox" id="autoSyncDropbox"> Sync automatically after edits</label><details class="storage-account-options"><summary>Account options</summary><label class="storage-option"><input type="checkbox" id="rememberDropbox" checked> Remember this connection in this browser</label><p>Only a short-lived access token is saved here. Dropbox may ask you to reconnect; your password is never stored.</p><button type="button" id="disconnectDropbox" ${connected ? '' : 'hidden'}>Disconnect this account</button></details>`;
+  container.innerHTML = `<div class="storage-account"><span class="storage-provider">Dropbox</span><strong>${escapeHtml(connected ? dropboxConnection.label || 'Connected account' : 'Connect your storage account')}</strong></div><p class="storage-description">${connected ? 'Your project uses separate document files and a small index in this account’s Apps/Capsanoto folder. Documents load when you open them; visited files are cached here for offline use.' : 'Keep a project copy online and open it on another device. Use the account where you want to store your writing.'}</p><p id="dropboxStatus" class="storage-sync-status" role="status"></p><div class="storage-main-actions"><button type="button" id="connectDropbox" ${valid ? 'hidden' : ''}>${connected ? 'Reconnect Dropbox' : 'Connect Dropbox'}</button><button type="button" id="syncDropbox" ${connected ? '' : 'hidden'} ${valid ? '' : 'disabled'}>Sync now</button><button type="button" id="openDropboxProject" ${connected ? '' : 'hidden'} ${valid ? '' : 'disabled'}>Open another project</button></div><p class="storage-option">Automatic sync is controlled by Sync interval in Workspace settings.</p><details class="storage-account-options"><summary>Account options</summary><label class="storage-option"><input type="checkbox" id="rememberDropbox" checked> Remember this connection in this browser</label><p>Only a short-lived access token is saved here. Dropbox may ask you to reconnect; your password is never stored.</p><button type="button" id="disconnectDropbox" ${connected ? '' : 'hidden'}>Disconnect this account</button></details>`;
   const developer = document.getElementById('dropboxDeveloperControls');
   const markup = '<details class="project-developer-setup"><summary>Developer setup</summary><p>App owners only. Register a free Scoped access / App folder app in the <a href="https://www.dropbox.com/developers/apps" target="_blank" rel="noopener noreferrer">Dropbox developer console</a>. Enable account_info.read, files.metadata.read, files.content.read, files.content.write and public clients (PKCE). Add the redirect address below and enable additional users. Never enter an app secret or access token here.</p><label>Public app key<input type="text" id="dropboxAppKey" autocomplete="off"></label><button type="button" id="saveDropboxAppKey">Save app key</button><p id="dropboxCallbackAddress"></p></details>';
   if (developer) developer.innerHTML = markup;
@@ -41,16 +52,14 @@ function renderDropboxStorage() {
   document.getElementById('dropboxAppKey').value = localStorage.getItem('capsanoto-dropbox-app-key') || '';
   document.getElementById('rememberDropbox').checked = dropboxConnection?.remembered !== false;
   document.getElementById('rememberDropbox').onchange = async (event) => { if (dropboxConnection) { dropboxConnection.remembered = event.target.checked; await workspaceRecord('dropbox-connection', event.target.checked ? dropboxConnection : null); } };
-  document.getElementById('autoSyncDropbox').checked = Boolean(state.dropboxAutoSync);
-  document.getElementById('autoSyncDropbox').onchange = async (event) => { state.dropboxAutoSync = event.target.checked; await persistNow(); };
   document.getElementById('saveDropboxAppKey').onclick = () => {
     const key = document.getElementById('dropboxAppKey').value.trim();
     if (!/^[a-zA-Z0-9]{5,80}$/.test(key)) { setDropboxStatus('Enter the public Dropbox app key from your developer console.'); return; }
     localStorage.setItem('capsanoto-dropbox-app-key', key);
     setDropboxStatus('App key saved. You can connect your account.');
   };
-  document.getElementById('connectDropbox').onclick = () => dropboxAction(connectDropbox);
-  document.getElementById('syncDropbox').onclick = () => dropboxAction(syncDropboxProject);
+  document.getElementById('connectDropbox').onclick = connectAndBrowseProjects;
+  document.getElementById('syncDropbox').onclick = () => dropboxAction(() => syncWorkspaceProjects({ manual: true }));
   document.getElementById('openDropboxProject').onclick = () => dropboxAction(openDropboxProject);
   document.getElementById('disconnectDropbox').onclick = () => dropboxAction(disconnectDropbox);
 }
@@ -68,12 +77,14 @@ function renderBottomDropboxControl() {
   if (!button) return;
   const connected = Boolean(dropboxConnection);
   const valid = connected && dropboxConnection.expiresAt > Date.now() + 10000;
-  button.textContent = dropboxBusy ? 'Working…' : valid ? 'Sync now' : connected ? 'Reconnect Dropbox' : 'Connect Dropbox';
+  const foreign = state.workspaceAccountId && state.workspaceAccountId !== dropboxConnection?.accountId;
+  button.textContent = dropboxBusy ? 'Working…' : valid ? (foreign ? 'Open workspace' : 'Sync now') : connected ? 'Reconnect Dropbox' : 'Connect Dropbox';
   button.title = valid ? 'Save this project to Dropbox now' : 'Connect the Dropbox account that stores your writing';
   button.disabled = dropboxBusy;
   button.setAttribute('aria-busy', String(dropboxBusy));
   document.getElementById('bottomDropboxStatus').textContent = dropboxStatus;
-  for (const id of ['startProjectSetup', 'addProjectFile', 'openSavedProject']) document.getElementById(id).disabled = dropboxBusy;
+  for (const id of ['workspaceSettings', 'addProjectFile', 'openSavedProject']) document.getElementById(id).disabled = dropboxBusy || (id === 'addProjectFile' && Boolean(foreign));
+  setWorkspaceControlsBusy();
 }
 
 async function dropboxAction(action) {
@@ -88,7 +99,7 @@ async function dropboxAction(action) {
 
 function base64Url(bytes) { return btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
 
-async function connectDropbox() {
+async function connectDropbox({ switchAccount = false } = {}) {
   const appKey = localStorage.getItem('capsanoto-dropbox-app-key');
   if (!appKey) throw new Error('Complete the one-time Dropbox app setup below first. Registration and API access are free.');
   const remember = document.getElementById('rememberDropbox').checked;
@@ -111,6 +122,7 @@ async function connectDropbox() {
   });
   const authUrl = new URL('https://www.dropbox.com/oauth2/authorize');
   authUrl.search = new URLSearchParams({ client_id: appKey, response_type: 'code', code_challenge: challenge, code_challenge_method: 'S256', state: oauthState, redirect_uri: redirect, token_access_type: 'online', scope: DROPBOX_SCOPES }).toString();
+  if (switchAccount) authUrl.searchParams.set('force_reauthentication', 'true');
   popup.location.href = authUrl.href;
   const code = await codePromise;
   const response = await fetch('https://api.dropboxapi.com/oauth2/token', { method: 'POST', body: new URLSearchParams({ client_id: appKey, grant_type: 'authorization_code', code, code_verifier: verifier, redirect_uri: redirect }) });
@@ -124,7 +136,11 @@ async function connectDropbox() {
     await workspaceRecord('dropbox-connection', remember ? dropboxConnection : null);
   } catch (error) { dropboxConnection = previous; throw error; }
   renderDropboxStorage();
-  setDropboxStatus('Connected. Choose Sync now or Open from Dropbox.');
+  setDropboxStatus('Connected. Loading your Dropbox projects…');
+  try { await refreshDropboxProjects(); setDropboxStatus('Connected. Your Dropbox projects are available in Open project.'); }
+  catch (error) { setDropboxStatus(`Connected, but the project list could not refresh. ${error.message}`); }
+  await restoreWorkspacePreferences();
+  scheduleDropboxSync({ reset: true });
 }
 
 function requireDropboxConnection() {
@@ -154,13 +170,30 @@ async function dropboxRequest(route, data, options = {}) {
 
 function dropboxBindingKey(projectId = state.projectId) { return `dropbox-binding:${dropboxConnection.accountId}:${projectId}`; }
 
+async function storeDropboxBinding(key, binding) {
+  const db = await openWorkspaceDb();
+  try {
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction('records', 'readwrite');
+      const records = tx.objectStore('records');
+      records.put(binding, key);
+      pruneDocumentBodyCache(records);
+      tx.oncomplete = resolve;
+      tx.onerror = () => reject(tx.error);
+      tx.onabort = () => reject(tx.error || new Error('Could not remember the confirmed Dropbox save.'));
+    });
+  } finally { db.close(); }
+}
+
 async function projectCloudFingerprint(project) {
   const { index } = await encodeProjectIndex(project);
   delete index.updatedAt;
+  delete index.cloudSyncPaused;
   for (const collection of PROJECT_DOCUMENT_COLLECTIONS) {
     index[collection] = index[collection].map(({ localDraftAt, diskSavedAt, onlineSavedAt, _body, ...doc }) => ({ ...doc, _body: { hash: _body.hash } }));
   }
-  return projectFileHash(JSON.stringify(index));
+  const canonical = value => Array.isArray(value) ? value.map(canonical) : value && typeof value === "object" ? Object.fromEntries(Object.keys(value).sort().map(key => [key, canonical(value[key])])) : value;
+  return projectFileHash(JSON.stringify(canonical(index)));
 }
 
 function assertDropboxAccount(accountId) {
@@ -203,17 +236,40 @@ async function uploadDropboxImmutableFile(path, text) {
 
 async function syncDropboxProject() {
   requireDropboxConnection();
+  if (state.workspaceAccountId && state.workspaceAccountId !== dropboxConnection.accountId) throw new Error('This draft belongs to another Dropbox workspace. Open a project from the connected workspace first.');
+  state.workspaceAccountId = dropboxConnection.accountId;
+  state.cloudSyncPaused = false;
   syncEditorToDocument();
-  clearTimeout(dropboxSyncTimer);
-  clearTimeout(state.saveTimer);
-  state.saveTimer = null;
+  clearTimeout(state.saveTimer); state.saveTimer = null;
   await writeWorkspaceSnapshot();
-  const projectId = state.projectId;
+  return publishDropboxProject(JSON.parse(serializedWorkspace()));
+}
+
+async function publishDropboxProject(project, sourceRecord = null, { automatic = false } = {}) {
+  requireDropboxConnection();
+  if (project.workspaceAccountId && project.workspaceAccountId !== dropboxConnection.accountId) throw new Error('The project belongs to another Dropbox account.');
+  const binding = await workspaceRecord(dropboxBindingKey(project.projectId));
+  const fingerprint = await projectCloudFingerprint(project);
+  if (automatic && project.cloudSyncPaused) return false;
+  if (binding?.format === 'document-files-v1' && binding.fingerprint === fingerprint) {
+    if (!automatic && (await dropboxMetadata(binding.path))?.rev !== binding.rev) throw new Error('Dropbox has another version. Open the Dropbox project before syncing; this browser copy is kept.');
+    return false;
+  }
+  await loadWorkspaceHistorySettings();
+  const folder = binding?.format === 'document-files-v1' ? binding.folder : `/${slugify(project.writingRoomName).slice(0, 60) || 'project'}--${project.projectId}.caps-project`;
+  return withDropboxProjectLock(folder, assertLock => publishDropboxProjectLocked(project, sourceRecord, { automatic, assertLock }));
+}
+
+async function publishDropboxProjectLocked(project, sourceRecord, { automatic, assertLock }) {
+  requireDropboxConnection();
+  const projectId = project.projectId;
   const accountId = dropboxConnection.accountId;
+  if (project.workspaceAccountId && project.workspaceAccountId !== accountId) throw new Error('The project belongs to another Dropbox account.');
+  if (automatic && project.cloudSyncPaused) return false;
   const bindingKey = dropboxBindingKey(projectId);
   const binding = await workspaceRecord(bindingKey);
-  const project = JSON.parse(serializedWorkspace());
   const fingerprint = await projectCloudFingerprint(project);
+  if (automatic && binding?.fingerprint === fingerprint) return false;
   const folder = binding?.format === 'document-files-v1' ? binding.folder : `/${slugify(project.writingRoomName).slice(0, 60) || 'project'}--${projectId}.caps-project`;
   const path = `${folder}/project.json`;
   const current = await dropboxMetadata(path);
@@ -231,6 +287,20 @@ async function syncDropboxProject() {
     assertDropboxAccount(accountId);
     await ensureDropboxFolder(directory);
   }
+  let previous = null;
+  if (current) {
+    try {
+      const file = await dropboxRequest('files/download', { path }, { download: true });
+      previous = JSON.parse(file.text);
+      validateDropboxIndex(previous, folder, accountId); validateRetainedHistory(previous, folder, accountId);
+    } catch (error) {
+      if (binding?.fingerprint !== null || !binding.historyPath) throw error;
+      const file = await dropboxRequest('files/download', { path: binding.historyPath }, { download: true });
+      if (await projectFileHash(file.text) !== binding.historyPath.split('/').pop().split('.')[0]) throw new Error('The recovery index failed its integrity check.');
+      previous = JSON.parse(file.text); validateDropboxIndex(previous, folder, accountId);
+    }
+  }
+  const older = previous && !previous.history ? await readHistorySnapshots(folder, accountId) : [];
   const { index, bodies } = await encodeProjectIndex(project);
   const known = new Set(binding?.format === 'document-files-v1' ? binding.hashes : []);
   const published = new Set();
@@ -246,7 +316,7 @@ async function syncDropboxProject() {
         if (typeof text !== 'string') {
           const original = project[collection].find((item) => item.id === doc.id);
           await ensureDocumentContent(original);
-          text = await workspaceRecord(documentBodyKey(hash));
+          text = (await encodeProjectIndex({ [collection]: [original] })).bodies.get(hash);
         }
         if (typeof text !== 'string') throw new Error(`The content for ${doc.title} is unavailable. The previous cloud index is kept.`);
         await checkedDocumentBody(text, hash);
@@ -265,30 +335,37 @@ async function syncDropboxProject() {
   const sharedPath = `${folder}/shared/${sharedHash}.json`;
   if (!known.has(sharedHash)) await uploadDropboxImmutableFile(sharedPath, sharedText);
   published.add(sharedHash);
-  const manifest = { type: 'capsanoto-project-index', schemaVersion: 1, savedAt: new Date().toISOString(), project: index, shared: { hash: sharedHash, path: sharedPath }, previous: binding?.historyPath || null };
+  const manifest = { type: 'capsanoto-project-index', schemaVersion: 1, savedAt: new Date().toISOString(), project: index, shared: { hash: sharedHash, path: sharedPath }, previous: null };
+  manifest.history = retainedProjectHistory(previous, manifest, older, workspaceHistoryLimit);
   const text = JSON.stringify(manifest, null, 2);
   const historyPath = `${folder}/history/${await projectFileHash(text)}.project.json`;
   assertDropboxAccount(accountId);
   await uploadDropboxImmutableFile(historyPath, text);
   // Immutable bodies and a recovery index are saved before the single revision-checked commit.
   assertDropboxAccount(accountId);
+  await assertLock();
   setDropboxStatus('Saving project index…');
   const uploaded = await uploadDropboxFile(path, text, current?.rev);
   assertDropboxAccount(accountId);
-  await workspaceRecord(bindingKey, { format: 'document-files-v1', folder, path, rev: uploaded.rev, hashes: [...published], historyPath, fingerprint, legacyPath: binding?.legacyPath || (binding?.format !== 'document-files-v1' ? binding?.path : null), syncedAt: new Date().toISOString() });
+  await storeDropboxBinding(bindingKey, { format: 'document-files-v1', folder, path, rev: uploaded.rev, hashes: [...published], historyPath, fingerprint, legacyPath: binding?.legacyPath || (binding?.format !== 'document-files-v1' ? binding?.path : null), syncedAt: new Date().toISOString() });
   // Attach cloud links only to the exact bodies that were published, never to newer edits.
-  rememberIndexedDocumentBodies(project, index);
-  if (state.projectId === projectId) await writeWorkspaceSnapshot();
-  setDropboxStatus(`Synced separate files · ${new Date().toLocaleString()}`);
+  if (state.projectId === projectId && (!state.workspaceAccountId || state.workspaceAccountId === accountId)) {
+    state.workspaceAccountId = accountId;
+    rememberIndexedDocumentBodies(project, index);
+    await writeWorkspaceSnapshot();
+    releaseInactiveDocumentBodies();
+  } else if (sourceRecord) {
+    await updateInactiveCloudLinks(sourceRecord, { ...index, blocks: project.blocks, deprecatedParagraphs: project.deprecatedParagraphs || [], workspaceAccountId: accountId });
+  }
+  let cleanupWarning = '';
+  try { await cleanupDropboxProjectHistory(folder, manifest, uploaded.rev, historyPath, assertLock); }
+  catch (error) { cleanupWarning = ` History cleanup will retry: ${error.message}`; }
+  setDropboxStatus(`Synced separate files · ${new Date().toLocaleString()}${cleanupWarning}`);
   setStatus('Saved in this browser and Dropbox', 'saved');
-  if (state.projectId === projectId && await projectCloudFingerprint(JSON.parse(serializedWorkspace())) !== fingerprint) scheduleDropboxSync();
+  try { await refreshDropboxProjects(); } catch { /* The project itself was saved; refresh the list when online. */ }
+  return true;
 }
 
-function scheduleDropboxSync() {
-  clearTimeout(dropboxSyncTimer);
-  if (!state.dropboxAutoSync || !dropboxConnection) return;
-  dropboxSyncTimer = setTimeout(() => { if (!dropboxBusy) void dropboxAction(syncDropboxProject); }, 5000);
-}
 
 async function listDropboxFiles(path) {
   let page = await dropboxRequest('files/list_folder', { path, recursive: false, limit: 200 });
@@ -322,7 +399,7 @@ async function readDropboxIndex(path, { recovery = true } = {}) {
     const downloaded = await dropboxRequest('files/download', { path }, { download: true });
     const payload = JSON.parse(downloaded.text);
     validateDropboxIndex(payload, folder, accountId);
-    return { payload, folder, rev: downloaded.metadata.rev, recovered: false };
+    return { payload, text: downloaded.text, folder, rev: downloaded.metadata.rev, recovered: false };
   } catch (error) {
     if (!recovery || (error.status && !error.notFound)) throw error;
     const entries = await listDropboxFiles(`${folder}/history`);
@@ -352,12 +429,16 @@ async function openDropboxProjectPath(path, { chooseDocument = false } = {}) {
     try { await importProjectBackupPayload(payload); }
     finally { dropboxOpeningProject = false; }
     assertDropboxAccount(accountId);
+    state.workspaceAccountId = accountId; state.cloudSyncPaused = false;
+    await writeWorkspaceSnapshot();
     await workspaceRecord(dropboxBindingKey(), { path, rev: downloaded.metadata.rev });
     setDropboxStatus('Opened older project backup. The next sync creates separate files and keeps this backup.');
     return;
   }
   const loaded = await readDropboxIndex(path);
   const project = loaded.payload.project;
+  project.workspaceAccountId = accountId;
+  project.cloudSyncPaused = loaded.recovered;
   if (chooseDocument && !await chooseProjectDocument(project)) return;
   const sharedFile = await dropboxRequest('files/download', { path: loaded.payload.shared.path }, { download: true });
   if (await projectFileHash(sharedFile.text) !== loaded.payload.shared.hash) throw new Error('The shared-data file failed its integrity check. The current project is kept.');
@@ -381,7 +462,7 @@ async function openDropboxProjectPath(path, { chooseDocument = false } = {}) {
       await writeWorkspaceSnapshot();
       const hashes = PROJECT_DOCUMENT_COLLECTIONS.flatMap((collection) => project[collection].map((doc) => doc._body.hash));
       hashes.push(loaded.payload.shared.hash);
-      await workspaceRecord(dropboxBindingKey(), { format: 'document-files-v1', folder: loaded.folder, path, rev: loaded.rev, hashes, historyPath: loaded.historyPath || null, fingerprint: loaded.recovered ? null : await projectCloudFingerprint(JSON.parse(serializedWorkspace())), syncedAt: new Date().toISOString() });
+      await storeDropboxBinding(dropboxBindingKey(), { format: 'document-files-v1', folder: loaded.folder, path, rev: loaded.rev, hashes, historyPath: loaded.historyPath || null, fingerprint: loaded.recovered ? null : await projectCloudFingerprint(JSON.parse(serializedWorkspace())), syncedAt: new Date().toISOString() });
     } catch (error) { restoreWorkspaceObject(previous); throw error; }
     renderAll(); updateUrl(); renderDropboxStorage();
     setDropboxStatus(loaded.recovered ? 'Recovered a saved index. Review it, then use Sync now to restore it to Dropbox.' : `Opened ${state.writingRoomName}. Other documents load when you choose them.`);
@@ -389,30 +470,18 @@ async function openDropboxProjectPath(path, { chooseDocument = false } = {}) {
   } finally { dropboxOpeningProject = false; }
 }
 
-async function openDropboxProject() {
-  requireDropboxConnection();
-  const files = await listDropboxFiles('');
-  const projects = files.filter((entry) => entry['.tag'] === 'folder' ? entry.name.endsWith('.caps-project') : entry['.tag'] === 'file' && entry.name.endsWith('.caps.json'));
-  if (!projects.length) throw new Error('No Capsanoto projects in this Dropbox app folder yet. Use Sync now on the first device.');
-  const result = await openCapsDialog('Open from Dropbox', [
-    { html: '<p>Open a project folder to load its index and selected document. Your current project stays saved in this browser. Older single-file backups can also be opened.</p>' },
-    { name: 'path', label: 'Project', options: projects.map((entry) => ({ value: entry['.tag'] === 'folder' ? `${entry.path_lower}/project.json` : entry.path_lower, label: `${entry.name}${entry['.tag'] === 'file' ? ' (older backup)' : ''}` })) },
-    { name: 'confirm', checkbox: true, label: 'Open the selected Dropbox project in this browser.' },
-  ]);
-  if (!result?.path || result.confirm !== 'on') return;
-  const allowed = projects.some((entry) => result.path === (entry['.tag'] === 'folder' ? `${entry.path_lower}/project.json` : entry.path_lower));
-  if (!allowed) throw new Error('Choose a project from the list.');
-  await openDropboxProjectPath(result.path, { chooseDocument: true });
-}
+async function openDropboxProject() { return openSavedProject(); }
 
 async function disconnectDropbox() {
-  clearTimeout(dropboxSyncTimer);
+  clearTimeout(dropboxSyncTimer); dropboxSyncTimer = null;
   if (dropboxConnection?.token && dropboxConnection.expiresAt > Date.now()) {
     try { await dropboxRequest('auth/token/revoke', null); }
     catch { /* Local disconnect must still succeed when offline or expired. */ }
   }
   await workspaceRecord('dropbox-connection', null);
   dropboxConnection = null;
+  await restoreDropboxCatalogue();
+  renderProjectLibraryOptions();
   renderDropboxStorage();
   setDropboxStatus('Disconnected in this browser. Local and Dropbox files are kept.');
 }

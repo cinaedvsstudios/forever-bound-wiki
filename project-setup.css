@@ -63,3 +63,17 @@
 .project-info-list dt { color: #d9cbbc; }
 .project-info-list dd { margin: 0; overflow-wrap: anywhere; }
 @media(max-width: 540px) { .project-settings-tabs { padding: 8px; } .project-settings-tabs button { font-size: 11px; } .project-settings-body { padding-inline: 8px; } .project-info-list { grid-template-columns: 1fr; gap: 3px; } }
+
+/* Project discovery combines cloud metadata and local indexes, without downloading documents. */
+#projectLibraryDialog > form { display:flex; flex-direction:column; max-height:calc(100dvh - 28px); }
+#projectLibraryDialog { width:min(640px,calc(100vw - 24px)); max-height:calc(100dvh - 24px); padding:0; border:1px solid #b67300; border-radius:18px; background:#211725; color:#fff0ce; }
+#projectLibraryDialog::backdrop { background:#0c0712c9; }
+#projectLibraryDialog header, #projectLibraryDialog footer { display:flex; gap:12px; justify-content:space-between; align-items:center; padding:16px 22px; background:#35203b; }
+#projectLibraryDialog h2 { margin:0; font-size:23px; }
+.project-library-body { display:grid; gap:12px; padding:20px 22px; overflow:auto; line-height:1.5; }
+.project-library-body label { display:grid; gap:8px; }
+#projectLibrarySelect { width:100%; min-width:0; padding:12px; background:#130e18; color:#fff0ce; border:1px solid #a98164; border-radius:8px; }
+.project-library-actions { display:flex; gap:10px; flex-wrap:wrap; }
+.returning-project { border-top:1px solid #796084; margin-top:20px; padding-top:16px; }
+
+#workspaceSyncInterval, #workspaceHistoryLimit { width:120px; padding:8px; }

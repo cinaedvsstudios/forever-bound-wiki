@@ -22,9 +22,12 @@ function app({ indexedDB = new IDBFactory(), legacy } = {}) {
   const setup = fs.readFileSync(path.join(root, 'project-setup.js'), 'utf8');
   const markdown = fs.readFileSync(path.join(root, 'markdown-export.js'), 'utf8');
   const navigation = fs.readFileSync(path.join(root, 'document-navigation.js'), 'utf8');
-  const cloud = fs.readFileSync(path.join(root, 'dropbox-storage.js'), 'utf8');
+  const cloud = fs.readFileSync(path.join(root, 'cloud-history.js'), 'utf8') + '\n' + fs.readFileSync(path.join(root, 'dropbox-storage.js'), 'utf8');
+  const library = fs.readFileSync(path.join(root, 'project-library.js'), 'utf8');
+  const workspace = fs.readFileSync(path.join(root, 'workspace-storage.js'), 'utf8');
+  const transfer = fs.readFileSync(path.join(root, 'storyboard-transfer.js'), 'utf8');
   const filesRuntime = fs.readFileSync(path.join(root, 'project-files.js'), 'utf8');
-  w.eval(filesRuntime + '\n' + setup + '\n' + cloud + '\n' + markdown + '\n' + navigation + '\n' + core + '\nwindow.testApp = { projectFileHash, encodeProjectIndex, ensureDocumentContent, ensureProjectDocumentsLoaded, openDocument, openDropboxProjectPath, documentIsLoaded, completeProjectCopy, listSavedProjectIndexes, openFromRoute, releaseDocumentBody, duplicateDocument, deprecateDocument, deleteDocumentSafely, restoreArchivedDocument, setDialogResponse: (response) => { openCapsDialog = async () => response; }, startWritingRoomResize, moveWritingRoomResize, stopWritingRoomResize, handleWritingRoomResizeKey, documentOutline, jumpToDocumentOutline, fillDocumentOutline, calculateRoomLayout, renderWritingRoomCards, renderDocumentEndBar, updateRoomWorkspaceLayout, toggleWritingRoomPanel, applyDesignSettings, collectDesignSettingsFromForm, saveDesignSettings, applyExtraDesignSettings, currentDesignSettings, buildMarkdownArchive, openProjectSetup, advanceProjectSetup, readGoogleDocsSource, renderDropboxStorage, setSetupSource: (source) => { setupSession.source = source; setupSession.selected = new Set(source.tabs.map(t => t.id)); }, state, els, boot, loadWorkspace, serializedWorkspace, writeWorkspaceSnapshot, readWorkspaceSnapshot, workspaceRecord, persistNow, safeDocumentHtml, googleDocsToImportSource, commitProjectImport, readImportFile, importProjectBackupPayload, folderModeProjectPayload, capsMarkdownToDocument, prepareProjectReplacement, saveFolderModeSnapshot, syncDropboxProject, openWritingRoomFolder, projectCloudFingerprint, setConnection: (value) => { dropboxConnection = value; }, getRevision: () => workspaceRevision };');
+  w.eval(filesRuntime + '\n' + setup + '\n' + library + '\n' + cloud + '\n' + workspace + '\n' + transfer + '\n' + markdown + '\n' + navigation + '\n' + core + '\nwindow.testApp = { hasRetainedDocumentBody: doc => savedDocumentBodies.has(doc), setWorkspaceHistoryLimit, loadWorkspaceHistorySettings, maintainWorkspaceHistory, withDropboxProjectLock, retainedProjectHistory, getHistoryLimit: () => workspaceHistoryLimit, getCatalogue: () => dropboxProjectCatalogue, getLibraryEntries: () => projectLibraryEntries, renderProjectLibraryOptions, restoreDropboxCatalogue, syncWorkspaceProjects, setWorkspaceSyncInterval, scheduleDropboxSync, restoreWorkspacePreferences, buildWorkspaceZip, projectBackupFromZip, removeWorkspaceProject, confirmWorkspaceDeletion, sendDocumentToStoryboarder, getSyncInterval: () => workspaceSyncInterval, getSyncTimer: () => dropboxSyncTimer, refreshDropboxProjects, openSavedProject, openLocalProjectRecord, projectFileHash, encodeProjectIndex, ensureDocumentContent, ensureProjectDocumentsLoaded, openDocument, openDropboxProjectPath, documentIsLoaded, completeProjectCopy, listSavedProjectIndexes, openFromRoute, releaseDocumentBody, duplicateDocument, deprecateDocument, deleteDocumentSafely, restoreArchivedDocument, setDialogResponse: (response) => { openCapsDialog = async () => response; }, startWritingRoomResize, moveWritingRoomResize, stopWritingRoomResize, handleWritingRoomResizeKey, documentOutline, jumpToDocumentOutline, fillDocumentOutline, calculateRoomLayout, renderWritingRoomCards, renderDocumentEndBar, updateRoomWorkspaceLayout, toggleWritingRoomPanel, applyDesignSettings, collectDesignSettingsFromForm, saveDesignSettings, applyExtraDesignSettings, currentDesignSettings, buildMarkdownArchive, openProjectSetup, advanceProjectSetup, readGoogleDocsSource, renderDropboxStorage, setSetupSource: (source) => { setupSession.source = source; setupSession.selected = new Set(source.tabs.map(t => t.id)); }, state, els, boot, loadWorkspace, serializedWorkspace, writeWorkspaceSnapshot, readWorkspaceSnapshot, workspaceRecord, persistNow, safeDocumentHtml, googleDocsToImportSource, commitProjectImport, readImportFile, importProjectBackupPayload, folderModeProjectPayload, capsMarkdownToDocument, prepareProjectReplacement, saveFolderModeSnapshot, syncDropboxProject, openWritingRoomFolder, projectCloudFingerprint, setConnection: (value) => { dropboxConnection = value; }, getRevision: () => workspaceRevision };');
   return { w, api: w.testApp, close: () => dom.window.close() };
 }
 function seed(a) {
@@ -117,7 +120,7 @@ test('Word imports preserve text, headings, and emphasis without uploading', asy
 test('all entry pages wire the same setup and storage runtime', () => {
   for (const file of ['index.html', 'editor.html', 'writing-room.html']) {
     const html = fs.readFileSync(path.join(root, file), 'utf8');
-    assert.match(html, /project-setup.js\?v=5.12.1/); assert.match(html, /dropbox-storage.js/);
+    assert.match(html, /project-setup.js\?v=5.14.0/); assert.match(html, /dropbox-storage.js/);
     assert.doesNotMatch(html, /id="createOnlineProjectButton"/);
   }
 });
@@ -472,8 +475,8 @@ function fakeDropbox() {
   const cloud = { entries, requests, fail: null, before: null };
   const metadata = (path, tag = 'file') => ({ '.tag': tag, path_lower: path.toLowerCase(), name: path.split('/').pop(), rev: String(++revision), server_modified: new Date(1700000000000 + revision * 1000).toISOString() });
   cloud.put = (path, text) => { const file = { ...metadata(path), text }; entries.set(path.toLowerCase(), file); return file; };
-  cloud.attach = (a) => {
-    a.api.setConnection({ token: 'test-only', accountId: 'account', expiresAt: Date.now() + 3600000 });
+  cloud.attach = (a, accountId = 'account') => {
+    a.api.setConnection({ token: 'test-only', accountId, expiresAt: Date.now() + 3600000 });
     a.w.fetch = async (url, options) => {
       const route = url.split('/2/')[1];
       const args = options.headers['Dropbox-API-Arg'] ? JSON.parse(options.headers['Dropbox-API-Arg']) : JSON.parse(options.body);
@@ -497,6 +500,11 @@ function fakeDropbox() {
       } else if (route === 'files/download') {
         if (!existing || existing['.tag'] !== 'file') return failure('path/not_found/');
         return { ok: true, status: 200, text: async () => existing.text, headers: { get: (name) => name === 'Dropbox-API-Result' ? JSON.stringify(existing) : null } };
+      } else if (route === 'files/delete_v2') {
+        if (!existing) return failure('path/not_found/');
+        if (args.parent_rev && existing.rev !== args.parent_rev) return failure('path/conflict/file/');
+        for (const entryKey of [...entries.keys()]) if (entryKey === key || entryKey.startsWith(key + '/')) entries.delete(entryKey);
+        result = { metadata: existing };
       } else if (route === 'files/list_folder') {
         const prefix = args.path.toLowerCase() + '/';
         result = { entries: [...entries.values()].filter((entry) => entry.path_lower.startsWith(prefix) && !entry.path_lower.slice(prefix.length).includes('/')), has_more: false };
@@ -702,7 +710,7 @@ test('older Dropbox snapshots migrate into separate files without modifying or d
     assert.equal(binding.format, 'document-files-v1');
     assert.equal(binding.legacyPath, '/older.caps.json');
     assert.equal(cloud.entries.get('/older.caps.json').text, legacyText);
-    assert.equal(cloud.requests.some((request) => request.route.includes('delete')), false);
+    assert.equal(cloud.requests.some((request) => request.route.includes('delete') && !request.args.path.endsWith('/.sync-lock.json')), false);
   } finally { a.close(); }
 });
 
@@ -865,7 +873,7 @@ test('project controls and visible save status live in the bottom bar and surviv
   try {
     await a.api.boot();
     const bar = a.api.els.documentEndBar;
-    const controls = ['startProjectSetup', 'addProjectFile', 'openSavedProject', 'quickDropboxSync'];
+    const controls = ['workspaceSettings', 'addProjectFile', 'openSavedProject', 'quickDropboxSync'];
     assert.equal(a.w.document.querySelector('.project-quick-actions'), null);
     for (const id of controls) assert.ok(bar.contains(a.w.document.getElementById(id)));
     assert.ok(bar.contains(a.api.els.saveStatus));
@@ -895,16 +903,574 @@ test('bottom-bar Sync now saves to Dropbox and exposes busy, connected, and expi
     const sync = button.onclick();
     assert.equal(button.disabled, true);
     assert.equal(button.getAttribute('aria-busy'), 'true');
-    assert.equal(a.w.document.querySelector('#startProjectSetup').disabled, true);
+    assert.equal(a.w.document.querySelector('#workspaceSettings').disabled, true);
     release(); await sync;
     assert.equal(button.disabled, false);
     assert.equal(button.textContent, 'Sync now');
-    assert.match(a.w.document.querySelector('#bottomDropboxStatus').textContent, /Synced separate files/);
+    assert.match(a.w.document.querySelector('#bottomDropboxStatus').textContent, /Synced/);
     assert.match(a.api.els.saveStatus.textContent, /browser and Dropbox/);
     assert.equal((await cloudIndex(a, cloud)).index.type, 'capsanoto-project-index');
     a.api.setConnection({ accountId: 'account', expiresAt: Date.now() - 1 }); a.api.renderDropboxStorage();
     assert.equal(button.textContent, 'Reconnect Dropbox');
     a.api.setConnection(null); a.api.renderDropboxStorage();
     assert.equal(button.textContent, 'Connect Dropbox');
+  } finally { a.close(); }
+});
+
+test('returning users see Dropbox projects in Workspace settings without downloading documents', async () => {
+  const a = app(); const b = app(); const cloud = fakeDropbox();
+  try {
+    await a.api.boot(); seedLibrary(a); cloud.attach(a); await a.api.syncDropboxProject();
+    await b.api.boot(); cloud.attach(b);
+    cloud.requests.length = 0;
+    const returning = b.w.document.querySelector('#setupExistingAccount');
+    assert.match(returning.textContent, /Sign in to Dropbox/);
+    await returning.onclick();
+    assert.equal(b.w.document.querySelector('#projectLibraryDialog').open, true);
+    assert.match(b.w.document.querySelector('#projectLibrarySelect').textContent, /Original/);
+    assert.equal(cloud.requests.some(request => request.route === 'files/download' && request.args.path.includes('/documents/')), false);
+    const selected = b.api.getLibraryEntries().find(entry => entry.cloud);
+    b.w.document.querySelector('#projectLibrarySelect').value = selected.key;
+    b.api.setDialogResponse({ documentId: 'original' });
+    await b.w.document.querySelector('#projectLibraryForm').onsubmit({ preventDefault() {} });
+    assert.equal(b.api.state.projectId, 'project-original');
+    assert.equal(b.api.state.documents[1].content, undefined);
+    assert.equal(b.api.state.workspaceAccountId, 'account');
+    assert.ok(b.w.document.querySelector('#projectLibraryDialog #startProjectSetup'));
+    assert.equal(b.w.document.querySelector('#documentEndBar #startProjectSetup'), null);
+  } finally { a.close(); b.close(); }
+});
+
+test('changing Dropbox accounts changes the workspace catalogue and cannot upload the former account’s draft', async () => {
+  const a = app(); const b = app(); const first = fakeDropbox(); const second = fakeDropbox();
+  try {
+    await a.api.boot(); seedLibrary(a); first.attach(a); await a.api.syncDropboxProject();
+    await b.api.boot(); seedLibrary(b); b.api.state.projectId = 'other-project'; b.api.state.writingRoomName = 'Other collection'; second.attach(b, 'other'); await b.api.syncDropboxProject();
+    second.attach(a, 'other');
+    await a.api.openSavedProject();
+    const entries = a.api.getLibraryEntries();
+    assert.equal(entries.some(entry => entry.name === 'Original'), false);
+    assert.equal(entries.some(entry => entry.name === 'Other collection'), true);
+    second.requests.length = 0;
+    await a.api.syncWorkspaceProjects();
+    assert.equal(second.requests.some(request => request.route === 'files/upload'), false);
+    await assert.rejects(a.api.syncDropboxProject(), /another Dropbox workspace/);
+  } finally { a.close(); b.close(); }
+});
+
+test('workspace timer defaults to ten minutes, does not reset after edits, and zero disables it', async () => {
+  const a = app(); const cloud = fakeDropbox();
+  try {
+    await a.api.boot(); cloud.attach(a);
+    assert.equal(a.api.getSyncInterval(), 10);
+    const timers = []; const original = a.w.setTimeout;
+    a.w.setTimeout = (fn, delay) => { timers.push({ fn, delay }); return 9000 + timers.length; };
+    await a.api.setWorkspaceSyncInterval(10);
+    assert.equal(timers.at(-1).delay, 600000);
+    const timer = a.api.getSyncTimer();
+    a.api.scheduleDropboxSync(); a.api.scheduleDropboxSync();
+    assert.equal(a.api.getSyncTimer(), timer);
+    assert.equal(timers.length, 1);
+    await a.api.setWorkspaceSyncInterval(0);
+    assert.equal(a.api.getSyncTimer(), null);
+    a.api.scheduleDropboxSync(); assert.equal(timers.length, 1);
+    await a.api.setWorkspaceSyncInterval(3);
+    assert.equal(timers.at(-1).delay, 180000);
+    a.api.setConnection({ accountId: 'different', expiresAt: Date.now() + 60000 });
+    await a.api.restoreWorkspacePreferences(); assert.equal(a.api.getSyncInterval(), 10);
+    a.w.setTimeout = original;
+  } finally { a.close(); }
+});
+
+test('scheduled sync sends changed browser data and ignores stale unbound migration copies', async () => {
+  const a = app(); const cloud = fakeDropbox();
+  try {
+    await a.api.boot(); seedLibrary(a); cloud.attach(a);
+    await a.api.writeWorkspaceSnapshot(); // old standalone browser record remains for recovery
+    await a.api.syncDropboxProject();
+    cloud.requests.length = 0;
+    await a.api.syncWorkspaceProjects();
+    assert.equal(cloud.requests.some(request => request.route === 'files/upload'), false);
+    a.api.els.editor.innerHTML = '<p>New automatic revision</p>';
+    await a.api.syncWorkspaceProjects();
+    const saved = await cloudIndex(a, cloud);
+    const body = cloud.entries.get(saved.index.project.documents[0]._body.path);
+    assert.match(body.text, /New automatic revision/);
+    assert.equal(cloud.requests.filter(request => request.route === 'files/upload' && request.args.path.includes('/documents/')).length, 1);
+  } finally { a.close(); }
+});
+
+test('workspace ZIP contains verified project files and separate unsynced drafts and can be restored', async () => {
+  const a = app(); const cloud = fakeDropbox();
+  try {
+    await a.api.boot(); seedLibrary(a); cloud.attach(a); await a.api.syncDropboxProject();
+    a.api.releaseDocumentBody(a.api.state.documents[1]);
+    a.api.els.editor.innerHTML = '<p>Unsynced browser draft</p>';
+    const bytes = await a.api.buildWorkspaceZip(); const zip = await JSZip.loadAsync(bytes);
+    const index = Object.keys(zip.files).find(name => name.endsWith('/project.json'));
+    const draft = Object.keys(zip.files).find(name => name.startsWith('browser-drafts/') && name.endsWith('.caps.json'));
+    assert.ok(index); assert.ok(draft);
+    a.api.setDialogResponse({ path: index });
+    const cloudCopy = await a.api.projectBackupFromZip({ arrayBuffer: async () => bytes });
+    assert.match(cloudCopy.project.documents[0].content, /Keep this draft/);
+    assert.match(cloudCopy.project.documents[1].content, /World history/);
+    a.api.setDialogResponse({ path: draft });
+    const localCopy = await a.api.projectBackupFromZip({ arrayBuffer: async () => bytes });
+    assert.match(localCopy.documents[0].content, /Unsynced browser draft/);
+    assert.equal(a.api.state.documents[1].content, undefined);
+    assert.equal(Object.keys(zip.files).some(name => /token|connection/.test(name)), false);
+  } finally { a.close(); }
+});
+
+test('a damaged document stops a ZIP backup instead of producing a partial-looking complete backup', async () => {
+  const a = app(); const cloud = fakeDropbox();
+  try {
+    await a.api.boot(); seedLibrary(a); cloud.attach(a); await a.api.syncDropboxProject();
+    const { index } = await cloudIndex(a, cloud);
+    cloud.entries.get(index.project.documents[1]._body.path).text = 'corrupted';
+    await assert.rejects(a.api.buildWorkspaceZip(), /integrity check/);
+    assert.equal(a.api.state.projectId, 'project-original');
+  } finally { a.close(); }
+});
+
+test('format requires its exact confirmation and only removes recognized projects in the selected account', async () => {
+  const a = app(); const cloud = fakeDropbox();
+  try {
+    await a.api.boot(); seedLibrary(a); cloud.attach(a); await a.api.syncDropboxProject();
+    cloud.put('/forever-bound-project-original.caps.json', a.api.serializedWorkspace());
+    cloud.put('/unrelated-notes.txt', 'Keep this unrelated file');
+    await a.api.openSavedProject();
+    a.api.setDialogResponse({ confirmation: 'wrong phrase' });
+    cloud.requests.length = 0;
+    await a.api.confirmWorkspaceDeletion({ all: true });
+    assert.equal(cloud.requests.some(request => request.route === 'files/delete_v2'), false);
+    a.api.setDialogResponse({ confirmation: 'RESET WORKSPACE' });
+    await a.api.confirmWorkspaceDeletion({ all: true });
+    assert.equal(a.api.getCatalogue().length, 0);
+    assert.equal(cloud.entries.has('/unrelated-notes.txt'), true);
+    assert.equal(cloud.entries.has('/forever-bound-project-original.caps.json'), false);
+    const copies = (await a.api.listSavedProjectIndexes()).map(record => JSON.parse(record.json));
+    assert.equal(copies.some(project => project.workspaceAccountId === 'account'), false);
+  } finally { a.close(); }
+});
+
+test('deleting one account’s project preserves another account’s browser copy with the same project ID', async () => {
+  const a = app(); const b = app(); const first = fakeDropbox(); const second = fakeDropbox();
+  try {
+    await a.api.boot(); seedLibrary(a); first.attach(a); await a.api.syncDropboxProject();
+    await b.api.boot(); seedLibrary(b); b.api.state.writingRoomName = 'Other account copy'; second.attach(b, 'other'); await b.api.syncDropboxProject();
+    const binding = await b.api.workspaceRecord('dropbox-binding:other:project-original');
+    second.attach(a, 'other');
+    await a.api.openDropboxProjectPath(binding.path);
+    await a.api.refreshDropboxProjects();
+    const entry = { ...a.api.getCatalogue()[0], cloud: true };
+    await a.api.removeWorkspaceProject(entry, 'other');
+    const records = (await a.api.listSavedProjectIndexes()).map(record => JSON.parse(record.json));
+    assert.equal(records.some(project => project.projectId === 'project-original' && project.workspaceAccountId === 'account'), true);
+    assert.equal(records.some(project => project.projectId === 'project-original' && project.workspaceAccountId === 'other'), false);
+    assert.ok([...first.entries.keys()].some(name => name.endsWith('/project.json')));
+  } finally { a.close(); b.close(); }
+});
+
+test('delete refuses a project changed after it was listed', async () => {
+  const a = app(); const cloud = fakeDropbox();
+  try {
+    await a.api.boot(); seedLibrary(a); cloud.attach(a); await a.api.syncDropboxProject();
+    const entry = { ...a.api.getCatalogue()[0], cloud: true };
+    cloud.put(entry.path, cloud.entries.get(entry.path).text);
+    cloud.requests.length = 0;
+    await assert.rejects(a.api.removeWorkspaceProject(entry, 'account'), /changed since/);
+    assert.equal(cloud.requests.some(request => request.route === 'files/delete_v2'), false);
+  } finally { a.close(); }
+});
+
+test('Writing Room can reach the viewport bottom without a fixed height cap and uses emoji icons', async () => {
+  const a = app();
+  try {
+    await a.api.boot();
+    Object.defineProperty(a.w, 'innerHeight', { configurable: true, value: 1100 });
+    const panel = a.api.els.writingRoomPanel;
+    panel.getBoundingClientRect = () => ({ left: 12, top: 80, width: 300, height: parseFloat(panel.style.height) || 400 });
+    a.w.document.querySelector('#fillWritingRoomHeight').click();
+    assert.equal(panel.style.height, '1008px');
+    assert.equal(panel.style.top, '80px');
+    assert.equal(a.w.document.querySelector('#newTabButton').textContent, '📑');
+    assert.equal(a.w.document.querySelector('#editWritingRoomButton').textContent, '✏️');
+    assert.equal(a.w.document.querySelector('#projectSettingsButton').textContent, '⚙️');
+  } finally { a.close(); }
+});
+
+test('Send to Storyboarder transfers just the selected document through local same-origin storage', async () => {
+  const a = app();
+  try {
+    await a.api.boot(); seedLibrary(a);
+    let destination;
+    const target = { opener: a.w, location: { replace: value => { destination = value; } }, close() {} };
+    a.w.open = () => target;
+    await a.api.sendDocumentToStoryboarder();
+    const url = new URL(destination);
+    assert.equal(url.origin, a.w.location.origin);
+    assert.equal(url.pathname, '/modules/storyboarder/');
+    assert.equal(target.opener, null);
+    const payload = await a.api.workspaceRecord(`storyboarder-handoff:${url.searchParams.get('import')}`);
+    assert.equal(payload.document.id, 'original');
+    assert.match(payload.document.markdown, /Keep this draft/);
+    assert.doesNotMatch(payload.document.markdown, /World history/);
+  } finally { a.close(); }
+});
+
+test('confirmed sync evicts saved document bodies and repairs older local links while keeping the open document in memory', async () => {
+  const db = new IDBFactory(); const a = app({ indexedDB: db }); seedLibrary(a); const cloud = fakeDropbox(); cloud.attach(a);
+  try {
+    await a.api.writeWorkspaceSnapshot(); // standalone record from before connecting Dropbox
+    a.api.state.trash.push({ id: 'trashed', title: 'Trashed', content: '<p>Archived content</p>', tags: [] });
+    a.api.state.deprecated.push({ id: 'old', title: 'Old draft', content: '<p>Previous content</p>', tags: [] });
+    await a.api.syncDropboxProject();
+    const index = JSON.parse((await a.api.workspaceRecord('active')).json);
+    assert.equal(await a.api.workspaceRecord('document-body:' + index.documents[0]._body.hash), undefined);
+    assert.match(a.api.state.documents[0].content, /Keep this draft/);
+    for (const doc of [index.documents[1], ...index.trash, ...index.deprecated]) {
+      assert.equal(await a.api.workspaceRecord('document-body:' + doc._body.hash), undefined);
+      assert.ok(cloud.entries.has(doc._body.path));
+    }
+    assert.equal(a.api.state.documents[1].content, undefined);
+    assert.equal(a.api.state.trash[0].content, undefined);
+    assert.equal(a.api.hasRetainedDocumentBody(a.api.state.documents[1]), false);
+    const old = JSON.parse((await a.api.workspaceRecord('project:project-original')).json);
+    assert.equal(old.documents[1]._body.path, index.documents[1]._body.path);
+    const b = app({ indexedDB: db }); cloud.attach(b);
+    try {
+      await b.api.loadWorkspace();
+      await b.api.ensureDocumentContent(b.api.state.documents[1]);
+      assert.match(b.api.state.documents[1].content, /World history/);
+      assert.equal(await b.api.workspaceRecord('document-body:' + index.documents[1]._body.hash), undefined);
+    } finally { b.close(); }
+  } finally { a.close(); }
+});
+
+test('edits made during a successful upload stay local when they differ from the committed cloud body', async () => {
+  const a = app(); seedLibrary(a); const cloud = fakeDropbox(); cloud.attach(a);
+  try {
+    cloud.before = async request => {
+      if (request.route === 'files/upload' && request.args.path.endsWith('/project.json')) {
+        cloud.before = null;
+        a.api.state.documents[1].content = '<p>Newer unsynced lore typed during upload</p>';
+        await a.api.writeWorkspaceSnapshot();
+      }
+    };
+    await a.api.syncDropboxProject();
+    const index = JSON.parse((await a.api.workspaceRecord('active')).json);
+    const saved = await cloudIndex(a, cloud);
+    assert.notEqual(index.documents[1]._body.hash, saved.index.project.documents[1]._body.hash);
+    assert.equal(index.documents[1]._body.path, undefined);
+    assert.match(await a.api.workspaceRecord('document-body:' + index.documents[1]._body.hash), /Newer unsynced lore/);
+    await a.api.ensureDocumentContent(a.api.state.documents[1]);
+    assert.match(a.api.state.documents[1].content, /Newer unsynced lore/);
+  } finally { a.close(); }
+});
+
+test('uploading document files without committing the index never makes unsynced cache bodies disposable', async () => {
+  const a = app(); seedLibrary(a); const cloud = fakeDropbox(); cloud.attach(a);
+  try {
+    cloud.fail = request => request.route === 'files/upload' && request.args.path.endsWith('/project.json');
+    await assert.rejects(a.api.syncDropboxProject(), /503/);
+    const index = JSON.parse((await a.api.workspaceRecord('active')).json);
+    assert.match(await a.api.workspaceRecord('document-body:' + index.documents[1]._body.hash), /World history/);
+    assert.equal(index.documents[1]._body.path, undefined);
+    assert.equal(await a.api.workspaceRecord('dropbox-binding:account:project-original'), undefined);
+    cloud.fail = null;
+    await a.api.syncDropboxProject();
+    assert.equal(await a.api.workspaceRecord('document-body:' + index.documents[1]._body.hash), undefined);
+  } finally { a.close(); }
+});
+
+test('switching between synced documents and exporting a complete copy does not refill an accumulating cache', async () => {
+  const a = app(); seedLibrary(a); const cloud = fakeDropbox(); cloud.attach(a);
+  try {
+    await a.api.syncDropboxProject();
+    const first = JSON.parse((await a.api.workspaceRecord('active')).json);
+    assert.equal(await a.api.openDocument('bible'), true);
+    await a.api.writeWorkspaceSnapshot();
+    assert.equal(await a.api.workspaceRecord('document-body:' + first.documents[0]._body.hash), undefined);
+    assert.equal(await a.api.workspaceRecord('document-body:' + first.documents[1]._body.hash), undefined);
+    assert.match(a.api.state.documents[1].content, /World history/);
+    const copy = await a.api.completeProjectCopy(JSON.parse(a.api.serializedWorkspace()));
+    assert.match(copy.documents[0].content, /Keep this draft/);
+    assert.equal(await a.api.workspaceRecord('document-body:' + first.documents[0]._body.hash), undefined);
+    assert.equal(await a.api.openDocument('original'), true);
+    await a.api.writeWorkspaceSnapshot();
+    assert.equal(await a.api.workspaceRecord('document-body:' + first.documents[1]._body.hash), undefined);
+    assert.match(a.api.state.documents[0].content, /Keep this draft/);
+  } finally { a.close(); }
+});
+
+test('cache eviction preserves identical bodies still needed by an unsynced separate project', async () => {
+  const a = app(); seedLibrary(a); const cloud = fakeDropbox(); cloud.attach(a);
+  try {
+    a.api.state.projectId = 'local-only-project';
+    await a.api.writeWorkspaceSnapshot();
+    a.api.state.projectId = 'project-original';
+    await a.api.syncDropboxProject();
+    const index = JSON.parse((await a.api.workspaceRecord('active')).json);
+    assert.match(await a.api.workspaceRecord('document-body:' + index.documents[1]._body.hash), /World history/);
+    const other = JSON.parse((await a.api.workspaceRecord('project:local-only-project')).json);
+    assert.equal(other.documents[1]._body.path, undefined);
+  } finally { a.close(); }
+});
+
+test('background sync clears the inactive project cache while preserving the current unsynced project', async () => {
+  const a = app(); seedLibrary(a); const cloud = fakeDropbox(); cloud.attach(a);
+  try {
+    a.api.state.workspaceAccountId = 'account';
+    await a.api.writeWorkspaceSnapshot();
+    const original = JSON.parse((await a.api.workspaceRecord('active')).json);
+    a.api.state.projectId = 'other-project'; a.api.state.writingRoomName = 'Other';
+    a.api.state.documents = [{ id: 'other-doc', title: 'Other', content: '<p>Open unsynced work</p>', tags: [] }];
+    a.api.state.activeId = 'other-doc'; a.api.state.cloudSyncPaused = true;
+    a.api.els.editor.innerHTML = '<p>Open unsynced work</p>';
+    await a.api.writeWorkspaceSnapshot();
+    await a.api.syncWorkspaceProjects();
+    for (const doc of original.documents) assert.equal(await a.api.workspaceRecord('document-body:' + doc._body.hash), undefined);
+    const active = JSON.parse((await a.api.workspaceRecord('active')).json);
+    assert.match(await a.api.workspaceRecord('document-body:' + active.documents[0]._body.hash), /Open unsynced work/);
+    const saved = JSON.parse((await a.api.workspaceRecord('project:account:project-original')).json);
+    assert.ok(saved.documents[1]._body.path);
+  } finally { a.close(); }
+});
+
+test('opening a saved cloud project keeps its chosen document in memory without leaving a local body copy', async () => {
+  const a = app(); const b = app(); seedLibrary(a); seed(b.api); const cloud = fakeDropbox(); cloud.attach(a); cloud.attach(b);
+  try {
+    await a.api.syncDropboxProject(); const saved = await cloudIndex(a, cloud);
+    await b.api.openDropboxProjectPath(saved.binding.path);
+    assert.match(b.api.state.documents[0].content, /Keep this draft/);
+    const index = JSON.parse((await b.api.workspaceRecord('active')).json);
+    assert.equal(await b.api.workspaceRecord('document-body:' + index.documents[0]._body.hash), undefined);
+    b.api.els.editor.innerHTML = '<p>Changed again after opening cloud copy</p>';
+    b.api.state.documents[0].content = b.api.els.editor.innerHTML;
+    await b.api.persistNow();
+    const edited = JSON.parse((await b.api.workspaceRecord('active')).json);
+    assert.match(await b.api.workspaceRecord('document-body:' + edited.documents[0]._body.hash), /Changed again after opening/);
+  } finally { a.close(); b.close(); }
+});
+
+test('a paused independent recovery copy keeps its bodies even when the same versions exist in Dropbox', async () => {
+  const a = app(); seedLibrary(a); const cloud = fakeDropbox(); cloud.attach(a);
+  try {
+    await a.api.syncDropboxProject();
+    const original = JSON.parse(a.api.serializedWorkspace());
+    const full = await a.api.completeProjectCopy(original);
+    await a.api.importProjectBackupPayload({ type: 'capsanoto-project-backup', project: full });
+    assert.equal(a.api.state.cloudSyncPaused, true);
+    const restored = JSON.parse((await a.api.workspaceRecord('active')).json);
+    assert.match(await a.api.workspaceRecord('document-body:' + restored.documents[1]._body.hash), /World history/);
+    a.api.setConnection(null);
+    await a.api.ensureDocumentContent(a.api.state.documents[1]);
+    assert.match(a.api.state.documents[1].content, /World history/);
+  } finally { a.close(); }
+});
+
+test('history defaults to five previous versions per document without ageing an unchanged document', async () => {
+  const a = app(); seedLibrary(a); const cloud = fakeDropbox(); cloud.attach(a);
+  try {
+    await a.api.syncDropboxProject();
+    for (let version = 1; version <= 2; version++) {
+      await a.api.ensureDocumentContent(a.api.state.documents[1]);
+      a.api.state.documents[1].content = `<p>Bible revision ${version}</p>`;
+      await a.api.syncDropboxProject();
+    }
+    for (let version = 1; version <= 8; version++) {
+      a.api.els.editor.innerHTML = `<p>Script revision ${version}</p>`;
+      await a.api.syncDropboxProject();
+    }
+    const saved = await cloudIndex(a, cloud);
+    assert.equal(saved.index.history.limit, 5);
+    assert.equal(saved.index.history.documents.original.length, 5);
+    assert.equal(saved.index.history.documents.bible.length, 2);
+    const originalVersions = saved.index.history.documents.original.map(ref => cloud.entries.get(ref.path).text);
+    assert.match(originalVersions[0], /Script revision 7/);
+    assert.match(originalVersions[4], /Script revision 3/);
+    assert.equal([...cloud.entries.values()].filter(file => file.path_lower.startsWith(saved.binding.folder + '/documents/')).length, 9);
+    for (const ref of [saved.index.shared, ...saved.index.history.shared, ...saved.index.history.documents.original, ...saved.index.history.documents.bible]) assert.ok(cloud.entries.has(ref.path));
+    assert.ok([...cloud.entries.values()].filter(file => file.name.endsWith('.project.json')).length <= 6);
+  } finally { a.close(); }
+});
+
+test('workspace history limit follows the account and zero retains current files without previous versions', async () => {
+  const a = app(); const b = app(); seedLibrary(a); const cloud = fakeDropbox(); cloud.attach(a); cloud.attach(b);
+  try {
+    await a.api.syncDropboxProject();
+    for (let version = 1; version <= 4; version++) { a.api.els.editor.innerHTML = `<p>Saved ${version}</p>`; await a.api.syncDropboxProject(); }
+    await a.api.setWorkspaceHistoryLimit(1);
+    await b.api.loadWorkspaceHistorySettings(); assert.equal(b.api.getHistoryLimit(), 1);
+    let saved = await cloudIndex(a, cloud); assert.equal(saved.index.history.documents.original.length, 1);
+    await a.api.setWorkspaceHistoryLimit(0);
+    saved = await cloudIndex(a, cloud); assert.equal(saved.index.history.documents.original.length, 0);
+    assert.equal([...cloud.entries.values()].filter(file => file.path_lower.startsWith(saved.binding.folder + '/documents/')).length, 2);
+    assert.equal([...cloud.entries.values()].filter(file => file.name.endsWith('.project.json')).length, 1);
+    assert.match(cloud.entries.get(saved.index.project.documents[0]._body.path).text, /Saved 4/);
+    for (const invalid of [-1, 1.5, 101, 'bad']) await assert.rejects(a.api.setWorkspaceHistoryLimit(invalid), /whole number/);
+    await assert.rejects(a.api.setWorkspaceHistoryLimit(''), /Enter the number/);
+    cloud.attach(b, 'another-account');
+    // Separate fake account contents for the settings read.
+    const config = cloud.entries.get('/workspace-settings.json'); cloud.entries.delete('/workspace-settings.json');
+    await b.api.loadWorkspaceHistorySettings(); assert.equal(b.api.getHistoryLimit(), 5);
+    cloud.entries.set('/workspace-settings.json', config);
+  } finally { a.close(); b.close(); }
+});
+
+test('failed project commit does not delete history and a later successful sync retries safely', async () => {
+  const a = app(); seedLibrary(a); const cloud = fakeDropbox(); cloud.attach(a);
+  try {
+    await a.api.syncDropboxProject(); await a.api.setWorkspaceHistoryLimit(0);
+    const saved = await cloudIndex(a, cloud); const currentBody = saved.index.project.documents[0]._body.path;
+    cloud.requests.length = 0;
+    a.api.els.editor.innerHTML = '<p>Pending failed revision</p>';
+    cloud.fail = request => request.route === 'files/upload' && request.args.path.endsWith('/project.json');
+    await assert.rejects(a.api.syncDropboxProject(), /503/);
+    assert.ok(cloud.entries.has(currentBody));
+    assert.equal(cloud.requests.some(request => request.route === 'files/delete_v2' && !request.args.path.endsWith('/.sync-lock.json')), false);
+    cloud.fail = null; await a.api.syncDropboxProject();
+    assert.equal(cloud.entries.has(currentBody), false);
+    const latest = await cloudIndex(a, cloud);
+    for (const doc of latest.index.project.documents) assert.ok(cloud.entries.has(doc._body.path));
+  } finally { a.close(); }
+});
+
+test('concurrent publication cannot enter a project while another device owns its history cleanup lock', async () => {
+  const a = app(); const b = app(); seedLibrary(a); seed(b.api); const cloud = fakeDropbox(); cloud.attach(a); cloud.attach(b);
+  try {
+    await a.api.syncDropboxProject(); const saved = await cloudIndex(a, cloud);
+    await b.api.openDropboxProjectPath(saved.binding.path);
+    a.api.els.editor.innerHTML = '<p>Device A revision</p>'; b.api.els.editor.innerHTML = '<p>Device B draft</p>';
+    let blocked = false;
+    cloud.before = async request => {
+      if (request.route === 'files/upload' && request.args.path === saved.binding.path) {
+        cloud.before = null;
+        await assert.rejects(b.api.syncDropboxProject(), /syncing in another/); blocked = true;
+        assert.ok(cloud.entries.has(saved.binding.folder + '/.sync-lock.json'));
+      }
+    };
+    await a.api.syncDropboxProject(); assert.equal(blocked, true);
+    assert.equal(cloud.entries.has(saved.binding.folder + '/.sync-lock.json'), false);
+    assert.match(b.api.state.documents[0].content, /Device B draft/);
+  } finally { a.close(); b.close(); }
+});
+
+test('interrupted cleanup keeps current and retained versions usable and retries only obsolete managed files', async () => {
+  const a = app(); seedLibrary(a); const cloud = fakeDropbox(); cloud.attach(a);
+  try {
+    await a.api.syncDropboxProject();
+    a.api.els.editor.innerHTML = '<p>Second saved revision</p>'; await a.api.syncDropboxProject();
+    const saved = await cloudIndex(a, cloud);
+    cloud.put(saved.binding.folder + '/documents/notes.txt', 'Unrelated file');
+    cloud.fail = request => request.route === 'files/delete_v2' && request.args.path.includes('/documents/');
+    await assert.rejects(a.api.setWorkspaceHistoryLimit(0), /cleanup needs retry/);
+    let current = await cloudIndex(a, cloud);
+    for (const doc of current.index.project.documents) assert.ok(cloud.entries.has(doc._body.path));
+    cloud.fail = null; await a.api.maintainWorkspaceHistory();
+    current = await cloudIndex(a, cloud);
+    assert.equal(current.index.history.documents.original.length, 0);
+    assert.ok(cloud.entries.has(saved.binding.folder + '/documents/notes.txt'));
+    assert.equal([...cloud.entries.values()].filter(file => file.path_lower.startsWith(saved.binding.folder + '/documents/') && file.name.endsWith('.doc.json')).length, 2);
+  } finally { a.close(); }
+});
+
+test('history settings use revision checks so another device cannot silently replace the chosen limit', async () => {
+  const a = app(); const b = app(); seedLibrary(a); const cloud = fakeDropbox(); cloud.attach(a); cloud.attach(b);
+  try {
+    await a.api.syncDropboxProject();
+    await a.api.loadWorkspaceHistorySettings(); await b.api.loadWorkspaceHistorySettings();
+    await a.api.setWorkspaceHistoryLimit(2);
+    await assert.rejects(b.api.setWorkspaceHistoryLimit(8), /settings changed on another device/);
+    assert.equal(JSON.parse(cloud.entries.get('/workspace-settings.json').text).documentHistoryLimit, 2);
+  } finally { a.close(); b.close(); }
+});
+
+test('existing unbounded snapshots bootstrap bounded per-document history without touching unrelated files', async () => {
+  const a = app(); seedLibrary(a); const cloud = fakeDropbox(); cloud.attach(a);
+  try {
+    await a.api.syncDropboxProject();
+    a.api.els.editor.innerHTML = '<p>Legacy second</p>'; await a.api.syncDropboxProject();
+    const saved = await cloudIndex(a, cloud);
+    const legacy = JSON.parse(saved.file.text); delete legacy.history;
+    const legacyText = JSON.stringify(legacy, null, 2);
+    const legacyFile = cloud.put(saved.binding.path, legacyText);
+    cloud.put(saved.binding.folder + '/history/' + await a.api.projectFileHash(legacyText) + '.project.json', legacyText);
+    const binding = await a.api.workspaceRecord('dropbox-binding:account:project-original');
+    await a.api.workspaceRecord('dropbox-binding:account:project-original', { ...binding, rev: legacyFile.rev });
+    cloud.put('/unrelated-folder/random.json', 'Not a managed file');
+    await a.api.setWorkspaceHistoryLimit(1);
+    const bounded = await cloudIndex(a, cloud);
+    assert.equal(bounded.index.history.documents.original.length, 1);
+    assert.ok(cloud.entries.has(bounded.index.history.documents.original[0].path));
+    assert.ok(cloud.entries.has('/unrelated-folder/random.json'));
+  } finally { a.close(); }
+});
+
+test('unreadable history settings stop publication and cleanup while keeping cloud and local drafts', async () => {
+  const a = app(); seedLibrary(a); const cloud = fakeDropbox(); cloud.attach(a);
+  try {
+    await a.api.syncDropboxProject(); const saved = await cloudIndex(a, cloud);
+    cloud.put('/workspace-settings.json', '{broken configuration');
+    a.api.els.editor.innerHTML = '<p>Keep unsynced update</p>'; cloud.requests.length = 0;
+    await assert.rejects(a.api.syncDropboxProject());
+    assert.equal(cloud.entries.get(saved.binding.path).text, saved.file.text);
+    assert.equal(cloud.requests.some(request => request.route === 'files/delete_v2'), false);
+    const local = JSON.parse((await a.api.workspaceRecord('active')).json);
+    assert.match(await a.api.workspaceRecord('document-body:' + local.documents[0]._body.hash), /Keep unsynced update/);
+  } finally { a.close(); }
+});
+
+test('Workspace settings history control saves the chosen account policy without changing its sync interval', async () => {
+  const a = app(); const cloud = fakeDropbox();
+  try {
+    await a.api.boot(); seedLibrary(a); cloud.attach(a); await a.api.syncDropboxProject();
+    await a.api.setWorkspaceSyncInterval(7); await a.api.openSavedProject();
+    const input = a.w.document.getElementById('workspaceHistoryLimit');
+    assert.equal(input.value, '5'); input.value = '2';
+    await a.w.document.getElementById('saveWorkspaceHistory').onclick();
+    assert.equal(JSON.parse(cloud.entries.get('/workspace-settings.json').text).documentHistoryLimit, 2);
+    assert.equal(a.api.getSyncInterval(), 7);
+    assert.match(a.w.document.getElementById('projectLibraryStatus').textContent, /2 previous/);
+    assert.equal(input.disabled, false);
+  } finally { a.close(); }
+});
+
+test('Release interrupted sync requires UNLOCK and removes only the selected project lock', async () => {
+  const a = app(); const cloud = fakeDropbox();
+  try {
+    await a.api.boot(); seedLibrary(a); cloud.attach(a); await a.api.syncDropboxProject();
+    const saved = await cloudIndex(a, cloud); const lockPath = saved.binding.folder + '/.sync-lock.json';
+    cloud.put(lockPath, JSON.stringify({ type: 'capsanoto-sync-lock', token: 'interrupted-test' }));
+    await a.api.openSavedProject();
+    a.api.setDialogResponse({ confirm: 'no' });
+    await a.w.document.getElementById('releaseWorkspaceSync').onclick();
+    assert.ok(cloud.entries.has(lockPath));
+    a.api.setDialogResponse({ confirm: 'UNLOCK' });
+    await a.w.document.getElementById('releaseWorkspaceSync').onclick();
+    assert.equal(cloud.entries.has(lockPath), false);
+    assert.equal(cloud.entries.get(saved.binding.path).text, saved.file.text);
+    for (const doc of saved.index.project.documents) assert.ok(cloud.entries.has(doc._body.path));
+  } finally { a.close(); }
+});
+
+test('cleanup keeps the exact current recovery index after shared-data changes and orphan-file retries', async () => {
+  const a = app(); seedLibrary(a); const cloud = fakeDropbox(); cloud.attach(a);
+  try {
+    await a.api.syncDropboxProject();
+    for (let version = 1; version <= 3; version++) {
+      a.api.state.blocks = { note: { id: 'note', content: `Shared note ${version}` } };
+      await a.api.syncDropboxProject();
+    }
+    const saved = await cloudIndex(a, cloud);
+    assert.equal(saved.index.history.shared.length, 3);
+    cloud.put(saved.binding.folder + '/documents/' + 'e'.repeat(64) + '.doc.json', 'Interrupted orphan');
+    await a.api.maintainWorkspaceHistory();
+    const current = await cloudIndex(a, cloud);
+    const exact = current.binding.folder + '/history/' + await a.api.projectFileHash(current.file.text) + '.project.json';
+    assert.equal(cloud.entries.get(exact)?.text, current.file.text);
+    for (const ref of [current.index.shared, ...current.index.history.shared]) assert.ok(cloud.entries.has(ref.path));
+    assert.equal(cloud.entries.has(saved.binding.folder + '/documents/' + 'e'.repeat(64) + '.doc.json'), false);
   } finally { a.close(); }
 });

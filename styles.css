@@ -475,7 +475,7 @@ code, pre { font-family: var(--mono-font-family); }
   resize:both;
   overflow:hidden;
 }
-.writing-room-panel { resize:none; top:5.4rem; left:1rem; width:var(--writing-room-width); height:var(--writing-room-height); min-width:var(--writing-room-min-width); min-height:var(--writing-room-min-height); max-width:var(--writing-room-max-width); max-height:var(--writing-room-max-height); background-color:var(--writing-room-bg); }
+.writing-room-panel { resize:none; top:5.4rem; left:1rem; width:var(--writing-room-width); height:var(--writing-room-height); min-width:var(--writing-room-min-width); min-height:var(--writing-room-min-height); max-width:var(--writing-room-max-width); max-height:calc(100dvh - 24px); background-color:var(--writing-room-bg); }
 .settings-panel { top:5.4rem; right:1rem; width:var(--settings-width); height:var(--settings-height); min-width:var(--settings-min-width); min-height:var(--settings-min-height); background-color:var(--settings-bg); background-image:var(--settings-bg-image); background-size:var(--settings-bg-size); border-color:var(--settings-border); }
 .help-panel { top:5.4rem; right:1rem; width:var(--help-width); height:var(--help-height); background-color:var(--help-bg); background-image:var(--help-bg-image); background-size:var(--help-bg-size); border-color:var(--help-border); }
 .project-settings-panel { top:5.4rem; left:50%; transform:translateX(-50%); width:min(92vw, 780px); max-height:82vh; overflow:auto; }

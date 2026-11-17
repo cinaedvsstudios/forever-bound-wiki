@@ -3,7 +3,7 @@
 .settings-panel, .help-panel, .block-panel, .project-settings-panel { background-color: var(--window-bg,var(--panel-bg)) !important; }
 #writingRoomPanel { background-color: var(--writing-room-bg) !important; box-shadow: 0 18px 48px var(--writing-room-shadow-color,#000) !important; }
 #writingRoomPanel > header { background-color: color-mix(in srgb,var(--writing-room-header-bg) calc(var(--writing-room-header-opacity,1)*100%),transparent) !important; background-image: var(--writing-room-header-bg-image,none) !important; background-size: var(--writing-room-header-bg-size,100%) !important; }
-#writingRoomPanel > header .icon-button { font-size: var(--writing-room-header-icon-size,16px) !important; }
+#writingRoomPanel > header .icon-button { font-family:"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif; font-size: var(--writing-room-header-icon-size,16px) !important; }
 .filing-jump-rail button { font-size: var(--rail-icon-size,14px) !important; }
 #writingRoomCards .filing-tab { border-color: var(--tab-row-border,var(--line)) !important; }
 #writingRoomCards .writing-room-card { border-color: var(--doc-row-border,var(--line)) !important; }

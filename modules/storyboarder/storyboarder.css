@@ -613,3 +613,5 @@ input:focus, textarea:focus { border-color: var(--pink); box-shadow: var(--glow)
 
 /* v7 sidebar + scene readability refinements */
 .validation-list { grid-column: 1 / -1; }
+
+.storyboard-save-status { margin:0; padding:8px 22px; font-size:12px; line-height:1.5; color:var(--text,#fff0ce); background:rgba(0,0,0,.3); }

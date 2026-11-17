@@ -13,6 +13,7 @@ function validDocumentBodyRef(ref) {
 }
 
 function documentBodyKey(hash) { return `document-body:${hash}`; }
+function workspaceProjectKey(projectId, accountId = '') { return accountId ? `project:${accountId}:${projectId}` : `project:${projectId}`; }
 function documentIsLoaded(doc) { return typeof doc?.content === 'string'; }
 
 async function encodeProjectIndex(project) {
@@ -61,7 +62,7 @@ async function ensureDocumentContent(doc) {
       const downloaded = await dropboxRequest('files/download', { path: ref.path }, { download: true });
       text = downloaded.text;
       body = await checkedDocumentBody(text, ref.hash);
-      await workspaceRecord(documentBodyKey(ref.hash), text);
+      await cacheDocumentBody(ref.hash, text);
     }
     doc.content = safeDocumentHtml(body.content);
     savedDocumentBodies.set(doc, doc.content === body.content ? doc.content : null);
@@ -99,7 +100,10 @@ function rememberIndexedDocumentBodies(captured, index) {
 }
 
 function releaseDocumentBody(doc) {
-  if (doc && doc.id !== state.activeId && validDocumentBodyRef(doc._body) && savedDocumentBodies.get(doc) === doc.content) delete doc.content;
+  if (doc && doc.id !== state.activeId && validDocumentBodyRef(doc._body) && savedDocumentBodies.get(doc) === doc.content) {
+    delete doc.content;
+    savedDocumentBodies.delete(doc);
+  }
 }
 
 function releaseInactiveDocumentBodies() {
@@ -147,41 +151,94 @@ async function listSavedProjectIndexes() {
         keys.forEach((key, index) => {
           const record = store.get(key);
           record.onerror = () => reject(record.error);
-          record.onsuccess = () => { records[index] = record.result; if (!--remaining) resolve(records); };
+          record.onsuccess = () => { records[index] = record.result ? { ...record.result, recordKey: key } : null; if (!--remaining) resolve(records.filter(Boolean)); };
         });
       };
     });
   } finally { db.close(); }
 }
 
-function pruneUnreferencedDocumentBodies(records) {
+async function cacheDocumentBody(hash, text) {
+  const db = await openWorkspaceDb();
+  try {
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction('records', 'readwrite');
+      const records = tx.objectStore('records');
+      records.put(text, documentBodyKey(hash));
+      pruneDocumentBodyCache(records);
+      tx.oncomplete = resolve;
+      tx.onerror = () => reject(tx.error);
+      tx.onabort = () => reject(tx.error || new Error('Browser cache write was cancelled.'));
+    });
+  } finally { db.close(); }
+}
+
+function pruneDocumentBodyCache(records, onActiveIndex = () => {}) {
   const request = records.getAllKeys();
   request.onsuccess = () => {
     const keys = request.result;
-    const indexes = keys.filter((key) => typeof key === 'string' && (key === 'active' || key === 'previous-project' || key.startsWith('project:') || key.startsWith('legacy-project:')));
-    const referenced = new Set();
-    let remaining = indexes.length;
-    let readable = true;
-    for (const key of indexes) {
+    const metadataKeys = keys.filter((key) => typeof key === 'string' && (key === 'active' || key === 'previous-project' || key.startsWith('project:') || key.startsWith('legacy-project:') || key.startsWith('dropbox-binding:')));
+    const metadata = new Map();
+    let remaining = metadataKeys.length;
+    if (!remaining) return;
+    for (const key of metadataKeys) {
       const indexRequest = records.get(key);
       indexRequest.onsuccess = () => {
-        try {
-          if (indexRequest.result != null) {
-            if (key.startsWith('legacy-project:')) {
-              if (!Array.isArray(indexRequest.result.bodyReferences)) throw new Error('Unknown recovery references');
-              indexRequest.result.bodyReferences.forEach((bodyKey) => referenced.add(bodyKey));
-            } else {
-              const project = JSON.parse(indexRequest.result.json);
-              for (const collection of PROJECT_DOCUMENT_COLLECTIONS) {
-                for (const doc of project[collection] || []) if (validDocumentBodyRef(doc._body)) referenced.add(documentBodyKey(doc._body.hash));
-              }
+        metadata.set(key, indexRequest.result);
+        if (!--remaining) prune();
+      };
+    }
+
+    function prune() {
+      const required = new Set();
+      const projects = [];
+      const cloudCopies = new Map();
+      try {
+        for (const [key, record] of metadata) {
+          if (!record || key.startsWith('dropbox-binding:')) continue;
+          if (key.startsWith('legacy-project:')) {
+            if (!Array.isArray(record.bodyReferences)) return; // Unreadable recovery data keeps its dependencies.
+            record.bodyReferences.forEach(bodyKey => required.add(bodyKey));
+          } else projects.push({ key, record, project: JSON.parse(record.json) });
+        }
+        // Only links from a committed/read cloud index with a matching saved binding
+        // can make a local body disposable. An uploaded body alone is insufficient.
+        for (const { project } of projects) {
+          if (project.cloudSyncPaused) continue;
+          for (const collection of PROJECT_DOCUMENT_COLLECTIONS) {
+            for (const doc of project[collection] || []) {
+              const ref = doc._body;
+              if (!validDocumentBodyRef(ref) || !ref.accountId) continue;
+              if (project.workspaceAccountId && project.workspaceAccountId !== ref.accountId) continue;
+              const binding = metadata.get(`dropbox-binding:${ref.accountId}:${project.projectId}`);
+              if (binding?.format !== 'document-files-v1' || !binding.rev || !/^\/[^/]+\.caps-project$/.test(binding.folder || '') || ref.path !== `${binding.folder}/documents/${ref.hash}.doc.json`) continue;
+              const identity = `${project.projectId}:${ref.hash}`;
+              if (!cloudCopies.has(identity)) cloudCopies.set(identity, []);
+              cloudCopies.get(identity).push(ref);
             }
           }
-        } catch { readable = false; }
-        if (!--remaining && readable) {
-          for (const bodyKey of keys) if (typeof bodyKey === 'string' && /^document-body:[a-f0-9]{64}$/.test(bodyKey) && !referenced.has(bodyKey)) records.delete(bodyKey);
         }
-      };
+        for (const { key, record, project } of projects) {
+          let changed = false;
+          for (const collection of PROJECT_DOCUMENT_COLLECTIONS) {
+            for (const doc of project[collection] || []) {
+              if (!validDocumentBodyRef(doc._body)) continue;
+              const owner = project.workspaceAccountId || doc._body.accountId;
+              const ref = !project.cloudSyncPaused && cloudCopies.get(`${project.projectId}:${doc._body.hash}`)?.find(copy => !owner || copy.accountId === owner);
+              if (ref && (doc._body.path !== ref.path || doc._body.accountId !== ref.accountId)) {
+                doc._body = { ...ref }; changed = true;
+              }
+              // The open document stays in memory; only unsynced bodies need disk copies.
+              if (!ref) required.add(documentBodyKey(doc._body.hash));
+            }
+          }
+          if (changed) records.put({ ...record, json: JSON.stringify(project) }, key);
+          if (key === 'active') onActiveIndex(project);
+        }
+      } catch { return; } // Never clean up around unreadable project metadata.
+      for (const bodyKey of keys) {
+        if (typeof bodyKey === 'string' && /^document-body:[a-f0-9]{64}$/.test(bodyKey) && !required.has(bodyKey)) records.delete(bodyKey);
+      }
     }
   };
 }

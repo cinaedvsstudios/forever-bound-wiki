@@ -22,7 +22,9 @@
     project: null,
     activeEpisodeId: '',
     scriptText: '',
-    scriptName: localStorage.getItem(SCRIPT_STORAGE_KEY) || '',
+    scriptName: '',
+    folderHandle: null,
+    storageBlocked: false,
     mediaRuntime: new Map(),
     validation: [],
     viewMode: 'scene',
@@ -181,19 +183,19 @@
 
   function makeDefaultProject() {
     const episode = makeBlankEpisode('1');
-    episode.episode.episodeTitle = 'The Curse Begins';
-    episode.episode.defaultEpisodeFolderName = 'Episode 01 - The Curse Begins';
+    episode.episode.episodeTitle = 'Untitled Episode';
+    episode.episode.defaultEpisodeFolderName = 'Episode 01 - Untitled Episode';
     return normalizeProjectEnvelope({
       storyboarderProjectVersion: 'v1',
-      projectName: 'Forever Bound',
+      projectName: 'Untitled Project',
       projectRootFolder: '',
       activeEpisodeId: 'episode-1',
       episodes: [{
         episodeId: 'episode-1',
         episodeNumber: '1',
-        episodeTitle: 'The Curse Begins',
+        episodeTitle: 'Untitled Episode',
         fileName: 'episode-01-storyboarder.json',
-        folderName: 'Episode 01 - The Curse Begins',
+        folderName: 'Episode 01 - Untitled Episode',
         data: episode
       }]
     });
@@ -202,6 +204,7 @@
   function normalizeProjectEnvelope(input) {
     const project = clone(input || {});
     project.storyboarderProjectVersion = project.storyboarderProjectVersion || 'v1';
+    project.projectId ||= makeId('story-project');
     project.projectName = project.projectName || 'Untitled Project';
     project.projectRootFolder = project.projectRootFolder || '';
     project.episodes = Array.isArray(project.episodes) ? project.episodes : [];
@@ -219,11 +222,13 @@
     }
 
     project.episodes = project.episodes.map((entry, index) => {
+      if (entry.stored && !entry.data) return { ...entry, data: null };
       const data = normalizeEpisode(entry.data || entry.storyboarderData || makeBlankEpisode(String(index + 1)));
       const number = String(entry.episodeNumber || data.episode.episodeNumber || index + 1);
       const title = entry.episodeTitle || data.episode.episodeTitle || `Episode ${number}`;
       return {
         episodeId: entry.episodeId || `episode-${number}`,
+        sourceEpisodeKey: entry.sourceEpisodeKey || data.episode.sourceEpisodeKey || '',
         episodeNumber: number,
         episodeTitle: title,
         fileName: entry.fileName || `episode-${String(number).padStart(2, '0')}-storyboarder.json`,
@@ -316,7 +321,10 @@
 
     data.episodeEffects = Array.isArray(data.episodeEffects) ? data.episodeEffects.map(cleanEpisodeEffect).filter(Boolean) : [];
     validation.push({ type: 'ok', title: 'Episode ready', message: `${countScenes(data)} scenes loaded.` });
-    state.validation = validation;
+    for (const warning of data.importWarnings || []) validation.push({ type: 'warning', title: 'Script import', message: warning });
+    const retained = data.acts.flatMap(act => act.scenes).filter(scene => scene.sourceRemoved).length;
+    if (retained) validation.push({ type: 'warning', title: 'Script changed', message: `${retained} removed scene(s) kept to preserve production work.` });
+    Object.defineProperty(data, 'validationMessages', { value: validation, configurable: true });
     return data;
   }
 
@@ -360,7 +368,8 @@
           status: STATUSES.includes(item.status) ? item.status : 'Needs Assets',
           notes: item.notes || '',
           size: item.size || 0,
-          lastModified: item.lastModified || 0
+          lastModified: item.lastModified || 0,
+          assetPath: item.assetPath || ''
         }));
     });
     return cleaned;
@@ -454,29 +463,29 @@
     state.autosaveTimer = setTimeout(() => persist(), 300);
   }
 
-  function persist() {
-    if (!state.project) return;
-    const payload = {
-      project: state.project,
-      activeEpisodeId: state.activeEpisodeId,
-      viewMode: state.viewMode,
-      filter: state.filter,
-      lastSavedHashes: state.lastSavedHashes,
-      dirty: state.dirty,
-      savedAt: new Date().toISOString()
-    };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+  async function persist() {
+    if (!state.project || state.storageBlocked) return false;
+    try {
+      await StoryboardStore.save({ project: state.project, activeEpisodeId: state.activeEpisodeId, viewMode: state.viewMode, filter: state.filter, lastSavedHashes: state.lastSavedHashes, dirty: state.dirty, savedAt: new Date().toISOString() });
+      document.getElementById('storyboardSaveStatus').textContent = 'Saved in this browser · use Save for a portable or folder backup. Storyboarder is not yet synced to Dropbox.';
+      return true;
+    } catch (error) {
+      document.getElementById('storyboardSaveStatus').textContent = 'Not saved in this browser. ' + error.message;
+      showToast('Browser save failed. Keep this tab open and use Save to download a backup.');
+      return false;
+    }
   }
 
   function render() {
     if (!state.project) state.project = makeDefaultProject();
     if (!state.activeEpisodeId) state.activeEpisodeId = state.project.activeEpisodeId;
+    state.validation = activeEpisode().validationMessages || [];
     renderTopBar();
     renderEpisodeHeader();
     renderJumpNav();
     renderLeftPanel();
     renderScenes();
-    persist();
+    scheduleAutosave();
   }
 
   function renderTopBar() {
@@ -747,6 +756,7 @@
               ${characterLine ? `<div class="scene-subline">${escapeHtml(characterLine)}</div>` : ''}
             </div>
           </div>
+          ${scene.sourceRemoved ? '<p class="scene-summary">Removed from the latest script; production work retained for review.</p>' : ''}
           ${scene.storySummary ? `<p class="scene-summary">${escapeHtml(scene.storySummary)}</p>` : ''}
         </div>
         <div class="scene-actions-row">
@@ -863,7 +873,7 @@
       preview.textContent = '🧊 .blend';
     } else if (!url && media.filename) {
       preview.textContent = 'Relink';
-      preview.title = 'Browsers cannot keep direct file handles after reload unless the HDD API is connected.';
+      preview.title = 'This older linked asset is not cached on this device. Relink it or open a complete project backup.';
     } else {
       preview.textContent = iconForType(media.type);
     }
@@ -874,10 +884,11 @@
     return tile;
   }
 
-  function addMediaFiles(scene, files) {
+  async function addMediaFiles(scene, files) {
+    try {
     if (!files || !files.length) return;
     scene.media = scene.media || blankMedia();
-    Array.from(files).forEach(file => {
+    for (const file of Array.from(files)) {
       const type = inferTypeFromName(file.name, file.type);
       const group = mediaGroupForType(type);
       const media = {
@@ -892,12 +903,14 @@
         size: file.size,
         lastModified: file.lastModified
       };
+      await StoryboardStore.asset(media.id, file, state.project.projectId);
       scene.media[group].push(media);
       state.mediaRuntime.set(media.id, { file, objectUrl: URL.createObjectURL(file) });
-    });
+    }
     markDirty();
     renderScenes();
     showToast(`${files.length} media file${files.length === 1 ? '' : 's'} attached.`);
+    } catch (error) { markDirty(); renderScenes(); showToast('Could not save this media file. ' + error.message); }
   }
 
   function handleMediaAction(scene, media, action, tile) {
@@ -982,7 +995,7 @@
       el.scriptPreview.innerHTML = `<p>No script Markdown has been linked yet.</p><p>Expected heading: <strong>${escapeHtml(scene.scriptHeadingText || scene.sceneTitle)}</strong></p>`;
       return;
     }
-    const excerpt = findSceneExcerpt(scene, state.scriptText);
+    const excerpt = scene.scriptExcerpt || findSceneExcerpt(scene, activeEpisode().sources?.[scene.sourceDocumentId]?.markdown || state.scriptText);
     el.scriptPreview.innerHTML = renderMarkdownLite(excerpt || `No matching script section was found for ${scene.scriptHeadingText || scene.sceneTitle}.`);
   }
 
@@ -1046,10 +1059,10 @@
     });
   }
 
-  function buildFolderPlan() {
-    const data = activeEpisode();
+  function buildFolderPlan({ includeRoot = true, episodeData = activeEpisode() } = {}) {
+    const data = episodeData;
     const epFolder = data.episode.defaultEpisodeFolderName || safeFolderText(`Episode ${data.episode.episodeNumber} - ${data.episode.episodeTitle}`);
-    const root = state.project.projectRootFolder ? state.project.projectRootFolder.replace(/[\\/]$/,'') : '';
+    const root = includeRoot && state.project.projectRootFolder ? state.project.projectRootFolder.replace(/[\\/]$/,'') : '';
     const prefix = root ? `${root}/${epFolder}` : epFolder;
     const folders = [prefix, `${prefix}/Episode Effects`];
     data.acts.forEach(act => {
@@ -1131,12 +1144,14 @@
 
   function projectManifestForSave() {
     return {
+      projectId: state.project.projectId,
       storyboarderProjectVersion: state.project.storyboarderProjectVersion,
       projectName: state.project.projectName,
       projectRootFolder: state.project.projectRootFolder,
       activeEpisodeId: state.activeEpisodeId,
       episodes: state.project.episodes.map(entry => ({
         episodeId: entry.episodeId,
+        sourceEpisodeKey: entry.sourceEpisodeKey || '',
         episodeNumber: entry.episodeNumber,
         episodeTitle: entry.episodeTitle,
         fileName: entry.fileName,
@@ -1145,49 +1160,143 @@
     };
   }
 
+  function downloadProductionFile(name, contents, type = 'application/octet-stream') {
+    const blob = new Blob([contents], { type });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a'); link.href = url; link.download = name; link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  async function buildProductionFiles() {
+    const files = [];
+    const missingAssets = [];
+    for (const entry of state.project.episodes) {
+      if (!entry.data) {
+        const stored = await StoryboardStore.episode(state.project.projectId, entry.episodeId);
+        if (!stored) throw new Error(`Episode ${entry.episodeTitle} could not be read. Backup stopped.`);
+        entry.data = normalizeEpisode(stored);
+      }
+      entry.fileName = `${safeFolderText(entry.episodeId)}.storyboarder.json`;
+      for (const scene of entry.data.acts.flatMap(act => act.scenes)) {
+        for (const media of getAllSceneMedia(scene)) {
+          const blob = state.mediaRuntime.get(media.id)?.file || await StoryboardStore.asset(media.id, undefined, state.project.projectId);
+          if (!blob) { missingAssets.push(media.label || media.id); continue; }
+          media.assetPath = `assets/${safeFolderText(media.id)}-${safeFolderText(media.filename || media.label || 'asset')}`;
+          scene.media[media.group].find(item => item.id === media.id).assetPath = media.assetPath;
+          files.push({ path: media.assetPath, contents: blob });
+        }
+      }
+      files.push({ path: entry.fileName, contents: JSON.stringify(normalizeEpisodeForExport(entry.data), null, 2) });
+      for (const [id, source] of Object.entries(entry.data.sources || {})) files.push({ path: `scripts/${safeFolderText(entry.episodeId)}-${safeFolderText(id)}.md`, contents: source.markdown || '' });
+    }
+    const folders = [...new Set(state.project.episodes.flatMap(entry => buildFolderPlan({ includeRoot: false, episodeData: entry.data })))];
+    files.push({ path: 'folder-plan.txt', contents: folders.join('\n') });
+    files.push({ path: 'README.txt', contents: 'STORYBOARDER PROJECT\nOpen this ZIP with Storyboarder Import, or use Open folder for an extracted copy. The project index links episode files. Script copies are in scripts; attached media are in assets. Scene folders are created when saving to a folder.\n\n' + (missingAssets.length ? 'These older linked assets were unavailable and need relinking: ' + missingAssets.join(', ') : 'All attached media were included.') });
+    // Publish the small project index only after its episode and asset files.
+    files.push({ path: 'storyboarder.project.json', contents: JSON.stringify(projectManifestForSave(), null, 2) });
+    return { files: [...new Map(files.map(file => [file.path, file])).values()], missingAssets, folders };
+  }
+
+  async function writeProductionFile(directory, path, contents) {
+    const parts = path.split('/'); const name = parts.pop();
+    if ([...parts, name].some(part => !part || part === '.' || part === '..' || /[\\:]/.test(part))) throw new Error('The project has an unsafe file path.');
+    let folder = directory;
+    for (const part of parts) folder = await folder.getDirectoryHandle(part, { create: true });
+    const handle = await folder.getFileHandle(name, { create: true });
+    const writer = await handle.createWritable();
+    try { await writer.write(contents); await writer.close(); }
+    catch (error) { await writer.abort?.(); throw error; }
+  }
+
   async function saveChangedFiles() {
     syncActiveEntryFromEpisode();
     const api = getHddApi();
-    const entry = activeEntry();
-    const projectPath = state.project.projectRootFolder ? `${state.project.projectRootFolder.replace(/[\\/]$/,'')}/storyboarder.project.json` : 'storyboarder.project.json';
-    const episodePath = state.project.projectRootFolder ? `${state.project.projectRootFolder.replace(/[\\/]$/,'')}/${entry.fileName}` : entry.fileName;
-    const files = [
-      { key: 'project', path: projectPath, text: JSON.stringify(projectManifestForSave(), null, 2) },
-      { key: `episode:${entry.episodeId}`, path: episodePath, text: JSON.stringify(normalizeEpisodeForExport(entry.data), null, 2) }
-    ];
-
-    const changed = [];
-    for (const file of files) {
-      const hash = await hashText(file.text);
-      if (state.lastSavedHashes[file.key] !== hash) changed.push({ ...file, hash });
-    }
-
-    if (!changed.length) {
-      state.dirty = false;
-      persist();
-      showToast('Nothing changed. No files need saving.');
-      return;
-    }
-
-    if (!api) {
-      showToast(`HDD API not detected. ${changed.length} changed file${changed.length === 1 ? '' : 's'} ready: ${changed.map(f => f.path).join(', ')}`);
-      return;
-    }
-
-    try {
-      for (const file of changed) {
-        if (typeof api.saveTextFile === 'function') await api.saveTextFile(file.path, file.text);
-        else if (typeof api.writeTextFile === 'function') await api.writeTextFile(file.path, file.text);
-        else if (typeof api.writeFile === 'function') await api.writeFile(file.path, file.text);
-        else throw new Error('Detected HDD API has no saveTextFile/writeTextFile/writeFile function.');
-        state.lastSavedHashes[file.key] = file.hash;
+    if (!api && window.showDirectoryPicker) {
+      if (state.folderHandle && await state.folderHandle.requestPermission({ mode: 'readwrite' }) !== 'granted') state.folderHandle = null;
+      if (!state.folderHandle) {
+        state.folderHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+        state.lastSavedHashes = {};
+        await StoryboardStore.record(`folder:${state.project.projectId}`, state.folderHandle);
       }
-      state.dirty = false;
-      persist();
-      showToast(`Saved ${changed.length} changed file${changed.length === 1 ? '' : 's'}.`);
-    } catch (error) {
-      showToast(`Save failed: ${error.message}`);
     }
+    const { files, missingAssets, folders } = await buildProductionFiles();
+    if (api || state.folderHandle) {
+      for (const file of files) {
+        // Binary files stay binary. Hashing is only an optimization for text files.
+        const hash = typeof file.contents === 'string' ? await hashText(file.contents) : null;
+        if (hash && state.lastSavedHashes[file.path] === hash) continue;
+        if (state.folderHandle) await writeProductionFile(state.folderHandle, file.path, file.contents);
+        else {
+          const writer = api.saveTextFile || api.writeTextFile || api.writeFile;
+          if (typeof writer !== 'function' || typeof file.contents !== 'string') throw new Error('This desktop bridge cannot save binary assets. Use the portable ZIP backup.');
+          await writer.call(api, file.path, file.contents);
+        }
+        if (hash) state.lastSavedHashes[file.path] = hash;
+      }
+      if (state.folderHandle) {
+        for (const path of folders) {
+          let folder = state.folderHandle;
+          for (const part of path.split('/').filter(Boolean)) folder = await folder.getDirectoryHandle(safeFolderText(part), { create: true });
+        }
+      }
+      showToast('Project files and scene folders saved.' + (missingAssets.length ? ' Some older assets need relinking.' : ''));
+    } else {
+      const zip = new JSZip();
+      for (const path of folders) zip.folder(path);
+      for (const file of files) {
+        const value = typeof file.contents === 'string' ? file.contents : await file.contents.arrayBuffer();
+        zip.file(file.path, value);
+      }
+      downloadProductionFile(`${safeFolderText(state.project.projectName)}-Storyboarder.zip`, await zip.generateAsync({ type: 'uint8array', compression: 'DEFLATE' }), 'application/zip');
+      showToast('Portable project ZIP downloaded, including scripts and available media.');
+    }
+    state.dirty = false;
+    await persist();
+  }
+
+  async function readProductionZip(file) {
+    const zip = await JSZip.loadAsync(await file.arrayBuffer());
+    const indexes = Object.keys(zip.files).filter(name => name === 'storyboarder.project.json');
+    if (indexes.length !== 1) throw new Error('Choose a Storyboarder project ZIP with a project index.');
+    const manifest = JSON.parse(await zip.file(indexes[0]).async('string'));
+    manifest.projectId = makeId('story-restored');
+    for (const entry of manifest.episodes || []) {
+      const episodeFile = zip.file(entry.fileName);
+      if (!episodeFile) throw new Error('The ZIP is missing an episode file. The current project is kept.');
+      entry.data = JSON.parse(await episodeFile.async('string'));
+      for (const scene of (entry.data.acts || []).flatMap(act => act.scenes || [])) {
+        for (const media of getAllSceneMedia(scene)) if (media.assetPath) {
+          const asset = zip.file(media.assetPath);
+          if (asset) await StoryboardStore.asset(media.id, new Blob([await asset.async('uint8array')]), manifest.projectId);
+        }
+      }
+    }
+    return manifest;
+  }
+
+  async function openProductionFolder() {
+    if (!window.showDirectoryPicker) throw new Error('This browser can open a portable Storyboarder ZIP through Import.');
+    const handle = await window.showDirectoryPicker({ mode: 'read' });
+    async function read(path) {
+      const parts = path.split('/'); const name = parts.pop();
+      if ([...parts, name].some(part => !part || part === '..' || part === '.' || /[\\:]/.test(part))) throw new Error('Unsafe file path in project.');
+      let folder = handle;
+      for (const part of parts) folder = await folder.getDirectoryHandle(part);
+      return (await folder.getFileHandle(name)).getFile();
+    }
+    const manifest = JSON.parse(await (await read('storyboarder.project.json')).text());
+    manifest.projectId = makeId('story-restored');
+    for (const entry of manifest.episodes || []) {
+      entry.data = JSON.parse(await (await read(entry.fileName)).text());
+      for (const scene of (entry.data.acts || []).flatMap(act => act.scenes || [])) {
+        for (const media of getAllSceneMedia(scene)) if (media.assetPath) await StoryboardStore.asset(media.id, await read(media.assetPath), manifest.projectId);
+      }
+    }
+    const next = normalizeProjectEnvelope(manifest);
+    if (!state.storageBlocked && !await persist()) return;
+    state.project = next; state.activeEpisodeId = next.activeEpisodeId;
+    state.folderHandle = handle; state.storageBlocked = false; state.dirty = false;
+    await loadActiveEpisode(); await persist(); render(); closeModal('projectModal');
   }
 
   async function hashText(text) {
@@ -1213,12 +1322,16 @@
     state.project.activeEpisodeId = state.activeEpisodeId;
   }
 
-  function switchEpisode(episodeId) {
-    if (state.dirty && !confirm('You have unsaved changes. Switch episodes anyway? Your browser autosave will keep a draft, but HDD Save has not run.')) return;
-    state.activeEpisodeId = episodeId;
-    state.project.activeEpisodeId = episodeId;
-    closeAllMenus();
-    render();
+  async function switchEpisode(episodeId) {
+    if (!await persist()) return;
+    const previous = state.activeEpisodeId;
+    try {
+      state.activeEpisodeId = episodeId; state.project.activeEpisodeId = episodeId;
+      await loadActiveEpisode(); closeAllMenus(); render();
+    } catch (error) {
+      state.activeEpisodeId = previous; state.project.activeEpisodeId = previous;
+      showToast(error.message);
+    }
   }
 
   function createNewEpisode() {
@@ -1261,6 +1374,7 @@
   function newProject() {
     if (state.dirty && !confirm('You have unsaved changes. Create a new project anyway?')) return;
     state.project = makeDefaultProject();
+    state.storageBlocked = false; state.folderHandle = null; state.lastSavedHashes = {};
     state.activeEpisodeId = state.project.activeEpisodeId;
     state.dirty = true;
     closeModal('projectModal');
@@ -1272,11 +1386,15 @@
     if (!file) return;
     if (state.dirty && !confirm('You have unsaved changes. Load another project anyway?')) return;
     try {
-      const text = await file.text();
-      const incoming = JSON.parse(text);
-      state.project = normalizeProjectEnvelope(incoming);
+      const incoming = file.name.toLowerCase().endsWith('.zip') ? await readProductionZip(file) : JSON.parse(await file.text());
+      if (!Array.isArray(incoming.episodes) || !incoming.episodes.length || incoming.episodes.some(entry => !entry.data || !Array.isArray(entry.data.acts))) throw new Error('This project file needs its episode files. Open the saved folder or import its portable ZIP.');
+      const next = normalizeProjectEnvelope(incoming);
+      if (!state.storageBlocked && !await persist()) return;
+      if (!file.name.toLowerCase().endsWith('.zip')) next.projectId = makeId('story-restored');
+      state.project = next; state.storageBlocked = false; state.folderHandle = null; state.lastSavedHashes = {};
       state.activeEpisodeId = state.project.activeEpisodeId;
       state.dirty = false;
+      await loadActiveEpisode();
       closeModal('projectModal');
       render();
       showToast(`Loaded project ${file.name}.`);
@@ -1285,11 +1403,14 @@
 
   async function importEpisodeFile(file) {
     if (!file) return;
+    if (file.name.toLowerCase().endsWith('.zip')) return importProjectFile(file);
     try {
       const text = await file.text();
       const data = normalizeEpisode(JSON.parse(text));
       const entry = activeEntry();
       entry.data = data;
+      state.storageBlocked = false;
+      useEpisodeScript();
       entry.episodeNumber = data.episode.episodeNumber;
       entry.episodeTitle = data.episode.episodeTitle;
       entry.folderName = data.episode.defaultEpisodeFolderName;
@@ -1326,13 +1447,13 @@
 
   function closeModal(id) {
     document.getElementById(id)?.classList.add('hidden');
-    if (![el.projectModal, el.foldersModal, el.settingsModal].some(modal => modal && !modal.classList.contains('hidden'))) {
+    if (![el.projectModal, el.foldersModal, el.settingsModal, document.getElementById('storyboardHelpModal')].some(modal => modal && !modal.classList.contains('hidden'))) {
       el.modalBackdrop.classList.add('hidden');
     }
   }
 
   function closeAllModals() {
-    [el.projectModal, el.foldersModal, el.settingsModal].forEach(modal => modal.classList.add('hidden'));
+    [el.projectModal, el.foldersModal, el.settingsModal, document.getElementById('storyboardHelpModal')].forEach(modal => modal.classList.add('hidden'));
     el.modalBackdrop.classList.add('hidden');
   }
 
@@ -1381,15 +1502,21 @@
     el.scriptInput.addEventListener('change', async event => {
       const file = event.target.files?.[0];
       if (!file) return;
-      state.scriptText = await file.text();
-      state.scriptName = file.name;
+      const markdown = await file.text();
+      const transfer = { type: 'capsanoto-storyboard-transfer', version: 1, project: { id: state.project.projectId }, episode: { number: activeEntry().episodeNumber, title: activeEntry().episodeTitle }, document: { id: 'local-' + slugify(file.name), title: file.name, markdown } };
+      const incoming = StoryboardScriptImport.parse(transfer);
+      activeEntry().data = normalizeEpisode(StoryboardScriptImport.merge(activeEpisode(), incoming));
+      useEpisodeScript(); markDirty(); render();
+      showToast('Script imported and scenes created.');
       localStorage.setItem(SCRIPT_STORAGE_KEY, file.name);
       showToast(`Linked script: ${file.name}.`);
       event.target.value = '';
     });
 
     el.btnLoadSample.addEventListener('click', loadSample);
-    el.btnSave.addEventListener('click', saveChangedFiles);
+    el.btnSave.addEventListener('click', () => saveChangedFiles().catch(error => showToast('Save failed: ' + error.message)));
+    document.getElementById('btnOpenFolder').addEventListener('click', () => openProductionFolder().catch(error => showToast('Open failed: ' + error.message)));
+    document.getElementById('btnStoryboardHelp').addEventListener('click', () => openModal('storyboardHelpModal'));
     el.btnFolders.addEventListener('click', openFoldersModal);
     el.btnCopyFolders.addEventListener('click', () => copyText(buildFolderPlan().join('\n')));
     el.btnCreateFolders.addEventListener('click', createFoldersViaApi);
@@ -1461,27 +1588,87 @@
     });
   }
 
-  function boot() {
-    bindEvents();
-    try {
-      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
-      if (saved?.project) {
-        state.project = normalizeProjectEnvelope(saved.project);
-        state.activeEpisodeId = saved.activeEpisodeId || state.project.activeEpisodeId;
-        state.viewMode = saved.viewMode || 'scene';
-        state.filter = saved.filter || state.filter;
-        state.lastSavedHashes = saved.lastSavedHashes || {};
-        state.dirty = !!saved.dirty;
-      } else {
-        state.project = makeDefaultProject();
-        state.activeEpisodeId = state.project.activeEpisodeId;
-      }
-    } catch {
-      state.project = makeDefaultProject();
-      state.activeEpisodeId = state.project.activeEpisodeId;
+  function useEpisodeScript() {
+    state.scriptText = Object.values(activeEpisode().sources || {}).map(source => source.markdown || '').join('\n\n');
+    state.scriptName = activeEpisode().episode.sourceScriptTitle || activeEntry().episodeTitle;
+  }
+
+  async function loadActiveEpisode() {
+    const entry = activeEntry();
+    if (!entry.data) {
+      const stored = await StoryboardStore.episode(state.project.projectId, entry.episodeId);
+      if (!stored) throw new Error(`Episode “${entry.episodeTitle}” is missing. Your saved project has been kept.`);
+      entry.data = normalizeEpisode(stored);
     }
+    useEpisodeScript();
+    for (const runtime of state.mediaRuntime.values()) if (runtime.objectUrl) URL.revokeObjectURL(runtime.objectUrl);
+    state.mediaRuntime.clear();
+    for (const scene of activeEpisode().acts.flatMap(act => act.scenes)) {
+      for (const media of getAllSceneMedia(scene)) {
+        const file = await StoryboardStore.asset(media.id, undefined, state.project.projectId);
+        if (file) state.mediaRuntime.set(media.id, { file, objectUrl: URL.createObjectURL(file) });
+      }
+    }
+  }
+
+  async function receiveCapsanotoDocument(token) {
+    clearTimeout(state.autosaveTimer);
+    const transfer = await StoryboardStore.handoff(token);
+    const incoming = StoryboardScriptImport.parse(transfer);
+    const projectId = `caps-${transfer.project.id}`;
+    const previous = await StoryboardStore.read(projectId);
+    const episodeKey = transfer.episode?.key || transfer.document.id;
+    const episodeId = `caps-${slugify(episodeKey)}`;
+    let project = previous?.project ? normalizeProjectEnvelope(previous.project) : normalizeProjectEnvelope({ projectId, projectName: transfer.project.name, episodes: [{ episodeId, sourceEpisodeKey: episodeKey, data: incoming }] });
+    let entry = project.episodes.find(item => item.sourceEpisodeKey === episodeKey || item.episodeId === episodeId);
+    if (!entry) {
+      entry = { episodeId, sourceEpisodeKey: episodeKey, episodeNumber: incoming.episode.episodeNumber, episodeTitle: incoming.episode.episodeTitle, fileName: `${episodeId}.json`, folderName: safeFolderText(incoming.episode.episodeTitle), data: null };
+      project.episodes.push(entry);
+    } else if (!entry.data && entry.stored) entry.data = await StoryboardStore.episode(projectId, entry.episodeId);
+    entry.data = normalizeEpisode(StoryboardScriptImport.merge(entry.data, incoming));
+    entry.sourceEpisodeKey = episodeKey;
+    state.project = project;
+    state.activeEpisodeId = entry.episodeId;
+    state.project.activeEpisodeId = entry.episodeId;
+    state.storageBlocked = false;
+    state.dirty = true;
+    await loadActiveEpisode();
+    if (!await persist()) throw new Error('The script was read but could not be saved. Keep this tab open and use Save.');
+    await StoryboardStore.consumeHandoff(token);
+    history.replaceState(null, '', location.pathname);
+    showToast(`Imported ${transfer.document.title}. Scene cards and the folder plan are ready.`);
+  }
+
+  async function boot() {
+    bindEvents();
+    let saved = await StoryboardStore.read();
+    if (!saved) {
+      const legacy = localStorage.getItem(STORAGE_KEY);
+      if (legacy) {
+        try { saved = JSON.parse(legacy); }
+        catch {
+          state.storageBlocked = true;
+          const recovery = document.getElementById('storyboardRecovery');
+          recovery.hidden = false;
+          recovery.querySelector('button').onclick = () => downloadProductionFile('Storyboarder-original-save.json', legacy, 'application/json');
+        }
+      }
+    }
+    if (saved?.project) {
+      state.project = normalizeProjectEnvelope(saved.project);
+      state.activeEpisodeId = saved.activeEpisodeId || state.project.activeEpisodeId;
+      if (!state.project.episodes.some(entry => entry.episodeId === state.activeEpisodeId)) throw new Error('The saved active episode is missing.');
+      state.viewMode = saved.viewMode || 'scene'; state.filter = saved.filter || state.filter;
+      state.lastSavedHashes = saved.lastSavedHashes || {}; state.dirty = !!saved.dirty;
+    } else {
+      state.project = makeDefaultProject(); state.activeEpisodeId = state.project.activeEpisodeId;
+    }
+    state.folderHandle = await StoryboardStore.record(`folder:${state.project.projectId}`) || null;
+    await loadActiveEpisode();
+    const token = new URLSearchParams(location.search).get('import');
+    if (token && !state.storageBlocked) await receiveCapsanotoDocument(token);
     render();
   }
 
-  boot();
+  boot().catch(error => { showToast('Could not open Storyboarder: ' + error.message); document.getElementById('storyboardSaveStatus').textContent = 'Saved data was kept. ' + error.message; });
 })();

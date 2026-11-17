@@ -537,6 +537,8 @@ async function loadWorkspace() {
       state.projectId = payload.projectId || crypto.randomUUID();
       state.activeId = payload.activeId;
       state.dropboxAutoSync = Boolean(payload.dropboxAutoSync);
+      state.workspaceAccountId = payload.workspaceAccountId || '';
+      state.cloudSyncPaused = Boolean(payload.cloudSyncPaused);
       state.documents = Array.isArray(payload.documents) ? payload.documents : [];
       state.blocks = payload.blocks && typeof payload.blocks === "object" ? payload.blocks : {};
       state.writingRoomName = payload.writingRoomName || state.writingRoomName;
@@ -734,6 +736,10 @@ function bindEditorEvents() {
   els.newTabButton.addEventListener("click", createFilingTab);
   els.trashCanButton?.addEventListener("click", () => setContextStatus(`${state.trash.length} items in Trash · ${state.deprecated.length} deprecated`, false));
   els.writingRoomCards.addEventListener("click", (event) => { void runProjectFileAction(() => handleWritingRoomCardClick(event)); });
+  document.getElementById("fillWritingRoomHeight")?.addEventListener("click", () => {
+    resizeWritingRoomPanel(els.writingRoomPanel.getBoundingClientRect().width, window.innerHeight);
+    saveWritingRoomPanelLayout({ keepEditMode: true });
+  });
   els.writingRoomResizeGrip?.addEventListener("pointerdown", startWritingRoomResize);
   els.writingRoomResizeGrip?.addEventListener("keydown", handleWritingRoomResizeKey);
   window.addEventListener("pointermove", moveWritingRoomResize);
@@ -1122,6 +1128,7 @@ function renderDocumentEndBar() {
     <span class="end-doc-meta">${escapeHtml(fileType)} · ${escapeHtml(doc.id)} · ${escapeHtml((doc.tags || []).join(", ") || "No tags")}</span>
     <span class="document-card-actions">
       <button type="button" data-end-action="open" data-tool-name="Open this file in the Writing Room panel">↗</button>
+      <button type="button" data-end-action="storyboard" title="Create or update scene cards from this document">🎬 Send to Storyboarder</button>
       <button type="button" data-end-action="bulk-style" data-tool-name="Bulk style TCards, tables, or emphasis boxes in this file">🎨</button>
       <button type="button" data-end-action="duplicate" data-tool-name="Duplicate this file">⧉</button>
       <button type="button" data-end-action="deprecate" data-tool-name="Deprecate this file as an old version">🕰</button>
@@ -1136,6 +1143,7 @@ async function handleDocumentEndBarClick(event) {
   const doc = activeDocument();
   const action = button.dataset.endAction;
   if (action === "writing-room" || action === "open") return toggleWritingRoomPanel(true);
+  if (action === "storyboard") return sendDocumentToStoryboarder();
   if (action === "bulk-style") return bulkStyleDocument(doc.id);
   if (action === "duplicate") return duplicateDocument(doc.id);
   if (action === "deprecate") return deprecateDocument(doc.id);
@@ -2460,7 +2468,7 @@ function inlineEditAttrs(kind, id, field) {
 
 function renderFilingTab(tab) {
   return `<details class="filing-tab" data-tab-id="${escapeAttr(tab.id)}" draggable="${state.filingEditMode}" ${tab.locked ? "open" : ""}>
-    <summary><span class="card-arrow">›</span><span class="tab-icon">${designIconSetting("tabIconText", "▱")}</span><strong ${inlineEditAttrs("tab", tab.id, "label")}>${escapeHtml(tab.label)}</strong><button type="button" class="lock-button" title="Keep tab expanded" data-tab-action="lock" data-tab-id="${escapeAttr(tab.id)}">${tab.locked ? "🔒" : "🔓"}</button>${state.filingEditMode ? `<span class="filing-group-actions"><button type="button" title="Delete tab" aria-label="Delete tab" data-tab-action="delete" data-tab-id="${escapeAttr(tab.id)}">❌</button></span>` : ""}</summary>
+    <summary><span class="card-arrow">›</span><span class="tab-icon">${designIconSetting("tabIconText", "📑")}</span><strong ${inlineEditAttrs("tab", tab.id, "label")}>${escapeHtml(tab.label)}</strong><button type="button" class="lock-button" title="Keep tab expanded" data-tab-action="lock" data-tab-id="${escapeAttr(tab.id)}">${tab.locked ? "🔒" : "🔓"}</button>${state.filingEditMode ? `<span class="filing-group-actions"><button type="button" title="Delete tab" aria-label="Delete tab" data-tab-action="delete" data-tab-id="${escapeAttr(tab.id)}">❌</button></span>` : ""}</summary>
     <div class="writing-room-card-stack filing-tab-documents" data-drop-tab="${escapeAttr(tab.id)}">
       ${tab.documents.map((doc) => renderWritingRoomCard(doc, 0)).join("")}
       ${state.filingEditMode && !tab.documents.length ? '<p class="panel-help">Drop documents into this tab.</p>' : ''}
@@ -3040,13 +3048,14 @@ function resizeWritingRoomPanel(width, height) {
   const minWidth = pixels(size.minWidth, 220);
   const minHeight = pixels(size.minHeight, 220);
   const maxWidth = Math.max(minWidth, Math.min(pixels(size.maxWidth, window.innerWidth - 24), window.innerWidth - 24));
-  const maxHeight = Math.max(minHeight, Math.min(pixels(size.maxHeight, window.innerHeight - 24), window.innerHeight - 24));
+  const top = Math.max(12, Math.min(rect.top, window.innerHeight - minHeight - 12));
+  const maxHeight = Math.max(minHeight, window.innerHeight - top - 12);
   const nextWidth = Math.round(Math.max(minWidth, Math.min(maxWidth, width)));
   const nextHeight = Math.round(Math.max(minHeight, Math.min(maxHeight, height)));
   panel.style.width = `${nextWidth}px`;
   panel.style.height = `${nextHeight}px`;
   panel.style.left = `${Math.max(12, Math.min(rect.left, window.innerWidth - nextWidth - 12))}px`;
-  panel.style.top = `${Math.max(12, Math.min(rect.top, window.innerHeight - nextHeight - 12))}px`;
+  panel.style.top = `${top}px`;
   panel.style.right = 'auto';
   scheduleRoomWorkspaceLayout();
 }
@@ -3353,6 +3362,8 @@ function applyWritingRoomPanelLayout() {
     if (Number.isFinite(layout.left)) els.writingRoomPanel.style.left = `${Math.max(8, Math.min(window.innerWidth - 80, layout.left))}px`;
     if (Number.isFinite(layout.top)) els.writingRoomPanel.style.top = `${Math.max(8, Math.min(window.innerHeight - 80, layout.top))}px`;
     els.writingRoomPanel.style.right = "auto";
+    const rect = els.writingRoomPanel.getBoundingClientRect();
+    resizeWritingRoomPanel(layout.width || rect.width, layout.height || rect.height);
   } catch (error) {
     console.warn("Ignoring unreadable Writing Room panel layout", error);
     localStorage.removeItem(WRITING_ROOM_LAYOUT_KEY);
@@ -4800,9 +4811,8 @@ async function importProjectBackupFromInput(event) {
   const file = event.target.files?.[0];
   if (!file) return;
   try {
-    const text = await file.text();
-    const payload = JSON.parse(text);
-    await previewAndImportProjectBackup(payload, file.name || "Capsanoto backup");
+    const payload = file.name.toLowerCase().endsWith(".zip") ? await projectBackupFromZip(file) : JSON.parse(await file.text());
+    if (payload) await previewAndImportProjectBackup(payload, file.name || "Capsanoto backup");
   } catch (error) {
     console.error(error);
     setStatus("Import backup failed", "dirty");
@@ -4891,6 +4901,7 @@ async function importProjectBackupPayload(payload) {
   const previous = serializedWorkspace();
   try {
   state.dropboxAutoSync = false;
+  state.workspaceAccountId = ''; state.cloudSyncPaused = true;
   state.projectId = /^[\w-]{1,100}$/.test(project.projectId || '') ? project.projectId : crypto.randomUUID();
   state.writingRoomName = project.writingRoomName || payload.projectName || payload.name || "Imported Writing Room";
   state.documents = importedDocs.map((doc) => ({ ...doc, content: safeDocumentHtml(doc.content) }));
@@ -6049,7 +6060,9 @@ function normalizedDesignSettings(settings = {}) {
     ].forEach((key) => { if (incoming[key] !== undefined) preserved[key] = incoming[key]; });
     return { ...defaults, ...preserved, paletteVersion: CAPSANOTO_THEME_VERSION, favoriteColors: [...DEFAULT_FAVORITE_COLORS] };
   }
-  return { ...defaults, ...incoming, paletteVersion: CAPSANOTO_THEME_VERSION };
+  const normalized = { ...defaults, ...incoming, paletteVersion: CAPSANOTO_THEME_VERSION };
+  if (normalized.tabIconText === "▱") normalized.tabIconText = "📑";
+  return normalized;
 }
 
 function setProjectDesignSettings(settings = {}, options = {}) {
@@ -6491,6 +6504,8 @@ function serializedWorkspace() {
     projectId: state.projectId,
     activeId: state.activeId,
     dropboxAutoSync: Boolean(state.dropboxAutoSync),
+    workspaceAccountId: state.workspaceAccountId || '',
+    cloudSyncPaused: Boolean(state.cloudSyncPaused),
     documents: state.documents,
     blocks: state.blocks,
     filingGroups: state.filingGroups,

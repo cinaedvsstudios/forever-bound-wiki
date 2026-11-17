@@ -25,12 +25,15 @@
           <div id="episodeMenu" class="select-menu hidden" role="listbox"></div>
         </div>
         <button id="btnLoadSample" type="button" class="top-button">🧪 Sample</button>
-        <label class="top-button file-button">📥 Import<input id="jsonInput" type="file" accept=".json,application/json" /></label>
-        <label class="top-button file-button subdued">📝 Script<input id="scriptInput" type="file" accept=".md,.markdown,text/markdown,text/plain" /></label>
-        <button id="btnSave" type="button" class="top-button save-button">💾 Save</button>
+        <label class="top-button file-button">📥 Import<input id="jsonInput" type="file" accept=".json,.zip,application/json,application/zip" /></label>
+        <label class="top-button file-button subdued">📝 Import script<input id="scriptInput" type="file" accept=".md,.markdown,text/markdown,text/plain" /></label>
+        <button id="btnStoryboardHelp" type="button" class="top-button">How it works</button>
+        <button id="btnSave" type="button" class="top-button save-button">💾 Save backup</button>
       </div>
     </header>
 
+    <p id="storyboardSaveStatus" class="storyboard-save-status" role="status">Opening saved project…</p>
+    <section id="storyboardRecovery" class="storyboard-save-status" hidden><p>The original browser draft could not be read. It has been kept. Download it before starting another project.</p><button type="button">Download original draft</button></section>
     <section class="episode-hero">
       <div class="hero-title-block">
         <div class="episode-number-line">
@@ -102,6 +105,7 @@
       <label>Project name<input id="projectNameInput" type="text" placeholder="Forever Bound" /></label>
       <label>Project root folder<input id="projectRootInput" type="text" placeholder="D:/Forever Bound/Storyboarder" /></label>
       <div class="modal-actions">
+        <button id="btnOpenFolder" type="button">📂 Open saved folder</button>
         <button id="btnNewProject" type="button">✨ New</button>
         <label class="modal-button file-button">📥 Load<input id="projectInput" type="file" accept=".json,application/json" /></label>
         <button id="btnApplyProject" type="button">✅ Apply</button>
@@ -129,7 +133,7 @@
         <button id="btnExport" type="button">📤 Export JSON</button>
         <button id="btnClearLocal" type="button" class="danger">🧹 Clear Draft</button>
       </div>
-      <p class="hint">Export is a manual backup/download. Save is the normal HDD overwrite workflow once the HDD API is connected.</p>
+      <p class="hint">Save backup includes all episodes, source scripts, and available media in a folder or ZIP. Export JSON downloads planning data only; it does not include media files.</p>
     </div>
   </section>
 
@@ -149,6 +153,10 @@
     </article>
   </template>
 
-  <script src="storyboarder.js"></script>
+<section class="app-modal hidden" id="storyboardHelpModal" role="dialog" aria-label="How Storyboarder works"><header class="modal-header"><strong>How Storyboarder works</strong><button type="button" data-close-modal="storyboardHelpModal">×</button></header><div class="modal-body"><p>Storyboarder turns a script into a production plan: acts, scene cards, notes, media, effects and progress.</p><ol><li>In Capsanoto, choose a document and click Send to Storyboarder. It opens here and builds scene cards automatically.</li><li>Check the breakdown, add production notes, and attach your images, video or sound files.</li><li>Use Save to choose a backup folder where supported, or download one portable project ZIP. It includes the project index, episode files, script copies and available media.</li><li>Open a saved folder or import the ZIP to restore it. Sending a revised script retains production notes, statuses and attached media; removed scenes stay marked for review.</li></ol><p>Browser drafts are saved per episode. Storyboarder planning is currently local to this device; Capsanoto’s Dropbox sync does not yet include these production files.</p><p>Scene Mockup is the separate frame-composition canvas. Arrange backgrounds and characters there, export an image, and attach that image to a scene here.</p></div></section>
+<script src="../../vendor/jszip.min.js"></script>
+<script src="storage.js?v=5.13.1"></script>
+<script src="script-import.js?v=5.13.1"></script>
+<script src="storyboarder.js?v=5.13.1"></script>
 </body>
 </html>
