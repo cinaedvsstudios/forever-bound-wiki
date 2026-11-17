@@ -15,6 +15,7 @@ async function initializeDropboxStorage() {
     } catch { /* Owner setup remains available when offline. */ }
   }
   dropboxConnection = await workspaceRecord('dropbox-connection') || null;
+  dropboxStatus = dropboxConnection ? (dropboxConnection.expiresAt > Date.now() ? 'Ready to sync.' : 'Sign-in expired. Reconnect to sync.') : 'Not connected. Edits still save in this browser.';
   renderDropboxStorage();
 }
 
@@ -23,10 +24,18 @@ function dropboxRedirectUrl() { return new URL('dropbox-callback.html', location
 function renderDropboxStorage() {
   const container = document.getElementById('dropboxStorageControls');
   if (!container) return;
-  container.innerHTML = '<p class="panel-help">Keep an independent project copy in your own Dropbox app folder. Browser autosave works offline. Sync sends your project to Dropbox; open it on another device using the same account.</p><div class="project-action-row"><button type="button" id="connectDropbox">Connect Dropbox</button><button type="button" id="syncDropbox">Sync now</button><button type="button" id="openDropboxProject">Open from Dropbox</button><button type="button" id="disconnectDropbox">Disconnect</button></div><label class="dialog-check"><input type="checkbox" id="autoSyncDropbox"> Sync this project automatically after edits</label><label class="dialog-check"><input type="checkbox" id="rememberDropbox" checked> Remember connection in this browser</label><p class="panel-help">A short-lived access token is saved on this device when remembered. Passwords are never stored. Dropbox may ask you to reconnect when the token expires.</p><p id="dropboxStatus" role="status"></p><details><summary>One-time Dropbox app setup</summary><p class="panel-help">The app owner registers a free Scoped access / App folder app in the <a href="https://www.dropbox.com/developers/apps" target="_blank" rel="noopener noreferrer">Dropbox developer console</a>. Enable account_info.read, files.metadata.read, files.content.read, files.content.write and public clients (PKCE). Add the callback address below. Enter the public app key here; never enter an app secret. For other people to connect, enable additional users and follow Dropbox’s production review requirements.</p><label>Public app key<input type="text" id="dropboxAppKey" autocomplete="off"></label><button type="button" id="saveDropboxAppKey">Save app key</button><p class="panel-help" id="dropboxCallbackAddress"></p></details>';
-  document.getElementById('dropboxStatus').textContent = dropboxConnection ? `${dropboxConnection.label || 'Dropbox connected'} · ${dropboxStatus}` : dropboxStatus;
+  const connected = Boolean(dropboxConnection);
+  const valid = connected && dropboxConnection.expiresAt > Date.now() + 10000;
+  container.innerHTML = `<div class="storage-account"><span class="storage-provider">Dropbox</span><strong>${escapeHtml(connected ? dropboxConnection.label || 'Connected account' : 'Connect your storage account')}</strong></div><p class="storage-description">${connected ? 'Your project stays in this browser and syncs to this account’s Apps/Capsanoto folder.' : 'Keep a project copy online and open it on another device. Use the account where you want to store your writing.'}</p><p id="dropboxStatus" class="storage-sync-status" role="status"></p><div class="storage-main-actions"><button type="button" id="connectDropbox" ${valid ? 'hidden' : ''}>${connected ? 'Reconnect Dropbox' : 'Connect Dropbox'}</button><button type="button" id="syncDropbox" ${connected ? '' : 'hidden'} ${valid ? '' : 'disabled'}>Sync now</button><button type="button" id="openDropboxProject" ${connected ? '' : 'hidden'} ${valid ? '' : 'disabled'}>Open another project</button></div><label class="storage-option" ${connected ? '' : 'hidden'}><input type="checkbox" id="autoSyncDropbox"> Sync automatically after edits</label><details class="storage-account-options"><summary>Account options</summary><label class="storage-option"><input type="checkbox" id="rememberDropbox" checked> Remember this connection in this browser</label><p>Only a short-lived access token is saved here. Dropbox may ask you to reconnect; your password is never stored.</p><button type="button" id="disconnectDropbox" ${connected ? '' : 'hidden'}>Disconnect this account</button></details>`;
+  const developer = document.getElementById('dropboxDeveloperControls');
+  const markup = '<details class="project-developer-setup"><summary>Developer setup</summary><p>App owners only. Register a free Scoped access / App folder app in the <a href="https://www.dropbox.com/developers/apps" target="_blank" rel="noopener noreferrer">Dropbox developer console</a>. Enable account_info.read, files.metadata.read, files.content.read, files.content.write and public clients (PKCE). Add the redirect address below and enable additional users. Never enter an app secret or access token here.</p><label>Public app key<input type="text" id="dropboxAppKey" autocomplete="off"></label><button type="button" id="saveDropboxAppKey">Save app key</button><p id="dropboxCallbackAddress"></p></details>';
+  if (developer) developer.innerHTML = markup;
+  else container.insertAdjacentHTML('beforeend', markup);
+  document.getElementById('dropboxStatus').textContent = dropboxStatus;
   document.getElementById('dropboxCallbackAddress').textContent = `Redirect URI: ${dropboxRedirectUrl()}`;
   document.getElementById('dropboxAppKey').value = localStorage.getItem('capsanoto-dropbox-app-key') || '';
+  document.getElementById('rememberDropbox').checked = dropboxConnection?.remembered !== false;
+  document.getElementById('rememberDropbox').onchange = async (event) => { if (dropboxConnection) { dropboxConnection.remembered = event.target.checked; await workspaceRecord('dropbox-connection', event.target.checked ? dropboxConnection : null); } };
   document.getElementById('autoSyncDropbox').checked = Boolean(state.dropboxAutoSync);
   document.getElementById('autoSyncDropbox').onchange = async (event) => { state.dropboxAutoSync = event.target.checked; await persistNow(); };
   document.getElementById('saveDropboxAppKey').onclick = () => {
@@ -44,7 +53,7 @@ function renderDropboxStorage() {
 function setDropboxStatus(message) {
   dropboxStatus = message;
   const target = document.getElementById('dropboxStatus');
-  if (target) target.textContent = `${dropboxConnection?.label ? dropboxConnection.label + ' · ' : ''}${message}`;
+  if (target) target.textContent = message;
   updateProjectSettingsStatus();
 }
 
@@ -54,7 +63,7 @@ async function dropboxAction(action) {
   document.querySelectorAll('#dropboxStorageControls button').forEach((button) => { button.disabled = true; });
   try { await action(); }
   catch (error) { setDropboxStatus(error.message || 'Dropbox operation failed. Your browser copy is kept.'); setStatus('Dropbox needs attention · browser copy kept', 'dirty'); }
-  finally { dropboxBusy = false; document.querySelectorAll('#dropboxStorageControls button').forEach((button) => { button.disabled = false; }); }
+  finally { dropboxBusy = false; document.querySelectorAll('#dropboxStorageControls button').forEach((button) => { button.disabled = ['syncDropbox', 'openDropboxProject'].includes(button.id) && (!dropboxConnection || dropboxConnection.expiresAt <= Date.now() + 10000); }); }
 }
 
 function base64Url(bytes) { return btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
@@ -87,8 +96,8 @@ async function connectDropbox() {
   const response = await fetch('https://api.dropboxapi.com/oauth2/token', { method: 'POST', body: new URLSearchParams({ client_id: appKey, grant_type: 'authorization_code', code, code_verifier: verifier, redirect_uri: redirect }) });
   if (!response.ok) throw new Error('Dropbox could not complete sign-in. Check the app key, redirect URI, and PKCE setting.');
   const token = await response.json();
-    const previous = dropboxConnection;
-  dropboxConnection = { token: token.access_token, accountId: token.account_id, expiresAt: Date.now() + Number(token.expires_in || 14400) * 1000, label: 'Dropbox connected' };
+  const previous = dropboxConnection;
+  dropboxConnection = { remembered: remember, token: token.access_token, accountId: token.account_id, expiresAt: Date.now() + Number(token.expires_in || 14400) * 1000, label: 'Dropbox connected' };
   try {
     const account = await dropboxRequest('users/get_current_account', null);
     dropboxConnection.label = account.name?.display_name || 'Dropbox connected';
@@ -149,7 +158,7 @@ async function syncDropboxProject() {
   const uploaded = await dropboxRequest('files/upload', { path, mode: binding?.rev ? { '.tag': 'update', update: binding.rev } : { '.tag': 'add' }, autorename: false, mute: true, strict_conflict: true }, { upload: body });
   if (dropboxConnection?.accountId !== accountId) throw new Error('Dropbox account changed. Check the saved file before syncing again.');
   await workspaceRecord(bindingKey, { path: uploaded.path_lower || path, rev: uploaded.rev, fingerprint, syncedAt: new Date().toISOString() });
-  setDropboxStatus(`Synced ${project.writingRoomName} · ${new Date().toLocaleTimeString()}`);
+  setDropboxStatus(`Synced · ${new Date().toLocaleString()}`);
   setStatus('Saved in this browser and Dropbox', 'saved');
   if (state.projectId === projectId && projectCloudFingerprint(JSON.parse(serializedWorkspace())) !== fingerprint) scheduleDropboxSync();
 }

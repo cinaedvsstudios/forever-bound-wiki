@@ -150,6 +150,7 @@ function initializeProjectSetup() {
   buttons.className = 'project-quick-actions';
   buttons.innerHTML = '<button type="button" id="startProjectSetup">New project</button><button type="button" id="addProjectFile">Add file</button><button type="button" id="openSavedProject">Open project</button>';
   els.toolbar.after(buttons);
+  initializeProjectSettingsViews();
   els.saveStatus.setAttribute('role', 'status');
   els.saveStatus.setAttribute('aria-live', 'polite');
   buttons.append(els.saveStatus);
@@ -183,6 +184,46 @@ function initializeProjectSetup() {
   if (firstWorkspaceRun) openProjectSetup('new');
 }
 
+function initializeProjectSettingsViews() {
+  const panel = els.projectSettingsPanel;
+  if (!panel || panel.querySelector('.project-settings-tabs')) return;
+  const navigation = document.createElement('nav');
+  navigation.className = 'project-settings-tabs';
+  navigation.setAttribute('role', 'tablist');
+  navigation.setAttribute('aria-label', 'Project settings sections');
+  const body = document.createElement('div'); body.className = 'project-settings-body';
+  const definitions = [['storage', 'Storage'], ['backups', 'Backups & files'], ['details', 'Project details']];
+  const views = new Map();
+  for (const [id, label] of definitions) {
+    const view = document.createElement('div');
+    view.id = `project-view-${id}`; view.setAttribute('role', 'tabpanel');
+    view.setAttribute('aria-labelledby', `project-tab-${id}`); view.tabIndex = 0; view.hidden = id !== 'storage';
+    const tab = document.createElement('button'); tab.type = 'button'; tab.id = `project-tab-${id}`;
+    tab.textContent = label; tab.setAttribute('role', 'tab'); tab.setAttribute('aria-controls', view.id);
+    tab.setAttribute('aria-selected', String(id === 'storage')); tab.tabIndex = id === 'storage' ? 0 : -1;
+    tab.onclick = () => { for (const [key, value] of views) { value.view.hidden = key !== id; value.tab.setAttribute('aria-selected', String(key === id)); value.tab.tabIndex = key === id ? 0 : -1; } };
+    tab.onkeydown = (event) => {
+      if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+      event.preventDefault();
+      const index = definitions.findIndex(([key]) => key === id);
+      const next = event.key === 'Home' ? 0 : event.key === 'End' ? 2 : (index + (event.key === 'ArrowRight' ? 1 : -1) + 3) % 3;
+      const target = views.get(definitions[next][0]).tab; target.click(); target.focus();
+    };
+    views.set(id, { view, tab }); navigation.append(tab); body.append(view);
+  }
+  for (const section of [...panel.querySelectorAll(':scope > .project-settings-section')]) {
+    const id = section.id === 'dropboxStorageSection' ? 'storage' : section.querySelector('#projectInfoStatus') ? 'details' : 'backups';
+    views.get(id).view.append(section);
+  }
+  const developer = document.createElement('div'); developer.id = 'dropboxDeveloperControls';
+  views.get('details').view.append(developer);
+  const exportCard = document.createElement('section'); exportCard.className = 'project-settings-section project-export-card';
+  exportCard.innerHTML = '<h3>Readable Markdown copy</h3><p>Download each document as an .md file in one ZIP, with images and a map of the document hierarchy. Use the complete project backup to restore all app features.</p><button id="downloadMarkdownProject" type="button">Download Markdown copy</button>';
+  exportCard.querySelector('button').onclick = () => downloadMarkdownProject().catch((error) => { setStatus('Markdown download failed', 'dirty'); showStorageWarning(error.message); });
+  views.get('backups').view.append(exportCard);
+  panel.querySelector('header').after(navigation, body);
+}
+
 function openProjectSetup(mode = 'new') {
   setupSession = { mode, step: mode === 'new' ? 1 : 2, name: mode === 'new' ? '' : state.writingRoomName, source: null, selected: new Set(), busy: false };
   renderProjectSetup();
@@ -195,15 +236,15 @@ function renderProjectSetup() {
   document.getElementById('setupTitle').textContent = session.mode === 'add' ? `Add to ${state.writingRoomName}` : 'Create your project';
   document.getElementById('setupError').textContent = '';
   document.getElementById('setupBack').hidden = session.step === (session.mode === 'new' ? 1 : 2);
-  document.getElementById('setupNext').textContent = session.step === 3 ? (session.mode === 'new' ? 'Create project and import' : 'Import selected tabs') : 'Continue';
+  document.getElementById('setupNext').textContent = session.step === 3 ? (session.mode === 'new' ? 'Create project and import' : session.source?.format === 'word' ? 'Import document' : 'Import selected tabs') : 'Continue';
   if (session.step === 1) {
     body.innerHTML = '<p class="setup-step">Step 1 of 3 · Your collection</p><p>A project holds documents under one theme: scripts, bible, characters, and notes.</p><label>Project name<input id="setupName" placeholder="Forever Bound" maxlength="120" required></label><p class="setup-note">Your current project stays available in Open project. Start with one source document; add more whenever you are ready.</p>';
     body.querySelector('input').value = session.name;
     body.querySelector('input').focus();
   } else if (session.step === 2) {
-    body.innerHTML = '<p class="setup-step">Step 2 of 3 · Choose one source</p><label>Downloaded file<input id="setupFile" type="file" accept=".docx,.txt,.md,.html,.htm,.json"></label><p class="setup-note">From Google Docs: File → Download → Microsoft Word (.docx). Review which tabs the download includes. A Word download does not reliably retain Google tab relationships.</p><details><summary>Import Google Docs tabs directly</summary><p>Read a Google Doc once, select its tabs, and copy them here. Nothing is written back to Google.</p><label>Google Docs link<input id="setupGoogleUrl" type="url" placeholder="https://docs.google.com/document/d/…"></label><button id="setupReadGoogle" type="button">Read tabs from Google Docs</button><p class="setup-note">Google will ask for read-only Docs access. This requires the Google Docs API and this site’s address to be enabled for the app’s Google client.</p></details><p id="setupSourceStatus" role="status"></p><p class="setup-note">Files are copied into this browser. Your originals stay intact. Word, Markdown, text, HTML, and Capsanoto Google Docs source packages are supported. Old .doc files must be downloaded as .docx.</p>';
+    body.innerHTML = '<p class="setup-step">Step 2 of 3 · Choose one source</p><label>Downloaded file<input id="setupFile" type="file" accept=".docx,.txt,.md,.html,.htm,.json"></label><p class="setup-note"><strong>Word combines tabs.</strong> Downloading “all tabs” puts their content into one .docx file. Capsanoto imports that as one document; it cannot reliably rebuild the original tabs. To keep tabs and nesting, use a tab-aware Google Docs source package or direct Google Docs import below. You do not need to download each tab separately.</p><details><summary>Import Google Docs tabs directly</summary><p>Read a Google Doc once, select its tabs, and copy them here. Nothing is written back to Google.</p><label>Google Docs link<input id="setupGoogleUrl" type="url" placeholder="https://docs.google.com/document/d/…"></label><button id="setupReadGoogle" type="button">Read tabs from Google Docs</button><p class="setup-note">Google will ask for read-only Docs access. This requires the Google Docs API and this site’s address to be enabled for the app’s Google client.</p></details><p id="setupSourceStatus" role="status"></p><p class="setup-note">Files are copied into this browser. Your originals stay intact. Word, Markdown, text, HTML, and Capsanoto Google Docs source packages are supported. Old .doc files must be downloaded as .docx.</p>';
     const status = document.getElementById('setupSourceStatus');
-    status.textContent = session.source ? `${session.source.title}: ${session.source.tabs.length} tab(s) ready` : 'No file selected yet.';
+    status.textContent = session.source ? importSourceStatus(session.source) : 'No file selected yet.';
     document.getElementById('setupFile').onchange = async (event) => {
       const file = event.target.files[0];
       if (!file) return;
@@ -216,39 +257,69 @@ function renderProjectSetup() {
     };
     document.getElementById('setupReadGoogle').onclick = () => setupWork(async () => {
       const url = document.getElementById('setupGoogleUrl').value.trim();
-      session.source = null;
-      session.source = await readGoogleDocsSource(url);
+      const source = await readGoogleDocsSource(url);
+      session.source = source;
       session.selected = new Set(session.source.tabs.map((tab) => tab.id));
-      status.textContent = `${session.source.title}: ${session.source.tabs.length} tabs ready`;
+      status.textContent = importSourceStatus(session.source);
     });
   } else {
     const source = session.source;
-    body.innerHTML = `<p class="setup-step">Step 3 of 3 · Review before importing</p><h3>${escapeHtml(source.title)}</h3><p>Select the tabs to copy. Each becomes an editable file; nested tabs keep their parent relationship. You can skip duplicate material such as a separate full-script tab.</p><div id="setupTabList"></div><div class="setup-preview" id="setupPreview" aria-label="Selected tab preview"></div><p class="setup-note">${escapeHtml((source.warnings || []).join(' '))}</p><p class="setup-note">Saves stay in this browser until you download a backup, choose a backup folder, or connect storage. Comments, suggestions, exact page layout, and some embedded objects may not transfer. Review your imported copy before removing originals.</p>`;
+    const word = source.format === 'word';
+    body.innerHTML = `<p class="setup-step">Step 3 of 3 · Review ${word ? 'document' : 'tabs'}</p><h3>${escapeHtml(source.title)}</h3><p>${word ? '<strong>This will import one combined document.</strong> Text from the selected Google tabs may be included, but their names and nesting are not available in this Word file.' : 'Select the tabs to copy. Each becomes a file; a selected child stays nested under its selected parent. You can skip alternate copies such as a full-script tab.'}</p>${word ? '' : '<div class="setup-selection-tools"><label class="sr-only" for="setupTabFilter">Filter tabs</label><input id="setupTabFilter" type="search" placeholder="Find a tab…"><button type="button" id="setupSelectAll">Select all</button><button type="button" id="setupSelectNone">Select none</button></div>'}<p id="setupSelectionCount" class="setup-note" role="status"></p><div id="setupTabList"></div><section id="setupPreviewSection" hidden aria-label="Document preview"><h4 id="setupPreviewTitle"></h4><div class="setup-preview" id="setupPreview" tabindex="0"></div></section><p class="setup-note">${escapeHtml((source.warnings || []).join(' '))}</p><p class="setup-note">Click Preview to read the complete extracted text here. Comments, suggestions, exact page layout, and some embedded objects may not transfer. Check the imported copy before removing originals.</p>`;
     const list = document.getElementById('setupTabList');
     for (const tab of source.tabs) {
-      const row = document.createElement('label');
+      const row = document.createElement('div');
       row.className = 'setup-tab';
+      row.dataset.tabTitle = tab.title.toLowerCase();
       row.style.paddingLeft = `${Math.min(tab.depth || 0, 8) * 18}px`;
+      const label = document.createElement('label');
       const checkbox = document.createElement('input');
-      checkbox.type = 'checkbox';
-      checkbox.checked = session.selected.has(tab.id);
-      checkbox.onchange = () => { checkbox.checked ? session.selected.add(tab.id) : session.selected.delete(tab.id); previewSetupTab(tab); };
+      checkbox.type = 'checkbox'; checkbox.checked = session.selected.has(tab.id);
+      checkbox.dataset.sourceTab = tab.id;
+      checkbox.onchange = () => { checkbox.checked ? session.selected.add(tab.id) : session.selected.delete(tab.id); updateImportSelectionCount(); };
       const title = document.createElement('span');
       title.textContent = `${tab.title} · ${tab.textLength.toLocaleString()} characters`;
       const preview = document.createElement('button');
-      preview.type = 'button';
-      preview.textContent = 'Preview';
-      preview.onclick = () => previewSetupTab(tab);
-      row.append(checkbox, title, preview);
-      list.append(row);
+      preview.type = 'button'; preview.textContent = 'Preview';
+      preview.setAttribute('aria-controls', 'setupPreviewSection'); preview.setAttribute('aria-pressed', 'false');
+      preview.onclick = () => { list.querySelectorAll('button').forEach((button) => button.setAttribute('aria-pressed', String(button === preview))); previewSetupTab(tab); };
+      label.append(checkbox, title); row.append(label, preview); list.append(row);
     }
-    previewSetupTab(source.tabs[0]);
+    updateImportSelectionCount();
+    document.getElementById('setupTabFilter')?.addEventListener('input', (event) => {
+      const query = event.target.value.toLowerCase().trim();
+      list.querySelectorAll('.setup-tab').forEach((row) => { row.hidden = !row.dataset.tabTitle.includes(query); });
+    });
+    const select = (checked) => { session.selected = new Set(checked ? source.tabs.map((tab) => tab.id) : []); list.querySelectorAll('input').forEach((input) => { input.checked = checked; }); updateImportSelectionCount(); };
+    document.getElementById('setupSelectAll')?.addEventListener('click', () => select(true));
+    document.getElementById('setupSelectNone')?.addEventListener('click', () => select(false));
   }
 }
 
+function importSourceStatus(source) {
+  return source.format === 'word' ? `${source.title}: 1 combined Word document ready · original tabs cannot be recovered from this file` : `${source.title}: ${source.tabs.length} tabs ready`;
+}
+
+function updateImportSelectionCount() {
+  document.getElementById('setupSelectionCount').textContent = `${setupSession.selected.size} of ${setupSession.source.tabs.length} ${setupSession.source.format === 'word' ? 'document' : 'tabs'} selected`;
+}
+
+function importPreviewText(html) {
+  const body = new DOMParser().parseFromString(html, 'text/html').body;
+  body.querySelectorAll('br').forEach((br) => br.replaceWith('\n'));
+  body.querySelectorAll('p,h1,h2,h3,h4,h5,h6,li,tr,blockquote,div').forEach((element) => element.append('\n\n'));
+  return body.textContent.replace(/\n{3,}/g, '\n\n').trim();
+}
+
 function previewSetupTab(tab) {
-  const text = new DOMParser().parseFromString(tab.html, 'text/html').body.textContent;
-  document.getElementById('setupPreview').textContent = `${tab.title}\n\n${text.slice(0, 3500)}${text.length > 3500 ? '\n… Preview shortened; the complete text will be imported.' : ''}`;
+  const section = document.getElementById('setupPreviewSection');
+  section.hidden = false;
+  document.getElementById('setupPreviewTitle').textContent = `Previewing: ${tab.title}`;
+  const preview = document.getElementById('setupPreview');
+  preview.textContent = importPreviewText(tab.html);
+  preview.scrollTop = 0;
+  preview.focus({ preventScroll: true });
+  section.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
 }
 
 async function setupWork(operation) {
@@ -292,7 +363,7 @@ async function readImportFile(file) {
     if (!window.mammoth) throw new Error('The Word importer could not load. Refresh and try again.');
     const converted = await mammoth.convertToHtml({ arrayBuffer: await file.arrayBuffer() }, { externalFileAccess: false });
     html = safeDocumentHtml(converted.value);
-    warnings.push('Word files are imported as one file. Use direct Google Docs import for individual tabs.');
+    warnings.push('Word imports are combined documents. Tab-aware source packages and direct Google Docs imports preserve separate tabs.');
     warnings.push(...converted.messages.map((message) => message.message));
   } else {
     const text = new TextDecoder('utf-8', { fatal: true }).decode(await file.arrayBuffer()).replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n');
@@ -307,7 +378,7 @@ async function readImportFile(file) {
     else throw new Error('Choose a .docx, .txt, .md, .html, or Google Docs source .json file.');
   }
   if (!new DOMParser().parseFromString(html, 'text/html').body.textContent.trim() && !/<img\b/.test(html)) throw new Error('This file has no importable content.');
-  return { title, warnings, sourceKey: '', tabs: [{ id: 'file', title, html, textLength: new DOMParser().parseFromString(html, 'text/html').body.textContent.length, parentId: '', depth: 0 }] };
+  return { title, warnings, format: ext === 'docx' ? 'word' : ext, sourceKey: '', tabs: [{ id: 'file', title, html, textLength: new DOMParser().parseFromString(html, 'text/html').body.textContent.length, parentId: '', depth: 0 }] };
 }
 
 function googleDocsToImportSource(doc) {
@@ -320,6 +391,7 @@ function googleDocsToImportSource(doc) {
       const tabId = properties.tabId;
       const documentTab = tab.documentTab || tab;
       if (tabId) {
+        if (!Array.isArray(documentTab.body?.content)) throw new Error('This source contains tab names without their content. Use a complete tab-aware source package.');
         const html = safeDocumentHtml(googleDocsElementsHtml(documentTab.body?.content || [], documentTab, warnings));
         tabs.push({ id: tabId, title: properties.title || 'Untitled tab', parentId: properties.parentTabId || parentId, depth, html, textLength: new DOMParser().parseFromString(html, 'text/html').body.textContent.length });
       }
@@ -340,7 +412,7 @@ function googleDocsToImportSource(doc) {
     tab.depth = 0;
     while (parent && !seen.has(parent.id)) { tab.depth++; seen.add(parent.id); parent = byId.get(parent.parentId); }
   }
-  return { title: doc.title || 'Google Doc', sourceKey: doc.documentId, tabs, warnings: [...warnings] };
+  return { title: doc.title || 'Google Doc', format: 'google-tabs', sourceKey: doc.documentId, tabs, warnings: [...warnings] };
 }
 
 function googleDocsElementsHtml(elements, tab, warnings) {
@@ -410,7 +482,11 @@ async function readGoogleDocsSource(url) {
   });
   try {
     const response = await fetch(`https://docs.googleapis.com/v1/documents/${encodeURIComponent(id)}?includeTabsContent=true`, { headers: { Authorization: `Bearer ${token}` } });
-    if (!response.ok) throw new Error(`Google Docs could not be read (${response.status}). Check account access and Google Docs API setup, or use a downloaded .docx.`);
+    if (!response.ok) {
+      const problem = await response.json().catch(() => ({}));
+      const detail = problem.error?.message || 'Check document access and Google Docs API setup.';
+      throw new Error(`Google Docs could not be read (${response.status}). ${detail} A selected downloaded file is still available. A Word download combines tabs; use a tab-aware source package to preserve them.`);
+    }
     return googleDocsToImportSource(await response.json());
   } finally {
     // The read-only token stays only in this operation's memory.

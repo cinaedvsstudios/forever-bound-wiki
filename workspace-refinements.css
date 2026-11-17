@@ -1,0 +1,38 @@
+/* Plain disclosure rows: the metadata, summary and outline share one level. */
+#writingRoomCards .document-disclosure { display: block !important; margin: 8px 0; border: 1px solid var(--doc-row-border, #615243) !important; border-radius: 9px !important; background: transparent !important; box-shadow: none !important; padding: 0 !important; }
+#writingRoomCards .document-disclosure > summary { display: list-item !important; list-style: disclosure-closed inside !important; border: 0 !important; border-radius: 8px !important; padding: 9px 10px !important; margin: 0 !important; background: rgba(95,30,102,.28) !important; box-shadow: none !important; color: var(--doc-text-color, #fff0ce) !important; font-size: 12px; cursor: pointer; }
+#writingRoomCards .document-disclosure[open] > summary { list-style-type: disclosure-open !important; border-bottom: 1px solid #615243 !important; border-radius: 8px 8px 0 0 !important; }
+#writingRoomCards .document-disclosure-body, #writingRoomCards .metadata-pill-body { display: block !important; padding: 10px !important; border: 0 !important; border-radius: 0 !important; background: transparent !important; box-shadow: none !important; overflow-wrap: anywhere; }
+#writingRoomCards .document-disclosure:not([open]) > .document-disclosure-body, #writingRoomCards .document-disclosure:not([open]) > .metadata-pill-body { display: none !important; }
+#writingRoomCards .metadata-pill.document-disclosure { border-color: var(--metadata-pill-border,#615243) !important; background-color: var(--metadata-pill-bg,transparent) !important; }
+#writingRoomCards .metadata-pill.document-disclosure > summary, #writingRoomCards .metadata-pill-body p { color: var(--metadata-pill-text-color,#fff0ce) !important; font-size: var(--metadata-pill-text-size,12px) !important; }
+#writingRoomCards .document-disclosure-body p, #writingRoomCards .metadata-pill-body p { margin: 4px 0; font-size: 12px; line-height: 1.5; }
+.outline-search-label { display: grid; gap: 6px; font-size: 11px; color: #c7b08e; }
+.outline-search-label input { width: 100%; min-width: 0; box-sizing: border-box; padding: 7px 9px; font-size: 12px; border-radius: 6px; }
+.outline-results { display: grid; gap: 3px; max-height: 300px; overflow-y: auto; }
+#writingRoomCards .outline-results button { display: block; width: 100%; text-align: left; white-space: normal; line-height: 1.4; font-size: 12px; padding: 8px 7px 8px calc(6px + (var(--outline-level) - 1)*7px); border: 0 !important; border-radius: 4px !important; background: rgba(0,0,0,.2) !important; box-shadow: none !important; color: var(--doc-text-color, #fff0ce) !important; }
+#writingRoomCards .outline-results button:hover, #writingRoomCards .outline-results button:focus-visible { background: rgba(0,112,182,.35) !important; outline: 1px solid #0070b6; }
+.room-stacked #writingRoomPanel { position: relative !important; left: auto !important; top: auto !important; transform: none !important; width: calc(100vw - 32px) !important; min-width: 0 !important; max-width: calc(100vw - 32px) !important; height: 32vh !important; min-height: 180px !important; max-height: 320px !important; margin: 12px 16px !important; }
+
+/* Settings: one aligned list of controls in the editing pane, with a separate preview. */
+#settingsPanel .settings-title-row { display: grid; grid-template-columns: auto minmax(180px,1fr); align-items: center; gap: 16px; min-width: 0; flex: 1; }
+#settingsPanel .settings-search-tools { display: flex; align-items: center; gap: 7px; min-width: 0; }
+#settingsSearchInput { flex: 1; min-width: 0; }
+#settingsPanel .settings-menu { display: flex; flex-wrap: wrap; gap: 7px; padding: 10px 14px; }
+#settingsPanel .settings-menu button { border-radius: 7px; padding: 8px 11px; font-size: 12px; }
+#settingsPanel .designer-heading-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding-bottom: 12px; }
+#settingsPanel .designer-heading-row h3 { margin: 0; }
+#settingsPanel .designer-expand-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+#settingsPanel .designer-expand-actions button { font-size: 11px; padding: 7px 10px; border-radius: 6px; }
+#settingsPanel .design-editor-grid { display: grid; grid-template-columns: minmax(310px,1fr) minmax(230px,.65fr); gap: 18px; min-height: 0; }
+#settingsPanel .design-controls { min-width: 0; padding-right: 10px; }
+#settingsPanel .element-designer-card { margin: 0 0 10px !important; padding: 0 12px 12px !important; border-radius: 10px !important; }
+#settingsPanel .element-designer-card:not([open]) { padding-bottom: 0 !important; }
+#settingsPanel .element-designer-card[open] { display: grid !important; grid-template-columns: minmax(0,1fr) !important; grid-auto-flow: row !important; gap: 9px !important; }
+#settingsPanel .element-designer-card > summary { margin: 0 -12px 3px !important; padding: 11px 12px !important; border-radius: 9px !important; font-size: 14px; }
+#settingsPanel .element-designer-card > label { display: grid !important; grid-template-columns: minmax(0,1fr) 150px !important; gap: 14px !important; align-items: center; margin: 0 !important; min-height: 34px; color: var(--label-text, #c7b08e) !important; font-size: 12px; }
+#settingsPanel .element-designer-card > label > input:not([type="color"]):not([type="checkbox"]), #settingsPanel .element-designer-card > label > select { width: 150px !important; min-width: 0 !important; box-sizing: border-box; border-radius: 6px; padding: 7px 9px; }
+#settingsPanel .element-designer-card > label > input[type="color"] { justify-self: end; width: 52px !important; height: 30px !important; border-radius: 6px !important; }
+#settingsPanel .icon-input-preview { justify-self: end; }
+#settingsPanel .design-preview-column { min-width: 0; padding-left: 16px; }
+@media(max-width: 760px) { #settingsPanel .design-editor-grid { grid-template-columns: minmax(0,1fr); } #settingsPanel .design-preview-column { display: none; } #settingsPanel .settings-title-row { grid-template-columns: 1fr; gap: 8px; } #settingsPanel .element-designer-card > label { grid-template-columns: minmax(0,1fr) 120px !important; } #settingsPanel .element-designer-card > label > input:not([type="color"]):not([type="checkbox"]), #settingsPanel .element-designer-card > label > select { width: 120px !important; } }

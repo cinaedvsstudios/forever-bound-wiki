@@ -18,9 +18,46 @@
 #setupTabList { max-height: 260px; overflow-y: auto; border-block: 1px solid #796084; padding: 10px 0; }
 .setup-tab { display: flex; align-items: center; gap: 9px; padding-block: 6px; font-size: 13px; }
 .setup-tab span { flex: 1; }
+#setupBody .setup-tab > label { flex: 1; display: flex; align-items: center; gap: 9px; min-width: 0; margin: 0; font-weight: 400; }
+.setup-tab button[aria-pressed="true"] { outline: 2px solid #a6cfe5; outline-offset: 2px; }
+.setup-selection-tools { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.setup-selection-tools input { flex: 1; }
+#setupPreviewSection { border-top: 1px solid #796084; margin-top: 14px; }
+#setupPreviewSection h4 { margin: 12px 0 0; color: #fff0ce; }
 .setup-tab input { accent-color: #a264ad; }
 .setup-preview { white-space: pre-wrap; overflow: auto; max-height: 190px; margin: 16px 0; padding: 14px; background: #130e18; border: 1px solid #796084; font-size: 13px; }
 #setupError { color: #ffc7a7; padding: 0 24px; white-space: pre-wrap; }
 #setupError:empty { display: none; }
 #storageWarning { position: fixed; bottom: 12px; left: 12px; right: 12px; z-index: 20000; padding: 14px; border: 2px solid #efbd72; border-radius: 10px; background: #4a231c; color: #fff0ce; display: flex; gap: 20px; align-items: center; justify-content: space-between; }
 @media(max-width: 540px) { #projectSetupForm header, #projectSetupForm footer, #setupBody { padding: 15px; } .setup-tab { flex-wrap: wrap; } .project-quick-actions #saveStatus { flex-basis: 100%; text-align: center; } }
+
+/* A small set of everyday actions, with backups and owner setup on separate pages. */
+#projectSettingsPanel { width: min(620px, calc(100vw - 24px)); max-width: calc(100vw - 24px); max-height: calc(100dvh - 100px); min-height: 0; }
+#projectSettingsPanel:not([hidden]) { display: flex; flex-direction: column; overflow: hidden !important; }
+#projectSettingsPanel > header { flex: 0 0 auto; padding: 16px 20px; }
+#projectSettingsPanel > header h2 { font-size: 21px; margin: 0; }
+.project-settings-tabs { display: flex; flex: 0 0 auto; gap: 6px; padding: 10px 16px; border-bottom: 1px solid #796084; background: #211725; }
+.project-settings-tabs button { flex: 1; font-size: 12px; padding: 9px 7px; border-radius: 7px; }
+.project-settings-tabs button[aria-selected="true"] { outline: 1px solid #a6cfe5; color: #fff0ce !important; }
+.project-settings-body { min-height: 0; overflow-y: auto; padding: 4px 16px 16px; }
+#projectSettingsPanel .project-settings-section { margin: 12px 0; padding: 16px; border-radius: 12px; }
+#projectSettingsPanel .project-settings-section h3 { margin: 0 0 14px; font-size: 17px; }
+#projectSettingsPanel p, #projectSettingsPanel label, #projectSettingsPanel .panel-help { font-size: 13px; line-height: 1.6; color: #d9cbbc !important; }
+.storage-account { display: grid; gap: 3px; margin-bottom: 12px; }
+.storage-provider { color: #a6cfe5; font-size: 12px; text-transform: uppercase; letter-spacing: .1em; }
+.storage-account strong { font-size: 19px; color: #fff0ce; }
+.storage-description { margin: 0 0 15px; }
+.storage-sync-status { padding: 10px 12px; margin: 0 0 15px; border-left: 3px solid #a6cfe5; background: #160f1c; border-radius: 4px; }
+.storage-main-actions { display: flex; gap: 10px; flex-wrap: wrap; margin: 0 0 15px; }
+.storage-main-actions button { padding: 10px 16px; }
+.storage-option { display: flex !important; align-items: flex-start; gap: 10px; margin: 14px 0; }
+.storage-option input { flex: 0 0 auto; margin-top: 4px; accent-color: #a264ad; }
+.storage-account-options, .project-developer-setup { border-top: 1px solid #796084; padding-top: 14px; margin-top: 18px; }
+.storage-account-options summary, .project-developer-setup summary { font-size: 13px; cursor: pointer; }
+.project-developer-setup { padding: 16px; }
+.project-developer-setup input { width: 100%; box-sizing: border-box; margin: 7px 0 12px; }
+#dropboxCallbackAddress { overflow-wrap: anywhere; }
+.project-info-list { display: grid; grid-template-columns: max-content 1fr; gap: 8px 14px; margin: 12px 0 0; font-size: 13px; }
+.project-info-list dt { color: #d9cbbc; }
+.project-info-list dd { margin: 0; overflow-wrap: anywhere; }
+@media(max-width: 540px) { .project-settings-tabs { padding: 8px; } .project-settings-tabs button { font-size: 11px; } .project-settings-body { padding-inline: 8px; } .project-info-list { grid-template-columns: 1fr; gap: 3px; } }

@@ -12,6 +12,16 @@ Capsanoto keeps a themed collection of writing documents: scripts, a series bibl
 
 A `.docx` download is imported as one file because Word exports do not reliably carry Google's tab relationships. A `capsanoto-google-docs-source` JSON package preserves the tabs supplied by Google. Direct Google Docs reading requires Google Docs API access and an authorized site origin for the configured Google client. Google Docs is only an import source; this workflow does not write back to Google.
 
+**Selecting “all tabs” in Google’s Word download includes their text in one combined file. It does not give Capsanoto a reliable tab tree to rebuild.** You do not need to download every tab separately: use one complete tab-aware source package or the direct Google importer when its account/API access is configured. The import screen identifies combined Word files before you confirm. Preview now opens the complete extracted text with paragraph breaks.
+
+## Navigate a long document
+
+Open **Room**, expand a document card, and open **Headings & scenes**. Search the list, then click a heading or scene label to jump directly to it. The list includes headings 1–6, explicit bookmarks, and short screenplay labels such as `Scene 12: …` or `INT. CASTLE - NIGHT`. Ordinary prose is not treated as a scene. Document tags can also match the search. Repeated heading titles remain separate jump targets.
+
+**Metadata**, **Summary**, and **Headings & scenes** are separate collapsed rows. Their open state and outline search are kept while the Room refreshes. On a wide screen, opening or resizing the Room fits the writing pad beside it. Closing the Room restores the pad’s previous width. On a narrow screen, the Room and pad stack instead of covering one another.
+
+Specnoto has a resize grip at the bottom right. Drag it, or focus the grip and use arrow keys (Shift for larger steps). Its size is remembered in this browser.
+
 Text, headings, emphasis, lists, and tables are supported. Review Word formatting after import. Direct Google imports mark images, drawings, footnotes, and smart chips with placeholders. Comments, suggestions, and precise page layouts are not migrated. Keep the originals until you have reviewed the imported copy and made a backup.
 
 ## Where your files are saved
@@ -21,6 +31,16 @@ Text, headings, emphasis, lists, and tables are supported. Review Word formattin
 - **Download Project Backup:** creates a portable `.caps.json` file containing original editor content, document metadata, TCards, hierarchy, and Markdown copies. Restore it using **Import Project Backup**.
 - **Backup folder:** Chrome and Edge can mirror the project into an empty folder on your HDD. The complete project JSON includes original editor content. Markdown files are convenient secondary copies. Existing folders are opened separately, and a folder binding belongs to one project.
 - **Dropbox:** optional read/write sync to the connected person's private app folder, normally `Apps/Capsanoto`. No server account or paid Capsanoto subscription is needed. Dropbox's own storage limits apply.
+
+Project Settings separates **Storage**, **Backups & files**, and **Project details**. Account setup for the app owner is under Project details, not among everyday sync actions.
+
+### JSON or Markdown?
+
+The complete `.caps.json` project copy remains the restore and Dropbox sync format. It preserves original editor HTML, styles, IDs, TCards, links, and the document tree. Replacing it with plain Markdown would lose some of that information unless a separate metadata system was introduced.
+
+Use **Room → Project Settings → Backups & files → Download Markdown copy** for a portable ZIP containing an `.md` file per document, nested parent folders, separate raster image assets, TCard text, and a document map. This copy works for reading or editing elsewhere; it does not automatically update the app or replace the complete backup. Some formatting is retained as inline HTML. Embedded images, rather than JSON punctuation, can account for most of a large project’s size.
+
+The main Settings designer uses an aligned list of labels and controls. Apply saves to the project. Image fields can be cleared; custom command labels are honored; Use Defaults applies section defaults while retaining the section’s custom values for when inheritance is turned off.
 
 ## Connect Dropbox
 

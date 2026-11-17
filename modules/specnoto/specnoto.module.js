@@ -28,6 +28,7 @@
 
   const defaultSettings = {
     width: 300,
+    height: 550,
     accent: '#e88f69',
     bg: '#211812',
     panel: '#28133f',
@@ -203,7 +204,9 @@
           top: 72px;
           right: 50px;
           width: var(--app-width);
-          height: 550px;
+          height: var(--app-height, 550px);
+          min-width: 260px; min-height: 240px;
+          max-width: calc(100vw - 24px); max-height: calc(100dvh - 24px);
           background: var(--bg);
           color: var(--text);
           font-size: var(--font-size);
@@ -213,9 +216,14 @@
           flex-direction: column;
           box-shadow: 0 16px 42px rgba(0,0,0,0.72);
           overflow: hidden;
-          transition: width 0.25s ease;
+          transition: none;
         }
-        #specnoto-app.expanded { width: calc(var(--app-width) + 450px); }
+        #specnoto-app.expanded { width: var(--expanded-width, calc(var(--app-width) + 450px)); }
+        #specnoto-app:not(.expanded) .col-search { width: 100%; flex: 1; min-width: 0; }
+        #specnoto-app.expanded .col-search { width: min(42%, var(--app-width)); min-width: 160px; }
+        .app-body, .col-search, .col-preview { min-height: 0; }
+        #specnoto-resize { position: absolute; right: 0; bottom: 0; width: 24px; height: 24px; border: 0; background: transparent; color: var(--accent); cursor: nwse-resize; z-index: 150; touch-action: none; }
+        #specnoto-resize:focus-visible { outline: 2px solid var(--accent); outline-offset: -3px; }
 
         .app-header {
           display: flex;
@@ -289,7 +297,7 @@
         ::-webkit-scrollbar-thumb:hover { background: var(--accent); border: 2px solid transparent; background-clip: padding-box; }
       </style>
 
-      <div id="specnoto-app" role="dialog" aria-label="Specnoto search panel">
+      <div id="specnoto-app" role="dialog" aria-label="Specnoto search panel"><button id="specnoto-resize" type="button" aria-label="Resize Specnoto; arrow keys change width and height" title="Drag to resize Specnoto">↘</button>
         <div class="app-header" id="drag-handle">
           <div class="app-title">📜 Specnoto <span class="app-subtitle">Capsanoto module</span></div>
           <button class="app-btn-top" id="btn-close" title="Close" type="button">✖</button>
@@ -356,7 +364,11 @@
     state.app.style.setProperty('--border', settings.border || '#724837');
     state.app.style.setProperty('--font-size', settings.fontSize + 'px');
     state.app.style.setProperty('--ui-padding', settings.uiPadding + 'px');
-    state.app.style.setProperty('--app-width', settings.width + 'px');
+    state.app.style.setProperty('--app-width', Math.max(260, Number(settings.width) || 300) + 'px');
+    state.app.style.setProperty('--app-height', Math.max(240, Number(settings.height) || 550) + 'px');
+    if (settings.expandedWidth) state.app.style.setProperty('--expanded-width', settings.expandedWidth + 'px');
+    state.app.style.removeProperty('width');
+    state.app.style.removeProperty('height');
 
     setText('btn-settings', settings.emSettings);
     setText('btn-back', settings.emBack);
@@ -544,6 +556,46 @@
     });
 
     handle.addEventListener('pointerdown', startAppDrag);
+    const resize = state.shadow.getElementById('specnoto-resize');
+    let resizing = null;
+    const persistSize = () => { storageSet({ [SETTINGS_KEY]: state.appSettings }); setValue('cfg-width', state.appSettings.width); };
+    const sizeTo = (width, height) => {
+      const rect = state.app.getBoundingClientRect();
+      const availableWidth = Math.max(260, window.innerWidth - 24);
+      const availableHeight = Math.max(240, window.innerHeight - 24);
+      const nextWidth = Math.max(260, Math.min(width, availableWidth));
+      const nextHeight = Math.max(240, Math.min(height, availableHeight));
+      state.app.style.left = Math.max(12, Math.min(rect.left, window.innerWidth - nextWidth - 12)) + 'px';
+      state.app.style.right = 'auto';
+      state.app.style.top = Math.max(12, Math.min(rect.top, window.innerHeight - nextHeight - 12)) + 'px';
+      if (state.app.classList.contains('expanded')) {
+        state.appSettings.expandedWidth = nextWidth;
+        state.app.style.setProperty('--expanded-width', nextWidth + 'px');
+      } else state.appSettings.width = nextWidth;
+      state.appSettings.height = nextHeight;
+      state.app.style.setProperty('--app-width', state.appSettings.width + 'px');
+      state.app.style.setProperty('--app-height', nextHeight + 'px');
+    };
+    resize.addEventListener('pointerdown', (event) => {
+      if (event.button !== undefined && event.button !== 0) return;
+      event.preventDefault(); event.stopPropagation();
+      const rect = state.app.getBoundingClientRect();
+      // Anchor the left edge before changing width; a right-anchored panel otherwise moves away from the pointer.
+      state.app.style.left = Math.max(12, rect.left) + 'px'; state.app.style.right = 'auto';
+      resizing = { x: event.clientX, y: event.clientY, width: rect.width, height: rect.height, pointerId: event.pointerId };
+      resize.setPointerCapture?.(event.pointerId);
+    });
+    resize.addEventListener('pointermove', (event) => { if (resizing) { event.preventDefault(); sizeTo(resizing.width + event.clientX - resizing.x, resizing.height + event.clientY - resizing.y); } });
+    const finish = () => { if (!resizing) return; try { resize.releasePointerCapture?.(resizing.pointerId); } catch {} resizing = null; persistSize(); };
+    resize.addEventListener('pointerup', finish); resize.addEventListener('pointercancel', finish);
+    resize.addEventListener('keydown', (event) => {
+      if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) return;
+      event.preventDefault(); event.stopPropagation();
+      const rect = state.app.getBoundingClientRect(); const step = event.shiftKey ? 50 : 10;
+      sizeTo(rect.width + (event.key === 'ArrowRight' ? step : event.key === 'ArrowLeft' ? -step : 0), rect.height + (event.key === 'ArrowDown' ? step : event.key === 'ArrowUp' ? -step : 0));
+      persistSize();
+    });
+    window.addEventListener('resize', () => { if (state.visible) { restorePosition(); const rect = state.app.getBoundingClientRect(); sizeTo(rect.width, rect.height); } });
     tabsContainer.addEventListener('wheel', handleTabsWheel, { passive: false });
     tabsContainer.addEventListener('pointerdown', startTabsDrag);
     tabsContainer.addEventListener('pointermove', moveTabsDrag);

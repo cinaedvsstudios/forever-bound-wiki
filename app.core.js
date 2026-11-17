@@ -477,6 +477,7 @@ async function startEditor() {
   startFolderModeReminderLoop();
   updateFolderModeStatus();
   initializeProjectSetup();
+  initializeDocumentNavigation();
   await initializeDropboxStorage();
 }
 
@@ -1125,7 +1126,7 @@ function getBookmarks() {
 }
 
 function ensureHeadingIds() {
-  [...els.editor.querySelectorAll("h1, h2, h3")].forEach((heading) => {
+  [...els.editor.querySelectorAll("h1, h2, h3, h4, h5, h6")].forEach((heading) => {
     if (!heading.id) heading.id = uniqueBookmarkId(slugify(heading.textContent || "section"));
   });
   syncEditorToDocument(false);
@@ -1316,7 +1317,15 @@ function stopWritingSurfaceResize(event) {
   document.body.classList.remove("is-resizing-writing-surface");
   saveWritingSurfaceLayout();
   updateWritingSurfaceMetrics();
-  queueLocalSave?.();
+  markDirty("Writing surface size saved");
+  if (workspaceLayoutSnapshot) {
+    const width = els.writingSurfaceShell.getBoundingClientRect().width;
+    workspaceLayoutSnapshot.preferredWidth = width;
+    workspaceLayoutSnapshot.rootWidth = `${width}px`;
+    const storedWidth = workspaceLayoutSnapshot.nodes[0][1].find(([property]) => property === 'width');
+    storedWidth[1] = `${width}px`; storedWidth[2] = 'important';
+  }
+  scheduleRoomWorkspaceLayout();
 }
 
 function handleEditorScroll() {
@@ -2367,6 +2376,7 @@ function renderWritingRoomCards() {
   ensureFilingTabs();
   els.writingRoomTitle.textContent = state.writingRoomName || "Writing Room";
   const groups = filingCabinetTree();
+  const savedCabinetScroll = captureCabinetView();
   const groupHtml = groups.map((group, groupIndex) => `
     <details class="writing-room-group" data-group-id="${escapeAttr(group.id)}" ${groupIndex === 0 || group.locked ? "open" : ""}>
       <summary><span class="card-arrow">›</span><span class="folder-icon">${groupIcon(group)}</span><strong ${inlineEditAttrs("group", group.id, "label")}>${escapeHtml(group.label)}</strong><button type="button" class="lock-button" title="Keep folder expanded" data-group-action="lock" data-group-id="${escapeAttr(group.id)}">${group.locked ? "🔒" : "🔓"}</button>${state.filingEditMode ? `<span class="filing-group-actions"><button type="button" title="Delete folder" aria-label="Delete folder" data-group-action="delete" data-group-id="${escapeAttr(group.id)}">❌</button></span>` : ""}</summary>
@@ -2380,6 +2390,7 @@ function renderWritingRoomCards() {
   const trashHtml = renderTrashSection();
   els.writingRoomPanel?.querySelector(":scope > .filing-jump-rail")?.remove();
   els.writingRoomCards.innerHTML = groupHtml + trashHtml;
+  restoreCabinetView(savedCabinetScroll);
   if (els.writingRoomPanel) {
     els.writingRoomPanel.insertAdjacentHTML("beforeend", rail);
     els.writingRoomPanel.querySelector(":scope > .filing-jump-rail")?.addEventListener("click", handleWritingRoomCardClick);
@@ -2468,14 +2479,15 @@ function renderWritingRoomCard(doc, depth = 0) {
         <button type="button" title="Delete" data-card-action="delete" data-doc-id="${escapeAttr(doc.id)}">❌</button>
         <button type="button" title="Copy URL" data-card-action="copy" data-doc-id="${escapeAttr(doc.id)}">🔗</button>
       </span>
-      <details class="metadata-pill"><summary>Meta data</summary><div class="metadata-pill-body">
+      <details class="metadata-pill document-disclosure" data-disclosure="metadata"><summary>Metadata</summary><div class="metadata-pill-body">
         <p>Type: <span ${inlineEditAttrs("doc", doc.id, "type")}>${escapeHtml(fileType)}</span></p>
         <p>ID: <span ${inlineEditAttrs("doc", doc.id, "id")}>${escapeHtml(doc.id)}</span></p>
         ${doc.parentDocumentId ? `<p>Parent: <span>${escapeHtml(state.documents.find((item) => item.id === doc.parentDocumentId)?.title || doc.parentDocumentId)}</span></p>` : ""}
         <p>Tags: <span ${inlineEditAttrs("doc", doc.id, "tags")}>${escapeHtml(tags.join(", ") || "No tags")}</span></p>
         <p>Updated ${escapeHtml(updated)}</p>
       </div></details>
-      <p>${escapeHtml(preview)}</p>
+      <details class="document-disclosure" data-disclosure="summary"><summary>Summary</summary><div class="document-disclosure-body"><p>${escapeHtml(preview)}</p></div></details>
+      ${renderDocumentOutlineSection(doc)}
       ${childHtml}
       ${renderDeprecatedVersions(doc)}
     </div>
@@ -3983,11 +3995,8 @@ function updateProjectSettingsStatus(message = "") {
   const active = activeDocument?.();
   const storageMode = "Browser autosave · optional HDD mirror · optional Dropbox sync";
   if (els.projectInfoStatus) {
-    const disk = state.folderMode.lastDiskSaveAt ? new Date(state.folderMode.lastDiskSaveAt).toLocaleString() : "never";
-    const online = dropboxConnection ? dropboxStatus : "Dropbox not connected";
-    const design = state.designSettings && Object.keys(state.designSettings).length ? "Writing Room theme active" : "Default theme";
-    const onlineProject = "Google Docs is an import source only";
-    els.projectInfoStatus.innerHTML = `<strong>${escapeHtml(state.writingRoomName || "Writing Room")}</strong><br>Active file: ${escapeHtml(active?.title || "No active file")}<br>Storage: ${escapeHtml(storageMode)}<br>${escapeHtml(onlineProject)}<br>Design: ${escapeHtml(design)}<br>Dropbox: ${escapeHtml(online)}<br>Last HDD backup: ${escapeHtml(disk)}`;
+    els.projectInfoStatus.innerHTML = `<strong>${escapeHtml(state.writingRoomName || 'Writing Room')}</strong><p>${state.documents.length} document(s) · edits save in this browser</p><dl class="project-info-list"><dt>Open document</dt><dd>${escapeHtml(active?.title || 'None')}</dd><dt>Online copy</dt><dd>${escapeHtml(dropboxConnection ? dropboxStatus : 'Dropbox not connected')}</dd><dt>HDD backup</dt><dd>${escapeHtml(state.folderMode.lastDiskSaveAt ? new Date(state.folderMode.lastDiskSaveAt).toLocaleString() : 'Not created yet')}</dd></dl>`;
+
   }
   if (els.googleDriveStatus) {
     const expires = state.googleDrive.expiresAt ? new Date(state.googleDrive.expiresAt).toLocaleString() : "not available";
@@ -5666,18 +5675,47 @@ function extraDesignInputs() {
 
 
 function compactTopCommandLabel(key, value) {
-  const fixed = {
-    topIconWritingRoom: "ROOM",
-    topIconFormat: "FORMAT",
-    topIconInsert: "INSERT",
-    topIconSubnoto: "SUBNOTO",
-    topIconSpecnoto: "SPECNOTO",
-    topIconHelp: "HELP",
-    topIconSettings: "SETTINGS",
-  };
-  if (fixed[key]) return fixed[key];
-  const cleaned = String(value || "").trim().replace(/[\/|].*$/, "").split(/\s+/)[0] || "TOOL";
-  return cleaned.toUpperCase();
+  return String(value || 'Tool').trim().replace(/\s+/g, ' ').slice(0, 24).toUpperCase();
+}
+
+function designColorValue(value) {
+  const hex = normalizeHexColor(value);
+  if (hex) return hex;
+  const rgb = /^rgba?\(\s*([\d.]+)[, ]+([\d.]+)[, ]+([\d.]+)/i.exec(String(value));
+  return rgb ? '#' + rgb.slice(1, 4).map((n) => Math.max(0, Math.min(255, Math.round(Number(n)))).toString(16).padStart(2, '0')).join('') : '#000000';
+}
+
+function setDesignColorInput(input, value, key) {
+  if (!input) return;
+  input.dataset.savedColor = String(value);
+  input.dataset.savedColorHex = designColorValue(value);
+  if (key) input.dataset.colorSettingKey = key;
+  input.value = input.dataset.savedColorHex;
+}
+
+function readDesignControl(input) {
+  if (input.type === 'checkbox') return input.checked;
+  if (input.type === 'color' && input.dataset.savedColorHex === input.value) return input.dataset.savedColor;
+  if (input.type === 'number') {
+    let value = Number(input.value);
+    if (!Number.isFinite(value)) value = Number(input.defaultValue || 0);
+    if (input.min !== '') value = Math.max(value, Number(input.min));
+    if (input.max !== '') value = Math.min(value, Number(input.max));
+    input.value = String(value); return input.value;
+  }
+  return input.value;
+}
+
+function effectiveExtraDesignSettings(settings) {
+  const effective = { ...settings };
+  const defaults = { ...defaultDesignSettings(), ...capsanotoForcedExtraDesignSettings() };
+  document.querySelectorAll('[data-inherit-section]').forEach((toggle) => {
+    if (!settings['inherit_' + toggle.dataset.inheritSection]) return;
+    toggle.closest('.element-designer-card').querySelectorAll('[data-design-key]').forEach((input) => {
+      effective[input.dataset.designKey] = defaults[input.dataset.designKey] ?? input.defaultValue;
+    });
+  });
+  return effective;
 }
 
 function applyTopCommandIconSettings(settings) {
@@ -5743,13 +5781,16 @@ function extraDesignDefaults() {
 }
 
 function applyExtraDesignSettings(settings) {
+  const effective = effectiveExtraDesignSettings(settings);
   const root = document.documentElement;
   extraDesignInputs().forEach((input) => {
     const key = input.dataset.designKey;
-    const value = settings[key] ?? input.value;
-    if (input.type === "checkbox") input.checked = Boolean(value);
-    else input.value = value;
-    if (input.dataset.cssVar && value !== undefined && value !== "") {
+    const storedValue = settings[key] ?? input.value;
+    const value = effective[key] ?? storedValue;
+    if (input.type === "checkbox") input.checked = Boolean(storedValue);
+    else if (input.type === "color") setDesignColorInput(input, storedValue);
+    else input.value = storedValue;
+    if (input.dataset.cssVar && value !== undefined) {
       const suffix = input.dataset.suffix || "";
       let cssValue = String(value);
       if (input.type === "checkbox" && (input.dataset.trueValue || input.dataset.falseValue)) {
@@ -5778,7 +5819,7 @@ function applyExtraDesignSettings(settings) {
 
 function collectExtraDesignSettings(settings) {
   extraDesignInputs().forEach((input) => {
-    settings[input.dataset.designKey] = input.type === "checkbox" ? input.checked : input.value;
+    settings[input.dataset.designKey] = readDesignControl(input);
   });
   document.querySelectorAll("[data-inherit-section]").forEach((input) => {
     settings[`inherit_${input.dataset.inheritSection}`] = input.checked;
@@ -5815,36 +5856,36 @@ function loadDesignForm() {
   const settings = currentDesignSettings();
   state.favoriteColors = validFavoriteColors(settings.favoriteColors);
   renderFavoriteColors();
-  els.designButtonBg.value = settings.buttonBg;
-  els.designBorderColor.value = settings.borderColor;
-  els.designTextColor.value = settings.textColor;
+  setDesignColorInput(els.designButtonBg, settings.buttonBg, 'buttonBg');
+  setDesignColorInput(els.designBorderColor, settings.borderColor, 'borderColor');
+  setDesignColorInput(els.designTextColor, settings.textColor, 'textColor');
   els.designFontSize.value = settings.fontSize;
   if (els.designFontFamily) els.designFontFamily.value = settings.fontFamily;
   if (els.titleIconScale) els.titleIconScale.value = settings.titleIconScale;
   els.designBold.checked = settings.bold;
   els.designBgImage.value = settings.bgImage;
-  els.dialogBgColor.value = settings.dialogBg;
-  els.dialogBorderColor.value = settings.dialogBorder;
-  els.dialogShadowColor.value = settings.dialogShadow;
-  els.dialogTextColor.value = settings.dialogText;
+  setDesignColorInput(els.dialogBgColor, settings.dialogBg, 'dialogBg');
+  setDesignColorInput(els.dialogBorderColor, settings.dialogBorder, 'dialogBorder');
+  setDesignColorInput(els.dialogShadowColor, settings.dialogShadow, 'dialogShadow');
+  setDesignColorInput(els.dialogTextColor, settings.dialogText, 'dialogText');
   els.dialogFontSize.value = settings.dialogFontSize;
   els.dialogBold.checked = settings.dialogBold;
-  els.dialogButtonBg.value = settings.dialogButtonBg;
-  els.dialogButtonBorder.value = settings.dialogButtonBorder;
-  els.dialogButtonText.value = settings.dialogButtonText;
-  els.dialogButtonShadow.value = settings.dialogButtonShadow;
-  els.labelTextColor.value = settings.labelText;
-  els.dynamicTextColor.value = settings.dynamicText;
-  els.scrollbarTrackColor.value = settings.scrollbarTrack;
-  els.scrollbarThumbColor.value = settings.scrollbarThumb;
-  els.statusBgColor.value = settings.statusBg;
-  els.statusBorderColor.value = settings.statusBorder;
-  els.statusTextColor.value = settings.statusText;
-  els.emphasisBgColor.value = settings.emphasisBg;
-  els.emphasisBorderColor.value = settings.emphasisBorder;
-  els.emphasisTextColor.value = settings.emphasisText;
+  setDesignColorInput(els.dialogButtonBg, settings.dialogButtonBg, 'dialogButtonBg');
+  setDesignColorInput(els.dialogButtonBorder, settings.dialogButtonBorder, 'dialogButtonBorder');
+  setDesignColorInput(els.dialogButtonText, settings.dialogButtonText, 'dialogButtonText');
+  setDesignColorInput(els.dialogButtonShadow, settings.dialogButtonShadow, 'dialogButtonShadow');
+  setDesignColorInput(els.labelTextColor, settings.labelText, 'labelText');
+  setDesignColorInput(els.dynamicTextColor, settings.dynamicText, 'dynamicText');
+  setDesignColorInput(els.scrollbarTrackColor, settings.scrollbarTrack, 'scrollbarTrack');
+  setDesignColorInput(els.scrollbarThumbColor, settings.scrollbarThumb, 'scrollbarThumb');
+  setDesignColorInput(els.statusBgColor, settings.statusBg, 'statusBg');
+  setDesignColorInput(els.statusBorderColor, settings.statusBorder, 'statusBorder');
+  setDesignColorInput(els.statusTextColor, settings.statusText, 'statusText');
+  setDesignColorInput(els.emphasisBgColor, settings.emphasisBg, 'emphasisBg');
+  setDesignColorInput(els.emphasisBorderColor, settings.emphasisBorder, 'emphasisBorder');
+  setDesignColorInput(els.emphasisTextColor, settings.emphasisText, 'emphasisText');
   els.panelBgColor.value = settings.writingRoomBg || settings.panelBg;
-  els.panelBorderColor.value = settings.panelBorder;
+  setDesignColorInput(els.panelBorderColor, settings.panelBorder, 'panelBorder');
   els.designBoldToggle?.setAttribute("aria-pressed", String(settings.bold));
   els.dialogBoldToggle?.setAttribute("aria-pressed", String(settings.dialogBold));
   applyExtraDesignSettings(settings);
@@ -5898,7 +5939,7 @@ function ensureCurrentThemeSettings() {
   const normalized = normalizedDesignSettings(merged);
   const staleTheme = merged.paletteVersion !== CAPSANOTO_THEME_VERSION;
   const staleFavorites = JSON.stringify(validFavoriteColors(normalized.favoriteColors)) !== JSON.stringify(DEFAULT_FAVORITE_COLORS);
-  if (staleTheme || staleFavorites) {
+  if (staleTheme) {
     normalized.favoriteColors = [...DEFAULT_FAVORITE_COLORS];
     state.favoriteColors = [...DEFAULT_FAVORITE_COLORS];
     state.designSettings = normalized;
@@ -6175,15 +6216,16 @@ function collectDesignSettingsFromForm() {
     panelBorder: els.panelBorderColor.value,
     favoriteColors: [...state.favoriteColors],
   });
+  document.querySelectorAll('input[type=color][data-color-setting-key]').forEach((input) => { settings[input.dataset.colorSettingKey] = readDesignControl(input); });
   settings.paletteVersion = CAPSANOTO_THEME_VERSION;
   return normalizedDesignSettings(settings);
 }
 
-function saveDesignSettings() {
+async function saveDesignSettings() {
   const settings = collectDesignSettingsFromForm();
   setProjectDesignSettings(settings, { persistLocal: true });
   applyDesignSettings(settings);
-  setStatus("Design applied", "saved");
+  await persistNow("Design saved to this project");
 }
 
 function resetDesignSettings() {
@@ -6256,6 +6298,7 @@ function applyDesignSettings(settings) {
   root.style.setProperty("--line", settings.borderColor);
   root.style.setProperty("--ink", settings.textColor);
   root.style.setProperty("--button-font-size", `${settings.fontSize}px`);
+  root.style.setProperty("--app-text-size", `${settings.fontSize}px`);
   root.style.setProperty("--app-font-family", settings.fontFamily || "Arial, Helvetica, sans-serif");
   const iconScale = Math.max(50, Math.min(250, Number(settings.titleIconScale) || 143));
   root.style.setProperty("--title-icon-scale", `${iconScale}%`);

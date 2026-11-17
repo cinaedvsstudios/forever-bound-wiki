@@ -1,0 +1,46 @@
+/* Consume the settings that previously wrote unused variables. Keep overrides in one place. */
+body { font-size: var(--app-text-size,14px); }
+body,button,input,select,textarea,.editor,.help-panel,.block-panel,.project-settings-panel,.settings-panel { font-family:var(--app-font-family,Arial,Helvetica,sans-serif) !important; }
+button, select, summary { font-size: var(--button-text-size,var(--button-font-size,14px)); }
+.settings-panel, .help-panel, .block-panel, .project-settings-panel, .emoji-picker { border-color: var(--window-border,var(--panel-border)) !important; box-shadow: 0 18px 48px var(--window-shadow-color,#000) !important; }
+.settings-panel, .help-panel, .block-panel, .project-settings-panel { background-color: var(--window-bg,var(--panel-bg)) !important; }
+.writer-header.toolbar { background-color: var(--top-bar-bg) !important; background-image: var(--top-bar-image-url,none),var(--top-bar-bg-image,none) !important; background-size: var(--top-bar-image-size,100%),var(--top-bar-bg-size,100%) !important; border-color: var(--top-bar-border) !important; }
+#writingRoomButton { color: var(--writing-room-button-text) !important; background: var(--writing-room-button-bg) !important; border-color: var(--writing-room-button-border) !important; font-size: var(--writing-room-button-text-size,12px) !important; }
+.top-command-menus { background-color: var(--command-bar-bg) !important; background-image: var(--command-bar-bg-image,none) !important; background-size: var(--command-bar-bg-size,100%) !important; color: var(--command-bar-text) !important; border-color: var(--command-bar-border) !important; }
+.top-command-menus .command-label { font-size: var(--command-bar-text-size,10px) !important; color: var(--command-bar-text) !important; }
+.top-command-menus .command-glyph { font-size: var(--right-icon-size,18px) !important; }
+#writingRoomPanel { background-color: var(--writing-room-bg) !important; box-shadow: 0 18px 48px var(--writing-room-shadow-color,#000) !important; }
+#writingRoomPanel > header { background-color: color-mix(in srgb,var(--writing-room-header-bg) calc(var(--writing-room-header-opacity,1)*100%),transparent) !important; background-image: var(--writing-room-header-bg-image,none) !important; background-size: var(--writing-room-header-bg-size,100%) !important; }
+#writingRoomPanel > header .icon-button { font-size: var(--writing-room-header-icon-size,16px) !important; }
+.filing-jump-rail button { font-size: var(--rail-icon-size,14px) !important; }
+#writingRoomCards .filing-tab { border-color: var(--tab-row-border,var(--line)) !important; }
+#writingRoomCards .writing-room-card { border-color: var(--doc-row-border,var(--line)) !important; }
+#writingRoomCards .writing-room-card > summary { color: var(--doc-text-color,var(--ink)) !important; font-size: var(--doc-text-size,13px) !important; }
+.caps-dialog.delete-confirm-dialog { background: var(--delete-dialog-bg,var(--dialog-bg)) !important; color: var(--delete-dialog-text,var(--dialog-text)) !important; border-color: var(--delete-dialog-border,var(--dialog-border)) !important; width: var(--delete-dialog-width,620px) !important; }
+.delete-tree-box { background: var(--delete-dialog-tree-bg,#160f0b) !important; border-color: var(--delete-dialog-tree-border,#615243) !important; }
+.writer-shell { background-color: var(--writing-desk-bg-color,transparent); }
+.writer-shell::before { content:""; position:fixed; inset:0; pointer-events:none; z-index:0; background:radial-gradient(ellipse at 50% 70%,var(--writing-desk-glow-color,transparent),transparent 65%); opacity:var(--writing-desk-glow-opacity,0); }
+body[data-desk-glow-flip="true"] .writer-shell::before { transform:scaleY(-1); }
+body[data-writing-surface-layout="floating"]:not(.room-beside):not(.room-stacked) .writing-surface-shell { position:relative !important; left:var(--writing-surface-floating-left,0) !important; top:var(--writing-surface-floating-top,0) !important; }
+.writing-surface-shell { background-color:color-mix(in srgb,var(--writing-surface-bg,var(--paper)) calc(var(--writing-overlay-opacity,1)*100%),transparent) !important; background-image:var(--writing-panel-bg-image,none) !important; background-size:var(--writing-panel-bg-size,100%) !important; box-shadow:0 var(--writing-surface-shadow-offset,8px) var(--writing-surface-shadow-blur,26px) color-mix(in srgb,var(--writing-surface-shadow-color,#000) calc(var(--writing-surface-shadow-opacity,.4)*100%),transparent) !important; }
+.writing-surface-shell .editor { background-image:var(--writing-surface-bg-image,none) !important; background-size:var(--writing-surface-bg-size,100%) !important; }
+.writing-surface-shell .title-strip { background-color:color-mix(in srgb,var(--doc-title-bg,#5f1e66) calc(var(--doc-title-bg-opacity,1)*100%),transparent) !important; background-image:var(--writing-title-bg-image,none) !important; background-size:var(--writing-title-bg-size,100%) !important; border-color:var(--doc-title-border,#615243) !important; }
+.document-end-bar { font-weight:var(--bottom-bar-font-weight,500) !important; }
+.document-end-bar .icon-button { font-size:var(--bottom-bar-icon-size,14px) !important; }
+#settingsPanel { max-width:min(var(--settings-max-width,96vw),calc(100vw - 24px)) !important; max-height:min(var(--settings-max-height,92vh),calc(100dvh - 24px)) !important; box-shadow:0 18px 48px var(--settings-shadow-color,#000) !important; }
+#settingsPanel .element-designer-card > label { font-size:var(--settings-label-size,12px) !important; }
+#settingsPanel input, #settingsPanel select, #settingsPanel textarea { font-size:var(--settings-input-text-size,13px) !important; }
+#settingsPanel * { scrollbar-color:var(--settings-scrollbar-thumb,#a97b38) var(--settings-scrollbar-track,#1c120e); }
+#settingsPanel ::-webkit-scrollbar-thumb { background:var(--settings-scrollbar-thumb,#a97b38) !important; }
+#settingsPanel ::-webkit-scrollbar-track { background:var(--settings-scrollbar-track,#1c120e) !important; }
+#settingsPanel .setting-search-match, #settingsPanel .setting-search-current { background:var(--settings-search-highlight,#5f1e66) !important; outline:1px solid var(--settings-search-highlight-border,#0070b6) !important; }
+#settingsPanel > header button { background:var(--settings-header-button-bg,var(--button)) !important; border-color:var(--settings-header-button-border,var(--line)) !important; color:var(--settings-header-button-text,var(--ink)) !important; }
+#closeSettingsPanel { background:var(--settings-close-button-bg,var(--button)) !important; }
+#helpPanel { min-width:min(var(--help-min-width,300px),calc(100vw - 24px)) !important; min-height:var(--help-min-height,250px) !important; max-width:min(var(--help-max-width,94vw),calc(100vw - 24px)) !important; max-height:min(var(--help-max-height,90vh),calc(100dvh - 24px)) !important; box-shadow:0 18px 48px var(--help-shadow-color,#000) !important; scrollbar-color:var(--help-scrollbar-thumb,#a97b38) var(--help-scrollbar-track,#1c120e); }
+#helpPanel ::-webkit-scrollbar-thumb { background:var(--help-scrollbar-thumb,#a97b38) !important; }
+#helpPanel ::-webkit-scrollbar-track { background:var(--help-scrollbar-track,#1c120e) !important; }
+#blockPanel { min-width:min(var(--tcard-panel-min-width,300px),calc(100vw - 24px)) !important; min-height:var(--tcard-panel-min-height,260px) !important; max-width:min(var(--tcard-panel-max-width,95vw),calc(100vw - 24px)) !important; max-height:min(var(--tcard-panel-max-height,100vh),100dvh) !important; }
+.caps-dialog { height:var(--dialog-window-height,auto); min-width:min(var(--dialog-window-min-width,280px),94vw); }
+.emoji-picker { background-image:var(--emoji-window-bg-image,none) !important; background-size:var(--emoji-window-bg-size,100%) !important; scrollbar-color:var(--emoji-scrollbar-thumb,#a97b38) var(--emoji-scrollbar-track,#1c120e); }
+.emoji-picker ::-webkit-scrollbar-thumb { background:var(--emoji-scrollbar-thumb,#a97b38) !important; }
+.emoji-picker ::-webkit-scrollbar-track { background:var(--emoji-scrollbar-track,#1c120e) !important; }

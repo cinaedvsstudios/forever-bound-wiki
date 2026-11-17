@@ -10,8 +10,11 @@
 <link href="iconcapsanoto.png" rel="apple-touch-icon"/>
 <link href="manifest.webmanifest" rel="manifest"/>
 <meta content="#5f1e66" name="theme-color"/>
-<link href="styles.css?v=5.11.0" rel="stylesheet"/>
-<link href="project-setup.css?v=5.11.0" rel="stylesheet"/>
+<link href="styles.css?v=5.11.1" rel="stylesheet"/>
+<link href="project-setup.css?v=5.11.1" rel="stylesheet"/>
+<link href="settings-consumers.css?v=5.11.1" rel="stylesheet"/>
+<link href="workspace-refinements.css?v=5.11.1" rel="stylesheet"/>
+<link href="settings-controls.css?v=5.11.1" rel="stylesheet"/>
 </head>
 <body class="is-unlocked">
 <main aria-labelledby="passwordTitle" class="password-screen" hidden="" id="passwordScreen">
@@ -29,7 +32,7 @@
 <main aria-label="Forever Bound writing editor" class="writer-shell" id="editorApp">
 <header aria-label="Capsanoto command bar" class="writer-header toolbar">
 <div class="document-controls">
-<strong class="app-name"><img alt="Capsanoto icon" src="https://raw.githubusercontent.com/cinaedvsstudios/forever-bound-wiki/refs/heads/main/iconcapsanoto.png"/><span class="brand-word">Capsanoto</span><span class="app-version">v5.10.8</span></strong>
+<strong class="app-name"><img alt="Capsanoto icon" src="https://raw.githubusercontent.com/cinaedvsstudios/forever-bound-wiki/refs/heads/main/iconcapsanoto.png"/><span class="brand-word">Capsanoto</span><span class="app-version">v5.11.1</span></strong>
 <label class="sr-only" for="documentSelect">Current document</label>
 <select hidden="" id="documentSelect" title="Document Switcher"></select>
 </div>
@@ -125,7 +128,7 @@
 <div class="project-status-card" id="projectInfoStatus">Current Writing Room project status will appear here.</div>
 <p class="panel-help">Project Settings controls the storage for this Writing Room. App appearance still lives in normal Settings.</p>
 </section>
-<section class="project-settings-section" id="dropboxStorageSection"><h3>Dropbox · access on other devices</h3><div id="dropboxStorageControls"></div></section>
+<section class="project-settings-section" id="dropboxStorageSection"><h3>Access on other devices</h3><div id="dropboxStorageControls"></div></section>
 <section class="project-settings-section">
 <h3>Local Backup Folder — HDD Mirror</h3>
 <p class="panel-help">Choose or create a local folder as an offline backup/mirror. This uses browser folder permissions in Chrome/Edge.</p>
@@ -145,7 +148,7 @@
 <button id="newProjectPlaceholderButton" type="button">New project wizard</button>
 
 
-<button id="downloadProjectBackupButton" type="button">Download Project Backup</button>
+<button id="downloadProjectBackupButton" type="button">Download complete backup</button>
 <button id="projectImportBackupButton" type="button">Import Project Backup</button>
 </div>
 <p class="panel-help">Create a project, add files one at a time, and download a complete backup. Browser autosave is local to this browser and device. Google Docs imports are independent copies; Dropbox can sync them across devices.</p>
@@ -582,7 +585,7 @@
 <div class="panel-header-actions"><button aria-label="Edit help" aria-pressed="false" class="icon-button" id="helpEditButton" type="button">✎</button><button aria-label="Close help" class="icon-button" id="closeHelpPanel" type="button">×</button></div>
 </header>
 <section>
-<h3>Start here · importing your first document</h3><ol><li>Choose <strong>New project</strong> and name the collection, for example Forever Bound.</li><li>Choose one .docx download, a Google Docs source package, or the direct read-only Google Docs importer.</li><li>Preview the tabs and select what to copy. Each selected tab becomes a file; nested tabs become sub files.</li><li>Use <strong>Room</strong> to browse the imported files. Use <strong>Add file</strong> to bring in another document later.</li><li>Use <strong>Room → Project Settings → Download Project Backup</strong> for a complete portable copy. Keep your originals until you have checked text, formatting, and embedded content.</li></ol><p>Browser autosave is temporary storage for this device. Dropbox keeps a project copy online when you connect and sync; it does not modify your Google Docs. For another device, connect the same Dropbox account and choose Open from Dropbox. If another device has changed a cloud copy, sync stops so you can review it. Live collaboration and automatic text merging are not supported.</p><p>Images and other embedded Google objects may appear as placeholders in direct imports. Word downloads can retain embedded images but may change layout and tab organization. Comments and suggestions are not migrated.</p></section><section><h3>1. What Capsanoto Is</h3>
+<h3>Start here · importing your first document</h3><p><strong>New navigation:</strong> open Room, expand a document, then open Headings &amp; scenes. Search and click an entry to jump into the writing pad. Metadata and Summary are separate collapsed rows. The pad makes room beside the open Room panel; narrow screens stack them. Specnoto has a resize grip at its lower-right corner.</p><ol><li>Choose <strong>New project</strong> and name the collection, for example Forever Bound.</li><li>Choose one .docx download, a Google Docs source package, or the direct read-only Google Docs importer.</li><li>Preview the tabs and select what to copy. Each selected tab becomes a file; nested tabs become sub files.</li><li>Use <strong>Room</strong> to browse the imported files. Use <strong>Add file</strong> to bring in another document later.</li><li>Use <strong>Room → Project Settings → Download Project Backup</strong> for a complete portable copy. Keep your originals until you have checked text, formatting, and embedded content.</li></ol><p>Browser autosave is temporary storage for this device. Dropbox keeps a project copy online when you connect and sync; it does not modify your Google Docs. For another device, connect the same Dropbox account and choose Open from Dropbox. If another device has changed a cloud copy, sync stops so you can review it. Live collaboration and automatic text merging are not supported.</p><p>Images and other embedded Google objects may appear as placeholders in direct imports. Word downloads can retain embedded images but may change layout and tab organization. Comments and suggestions are not migrated.</p></section><section><h3>1. What Capsanoto Is</h3>
 <p>Capsanoto is a lightweight structured writing environment for lore-heavy writing, long-form worldbuilding, scripts, novels, pitch material, and linked narrative documents.</p>
 <p>It is built for human writing first: quick editing, readable files, local autosave, portable downloads, and simple structure without turning the app into a heavy database or wiki system.</p>
 </section>
@@ -766,12 +769,15 @@
 <h2 id="notes">Notes</h2>
 <p>Add internal references, links, and reusable TCards.</p>
 </template>
-<script src="modules/specnoto/specnoto.module.js"></script>
+<script src="modules/specnoto/specnoto.module.js?v=5.11.1"></script>
 <script src="modules/subnoto/subnoto.module.js"></script>
 <script src="vendor/purify.min.js"></script>
 <script src="vendor/mammoth.browser.min.js"></script>
-<script src="project-setup.js?v=5.11.0"></script>
-<script src="dropbox-storage.js?v=5.11.0"></script>
-<script src="app.js?v=5.11.0"></script>
+<script src="project-setup.js?v=5.11.1"></script>
+<script src="dropbox-storage.js?v=5.11.1"></script>
+<script src="vendor/jszip.min.js"></script>
+<script src="markdown-export.js?v=5.11.1"></script>
+<script src="document-navigation.js?v=5.11.1"></script>
+<script src="app.js?v=5.11.1"></script>
 </body>
 </html>

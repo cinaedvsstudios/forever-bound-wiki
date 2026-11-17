@@ -13,15 +13,17 @@ function app({ indexedDB = new IDBFactory(), legacy } = {}) {
   const dom = new JSDOM(html, { url: 'http://localhost:4317/', runScripts: 'outside-only', pretendToBeVisual: true });
   const w = dom.window;
   Object.defineProperty(w, 'crypto', { value: webcrypto });
-  Object.assign(w, { indexedDB, TextEncoder, TextDecoder, fetch: async () => ({ ok: true, json: async () => JSON.parse(fs.readFileSync(path.join(root, 'content/documents.json'), 'utf8')) }), DOMPurify: createPurifier(w), mammoth: require('mammoth') });
+  Object.assign(w, { indexedDB, TextEncoder, TextDecoder, fetch: async () => ({ ok: true, json: async () => JSON.parse(fs.readFileSync(path.join(root, 'content/documents.json'), 'utf8')) }), DOMPurify: createPurifier(w), JSZip, mammoth: require('mammoth') });
   w.HTMLDialogElement.prototype.showModal ||= function () { this.open = true; };
   w.HTMLDialogElement.prototype.close ||= function () { this.open = false; };
   w.HTMLElement.prototype.scrollIntoView = function () {};
   if (legacy !== undefined) w.localStorage.setItem('forever-bound-writing-room-v2', legacy);
   const core = fs.readFileSync(path.join(root, 'app.core.js'), 'utf8').replace(/boot\(\)\.catch\([\s\S]*?\n\}\);/, '');
   const setup = fs.readFileSync(path.join(root, 'project-setup.js'), 'utf8');
+  const markdown = fs.readFileSync(path.join(root, 'markdown-export.js'), 'utf8');
+  const navigation = fs.readFileSync(path.join(root, 'document-navigation.js'), 'utf8');
   const cloud = fs.readFileSync(path.join(root, 'dropbox-storage.js'), 'utf8');
-  w.eval(setup + '\n' + cloud + '\n' + core + '\nwindow.testApp = { state, els, boot, loadWorkspace, serializedWorkspace, writeWorkspaceSnapshot, readWorkspaceSnapshot, workspaceRecord, persistNow, safeDocumentHtml, googleDocsToImportSource, commitProjectImport, readImportFile, importProjectBackupPayload, folderModeProjectPayload, capsMarkdownToDocument, prepareProjectReplacement, saveFolderModeSnapshot, syncDropboxProject, openWritingRoomFolder, projectCloudFingerprint, setConnection: (value) => { dropboxConnection = value; }, getRevision: () => workspaceRevision };');
+  w.eval(setup + '\n' + cloud + '\n' + markdown + '\n' + navigation + '\n' + core + '\nwindow.testApp = { documentOutline, jumpToDocumentOutline, fillDocumentOutline, calculateRoomLayout, renderWritingRoomCards, updateRoomWorkspaceLayout, toggleWritingRoomPanel, applyDesignSettings, collectDesignSettingsFromForm, saveDesignSettings, applyExtraDesignSettings, currentDesignSettings, buildMarkdownArchive, openProjectSetup, advanceProjectSetup, readGoogleDocsSource, renderDropboxStorage, setSetupSource: (source) => { setupSession.source = source; setupSession.selected = new Set(source.tabs.map(t => t.id)); }, state, els, boot, loadWorkspace, serializedWorkspace, writeWorkspaceSnapshot, readWorkspaceSnapshot, workspaceRecord, persistNow, safeDocumentHtml, googleDocsToImportSource, commitProjectImport, readImportFile, importProjectBackupPayload, folderModeProjectPayload, capsMarkdownToDocument, prepareProjectReplacement, saveFolderModeSnapshot, syncDropboxProject, openWritingRoomFolder, projectCloudFingerprint, setConnection: (value) => { dropboxConnection = value; }, getRevision: () => workspaceRevision };');
   return { w, api: w.testApp, close: () => dom.window.close() };
 }
 function seed(a) {
@@ -123,7 +125,7 @@ test('Dropbox upload uses revision checks and keeps the local copy on a conflict
 test('all entry pages wire the same setup and storage runtime', () => {
   for (const file of ['index.html', 'editor.html', 'writing-room.html']) {
     const html = fs.readFileSync(path.join(root, file), 'utf8');
-    assert.match(html, /project-setup.js\?v=5.11.0/); assert.match(html, /dropbox-storage.js/);
+    assert.match(html, /project-setup.js\?v=5.11.1/); assert.match(html, /dropbox-storage.js/);
     assert.doesNotMatch(html, /id="createOnlineProjectButton"/);
   }
 });
@@ -188,5 +190,225 @@ test('folder snapshots include every file and queue edits made during a write', 
     assert.equal(project.documents.length, 2);
     assert.equal(project.documents[0].content, '<p>Edited while saving</p>');
     assert.equal(a.api.state.folderMode.writeInProgress, false);
+  } finally { a.close(); }
+});
+
+test('project storage, backups, and developer settings are separate accessible views', async () => {
+  const a = app();
+  try {
+    await a.api.boot();
+    assert.equal(a.w.document.querySelector('#project-view-storage').hidden, false);
+    assert.equal(a.w.document.querySelector('#project-view-backups').hidden, true);
+    assert.equal(a.w.document.querySelector('#project-view-details').hidden, true);
+    assert.ok(a.w.document.querySelector('#project-view-details #dropboxAppKey'));
+    a.w.document.querySelector('#project-tab-backups').click();
+    assert.equal(a.w.document.querySelector('#project-view-storage').hidden, true);
+    assert.equal(a.w.document.querySelector('#project-view-backups').hidden, false);
+    assert.ok(a.w.document.querySelector('#project-view-backups #downloadMarkdownProject'));
+    a.api.setConnection({ token: 'test-only', accountId: 'storage-account', expiresAt: Date.now() + 60000, label: 'Writing account' });
+    a.api.renderDropboxStorage();
+    assert.equal(a.w.document.querySelector('#connectDropbox').hidden, true);
+    assert.equal(a.w.document.querySelector('#syncDropbox').hidden, false);
+    assert.equal(a.w.document.querySelector('.storage-account-options').open, false);
+  } finally { a.close(); }
+});
+
+test('Preview opens a labelled, complete, paragraph-separated view and filtering keeps selection', async () => {
+  const a = app(); seed(a.api);
+  try {
+    await a.api.boot();
+    a.api.openProjectSetup('add');
+    const source = a.api.googleDocsToImportSource(native);
+    source.tabs[0].html = '<p>First paragraph.</p><p>Second paragraph.</p><p>' + 'Long text. '.repeat(600) + '</p>';
+    a.api.setSetupSource(source);
+    await a.api.advanceProjectSetup({ preventDefault() {} });
+    const section = a.w.document.querySelector('#setupPreviewSection');
+    assert.equal(section.hidden, true);
+    a.w.document.querySelector('#setupTabList button').click();
+    assert.equal(section.hidden, false);
+    assert.match(a.w.document.querySelector('#setupPreviewTitle').textContent, /Act 1/);
+    assert.match(a.w.document.querySelector('#setupPreview').textContent, /First paragraph\.\n\nSecond paragraph/);
+    assert.ok(a.w.document.querySelector('#setupPreview').textContent.length > 6000);
+    const filter = a.w.document.querySelector('#setupTabFilter');
+    filter.value = 'Notes'; filter.dispatchEvent(new a.w.Event('input'));
+    assert.equal([...a.w.document.querySelectorAll('.setup-tab')].filter((row) => !row.hidden).length, 1);
+    assert.equal(a.w.document.querySelectorAll('#setupTabList input:checked').length, 3);
+  } finally { a.close(); }
+});
+
+test('metadata-only tab outlines cannot accidentally become empty imported documents', () => {
+  const a = app();
+  try { assert.throws(() => a.api.googleDocsToImportSource({ documentId: 'outline-only', tabs: [{ tabId: 'one', title: 'Names only', body: null }] }), /without their content/); }
+  finally { a.close(); }
+});
+
+test('Markdown ZIP keeps hierarchy, extracts and deduplicates images, and leaves original content intact', async () => {
+  const a = app(); seed(a.api);
+  try {
+    const image = '<img alt="Example" src="data:image/png;base64,iVBORw0KGgo=">';
+    a.api.state.documents[0].content = '<h1>Parent</h1><p>Text {{Canon-Example}}</p>' + image;
+    a.api.state.documents.push({ id: 'child', title: 'Child', parentDocumentId: 'original', content: '<p>Nested</p>' + image, tags: [] });
+    a.api.state.blocks = { 'Canon-Example': { id: 'Canon-Example', content: 'Reusable text' } };
+    const before = a.api.state.documents.map((doc) => doc.content);
+    const archive = await JSZip.loadAsync(await a.api.buildMarkdownArchive());
+    const manifest = JSON.parse(await archive.file('project-map.json').async('string'));
+    assert.equal(manifest.documents.length, 2);
+    assert.equal(manifest.documents[1].parentDocumentId, 'original');
+    const child = await archive.file(manifest.documents[1].path).async('string');
+    assert.match(child, /!\[Example\]\(\.\.\/\.\.\/assets\/image-1.png\)/);
+    assert.equal(Object.keys(archive.files).filter((name) => /^assets\/image-/.test(name)).length, 1);
+    assert.ok(archive.file('tcards/Canon-Example.md'));
+    assert.deepEqual(a.api.state.documents.map((doc) => doc.content), before);
+  } finally { a.close(); }
+});
+
+test('Google failure explains the server error while retaining a selected Word source', async () => {
+  const a = app(); seed(a.api);
+  try {
+    await a.api.boot();
+    a.api.openProjectSetup('add');
+    a.api.setSetupSource({ title: 'Downloaded', format: 'word', tabs: [{ id: 'file', title: 'Downloaded', html: '<p>Writing</p>', textLength: 7 }] });
+    a.w.google = { accounts: { oauth2: { initTokenClient: (options) => ({ requestAccessToken: () => options.callback({ access_token: 'test-only' }) }) } } };
+    a.w.fetch = async () => ({ ok: false, status: 403, json: async () => ({ error: { message: 'Google Docs API is disabled for this project.' } }) });
+    a.w.document.querySelector('#setupGoogleUrl').value = 'https://docs.google.com/document/d/test-document/edit';
+    await a.w.document.querySelector('#setupReadGoogle').onclick();
+    assert.match(a.w.document.querySelector('#setupError').textContent, /API is disabled/);
+    await a.api.advanceProjectSetup({ preventDefault() {} });
+    assert.match(a.w.document.querySelector('#setupBody').textContent, /one combined document/);
+    assert.equal(a.w.document.querySelectorAll('#setupTabList input').length, 1);
+  } finally { a.close(); }
+});
+
+test('outline includes deep headings, scene paragraphs, duplicate titles and document tags', async () => {
+  const a = app();
+  try {
+    await a.api.boot();
+    const doc = a.api.state.documents[0];
+    doc.content = '<h1>Act One</h1><p>Ordinary prose.</p><p><strong>Scene 12: The gate</strong></p><h4>Notes</h4><h2>Notes</h2><p>INT. CASTLE - NIGHT</p>';
+    doc.tags = ['pilot']; a.api.renderWritingRoomCards();
+    const outline = a.api.documentOutline(doc);
+    assert.equal(outline.length, 5); assert.equal(outline[2].level, 4); assert.notEqual(outline[2].index, outline[3].index);
+    const section = a.w.document.querySelector(`[data-outline-doc="${doc.id}"]`);
+    section.open = true; a.api.fillDocumentOutline(section, 'gate');
+    assert.equal(section.querySelectorAll('.outline-results button').length, 1);
+    a.api.fillDocumentOutline(section, 'pilot');
+    assert.equal(section.querySelectorAll('.outline-results button').length, 5);
+    const metadata = section.parentElement.querySelector('[data-disclosure="metadata"]');
+    const summary = section.parentElement.querySelector('[data-disclosure="summary"]');
+    assert.equal(metadata.open, false); assert.equal(summary.open, false);
+    a.api.renderWritingRoomCards();
+    assert.equal(a.w.document.querySelector(`[data-outline-doc="${doc.id}"]`).open, true);
+  } finally { a.close(); }
+});
+
+test('jumping to an outline item opens the correct document and selects the correct repeated heading', async () => {
+  const a = app();
+  try {
+    await a.api.boot();
+    a.api.state.documents.push({ id: 'jump-target', title: 'Scene target', content: '<h2>Repeated</h2><p>Prose.</p><h2>Repeated</h2><p>Scene 3: Arrival</p>', tags: [] });
+    a.api.jumpToDocumentOutline('jump-target', 1);
+    assert.equal(a.api.state.activeId, 'jump-target');
+    const node = a.w.getSelection().anchorNode;
+    assert.equal(node.tagName, 'H2');
+    assert.equal(node, a.api.els.editor.querySelectorAll('h2')[1]);
+  } finally { a.close(); }
+});
+
+test('the writing pad fits to either side of the Room and restores its prior width on close', async () => {
+  const a = app();
+  try {
+    await a.api.boot();
+    Object.defineProperty(a.w, 'innerWidth', { configurable: true, value: 1400 });
+    const shell = a.api.els.writingSurfaceShell;
+    shell.style.width = '1000px'; shell.getBoundingClientRect = () => ({ width: parseFloat(shell.style.width), height: 500, top: 100 });
+    a.api.els.writingRoomPanel.getBoundingClientRect = () => ({ left: 16, right: 316, width: 300 });
+    a.api.els.writingRoomPanel.hidden = false;
+    a.api.updateRoomWorkspaceLayout();
+    assert.equal(shell.style.width, '1000px'); assert.equal(shell.style.marginLeft, '334px');
+    a.api.els.writingRoomPanel.hidden = true; a.api.updateRoomWorkspaceLayout();
+    assert.equal(shell.style.width, '1000px'); assert.equal(shell.style.marginLeft, '');
+    assert.equal(a.api.calculateRoomLayout(700, { left: 16, right: 316 }, 1000).mode, 'stacked');
+    const rightRoom = a.api.calculateRoomLayout(1400, { left: 1084, right: 1384 }, 1000);
+    assert.equal(rightRoom.mode, 'beside'); assert.ok(rightRoom.left + rightRoom.width < 1084);
+  } finally { a.close(); }
+});
+
+test('all mapped design controls apply their CSS value, including empty image clearing, and save to the project', async () => {
+  const a = app();
+  try {
+    await a.api.boot();
+    const controls = [...a.w.document.querySelectorAll('[data-design-key]')];
+    for (const input of controls) {
+      if (input.type === 'color') input.value = '#123456';
+      else if (input.type === 'number') input.value = String(Math.max(Number(input.min || 0), Math.min(Number(input.max || 999), 23)));
+      else if (input.type === 'checkbox') input.checked = !input.checked;
+      else if (input.tagName === 'SELECT') input.selectedIndex = input.options.length - 1;
+      else if (input.dataset.cssUrl === 'true' || input.dataset.cssVar === '--top-bar-image-url') input.value = 'example.png';
+    }
+    a.w.document.querySelectorAll('[data-inherit-section]').forEach((toggle) => { toggle.checked = false; });
+    await a.api.saveDesignSettings();
+    const saved = JSON.parse((await a.api.workspaceRecord('active')).json).designSettings;
+    for (const input of controls) {
+      assert.ok(Object.hasOwn(saved, input.dataset.designKey), input.dataset.designKey + ' must persist');
+      if (input.dataset.cssVar) assert.notEqual(a.w.document.documentElement.style.getPropertyValue(input.dataset.cssVar), '', input.dataset.designKey + ' must apply');
+    }
+    const image = a.w.document.querySelector('[data-design-key="topBarImage"]');
+    image.value = ''; await a.api.saveDesignSettings();
+    assert.equal(a.w.document.documentElement.style.getPropertyValue('--top-bar-image-url'), 'none');
+    const label = a.w.document.querySelector('[data-design-key="topLabelWritingRoom"]'); label.value = 'My library';
+    await a.api.saveDesignSettings();
+    assert.equal(a.w.document.querySelector('#writingRoomButton .command-label').textContent, 'MY LIBRARY');
+  } finally { a.close(); }
+});
+
+test('Specnoto has a real pointer and keyboard resize handle with remembered dimensions', async () => {
+  const a = app();
+  try {
+    a.w.eval(fs.readFileSync(path.join(root, 'modules/specnoto/specnoto.module.js'), 'utf8'));
+    a.w.CapsanotoSpecnoto.init({ autoRestoreOpenState: false });
+    a.w.CapsanotoSpecnoto.open();
+    const shadow = a.w.document.querySelector('#specnoto-host').shadowRoot;
+    const panel = shadow.querySelector('#specnoto-app');
+    const handle = shadow.querySelector('#specnoto-resize');
+    panel.getBoundingClientRect = () => ({ left: 100, top: 100, width: parseFloat(panel.style.getPropertyValue('--app-width')) || 300, height: parseFloat(panel.style.getPropertyValue('--app-height')) || 550 });
+    handle.dispatchEvent(new a.w.KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+    assert.equal(panel.style.getPropertyValue('--app-width'), '310px');
+    function pointer(type, x, y) { const event = new a.w.Event(type, { bubbles: true, cancelable: true }); Object.assign(event, { clientX: x, clientY: y, pointerId: 1, button: 0 }); handle.dispatchEvent(event); }
+    pointer('pointerdown', 410, 650); pointer('pointermove', 470, 680); pointer('pointerup', 470, 680);
+    const settings = JSON.parse(a.w.localStorage.getItem('capsanoto_specnoto_settings'));
+    assert.equal(settings.width, 370); assert.ok(settings.height > 550);
+    a.w.CapsanotoSpecnoto.close(); a.w.CapsanotoSpecnoto.open();
+    assert.equal(panel.style.getPropertyValue('--app-width'), '370px');
+    a.w.CapsanotoSpecnoto.destroy();
+  } finally { a.close(); }
+});
+
+test('every mapped design variable has a stylesheet consumer and refinement styles parse', () => {
+  const a = app();
+  try {
+    const sheets = [...a.w.document.querySelectorAll('link[rel="stylesheet"]')].map((link) => fs.readFileSync(path.join(root, link.getAttribute('href').split('?')[0]), 'utf8'));
+    const css = sheets.join('\n');
+    for (const input of a.w.document.querySelectorAll('[data-css-var]')) assert.ok(css.includes(`var(${input.dataset.cssVar}`), `${input.dataset.designKey} must have a visual consumer`);
+    for (const file of ['workspace-refinements.css', 'settings-controls.css', 'settings-consumers.css']) {
+      const style = a.w.document.createElement('style'); style.textContent = fs.readFileSync(path.join(root, file), 'utf8'); a.w.document.head.append(style);
+      assert.ok(style.sheet?.cssRules.length, `${file} must parse`);
+    }
+  } finally { a.close(); }
+});
+
+test('Use Defaults applies section defaults without losing the custom value; rgba colors remain valid and preserve alpha', async () => {
+  const a = app();
+  try {
+    await a.api.boot();
+    const settings = { ...a.api.currentDesignSettings(), commandBarText: '#123456', 'inherit_top-menu': true, windowBg: 'rgba(28, 18, 14, 0.76)' };
+    a.api.applyDesignSettings(settings);
+    const rootStyle = a.w.document.documentElement.style;
+    assert.notEqual(rootStyle.getPropertyValue('--command-bar-text'), '#123456');
+    assert.equal(a.w.document.querySelector('[data-design-key="commandBarText"]').value, '#123456');
+    const color = a.w.document.querySelector('[data-design-key="windowBg"]');
+    assert.equal(color.value, '#1c120e');
+    assert.equal(a.api.collectDesignSettingsFromForm().windowBg, 'rgba(28, 18, 14, 0.76)');
+    a.api.applyDesignSettings({ ...settings, 'inherit_top-menu': false });
+    assert.equal(rootStyle.getPropertyValue('--command-bar-text'), '#123456');
   } finally { a.close(); }
 });
