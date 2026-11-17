@@ -357,7 +357,8 @@ code, pre { font-family: var(--mono-font-family); }
 .brand-word { font-size:var(--title-text-size); }
 .app-version { color:var(--label-text); font-size:.72rem; letter-spacing:.06em; }
 .document-controls { display:flex; align-items:center; gap:.5rem; min-width:0; }
-.save-status { display:none !important; }
+.save-status { font-size:12px; overflow-wrap:anywhere; }
+.save-status:empty { display:none; }
 
 .top-command-menus.unified-command-bar {
   display:grid;
@@ -566,7 +567,10 @@ details[data-section="trash"] > summary, .filing-archive > summary, .trash-secti
 .editor code { background:var(--caps-black); border-radius:6px; padding:.1rem .3rem; }
 .writing-surface-grip { position:absolute; right:.45rem; bottom:.45rem; z-index:10; width:1.45rem; min-width:1.45rem; height:1.45rem; padding:0; border-radius:999px; cursor:nwse-resize; touch-action:none; opacity:.75; }
 .writing-surface-grip:hover { opacity:1; background:var(--accent); color:var(--caps-black); }
-.document-end-bar { width:var(--writing-shell-width); max-width:96vw; min-height:2.8rem; margin:.7rem auto 4rem; display:flex; gap:var(--bottom-bar-icon-spacing); align-items:center; justify-content:space-between; padding:.55rem .8rem; color:var(--bottom-bar-text); background:var(--bottom-bar-bg); border:1px solid var(--bottom-bar-border); border-radius:16px; font-size:var(--bottom-bar-text-size); position:relative; z-index:5; }
+.document-end-bar { width:var(--writing-shell-width); max-width:96vw; min-height:2.8rem; margin:.7rem auto 4rem; display:flex; flex-direction:column; gap:.55rem; align-items:stretch; padding:.55rem .8rem; color:var(--bottom-bar-text); background:var(--bottom-bar-bg); border:1px solid var(--bottom-bar-border); border-radius:16px; font-size:var(--bottom-bar-text-size); position:relative; z-index:5; }
+.document-end-file { display:flex; gap:var(--bottom-bar-icon-spacing); align-items:center; justify-content:space-between; flex-wrap:wrap; min-width:0; }
+.document-end-file .end-doc-title { flex:1 1 12rem; min-width:0; overflow-wrap:anywhere; }
+.document-end-file .end-doc-meta { flex:1 1 12rem; min-width:0; overflow-wrap:anywhere; }
 .end-doc-title { font-size:var(--bottom-bar-title-size); color:var(--dynamic-text); }
 .end-doc-meta { color:var(--label-text); }
 

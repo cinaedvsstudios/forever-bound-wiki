@@ -1110,7 +1110,13 @@ function renderDocumentEndBar() {
   if (!els.documentEndBar) return;
   const doc = activeDocument();
   const fileType = documentFileType(doc);
-  els.documentEndBar.innerHTML = `
+  let fileRow = els.documentEndBar.querySelector('.document-end-file');
+  if (!fileRow) {
+    fileRow = document.createElement('div');
+    fileRow.className = 'document-end-file';
+    els.documentEndBar.prepend(fileRow);
+  }
+  fileRow.innerHTML = `
     <button type="button" data-end-action="writing-room" data-tool-name="Open the Writing Room Filing Cabinet">Writing Room</button>
     <span class="end-doc-title"><span class="card-icon">${docIcon(doc)}</span><strong>${escapeHtml(doc.title)}</strong></span>
     <span class="end-doc-meta">${escapeHtml(fileType)} · ${escapeHtml(doc.id)} · ${escapeHtml((doc.tags || []).join(", ") || "No tags")}</span>
@@ -6920,7 +6926,7 @@ function setContextStatus(message, lock = false, timeout = 0) {
 }
 
 function setStatus(message, className) {
-  els.saveStatus.textContent = "";
+  els.saveStatus.textContent = message || "";
   els.saveStatus.className = `save-status ${className}`;
   if (className === "dirty") setContextStatus(`${message} …`, true);
   else if (className === "saved") setContextStatus(message, true, 1400);

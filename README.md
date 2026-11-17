@@ -30,6 +30,10 @@ The main toolbar's layout and appearance are owned by `styles.css`. The generate
 
 Text, headings, emphasis, lists, and tables are supported. Review Word formatting after import. Direct Google imports mark images, drawings, footnotes, and smart chips with placeholders. Comments, suggestions, and precise page layouts are not migrated. Keep the originals until you have reviewed the imported copy and made a backup.
 
+## Project controls
+
+The bottom bar contains New project, Add file, Open project, and Sync now. When Dropbox is disconnected or sign-in has expired, the sync button becomes Connect Dropbox or Reconnect Dropbox. Browser-save messages and Dropbox status appear alongside these controls. Storage account options remain under Room → Project Settings → Storage.
+
 ## Where your files are saved
 
 - **Browser autosave:** a small project index and independent document records use IndexedDB. Existing snapshot saves migrate once; their original copy is preserved. Unopened document bodies are not parsed at startup. Superseded local cache records are removed only when no saved project or recovery copy references them. This copy belongs to this browser, device, and site address. Clearing browser data can remove it.

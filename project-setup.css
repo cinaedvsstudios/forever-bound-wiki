@@ -1,6 +1,8 @@
-.project-quick-actions { position: relative; z-index: 30; display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; box-sizing: border-box; padding: 8px 14px 4px; width: 100%; }
-.project-quick-actions button { background: #261926; color: #fff0ce; border: 1px solid #b67300; font-size: 12px; box-shadow: 0 2px 10px #0009; }
-.project-quick-actions #saveStatus { display: inline !important; font-size: 12px; color: #dfd3bc; padding: 6px 9px; background: #211725; border-radius: 5px; }
+.project-actions { display:flex; align-items:center; gap:12px; flex-wrap:wrap; min-width:0; border-top:1px solid var(--bottom-bar-border); padding-top:.55rem; }
+.project-action-buttons { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.project-action-buttons button { font-size:12px; white-space:nowrap; }
+.project-save-status { display:flex; flex:1 1 16rem; min-width:0; flex-direction:column; gap:3px; color:var(--bottom-bar-text); font-size:12px; line-height:1.4; overflow-wrap:anywhere; }
+#bottomDropboxStatus { color:var(--bottom-bar-text); }
 #projectSetupDialog { width: min(720px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); padding: 0; border: 1px solid #b67300; border-radius: 18px; background: #211725; color: #fff0ce; box-shadow: 0 20px 90px #000b; }
 #projectSetupDialog::backdrop { background: #0c0712c9; }
 #projectSetupForm { display: flex; flex-direction: column; max-height: calc(100dvh - 28px); }
@@ -29,7 +31,7 @@
 #setupError { color: #ffc7a7; padding: 0 24px; white-space: pre-wrap; }
 #setupError:empty { display: none; }
 #storageWarning { position: fixed; bottom: 12px; left: 12px; right: 12px; z-index: 20000; padding: 14px; border: 2px solid #efbd72; border-radius: 10px; background: #4a231c; color: #fff0ce; display: flex; gap: 20px; align-items: center; justify-content: space-between; }
-@media(max-width: 540px) { #projectSetupForm header, #projectSetupForm footer, #setupBody { padding: 15px; } .setup-tab { flex-wrap: wrap; } .project-quick-actions #saveStatus { flex-basis: 100%; text-align: center; } }
+@media(max-width: 540px) { #projectSetupForm header, #projectSetupForm footer, #setupBody { padding: 15px; } .setup-tab { flex-wrap: wrap; } }
 
 /* A small set of everyday actions, with backups and owner setup on separate pages. */
 #projectSettingsPanel { width: min(620px, calc(100vw - 24px)); max-width: calc(100vw - 24px); max-height: calc(100dvh - 100px); min-height: 0; }

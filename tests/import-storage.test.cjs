@@ -24,7 +24,7 @@ function app({ indexedDB = new IDBFactory(), legacy } = {}) {
   const navigation = fs.readFileSync(path.join(root, 'document-navigation.js'), 'utf8');
   const cloud = fs.readFileSync(path.join(root, 'dropbox-storage.js'), 'utf8');
   const filesRuntime = fs.readFileSync(path.join(root, 'project-files.js'), 'utf8');
-  w.eval(filesRuntime + '\n' + setup + '\n' + cloud + '\n' + markdown + '\n' + navigation + '\n' + core + '\nwindow.testApp = { projectFileHash, encodeProjectIndex, ensureDocumentContent, ensureProjectDocumentsLoaded, openDocument, openDropboxProjectPath, documentIsLoaded, completeProjectCopy, listSavedProjectIndexes, openFromRoute, releaseDocumentBody, duplicateDocument, deprecateDocument, deleteDocumentSafely, restoreArchivedDocument, setDialogResponse: (response) => { openCapsDialog = async () => response; }, startWritingRoomResize, moveWritingRoomResize, stopWritingRoomResize, handleWritingRoomResizeKey, documentOutline, jumpToDocumentOutline, fillDocumentOutline, calculateRoomLayout, renderWritingRoomCards, updateRoomWorkspaceLayout, toggleWritingRoomPanel, applyDesignSettings, collectDesignSettingsFromForm, saveDesignSettings, applyExtraDesignSettings, currentDesignSettings, buildMarkdownArchive, openProjectSetup, advanceProjectSetup, readGoogleDocsSource, renderDropboxStorage, setSetupSource: (source) => { setupSession.source = source; setupSession.selected = new Set(source.tabs.map(t => t.id)); }, state, els, boot, loadWorkspace, serializedWorkspace, writeWorkspaceSnapshot, readWorkspaceSnapshot, workspaceRecord, persistNow, safeDocumentHtml, googleDocsToImportSource, commitProjectImport, readImportFile, importProjectBackupPayload, folderModeProjectPayload, capsMarkdownToDocument, prepareProjectReplacement, saveFolderModeSnapshot, syncDropboxProject, openWritingRoomFolder, projectCloudFingerprint, setConnection: (value) => { dropboxConnection = value; }, getRevision: () => workspaceRevision };');
+  w.eval(filesRuntime + '\n' + setup + '\n' + cloud + '\n' + markdown + '\n' + navigation + '\n' + core + '\nwindow.testApp = { projectFileHash, encodeProjectIndex, ensureDocumentContent, ensureProjectDocumentsLoaded, openDocument, openDropboxProjectPath, documentIsLoaded, completeProjectCopy, listSavedProjectIndexes, openFromRoute, releaseDocumentBody, duplicateDocument, deprecateDocument, deleteDocumentSafely, restoreArchivedDocument, setDialogResponse: (response) => { openCapsDialog = async () => response; }, startWritingRoomResize, moveWritingRoomResize, stopWritingRoomResize, handleWritingRoomResizeKey, documentOutline, jumpToDocumentOutline, fillDocumentOutline, calculateRoomLayout, renderWritingRoomCards, renderDocumentEndBar, updateRoomWorkspaceLayout, toggleWritingRoomPanel, applyDesignSettings, collectDesignSettingsFromForm, saveDesignSettings, applyExtraDesignSettings, currentDesignSettings, buildMarkdownArchive, openProjectSetup, advanceProjectSetup, readGoogleDocsSource, renderDropboxStorage, setSetupSource: (source) => { setupSession.source = source; setupSession.selected = new Set(source.tabs.map(t => t.id)); }, state, els, boot, loadWorkspace, serializedWorkspace, writeWorkspaceSnapshot, readWorkspaceSnapshot, workspaceRecord, persistNow, safeDocumentHtml, googleDocsToImportSource, commitProjectImport, readImportFile, importProjectBackupPayload, folderModeProjectPayload, capsMarkdownToDocument, prepareProjectReplacement, saveFolderModeSnapshot, syncDropboxProject, openWritingRoomFolder, projectCloudFingerprint, setConnection: (value) => { dropboxConnection = value; }, getRevision: () => workspaceRevision };');
   return { w, api: w.testApp, close: () => dom.window.close() };
 }
 function seed(a) {
@@ -117,7 +117,7 @@ test('Word imports preserve text, headings, and emphasis without uploading', asy
 test('all entry pages wire the same setup and storage runtime', () => {
   for (const file of ['index.html', 'editor.html', 'writing-room.html']) {
     const html = fs.readFileSync(path.join(root, file), 'utf8');
-    assert.match(html, /project-setup.js\?v=5.12.0/); assert.match(html, /dropbox-storage.js/);
+    assert.match(html, /project-setup.js\?v=5.12.1/); assert.match(html, /dropbox-storage.js/);
     assert.doesNotMatch(html, /id="createOnlineProjectButton"/);
   }
 });
@@ -858,4 +858,53 @@ test('ordinary autosave never reparses a large preserved legacy snapshot', async
     assert.equal(a.api.state.documents[1].content, undefined);
     assert.equal((await a.api.workspaceRecord('legacy-project:original-backup')).json, legacy);
   } finally { a.w.JSON.parse = originalParse; a.close(); }
+});
+
+test('project controls and visible save status live in the bottom bar and survive document redraws', async () => {
+  const a = app();
+  try {
+    await a.api.boot();
+    const bar = a.api.els.documentEndBar;
+    const controls = ['startProjectSetup', 'addProjectFile', 'openSavedProject', 'quickDropboxSync'];
+    assert.equal(a.w.document.querySelector('.project-quick-actions'), null);
+    for (const id of controls) assert.ok(bar.contains(a.w.document.getElementById(id)));
+    assert.ok(bar.contains(a.api.els.saveStatus));
+    assert.ok(a.api.els.saveStatus.textContent.trim());
+    const originalButton = a.w.document.querySelector('#addProjectFile');
+    a.api.renderDocumentEndBar(); a.api.renderDocumentEndBar();
+    assert.equal(a.w.document.querySelector('#addProjectFile'), originalButton);
+    assert.equal(a.w.document.querySelectorAll('#projectActions').length, 1);
+    a.w.document.querySelector('#projectSetupDialog').close();
+    originalButton.click();
+    assert.match(a.w.document.querySelector('#setupBody').textContent, /Step 2/);
+    a.w.document.querySelector('#projectSetupDialog').close();
+    a.w.document.querySelector('#startProjectSetup').click();
+    assert.match(a.w.document.querySelector('#setupBody').textContent, /Step 1/);
+  } finally { a.close(); }
+});
+
+test('bottom-bar Sync now saves to Dropbox and exposes busy, connected, and expired states', async () => {
+  const a = app(); const cloud = fakeDropbox();
+  try {
+    await a.api.boot(); seedLibrary(a); cloud.attach(a); a.api.renderDropboxStorage();
+    const button = a.w.document.querySelector('#quickDropboxSync');
+    assert.equal(button.textContent, 'Sync now');
+    let release;
+    const gate = new Promise((resolve) => { release = resolve; });
+    cloud.before = async () => { cloud.before = null; await gate; };
+    const sync = button.onclick();
+    assert.equal(button.disabled, true);
+    assert.equal(button.getAttribute('aria-busy'), 'true');
+    assert.equal(a.w.document.querySelector('#startProjectSetup').disabled, true);
+    release(); await sync;
+    assert.equal(button.disabled, false);
+    assert.equal(button.textContent, 'Sync now');
+    assert.match(a.w.document.querySelector('#bottomDropboxStatus').textContent, /Synced separate files/);
+    assert.match(a.api.els.saveStatus.textContent, /browser and Dropbox/);
+    assert.equal((await cloudIndex(a, cloud)).index.type, 'capsanoto-project-index');
+    a.api.setConnection({ accountId: 'account', expiresAt: Date.now() - 1 }); a.api.renderDropboxStorage();
+    assert.equal(button.textContent, 'Reconnect Dropbox');
+    a.api.setConnection(null); a.api.renderDropboxStorage();
+    assert.equal(button.textContent, 'Connect Dropbox');
+  } finally { a.close(); }
 });

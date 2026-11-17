@@ -162,14 +162,21 @@ async function detachBackupFolder() {
 
 function initializeProjectSetup() {
   if (document.getElementById('projectSetupDialog')) return;
-  const buttons = document.createElement('div');
-  buttons.className = 'project-quick-actions';
-  buttons.innerHTML = '<button type="button" id="startProjectSetup">New project</button><button type="button" id="addProjectFile">Add file</button><button type="button" id="openSavedProject">Open project</button>';
-  els.toolbar.after(buttons);
+  const actions = document.createElement('div');
+  actions.id = 'projectActions';
+  actions.className = 'project-actions';
+  actions.innerHTML = '<div class="project-action-buttons" role="group" aria-label="Project controls"><button type="button" id="startProjectSetup">New project</button><button type="button" id="addProjectFile">Add file</button><button type="button" id="openSavedProject">Open project</button><button type="button" id="quickDropboxSync">Connect Dropbox</button></div><div class="project-save-status"><span id="bottomDropboxStatus" role="status" aria-live="polite"></span></div>';
+  els.documentEndBar.append(actions);
   initializeProjectSettingsViews();
   els.saveStatus.setAttribute('role', 'status');
   els.saveStatus.setAttribute('aria-live', 'polite');
-  buttons.append(els.saveStatus);
+  actions.querySelector('.project-save-status').prepend(els.saveStatus);
+  document.getElementById('quickDropboxSync').onclick = () => {
+    if (!document.getElementById('rememberDropbox')) renderDropboxStorage();
+    const valid = dropboxConnection && dropboxConnection.expiresAt > Date.now() + 10000;
+    return dropboxAction(valid ? syncDropboxProject : connectDropbox);
+  };
+  renderBottomDropboxControl();
   document.getElementById('startProjectSetup').onclick = () => openProjectSetup('new');
   document.getElementById('addProjectFile').onclick = () => openProjectSetup('add');
   document.querySelectorAll('[data-open-file-import]').forEach((button) => { button.onclick = () => openProjectSetup('add'); });

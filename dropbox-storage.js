@@ -26,6 +26,7 @@ async function restoreDropboxConnection() {
 function dropboxRedirectUrl() { return new URL('dropbox-callback.html', location.href).href; }
 
 function renderDropboxStorage() {
+  renderBottomDropboxControl();
   const container = document.getElementById('dropboxStorageControls');
   if (!container) return;
   const connected = Boolean(dropboxConnection);
@@ -59,15 +60,30 @@ function setDropboxStatus(message) {
   const target = document.getElementById('dropboxStatus');
   if (target) target.textContent = message;
   updateProjectSettingsStatus();
+  renderBottomDropboxControl();
+}
+
+function renderBottomDropboxControl() {
+  const button = document.getElementById('quickDropboxSync');
+  if (!button) return;
+  const connected = Boolean(dropboxConnection);
+  const valid = connected && dropboxConnection.expiresAt > Date.now() + 10000;
+  button.textContent = dropboxBusy ? 'Working…' : valid ? 'Sync now' : connected ? 'Reconnect Dropbox' : 'Connect Dropbox';
+  button.title = valid ? 'Save this project to Dropbox now' : 'Connect the Dropbox account that stores your writing';
+  button.disabled = dropboxBusy;
+  button.setAttribute('aria-busy', String(dropboxBusy));
+  document.getElementById('bottomDropboxStatus').textContent = dropboxStatus;
+  for (const id of ['startProjectSetup', 'addProjectFile', 'openSavedProject']) document.getElementById(id).disabled = dropboxBusy;
 }
 
 async function dropboxAction(action) {
   if (dropboxBusy) return;
   dropboxBusy = true;
+  renderBottomDropboxControl();
   document.querySelectorAll('#dropboxStorageControls button').forEach((button) => { button.disabled = true; });
   try { await action(); }
   catch (error) { setDropboxStatus(error.message || 'Dropbox operation failed. Your browser copy is kept.'); setStatus('Dropbox needs attention · browser copy kept', 'dirty'); }
-  finally { dropboxBusy = false; document.querySelectorAll('#dropboxStorageControls button').forEach((button) => { button.disabled = ['syncDropbox', 'openDropboxProject'].includes(button.id) && (!dropboxConnection || dropboxConnection.expiresAt <= Date.now() + 10000); }); }
+  finally { dropboxBusy = false; document.querySelectorAll('#dropboxStorageControls button').forEach((button) => { button.disabled = ['syncDropbox', 'openDropboxProject'].includes(button.id) && (!dropboxConnection || dropboxConnection.expiresAt <= Date.now() + 10000); }); renderBottomDropboxControl(); }
 }
 
 function base64Url(bytes) { return btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
