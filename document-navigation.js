@@ -15,6 +15,7 @@ function outlineCandidates(root) {
 }
 
 function documentOutline(doc) {
+  if (!documentIsLoaded(doc)) return [];
   const cached = outlineCache.get(doc);
   if (cached?.content === doc.content) return cached.items;
   const root = new DOMParser().parseFromString(doc.content || '', 'text/html').body;
@@ -33,6 +34,11 @@ function renderDocumentOutlineSection(doc) {
 function fillDocumentOutline(section, query = outlineSearches.get(section.dataset.outlineDoc) || '') {
   const doc = state.documents.find((item) => item.id === section.dataset.outlineDoc);
   if (!doc) return;
+  if (!documentIsLoaded(doc)) {
+    section.querySelector('.outline-count').textContent = 'This document has not been loaded.';
+    section.querySelector('.outline-results').innerHTML = `<button type="button" data-load-outline="${escapeAttr(doc.id)}">Load headings for this document</button>`;
+    return;
+  }
   const search = section.querySelector('input');
   if (search.value !== query) search.value = query;
   outlineSearches.set(doc.id, query);
@@ -69,10 +75,10 @@ function restoreCabinetView(scrollTop) {
   els.writingRoomCards.scrollTop = scrollTop;
 }
 
-function jumpToDocumentOutline(documentId, index) {
+async function jumpToDocumentOutline(documentId, index) {
   const doc = state.documents.find((item) => item.id === documentId);
   if (!doc) return;
-  if (state.activeId !== documentId) { syncEditorToDocument(); openDocument(documentId); }
+  if (state.activeId !== documentId && !await openDocument(documentId)) return;
   const target = outlineCandidates(els.editor)[Number(index)];
   if (!target) { setStatus('The document changed. Reopen Headings to refresh the list.', 'dirty'); return; }
   const editorRect = els.editor.getBoundingClientRect();
@@ -151,7 +157,13 @@ function initializeDocumentNavigation() {
   els.writingRoomCards.dataset.navigationBound = 'true';
   els.writingRoomCards.addEventListener('toggle', (event) => { if (event.target.matches?.('.document-outline[open]')) fillDocumentOutline(event.target); }, true);
   els.writingRoomCards.addEventListener('input', (event) => { if (event.target.matches('[data-outline-search]')) fillDocumentOutline(event.target.closest('.document-outline'), event.target.value); });
-  els.writingRoomCards.addEventListener('click', (event) => {
+  els.writingRoomCards.addEventListener('click', async (event) => {
+    const load = event.target.closest('[data-load-outline]');
+    if (load) {
+      try { await ensureDocumentContent(state.documents.find((doc) => doc.id === load.dataset.loadOutline)); fillDocumentOutline(load.closest('.document-outline')); }
+      catch (error) { setStatus(error.message, 'dirty'); load.closest('.document-outline').querySelector('.outline-count').textContent = error.message; }
+      return;
+    }
     const button = event.target.closest('[data-outline-jump]');
     if (button) { event.preventDefault(); jumpToDocumentOutline(button.dataset.outlineDocument, button.dataset.outlineJump); }
   });

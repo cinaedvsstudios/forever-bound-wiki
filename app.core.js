@@ -466,6 +466,9 @@ async function startEditor() {
   hydrateIconButtons();
   bindEditorEvents();
   applyRouteToState();
+  await restoreDropboxConnection();
+  try { await ensureDocumentContent(activeDocument()); }
+  catch (error) { showStorageWarning(error.message); }
   loadEditableHelp();
   renderAll();
   runLayoutRecovery("after-render");
@@ -473,7 +476,7 @@ async function startEditor() {
   setTimeout(() => runLayoutRecovery("after-timeout"), 250);
   if (!new URLSearchParams(location.search).has("doc")) updateUrl();
   scrollToRouteBookmark();
-  setStatus("Ready", "saved");
+  setStatus(documentIsLoaded(activeDocument()) ? "Ready" : "Choose a document or reconnect Dropbox", documentIsLoaded(activeDocument()) ? "saved" : "dirty");
   updateContextStatus();
   startFolderModeReminderLoop();
   updateFolderModeStatus();
@@ -524,11 +527,13 @@ function isAuthenticated() {
 
 async function loadWorkspace() {
   const saved = await readWorkspaceSnapshot();
+  let migrateDocumentFiles = false;
   firstWorkspaceRun = !saved;
   if (saved) {
     try {
       const payload = JSON.parse(saved);
-      if (!Array.isArray(payload.documents) || payload.documents.some((doc) => !doc || typeof doc.id !== "string" || typeof doc.content !== "string")) throw new Error("Saved project data is unreadable. The original save has been preserved.");
+      migrateDocumentFiles = payload.storageFormat !== 'document-files-v1';
+      if (!Array.isArray(payload.documents) || payload.documents.some((doc) => !doc || typeof doc.id !== "string" || (typeof doc.content !== "string" && !validDocumentBodyRef(doc._body)))) throw new Error("Saved project data is unreadable. The original save has been preserved.");
       state.projectId = payload.projectId || crypto.randomUUID();
       state.activeId = payload.activeId;
       state.dropboxAutoSync = Boolean(payload.dropboxAutoSync);
@@ -565,6 +570,8 @@ async function loadWorkspace() {
   normalizeFilingHierarchy();
   if (!state.documents.length) createDocument();
   state.activeId = state.documents.some((doc) => doc.id === state.activeId) ? state.activeId : state.documents[0].id;
+  if (saved && migrateDocumentFiles) await writeWorkspaceSnapshot();
+  releaseInactiveDocumentBodies();
   if (legacyStarterCleaned) persistNow("Cleaned starter TCard examples");
 }
 
@@ -624,6 +631,9 @@ function bindEditorEvents() {
     markDirty("Tags updated");
   });
 
+  els.editor.addEventListener("click", (event) => {
+    if (event.target.closest("[data-retry-document]")) void openDocument(state.activeId);
+  });
   els.editor.addEventListener("input", () => {
     if (state.suppressInput) return;
     syncEditorToDocument();
@@ -723,7 +733,7 @@ function bindEditorEvents() {
   els.newFolderButton.addEventListener("click", () => createFilingGroup("folder"));
   els.newTabButton.addEventListener("click", createFilingTab);
   els.trashCanButton?.addEventListener("click", () => setContextStatus(`${state.trash.length} items in Trash · ${state.deprecated.length} deprecated`, false));
-  els.writingRoomCards.addEventListener("click", handleWritingRoomCardClick);
+  els.writingRoomCards.addEventListener("click", (event) => { void runProjectFileAction(() => handleWritingRoomCardClick(event)); });
   els.writingRoomResizeGrip?.addEventListener("pointerdown", startWritingRoomResize);
   els.writingRoomResizeGrip?.addEventListener("keydown", handleWritingRoomResizeKey);
   window.addEventListener("pointermove", moveWritingRoomResize);
@@ -737,7 +747,7 @@ function bindEditorEvents() {
   els.writingRoomCards.addEventListener("pointerdown", startCabinetScrollDrag);
   window.addEventListener("pointermove", moveCabinetScrollDrag);
   window.addEventListener("pointerup", stopCabinetScrollDrag);
-  els.documentEndBar?.addEventListener("click", handleDocumentEndBarClick);
+  els.documentEndBar?.addEventListener("click", (event) => { void runProjectFileAction(() => handleDocumentEndBarClick(event)); });
   els.writingSurfaceGrip?.addEventListener("pointerdown", startWritingSurfaceResize);
   window.addEventListener("pointermove", moveWritingSurfaceResize);
   window.addEventListener("pointerup", stopWritingSurfaceResize);
@@ -770,10 +780,10 @@ function bindEditorEvents() {
   els.logoutButton.addEventListener("click", resetLocalWorkspace);
   els.exportSourceType.addEventListener("change", renderExportSourceSelect);
   els.addExportItemButton.addEventListener("click", addExportItem);
-  els.exportCapsButton.addEventListener("click", () => exportSmartBundle("caps"));
-  els.exportTxtButton.addEventListener("click", () => exportSmartBundle("txt"));
-  els.exportHtmlButton.addEventListener("click", () => exportSmartBundle("html"));
-  els.exportDocButton.addEventListener("click", () => exportSmartBundle("doc"));
+  els.exportCapsButton.addEventListener("click", () => runProjectFileAction(() => exportSmartBundle("caps")));
+  els.exportTxtButton.addEventListener("click", () => runProjectFileAction(() => exportSmartBundle("txt")));
+  els.exportHtmlButton.addEventListener("click", () => runProjectFileAction(() => exportSmartBundle("html")));
+  els.exportDocButton.addEventListener("click", () => runProjectFileAction(() => exportSmartBundle("doc")));
   els.exportQueue.addEventListener("dragstart", handleExportDragStart);
   els.exportQueue.addEventListener("dragover", handleExportDragOver);
   els.exportQueue.addEventListener("drop", handleExportDrop);
@@ -809,7 +819,7 @@ function bindEditorEvents() {
   els.editBlockInlineButton?.addEventListener("click", toggleInlineTCardEditMode);
   els.blockList.addEventListener("click", (event) => {
     const deleteButton = event.target.closest("button[data-delete-block-id]");
-    if (deleteButton) { confirmDeleteBlock(deleteButton.dataset.deleteBlockId); return; }
+    if (deleteButton) { void runProjectFileAction(() => confirmDeleteBlock(deleteButton.dataset.deleteBlockId)); return; }
     const button = event.target.closest("button[data-block-id]");
     if (!button) return;
     selectBlock(button.dataset.blockId);
@@ -1011,20 +1021,46 @@ function createDocument(id = `doc-${Date.now()}`, title = "Untitled Document", o
   return doc;
 }
 
-function openDocument(id, bookmarkId = "") {
-  void promptForLocalDiskMismatch(id);
-  state.activeId = id;
-  state.pendingBookmarkId = bookmarkId;
-  renderAll();
-  updateUrl(bookmarkId);
-  if (bookmarkId) scrollToRouteBookmark();
-  setStatus("Ready", "saved");
+let documentOpenSequence = 0;
+async function openDocument(id, bookmarkId = "") {
+  const doc = state.documents.find((item) => item.id === id);
+  if (!doc) return false;
+  const sequence = ++documentOpenSequence;
+  const projectId = state.projectId;
+  const previous = activeDocument();
+  try {
+    setStatus('Opening ' + doc.title + '…', "dirty");
+    await ensureDocumentContent(doc);
+    if (sequence !== documentOpenSequence || state.projectId !== projectId) return false;
+    syncEditorToDocument(false);
+    await writeWorkspaceSnapshot();
+    if (sequence !== documentOpenSequence || state.projectId !== projectId) return false;
+    void promptForLocalDiskMismatch(id);
+    state.activeId = id;
+    state.pendingBookmarkId = bookmarkId;
+    renderAll();
+    updateUrl(bookmarkId);
+    if (bookmarkId) scrollToRouteBookmark();
+    releaseDocumentBody(previous);
+    markDirty("Opened document");
+    return true;
+  } catch (error) {
+    setStatus(error.message, "dirty");
+    showStorageWarning(error.message);
+    els.documentSelect.value = state.activeId;
+    return false;
+  }
 }
 
-function openFromRoute() {
-  const previousId = state.activeId;
-  applyRouteToState();
-  if (state.activeId !== previousId) renderAll();
+async function openFromRoute() {
+  const route = parseRoute();
+  const target = route.documentId ? findDocumentByRouteId(route.documentId) : null;
+  if (target) { await openDocument(target.id, route.bookmarkId); return; }
+  if (route.documentId) {
+    syncEditorToDocument(false);
+    applyRouteToState();
+    renderAll();
+  } else state.pendingBookmarkId = route.bookmarkId;
   scrollToRouteBookmark();
 }
 
@@ -1114,8 +1150,13 @@ function renderActiveDocument() {
   const doc = activeDocument();
   els.titleInput.value = doc.title;
   els.tagsInput.value = (doc.tags ?? []).join(", ");
+  els.editor.contentEditable = String(documentIsLoaded(doc));
+  if (!documentIsLoaded(doc)) {
+    els.editor.innerHTML = '<p>This document could not be loaded. Connect its Dropbox account in Project Settings, retry, or choose another document. Its saved content has been kept.</p><button type="button" data-retry-document>Retry opening document</button>';
+    return;
+  }
   state.suppressInput = true;
-  els.editor.innerHTML = renderTransclusions(safeDocumentHtml(doc.content));
+  els.editor.innerHTML = renderTransclusions(safeDocumentHtml(requireDocumentContent(doc)));
   ensureHeadingIds();
   state.suppressInput = false;
 }
@@ -1151,14 +1192,16 @@ function renderTransclusions(html) {
 }
 
 function syncEditorToDocument(updateTimestamp = true) {
+  if (!documentIsLoaded(activeDocument())) return;
   const clone = els.editor.cloneNode(true);
   clone.querySelectorAll(".floating-edit-button").forEach((node) => node.remove());
   clone.querySelectorAll(".transclusion-ref[data-block-id]").forEach((node) => {
     node.replaceWith(document.createTextNode(`{{${node.dataset.blockId}}}`));
   });
   const doc = activeDocument();
+  const changed = doc.content !== clone.innerHTML;
   doc.content = clone.innerHTML;
-  if (updateTimestamp) doc.updatedAt = new Date().toISOString();
+  if (updateTimestamp && changed) doc.updatedAt = new Date().toISOString();
 }
 
 function runCommand(command) {
@@ -2399,7 +2442,7 @@ function renderWritingRoomCards() {
   restoreCabinetView(savedCabinetScroll);
   if (els.writingRoomPanel) {
     els.writingRoomPanel.insertAdjacentHTML("beforeend", rail);
-    els.writingRoomPanel.querySelector(":scope > .filing-jump-rail")?.addEventListener("click", handleWritingRoomCardClick);
+    els.writingRoomPanel.querySelector(":scope > .filing-jump-rail")?.addEventListener("click", (event) => { void runProjectFileAction(() => handleWritingRoomCardClick(event)); });
   } else {
     els.writingRoomCards.insertAdjacentHTML("afterbegin", rail);
   }
@@ -2458,7 +2501,7 @@ async function createSubDocument(parentId) {
 function renderWritingRoomCard(doc, depth = 0) {
   const tags = (doc.tags ?? []).slice(0, 8);
   const updated = doc.updatedAt ? new Date(doc.updatedAt).toLocaleDateString() : "Not saved yet";
-  const preview = textFromHtml(renderTransclusions(doc.content)).slice(0, 180) || "Empty Writing Room file";
+  const preview = documentIsLoaded(doc) ? (textFromHtml(renderTransclusions(doc.content)).slice(0, 180) || "Empty Writing Room file") : "Open this document to load its content on this device.";
   const fileType = documentFileType(doc);
   const children = childDocuments(doc.id);
   const childHtml = children.length || state.filingEditMode ? `
@@ -2667,6 +2710,7 @@ async function handleFilingTabAction(action, tabId) {
   if (action === "delete") {
     const confirmed = await confirmFilingDelete({ type: "tab", label: tab.label, docs: tabDocs });
     if (!confirmed) return;
+    await prepareDocumentRemoval(tabDocs);
     moveDocumentsToTrash(tabDocs);
     state.filingTabs = state.filingTabs.filter((item) => item.id !== tabId);
     renderAll();
@@ -2708,6 +2752,7 @@ async function handleFilingGroupAction(action, groupId) {
   if (action === "delete") {
     const confirmed = await confirmFilingDelete({ type: "folder", label: group.label, tabs: groupTabs, docs: groupDocs });
     if (!confirmed) return;
+    await prepareDocumentRemoval(groupDocs);
     moveDocumentsToTrash(groupDocs);
     const tabIds = new Set(groupTabs.map((tab) => tab.id));
     state.filingTabs = state.filingTabs.filter((item) => item.groupId !== groupId);
@@ -2718,9 +2763,10 @@ async function handleFilingGroupAction(action, groupId) {
   }
 }
 
-function duplicateDocument(docId) {
+async function duplicateDocument(docId) {
   const doc = state.documents.find((item) => item.id === docId);
   if (!doc) return;
+  await ensureDocumentContent(doc);
   const copy = JSON.parse(JSON.stringify(doc));
   copy.id = uniqueDocumentId(`${doc.id}-copy`);
   copy.title = `${doc.title} Copy`;
@@ -2730,9 +2776,10 @@ function duplicateDocument(docId) {
   markDirty("Document duplicated");
 }
 
-function deprecateDocument(docId) {
+async function deprecateDocument(docId) {
   const index = state.documents.findIndex((item) => item.id === docId);
   if (index < 0) return;
+  await ensureDocumentContent(state.documents[index]);
   const oldDoc = JSON.parse(JSON.stringify(state.documents[index]));
   oldDoc.id = uniqueDocumentId(`${oldDoc.id}-deprecated`);
   oldDoc.deprecatedAt = new Date().toISOString();
@@ -2763,10 +2810,21 @@ async function deleteDocumentSafely(docId) {
   const stats = documentTextStats(docsToMove.map((item) => item.content || "").join("\n"));
   const confirmed = await confirmFilingDelete({ type: doc.parentDocumentId ? "sub file" : "document", label: doc.title, docs: docsToMove, stats });
   if (!confirmed) return;
+  await prepareDocumentRemoval(docsToMove);
   moveDocumentsToTrash(docsToMove);
-  if (state.activeId === docId) state.activeId = state.documents[0]?.id || createDocument().id;
+  if (state.activeId === docId || !state.documents.some((item) => item.id === state.activeId)) state.activeId = state.documents[0]?.id || createDocument().id;
+  await ensureDocumentContent(activeDocument());
   renderAll();
   markDirty("Document moved to Trash");
+}
+
+async function prepareDocumentRemoval(docs) {
+  syncEditorToDocument(false);
+  const ids = new Set(docs.flatMap((doc) => [doc.id, ...descendantDocuments(doc.id).map((child) => child.id)]));
+  if (ids.has(state.activeId)) {
+    const next = state.documents.find((doc) => !ids.has(doc.id));
+    if (next) await ensureDocumentContent(next);
+  }
 }
 
 function moveDocumentsToTrash(docs) {
@@ -2782,6 +2840,7 @@ function moveDocumentsToTrash(docs) {
     doc.deletedAt = new Date().toISOString();
     state.trash.push(doc);
   });
+  if (!state.documents.some((doc) => doc.id === state.activeId)) state.activeId = state.documents[0]?.id || createDocument().id;
 }
 
 async function confirmFilingDelete({ type, label, tabs = [], docs = [], stats = null }) {
@@ -2805,8 +2864,8 @@ function deleteTreeHtml({ type, label, tabs = [], docs = [], stats = null }) {
   }
   if (docs.length) {
     rows.push(`<li><span class="tree-type">documents</span><ul>${docs.map((doc) => {
-      const docStats = documentTextStats(doc.content || "");
-      return `<li>📄 ${escapeHtml(doc.title)} <small>${docStats.lines} lines · ${docStats.characters} chars</small></li>`;
+      const docStats = documentIsLoaded(doc) ? documentTextStats(doc.content) : null;
+      return `<li>📄 ${escapeHtml(doc.title)} <small>${docStats ? `${docStats.lines} lines · ${docStats.characters} chars` : "Content stored separately"}</small></li>`;
     }).join("")}</ul></li>`);
   } else if (stats?.characters) {
     rows.push(`<li><span class="tree-type">content</span> ${stats.lines} lines · ${stats.characters} characters</li>`);
@@ -3533,6 +3592,7 @@ function handleEditorDrop(event) {
 async function bulkStyleDocument(docId) {
   const doc = state.documents.find((item) => item.id === docId);
   if (!doc) return;
+  await ensureDocumentContent(doc);
   const result = await openCapsDialog("Edit All In File", [
     { name: "target", label: "Target", value: "tcards", placeholder: "tcards, tables, emphasis" },
     { name: "color", label: "Color", value: CAPSANOTO_PALETTE.peach, placeholder: "#e88f69" },
@@ -3720,12 +3780,13 @@ function toggleBlockDeleteMode() {
 function getBlockUsage(id) {
   const token = `{{${id}}}`;
   return state.documents.map((doc) => {
-    const count = (doc.content.match(new RegExp(escapeRegExp(token), "g")) || []).length;
+    const count = (requireDocumentContent(doc).match(new RegExp(escapeRegExp(token), "g")) || []).length;
     return count ? { doc, count } : null;
   }).filter(Boolean);
 }
 
 async function confirmDeleteBlock(id) {
+  await ensureProjectDocumentsLoaded();
   const usage = getBlockUsage(id);
   const decision = await openBlockDeleteDialog(id, usage);
   if (decision === "show-use") {
@@ -3733,10 +3794,11 @@ async function confirmDeleteBlock(id) {
     return;
   }
   if (decision !== "yes") return;
-  deleteBlockEverywhere(id);
+  await deleteBlockEverywhere(id);
 }
 
-function deleteBlockEverywhere(id) {
+async function deleteBlockEverywhere(id) {
+  await ensureProjectDocumentsLoaded();
   delete state.blocks[id];
   state.documents.forEach((doc) => {
     doc.content = doc.content.replace(new RegExp(escapeRegExp(`{{${id}}}`), "g"), "");
@@ -4693,6 +4755,7 @@ async function duplicateGoogleDriveProject() {
 async function downloadCapsanotoProjectBackup() {
   try {
     syncEditorToDocument();
+    await ensureProjectDocumentsLoaded({ archives: true });
     await prepareDocumentsForFolderMode({ rebuildPaths: true });
     const now = new Date().toISOString();
     const payload = {
@@ -4845,6 +4908,7 @@ async function importProjectBackupPayload(payload) {
   state.googleDrive.lastStatus = "Imported independent project copy. Download a backup or connect Dropbox.";
   saveGoogleDriveStorageState();
   await writeWorkspaceSnapshot();
+  releaseInactiveDocumentBodies();
   renderAll();
   updateUrl();
   updateProjectSettingsStatus(state.googleDrive.lastStatus);
@@ -5030,6 +5094,7 @@ async function loadWritingRoomFromFolder(directoryHandle) {
 }
 
 async function prepareDocumentsForFolderMode(options = {}) {
+  await ensureProjectDocumentsLoaded({ archives: true });
   normalizeFilingHierarchy();
   const used = new Set();
   for (const doc of state.documents) {
@@ -5273,6 +5338,7 @@ async function readJsonFromDirectory(directoryHandle, name) {
 }
 
 function documentToCapsMarkdown(doc) {
+  requireDocumentContent(doc);
   const frontMatter = {
     id: doc.id,
     title: doc.title || "Untitled File",
@@ -5479,8 +5545,9 @@ function handleExportQueueClick(event) {
   renderExportQueue();
 }
 
-function exportSmartBundle(format) {
+async function exportSmartBundle(format) {
   const items = state.exportItems.length ? state.exportItems : [{ type: "document", id: activeDocument().id }];
+  for (const item of items) if (item.type === "document") await ensureDocumentContent(state.documents.find((doc) => doc.id === item.id));
   const pieces = items.map(resolveExportPiece).filter(Boolean);
   const baseName = `capsanoto-${new Date().toISOString().slice(0, 10)}`;
   if (format === "caps") {
@@ -5500,7 +5567,7 @@ function resolveExportPiece(item) {
     return block ? { type: "block", id: block.id, title: block.id, html: `<p>${sanitizeBlockContent(block.content)}</p>` } : null;
   }
   const doc = state.documents.find((entry) => entry.id === item.id);
-  return doc ? { type: "document", id: doc.id, title: doc.title, html: renderTransclusions(doc.content) } : null;
+  return doc ? { type: "document", id: doc.id, title: doc.title, html: renderTransclusions(requireDocumentContent(doc)) } : null;
 }
 
 function downloadFile(filename, content, type) {
@@ -6396,8 +6463,9 @@ async function resetLocalWorkspace() {
   renderAll(); updateUrl();
 }
 
-function exportWorkspace() {
-  persistNow("Download prepared");
+async function exportWorkspace() {
+  await ensureProjectDocumentsLoaded({ archives: true });
+  await persistNow("Download prepared");
   const blob = new Blob([serializedWorkspace()], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");

@@ -23,7 +23,8 @@ function app({ indexedDB = new IDBFactory(), legacy } = {}) {
   const markdown = fs.readFileSync(path.join(root, 'markdown-export.js'), 'utf8');
   const navigation = fs.readFileSync(path.join(root, 'document-navigation.js'), 'utf8');
   const cloud = fs.readFileSync(path.join(root, 'dropbox-storage.js'), 'utf8');
-  w.eval(setup + '\n' + cloud + '\n' + markdown + '\n' + navigation + '\n' + core + '\nwindow.testApp = { startWritingRoomResize, moveWritingRoomResize, stopWritingRoomResize, handleWritingRoomResizeKey, documentOutline, jumpToDocumentOutline, fillDocumentOutline, calculateRoomLayout, renderWritingRoomCards, updateRoomWorkspaceLayout, toggleWritingRoomPanel, applyDesignSettings, collectDesignSettingsFromForm, saveDesignSettings, applyExtraDesignSettings, currentDesignSettings, buildMarkdownArchive, openProjectSetup, advanceProjectSetup, readGoogleDocsSource, renderDropboxStorage, setSetupSource: (source) => { setupSession.source = source; setupSession.selected = new Set(source.tabs.map(t => t.id)); }, state, els, boot, loadWorkspace, serializedWorkspace, writeWorkspaceSnapshot, readWorkspaceSnapshot, workspaceRecord, persistNow, safeDocumentHtml, googleDocsToImportSource, commitProjectImport, readImportFile, importProjectBackupPayload, folderModeProjectPayload, capsMarkdownToDocument, prepareProjectReplacement, saveFolderModeSnapshot, syncDropboxProject, openWritingRoomFolder, projectCloudFingerprint, setConnection: (value) => { dropboxConnection = value; }, getRevision: () => workspaceRevision };');
+  const filesRuntime = fs.readFileSync(path.join(root, 'project-files.js'), 'utf8');
+  w.eval(filesRuntime + '\n' + setup + '\n' + cloud + '\n' + markdown + '\n' + navigation + '\n' + core + '\nwindow.testApp = { projectFileHash, encodeProjectIndex, ensureDocumentContent, ensureProjectDocumentsLoaded, openDocument, openDropboxProjectPath, documentIsLoaded, completeProjectCopy, listSavedProjectIndexes, openFromRoute, releaseDocumentBody, duplicateDocument, deprecateDocument, deleteDocumentSafely, restoreArchivedDocument, setDialogResponse: (response) => { openCapsDialog = async () => response; }, startWritingRoomResize, moveWritingRoomResize, stopWritingRoomResize, handleWritingRoomResizeKey, documentOutline, jumpToDocumentOutline, fillDocumentOutline, calculateRoomLayout, renderWritingRoomCards, updateRoomWorkspaceLayout, toggleWritingRoomPanel, applyDesignSettings, collectDesignSettingsFromForm, saveDesignSettings, applyExtraDesignSettings, currentDesignSettings, buildMarkdownArchive, openProjectSetup, advanceProjectSetup, readGoogleDocsSource, renderDropboxStorage, setSetupSource: (source) => { setupSession.source = source; setupSession.selected = new Set(source.tabs.map(t => t.id)); }, state, els, boot, loadWorkspace, serializedWorkspace, writeWorkspaceSnapshot, readWorkspaceSnapshot, workspaceRecord, persistNow, safeDocumentHtml, googleDocsToImportSource, commitProjectImport, readImportFile, importProjectBackupPayload, folderModeProjectPayload, capsMarkdownToDocument, prepareProjectReplacement, saveFolderModeSnapshot, syncDropboxProject, openWritingRoomFolder, projectCloudFingerprint, setConnection: (value) => { dropboxConnection = value; }, getRevision: () => workspaceRevision };');
   return { w, api: w.testApp, close: () => dom.window.close() };
 }
 function seed(a) {
@@ -49,7 +50,7 @@ test('unreadable browser saves are preserved, never replaced by starter content'
 test('legacy data migrates to the larger browser database with HTML intact', async () => {
   const legacy = { projectId: 'legacy', writingRoomName: 'Old project', documents: [{ id: 'old', title: 'Old', content: '<p>100% preserved</p>', tags: [] }], blocks: {} };
   const a = app({ legacy: JSON.stringify(legacy) });
-  try { await a.api.loadWorkspace(); await a.api.writeWorkspaceSnapshot(); const saved = JSON.parse((await a.api.workspaceRecord('active')).json); assert.equal(saved.documents[0].content, legacy.documents[0].content); assert.equal(saved.projectId, 'legacy'); }
+  try { await a.api.loadWorkspace(); await a.api.writeWorkspaceSnapshot(); const saved = JSON.parse((await a.api.workspaceRecord('active')).json); assert.equal(saved.documents[0].content, undefined); await a.api.ensureDocumentContent(a.api.state.documents[0]); assert.equal(a.api.state.documents[0].content, legacy.documents[0].content); assert.equal(saved.projectId, 'legacy'); }
   finally { a.close(); }
 });
 test('native tabs and nested relationships survive selective import and backup restore', async () => {
@@ -60,6 +61,7 @@ test('native tabs and nested relationships survive selective import and backup r
     await a.api.commitProjectImport({ mode: 'new', name: 'Forever Bound', source, selected: new Set(['act', 'notes']) });
     assert.equal(a.api.state.documents.length, 2);
     assert.equal(a.api.state.documents[1].parentDocumentId, a.api.state.documents[0].id);
+    await a.api.ensureProjectDocumentsLoaded();
     const payload = a.api.folderModeProjectPayload();
     payload.blocks = a.api.state.blocks;
     assert.equal(payload.documents[1].source.tabId, 'notes');
@@ -75,7 +77,10 @@ test('adding another file retains the existing documents and rejects duplicate G
     const source = a.api.googleDocsToImportSource(native);
     await a.api.commitProjectImport({ mode: 'add', source, selected: new Set(['act']) });
     assert.equal(a.api.state.documents.length, 2);
-    assert.match(a.api.state.documents.find((d) => d.id === 'original').content, /Keep this draft/);
+    const original = a.api.state.documents.find((d) => d.id === 'original');
+    assert.equal(original.content, undefined);
+    await a.api.ensureDocumentContent(original);
+    assert.match(original.content, /Keep this draft/);
     await assert.rejects(a.api.commitProjectImport({ mode: 'add', source, selected: new Set(['act']) }), /already/);
     assert.equal(a.api.state.documents.length, 2);
   } finally { a.close(); }
@@ -109,23 +114,10 @@ test('Word imports preserve text, headings, and emphasis without uploading', asy
     assert.match(source.tabs[0].html, /<strong>Word pilot text<\/strong>/);
   } finally { a.close(); }
 });
-test('Dropbox upload uses revision checks and keeps the local copy on a conflict', async () => {
-  const a = app(); seed(a.api);
-  try {
-    a.api.setConnection({ token: 'test-only', accountId: 'account', expiresAt: Date.now() + 60000 });
-    await a.api.workspaceRecord('dropbox-binding:account:project-original', { path: '/project.caps.json', rev: 'known-revision' });
-    let upload;
-    a.w.fetch = async (url, options) => { upload = options; return { ok: false, status: 409 }; };
-    await assert.rejects(a.api.syncDropboxProject(), /another version/);
-    const args = JSON.parse(upload.headers['Dropbox-API-Arg']);
-    assert.equal(args.mode.update, 'known-revision'); assert.equal(args.strict_conflict, true); assert.equal(args.autorename, false);
-    assert.match((await a.api.workspaceRecord('active')).json, /Keep this draft/);
-  } finally { a.close(); }
-});
 test('all entry pages wire the same setup and storage runtime', () => {
   for (const file of ['index.html', 'editor.html', 'writing-room.html']) {
     const html = fs.readFileSync(path.join(root, file), 'utf8');
-    assert.match(html, /project-setup.js\?v=5.11.2/); assert.match(html, /dropbox-storage.js/);
+    assert.match(html, /project-setup.js\?v=5.12.0/); assert.match(html, /dropbox-storage.js/);
     assert.doesNotMatch(html, /id="createOnlineProjectButton"/);
   }
 });
@@ -306,7 +298,7 @@ test('jumping to an outline item opens the correct document and selects the corr
   try {
     await a.api.boot();
     a.api.state.documents.push({ id: 'jump-target', title: 'Scene target', content: '<h2>Repeated</h2><p>Prose.</p><h2>Repeated</h2><p>Scene 3: Arrival</p>', tags: [] });
-    a.api.jumpToDocumentOutline('jump-target', 1);
+    await a.api.jumpToDocumentOutline('jump-target', 1);
     assert.equal(a.api.state.activeId, 'jump-target');
     const node = a.w.getSelection().anchorNode;
     assert.equal(node.tagName, 'H2');
@@ -471,4 +463,399 @@ test('Writing Room pointer and keyboard resizing persists geometry without exiti
     const stored = JSON.parse(a.w.localStorage.getItem('capsanoto-writing-room-layout-v5-8-6'));
     assert.equal(stored.width, 450); assert.equal(stored.height, 450);
   } finally { a.close(); }
+});
+
+function fakeDropbox() {
+  const entries = new Map();
+  const requests = [];
+  let revision = 0;
+  const cloud = { entries, requests, fail: null, before: null };
+  const metadata = (path, tag = 'file') => ({ '.tag': tag, path_lower: path.toLowerCase(), name: path.split('/').pop(), rev: String(++revision), server_modified: new Date(1700000000000 + revision * 1000).toISOString() });
+  cloud.put = (path, text) => { const file = { ...metadata(path), text }; entries.set(path.toLowerCase(), file); return file; };
+  cloud.attach = (a) => {
+    a.api.setConnection({ token: 'test-only', accountId: 'account', expiresAt: Date.now() + 3600000 });
+    a.w.fetch = async (url, options) => {
+      const route = url.split('/2/')[1];
+      const args = options.headers['Dropbox-API-Arg'] ? JSON.parse(options.headers['Dropbox-API-Arg']) : JSON.parse(options.body);
+      const request = { route, args, body: options.body };
+      requests.push(request);
+      if (cloud.before) await cloud.before(request);
+      const failure = (summary, status = 409) => ({ ok: false, status, json: async () => ({ error_summary: summary }) });
+      if (cloud.fail?.(request)) return failure('simulated failure', 503);
+      const key = args?.path?.toLowerCase();
+      const existing = entries.get(key);
+      let result;
+      if (route === 'files/get_metadata') {
+        if (!existing) return failure('path/not_found/');
+        result = existing;
+      } else if (route === 'files/create_folder_v2') {
+        if (existing) return failure('path/conflict/folder/');
+        const folder = metadata(args.path, 'folder'); entries.set(key, folder); result = { metadata: folder };
+      } else if (route === 'files/upload') {
+        if (args.mode?.['.tag'] === 'update' ? existing?.rev !== args.mode.update : existing && (args.strict_conflict || existing.text !== options.body)) return failure('path/conflict/file/');
+        result = existing?.text === options.body ? existing : cloud.put(args.path, options.body);
+      } else if (route === 'files/download') {
+        if (!existing || existing['.tag'] !== 'file') return failure('path/not_found/');
+        return { ok: true, status: 200, text: async () => existing.text, headers: { get: (name) => name === 'Dropbox-API-Result' ? JSON.stringify(existing) : null } };
+      } else if (route === 'files/list_folder') {
+        const prefix = args.path.toLowerCase() + '/';
+        result = { entries: [...entries.values()].filter((entry) => entry.path_lower.startsWith(prefix) && !entry.path_lower.slice(prefix.length).includes('/')), has_more: false };
+      } else throw new Error('Unexpected Dropbox route: ' + route);
+      return { ok: true, status: 200, json: async () => result, headers: { get: () => null } };
+    };
+  };
+  return cloud;
+}
+
+function seedLibrary(a) {
+  seed(a.api);
+  a.api.state.documents.push({ id: 'bible', title: 'Bible', tags: ['lore'], content: '<p>' + 'World history. '.repeat(50000) + '</p>' });
+  a.api.state.filingGroups = [{ id: 'files', label: 'Files' }];
+  a.api.state.filingTabs = [{ id: 'documents', groupId: 'files', label: 'Documents' }];
+  a.api.state.documents.forEach((doc) => { doc.filingGroupId = 'files'; doc.filingTabId = 'documents'; });
+}
+
+async function cloudIndex(a, cloud) {
+  const binding = await a.api.workspaceRecord('dropbox-binding:account:project-original');
+  return { binding, file: cloud.entries.get(binding.path.toLowerCase()), index: JSON.parse(cloud.entries.get(binding.path.toLowerCase()).text) };
+}
+
+test('local persistence splits bodies from the index and reopens only the selected document', async () => {
+  const db = new IDBFactory(); const a = app({ indexedDB: db }); const b = app({ indexedDB: db }); seedLibrary(a);
+  try {
+    await a.api.writeWorkspaceSnapshot();
+    const record = await a.api.workspaceRecord('active'); const index = JSON.parse(record.json);
+    assert.ok(record.json.length < 10000);
+    assert.equal(index.documents[1].content, undefined);
+    assert.match(await a.api.workspaceRecord('document-body:' + index.documents[1]._body.hash), /World history/);
+    await b.api.loadWorkspace();
+    assert.equal(b.api.state.documents.every((doc) => !b.api.documentIsLoaded(doc)), true);
+    await b.api.ensureDocumentContent(b.api.state.documents[0]);
+    assert.equal(b.api.documentIsLoaded(b.api.state.documents[1]), false);
+    assert.equal(b.api.state.documents[0].content, '<p>Keep this draft</p>');
+  } finally { a.close(); b.close(); }
+});
+
+test('Dropbox publishes separate document files and a small index, then uploads only the edited document', async () => {
+  const a = app(); seedLibrary(a); const cloud = fakeDropbox(); cloud.attach(a);
+  try {
+    await a.api.syncDropboxProject();
+    const first = await cloudIndex(a, cloud);
+    assert.equal(first.index.type, 'capsanoto-project-index');
+    assert.equal(first.index.project.documents.length, 2);
+    assert.ok(first.file.text.length < cloud.entries.get(first.index.project.documents[1]._body.path).text.length / 10);
+    assert.doesNotMatch(first.file.text, /World history/);
+    assert.equal(first.index.project.documents[0].content, undefined);
+    const biblePath = first.index.project.documents[1]._body.path;
+    assert.match(cloud.entries.get(biblePath).text, /World history/);
+    cloud.requests.length = 0;
+    a.api.els.editor.innerHTML = '<p>Edited script</p>';
+    await a.api.syncDropboxProject();
+    const uploads = cloud.requests.filter((request) => request.route === 'files/upload');
+    assert.equal(uploads.filter((request) => request.args.path.includes('/documents/')).length, 1);
+    assert.equal(uploads.some((request) => request.args.path === biblePath), false);
+    assert.equal(uploads.at(-1).args.path, first.binding.path);
+    assert.equal(uploads.at(-1).args.mode.update, first.binding.rev);
+    assert.equal(uploads.at(-1).args.strict_conflict, true);
+    assert.equal(uploads.at(-1).args.autorename, false);
+    cloud.requests.length = 0;
+    await a.api.syncDropboxProject();
+    assert.equal(cloud.requests.some((request) => request.route === 'files/upload'), false);
+  } finally { a.close(); }
+});
+
+test('a new device opens the index and selected script without downloading or parsing the bible', async () => {
+  const a = app(); const b = app(); seedLibrary(a); seed(b.api); const cloud = fakeDropbox(); cloud.attach(a); cloud.attach(b);
+  try {
+    await a.api.syncDropboxProject(); const { binding, index } = await cloudIndex(a, cloud);
+    cloud.requests.length = 0;
+    await b.api.openDropboxProjectPath(binding.path);
+    const downloads = cloud.requests.filter((request) => request.route === 'files/download').map((request) => request.args.path);
+    assert.equal(downloads.length, 3); // index, shared TCards, selected script
+    assert.equal(downloads.includes(index.project.documents[1]._body.path), false);
+    assert.equal(b.api.documentIsLoaded(b.api.state.documents[1]), false);
+    b.api.renderWritingRoomCards();
+    assert.equal(b.api.documentIsLoaded(b.api.state.documents[1]), false);
+    assert.equal(await b.api.openDocument('bible'), true);
+    assert.match(b.api.state.documents[1].content, /World history/);
+    assert.equal(b.api.documentIsLoaded(b.api.state.documents[0]), false);
+  } finally { a.close(); b.close(); }
+});
+
+test('an interrupted upload keeps the previous index and document versions intact and can be retried', async () => {
+  const a = app(); seedLibrary(a); const cloud = fakeDropbox(); cloud.attach(a);
+  try {
+    await a.api.syncDropboxProject(); const first = await cloudIndex(a, cloud);
+    const originalText = first.file.text;
+    a.api.els.editor.innerHTML = '<p>New edit that must survive failure</p>';
+    cloud.fail = (request) => request.route === 'files/upload' && request.args.path.includes('/history/');
+    await assert.rejects(a.api.syncDropboxProject(), /503/);
+    assert.equal(cloud.entries.get(first.binding.path).text, originalText);
+    assert.equal((await a.api.workspaceRecord('dropbox-binding:account:project-original')).rev, first.binding.rev);
+    const local = JSON.parse((await a.api.workspaceRecord('active')).json);
+    assert.match(await a.api.workspaceRecord('document-body:' + local.documents[0]._body.hash), /must survive failure/);
+    cloud.fail = null;
+    await a.api.syncDropboxProject();
+    assert.notEqual(cloud.entries.get(first.binding.path).text, originalText);
+    for (const doc of first.index.project.documents) assert.ok(cloud.entries.has(doc._body.path));
+  } finally { a.close(); }
+});
+
+test('a competing device cannot publish a stale index or overwrite another device’s documents', async () => {
+  const a = app(); const b = app(); seedLibrary(a); seed(b.api); const cloud = fakeDropbox(); cloud.attach(a); cloud.attach(b);
+  try {
+    await a.api.syncDropboxProject(); const first = await cloudIndex(a, cloud);
+    await b.api.openDropboxProjectPath(first.binding.path);
+    a.api.els.editor.innerHTML = '<p>Device A wins</p>'; await a.api.syncDropboxProject();
+    const newer = cloud.entries.get(first.binding.path).text;
+    b.api.els.editor.innerHTML = '<p>Device B unsynced draft</p>';
+    await assert.rejects(b.api.syncDropboxProject(), /another version/);
+    assert.equal(cloud.entries.get(first.binding.path).text, newer);
+    assert.match(b.api.state.documents[0].content, /Device B unsynced/);
+  } finally { a.close(); b.close(); }
+});
+
+test('a revision conflict at the final commit cannot expose partially updated document files', async () => {
+  const a = app(); seedLibrary(a); const cloud = fakeDropbox(); cloud.attach(a);
+  try {
+    await a.api.syncDropboxProject(); const first = await cloudIndex(a, cloud);
+    a.api.els.editor.innerHTML = '<p>Competing edit</p>';
+    cloud.before = async (request) => {
+      if (request.route === 'files/upload' && request.args.path === first.binding.path) { cloud.before = null; cloud.put(first.binding.path, first.file.text); }
+    };
+    await assert.rejects(a.api.syncDropboxProject(), /another version/);
+    assert.equal(cloud.entries.get(first.binding.path).text, first.file.text);
+    const finalUpload = cloud.requests.filter((request) => request.route === 'files/upload').at(-1);
+    assert.equal(finalUpload.args.mode.update, first.binding.rev);
+    assert.equal(finalUpload.args.autorename, false);
+  } finally { a.close(); }
+});
+
+test('a missing bible file leaves the script usable and cannot become a blank saved bible', async () => {
+  const a = app(); const b = app(); seedLibrary(a); seed(b.api); const cloud = fakeDropbox(); cloud.attach(a); cloud.attach(b);
+  try {
+    await a.api.syncDropboxProject(); const { binding, index } = await cloudIndex(a, cloud);
+    const biblePath = index.project.documents[1]._body.path;
+    cloud.entries.delete(biblePath);
+    await b.api.openDropboxProjectPath(binding.path);
+    assert.equal(await b.api.openDocument('bible'), false);
+    assert.equal(b.api.state.activeId, 'original');
+    assert.equal(b.api.state.documents[1].content, undefined);
+    b.api.els.editor.innerHTML = '<p>Still editing script</p>';
+    await b.api.syncDropboxProject();
+    const saved = await cloudIndex(b, cloud);
+    assert.equal(saved.index.project.documents[1]._body.hash, index.project.documents[1]._body.hash);
+    assert.equal(cloud.entries.has(biblePath), false);
+  } finally { a.close(); b.close(); }
+});
+
+test('a corrupted document is rejected independently while other documents can still open', async () => {
+  const a = app(); const b = app(); seedLibrary(a); seed(b.api); const cloud = fakeDropbox(); cloud.attach(a); cloud.attach(b);
+  try {
+    await a.api.syncDropboxProject(); const { binding, index } = await cloudIndex(a, cloud);
+    cloud.entries.get(index.project.documents[1]._body.path).text = '{broken content';
+    await b.api.openDropboxProjectPath(binding.path);
+    await assert.rejects(b.api.ensureDocumentContent(b.api.state.documents[1]), /integrity check/);
+    assert.match(b.api.state.documents[0].content, /Keep this draft/);
+    assert.equal(b.api.state.documents[1].content, undefined);
+  } finally { a.close(); b.close(); }
+});
+
+test('visited documents reopen offline from individual cache records after a browser restart', async () => {
+  const db = new IDBFactory(); const a = app({ indexedDB: db }); seedLibrary(a);
+  try {
+    await a.api.writeWorkspaceSnapshot();
+    const b = app({ indexedDB: db });
+    try {
+      b.w.fetch = async () => { throw new Error('Offline'); };
+      await b.api.loadWorkspace();
+      await b.api.ensureDocumentContent(b.api.state.documents[0]);
+      await b.api.ensureDocumentContent(b.api.state.documents[1]);
+      assert.match(b.api.state.documents[1].content, /World history/);
+    } finally { b.close(); }
+  } finally { a.close(); }
+});
+
+test('complete backups and Markdown export explicitly load all required bodies without empty files', async () => {
+  const a = app(); const b = app(); seedLibrary(a); seed(b.api); const cloud = fakeDropbox(); cloud.attach(a); cloud.attach(b);
+  try {
+    await a.api.syncDropboxProject(); const { binding } = await cloudIndex(a, cloud);
+    await b.api.openDropboxProjectPath(binding.path);
+    const copy = await b.api.completeProjectCopy(JSON.parse(b.api.serializedWorkspace()));
+    assert.match(copy.documents[1].content, /World history/);
+    assert.equal(copy.documents[1]._body, undefined);
+    assert.equal(b.api.state.documents[1].content, undefined); // backup does not load it into the editor model
+    const archive = await JSZip.loadAsync(await b.api.buildMarkdownArchive());
+    const map = JSON.parse(await archive.file('project-map.json').async('string'));
+    assert.match(await archive.file(map.documents[1].path).async('string'), /World history/);
+  } finally { a.close(); b.close(); }
+});
+
+test('older Dropbox snapshots migrate into separate files without modifying or deleting the old backup', async () => {
+  const a = app(); seedLibrary(a); const cloud = fakeDropbox(); cloud.attach(a);
+  try {
+    const legacyText = JSON.stringify({ type: 'capsanoto-project-backup', project: JSON.parse(a.api.serializedWorkspace()) });
+    const legacy = cloud.put('/older.caps.json', legacyText);
+    await a.api.workspaceRecord('dropbox-binding:account:project-original', { path: '/older.caps.json', rev: legacy.rev });
+    await a.api.syncDropboxProject();
+    const { binding } = await cloudIndex(a, cloud);
+    assert.equal(binding.format, 'document-files-v1');
+    assert.equal(binding.legacyPath, '/older.caps.json');
+    assert.equal(cloud.entries.get('/older.caps.json').text, legacyText);
+    assert.equal(cloud.requests.some((request) => request.route.includes('delete')), false);
+  } finally { a.close(); }
+});
+
+test('a damaged index can reopen a verified saved index without replacing anything in Dropbox', async () => {
+  const a = app(); const b = app(); seedLibrary(a); seed(b.api); const cloud = fakeDropbox(); cloud.attach(a); cloud.attach(b);
+  try {
+    await a.api.syncDropboxProject(); const { binding } = await cloudIndex(a, cloud);
+    cloud.entries.get(binding.path).text = '{damaged index';
+    b.api.setDialogResponse({ path: binding.historyPath, confirm: 'on' });
+    cloud.requests.length = 0;
+    await b.api.openDropboxProjectPath(binding.path);
+    assert.equal(b.api.state.projectId, 'project-original');
+    assert.match(b.api.state.documents[0].content, /Keep this draft/);
+    assert.equal(b.api.state.documents[1].content, undefined);
+    assert.equal(cloud.entries.get(binding.path).text, '{damaged index');
+    assert.equal(cloud.requests.some((request) => request.route === 'files/upload'), false);
+  } finally { a.close(); b.close(); }
+});
+
+test('choosing a script before project opening does not load the previously active bible', async () => {
+  const a = app(); const b = app(); seedLibrary(a); seed(b.api); const cloud = fakeDropbox(); cloud.attach(a); cloud.attach(b);
+  try {
+    a.api.state.activeId = 'bible'; a.api.els.editor.innerHTML = a.api.state.documents[1].content;
+    await a.api.syncDropboxProject(); const { binding, index } = await cloudIndex(a, cloud);
+    b.api.setDialogResponse({ documentId: 'original' });
+    cloud.requests.length = 0;
+    await b.api.openDropboxProjectPath(binding.path, { chooseDocument: true });
+    assert.equal(b.api.state.activeId, 'original');
+    assert.equal(b.api.state.documents[1].content, undefined);
+    assert.equal(cloud.requests.some((request) => request.route === 'files/download' && request.args.path === index.project.documents[1]._body.path), false);
+  } finally { a.close(); b.close(); }
+});
+
+test('a missing startup body leaves navigation and reconnection available without saving placeholder text', async () => {
+  const a = app(); const b = app(); seedLibrary(a); const cloud = fakeDropbox(); cloud.attach(a);
+  try {
+    await a.api.writeWorkspaceSnapshot();
+    const index = JSON.parse((await a.api.workspaceRecord('active')).json);
+    // Simulate a new browser with just the index, no cached bodies and an expired connection.
+    await b.api.workspaceRecord('active', { json: JSON.stringify(index), revision: 1, projectId: 'project-original', name: 'Original' });
+    await b.api.boot();
+    assert.equal(b.api.els.editor.contentEditable, 'false');
+    assert.ok(b.w.document.querySelector('[data-retry-document]'));
+    assert.ok(b.w.document.querySelector('#connectDropbox'));
+    assert.equal(b.api.state.documents[0].content, undefined);
+    await b.api.writeWorkspaceSnapshot();
+    const saved = JSON.parse((await b.api.workspaceRecord('active')).json);
+    assert.equal(saved.documents[0].content, undefined);
+    assert.equal(saved.documents[0]._body.hash, index.documents[0]._body.hash);
+  } finally { a.close(); b.close(); }
+});
+
+test('listing saved projects does not read every cached body', async () => {
+  const a = app(); seedLibrary(a);
+  const { IDBObjectStore } = require('fake-indexeddb');
+  const originalGetAll = IDBObjectStore.prototype.getAll;
+  try {
+    await a.api.writeWorkspaceSnapshot();
+    IDBObjectStore.prototype.getAll = () => { throw new Error('Bulk body read forbidden'); };
+    const projects = await a.api.listSavedProjectIndexes();
+    assert.equal(projects.length, 1);
+    assert.equal(projects[0].projectId, 'project-original');
+    assert.doesNotMatch(projects[0].json, /World history/);
+  } finally { IDBObjectStore.prototype.getAll = originalGetAll; a.close(); }
+});
+
+test('a failed selected-document download never replaces the current project', async () => {
+  const a = app(); const b = app(); seedLibrary(a); seed(b.api); const cloud = fakeDropbox(); cloud.attach(a); cloud.attach(b);
+  try {
+    b.api.state.projectId = 'different-project';
+    await a.api.syncDropboxProject(); const { binding, index } = await cloudIndex(a, cloud);
+    cloud.entries.delete(index.project.documents[0]._body.path);
+    await assert.rejects(b.api.openDropboxProjectPath(binding.path), /Could not open/);
+    assert.equal(b.api.state.projectId, 'different-project');
+    assert.match(b.api.state.documents[0].content, /Keep this draft/);
+  } finally { a.close(); b.close(); }
+});
+
+test('local cache pruning keeps every saved project and the previous working copy', async () => {
+  const a = app(); seedLibrary(a);
+  try {
+    await a.api.writeWorkspaceSnapshot();
+    const oldRecord = await a.api.workspaceRecord('active');
+    const oldIndex = JSON.parse(oldRecord.json);
+    await a.api.workspaceRecord('previous-project', { json: oldRecord.json });
+    a.api.state.documents[0].content = '<p>Second revision</p>';
+    await a.api.writeWorkspaceSnapshot();
+    const second = JSON.parse((await a.api.workspaceRecord('active')).json);
+    assert.match(await a.api.workspaceRecord('document-body:' + oldIndex.documents[0]._body.hash), /Keep this draft/);
+    assert.match(await a.api.workspaceRecord('document-body:' + second.documents[0]._body.hash), /Second revision/);
+    assert.match(await a.api.workspaceRecord('document-body:' + oldIndex.documents[1]._body.hash), /World history/);
+    await a.api.workspaceRecord('previous-project', null);
+    a.api.state.documents[0].content = '<p>Third revision</p>';
+    await a.api.writeWorkspaceSnapshot();
+    assert.equal(await a.api.workspaceRecord('document-body:' + second.documents[0]._body.hash), undefined);
+    assert.equal(await a.api.workspaceRecord('document-body:' + oldIndex.documents[0]._body.hash), undefined);
+    assert.match(await a.api.workspaceRecord('document-body:' + oldIndex.documents[1]._body.hash), /World history/);
+  } finally { a.close(); }
+});
+
+test('an unavailable body stops a complete export instead of emitting an empty document', async () => {
+  const a = app(); const b = app(); seedLibrary(a); seed(b.api); const cloud = fakeDropbox(); cloud.attach(a); cloud.attach(b);
+  try {
+    await a.api.syncDropboxProject(); const { binding, index } = await cloudIndex(a, cloud);
+    cloud.entries.delete(index.project.documents[1]._body.path);
+    await b.api.openDropboxProjectPath(binding.path);
+    await assert.rejects(b.api.buildMarkdownArchive(), /Could not open/);
+    assert.equal(b.api.state.documents[1].content, undefined);
+  } finally { a.close(); b.close(); }
+});
+
+test('normal startup after migration loads only the active cached document', async () => {
+  const db = new IDBFactory(); const a = app({ indexedDB: db }); const b = app({ indexedDB: db }); seedLibrary(a);
+  try {
+    await a.api.writeWorkspaceSnapshot();
+    await b.api.boot();
+    assert.equal(b.api.state.activeId, 'original');
+    assert.match(b.api.els.editor.textContent, /Keep this draft/);
+    assert.equal(b.api.state.documents[1].content, undefined);
+    assert.equal(b.api.els.editor.contentEditable, 'true');
+  } finally { a.close(); b.close(); }
+});
+
+test('document routes load existing bodies on demand and retain new-document link behavior', async () => {
+  const a = app(); seedLibrary(a);
+  try {
+    await a.api.writeWorkspaceSnapshot();
+    a.api.releaseDocumentBody(a.api.state.documents[1]);
+    a.w.history.pushState(null, '', '?doc=bible');
+    await a.api.openFromRoute();
+    assert.equal(a.api.state.activeId, 'bible');
+    assert.match(a.api.state.documents[1].content, /World history/);
+    a.w.history.pushState(null, '', '?doc=new-linked-file');
+    await a.api.openFromRoute();
+    assert.equal(a.api.state.activeId, 'new-linked-file');
+    assert.equal(a.api.state.documents.length, 3);
+  } finally { a.close(); }
+});
+
+test('ordinary autosave never reparses a large preserved legacy snapshot', async () => {
+  const a = app(); seedLibrary(a);
+  const originalParse = a.w.JSON.parse;
+  try {
+    const legacy = a.api.serializedWorkspace();
+    await a.api.writeWorkspaceSnapshot();
+    a.api.releaseDocumentBody(a.api.state.documents[1]);
+    await a.api.workspaceRecord('legacy-project:original-backup', { json: legacy, bodyReferences: [] });
+    a.w.JSON.parse = (value, ...args) => {
+      if (typeof value === 'string' && value.includes('World history')) throw new Error('Unopened bible was parsed during autosave');
+      return originalParse(value, ...args);
+    };
+    await a.api.writeWorkspaceSnapshot();
+    assert.equal(a.api.state.documents[1].content, undefined);
+    assert.equal((await a.api.workspaceRecord('legacy-project:original-backup')).json, legacy);
+  } finally { a.w.JSON.parse = originalParse; a.close(); }
 });

@@ -32,7 +32,7 @@ Text, headings, emphasis, lists, and tables are supported. Review Word formattin
 
 ## Where your files are saved
 
-- **Browser autosave:** documents and project history use IndexedDB, with migration from the previous localStorage save. This copy belongs to this browser, device, and site address. Clearing browser data can remove it.
+- **Browser autosave:** a small project index and independent document records use IndexedDB. Existing snapshot saves migrate once; their original copy is preserved. Unopened document bodies are not parsed at startup. Superseded local cache records are removed only when no saved project or recovery copy references them. This copy belongs to this browser, device, and site address. Clearing browser data can remove it.
 - **Open project:** reopens projects saved in this browser. Creating or opening another project keeps the current one. **Download previous working copy** recovers the most recent copy before a switch, including before opening a different version of the same project.
 - **Download Project Backup:** creates a portable `.caps.json` file containing original editor content, document metadata, TCards, hierarchy, and Markdown copies. Restore it using **Import Project Backup**.
 - **Backup folder:** Chrome and Edge can mirror the project into an empty folder on your HDD. The complete project JSON includes original editor content. Markdown files are convenient secondary copies. Existing folders are opened separately, and a folder binding belongs to one project.
@@ -42,7 +42,7 @@ Project Settings separates **Storage**, **Backups & files**, and **Project detai
 
 ### JSON or Markdown?
 
-The complete `.caps.json` project copy remains the restore and Dropbox sync format. It preserves original editor HTML, styles, IDs, TCards, links, and the document tree. Replacing it with plain Markdown would lose some of that information unless a separate metadata system was introduced.
+Dropbox now uses a project folder with a small `project.json` index, independent `documents/*.doc.json` files, shared TCard data, and recovery indexes. Each document retains original editor HTML; its name, tags, nesting, and other metadata are recorded in the index. JSON is a container for app data, not a requirement to put the whole project in one file. A downloaded `.caps.json` remains an optional complete offline backup.
 
 Use **Room → Project Settings → Backups & files → Download Markdown copy** for a portable ZIP containing an `.md` file per document, nested parent folders, separate raster image assets, TCard text, and a document map. This copy works for reading or editing elsewhere; it does not automatically update the app or replace the complete backup. Some formatting is retained as inline HTML. Embedded images, rather than JSON punctuation, can account for most of a large project’s size.
 
@@ -62,9 +62,13 @@ In the Dropbox developer console:
 4. Register the exact callback address. For the existing GitHub Pages site this is `https://cinaedvsstudios.github.io/forever-bound-wiki/dropbox-callback.html`. For local preview, also register `http://localhost:4317/dropbox-callback.html`.
 5. Enable additional development users so a separate storage account can connect. Follow Dropbox's production requirements before broad distribution.
 
-In Capsanoto, open **Room → Project Settings → Connect Dropbox**. Sign in with the storage account, then choose **Sync now**. On another device, connect that same storage account and choose **Open from Dropbox**.
+In Capsanoto, open **Room → Project Settings → Connect Dropbox**. Sign in with the storage account, then choose **Sync now**. On another device, connect that same storage account and choose **Open another project**. Select its project folder, then choose the document to open.
 
-Automatic sync is optional and starts five seconds after a browser save. It uploads a complete project snapshot. Sync uses Dropbox revision checks; another device's changed copy stops an upload instead of being overwritten. Review the cloud copy or keep a separate local backup to resolve a conflict. There is no automatic text merge or live collaboration. An offline browser copy remains editable.
+Automatic sync is optional and starts five seconds after a browser save. It uploads only changed document files, then publishes the small project index using a Dropbox revision check. File versions and a recovery index are saved before that final commit, so an interruption cannot expose half a project. Another device’s changed index stops publication instead of being overwritten. There is no automatic text merge or live collaboration.
+
+Opening a folder reads the index, shared TCards, and your chosen document. Other documents load when opened and are cached separately for offline use. A missing or damaged document does not turn into a blank file or block unrelated documents. Complete project downloads, Markdown exports, and the optional full HDD mirror explicitly load the files they need; ordinary Dropbox use does not.
+
+Older `.caps.json` Dropbox projects remain readable. Their next sync creates the separate-file folder and leaves the older backup untouched. Initial conversion necessarily reads the old snapshot once. Saved cloud versions and recovery indexes are retained; automatic cloud history cleanup is not implemented yet, so these versions count towards the account’s storage. The app does not automatically delete cloud files. If a project index is damaged, Open another project offers its saved recovery indexes before replacing any browser data.
 
 Sign-in uses OAuth authorization code with PKCE, without an app secret. If **Remember connection** is selected, a short-lived access token is stored in the browser database. Passwords and refresh tokens are not stored. An expired connection asks for sign-in again. Disconnect removes the local connection and attempts to revoke its token; it keeps your documents.
 

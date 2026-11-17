@@ -43,6 +43,9 @@ function writeWorkspaceSnapshot() {
   const name = state.writingRoomName;
   localSavePending++;
   const operation = workspaceWriteQueue.catch(() => {}).then(async () => {
+    const captured = JSON.parse(json);
+    const { index, bodies } = await encodeProjectIndex(captured);
+    const indexJson = JSON.stringify(index);
     const db = await openWorkspaceDb();
     try {
       await new Promise((resolve, reject) => {
@@ -56,14 +59,26 @@ function writeWorkspaceSnapshot() {
             tx.abort();
             return;
           }
-          const record = { json, revision: workspaceRevision + 1, projectId, name, savedAt: new Date().toISOString() };
+          if (request.result?.json && !request.result.storageFormat) {
+            let bodyReferences = null;
+            try {
+              const legacy = JSON.parse(request.result.json);
+              bodyReferences = PROJECT_DOCUMENT_COLLECTIONS.flatMap((collection) => (legacy[collection] || []).filter((doc) => validDocumentBodyRef(doc._body)).map((doc) => documentBodyKey(doc._body.hash)));
+            } catch { /* Preserve unreadable recovery data without pruning its possible dependencies. */ }
+            records.put({ ...request.result, bodyReferences }, `legacy-project:${request.result.projectId || projectId}`);
+          }
+          for (const [hash, text] of bodies) records.put(text, documentBodyKey(hash));
+          const record = { json: indexJson, storageFormat: 'document-files-v1', revision: workspaceRevision + 1, projectId, name, savedAt: new Date().toISOString() };
           records.put(record, 'active');
           records.put(record, `project:${projectId}`);
+          // Prune only unreferenced local cache records in this same atomic transaction.
+          pruneUnreferencedDocumentBodies(records);
         };
         tx.oncomplete = () => { workspaceRevision++; resolve(); };
         tx.onerror = () => reject(tx.error);
         tx.onabort = () => reject(conflict ? new Error('Another tab saved a different copy. Download this copy before reloading.') : tx.error || new Error('Browser storage write failed.'));
       });
+      rememberIndexedDocumentBodies(captured, index);
       localSaveFailed = false;
       showStorageWarning('');
     } finally { db.close(); }
@@ -103,10 +118,10 @@ function safeDocumentHtml(html) {
   });
 }
 
-function validateImportedDocuments(documents) {
+function validateImportedDocuments(documents, { allowUnloaded = false } = {}) {
   const ids = new Set();
   for (const doc of documents) {
-    if (!doc || typeof doc.id !== 'string' || typeof doc.title !== 'string' || typeof doc.content !== 'string' || (doc.tags !== undefined && !Array.isArray(doc.tags))) throw new Error('This backup has invalid document data. The current project is unchanged.');
+    if (!doc || typeof doc.id !== 'string' || typeof doc.title !== 'string' || (typeof doc.content !== 'string' && !(allowUnloaded && validDocumentBodyRef(doc._body))) || (doc.tags !== undefined && !Array.isArray(doc.tags))) throw new Error('This backup has invalid document data. The current project is unchanged.');
     if (ids.has(doc.id)) throw new Error('This backup contains duplicate document IDs. The current project is unchanged.');
     ids.add(doc.id);
   }
@@ -130,7 +145,8 @@ async function prepareProjectReplacement({ detach = true } = {}) {
   clearTimeout(state.saveTimer);
   state.saveTimer = null;
   await writeWorkspaceSnapshot(); // Every project remains available in Open project.
-  await workspaceRecord('previous-project', { json: serializedWorkspace(), savedAt: new Date().toISOString() });
+  const savedIndex = await workspaceRecord('active');
+  await workspaceRecord('previous-project', { json: savedIndex.json, storageFormat: 'document-files-v1', savedAt: new Date().toISOString() });
   if (detach) await detachBackupFolder();
 }
 
@@ -160,11 +176,12 @@ function initializeProjectSetup() {
   document.getElementById('openSavedProject').onclick = openSavedProject;
   const recover = document.createElement('button');
   recover.type = 'button'; recover.textContent = 'Download previous working copy';
-  recover.onclick = async () => {
+  recover.onclick = () => runProjectFileAction(async () => {
     const previous = await workspaceRecord('previous-project');
     if (!previous) { setStatus('No previous working copy has been saved yet', 'dirty'); return; }
-    downloadFile('Previous-Working-Copy.caps.json', previous.json, 'application/json');
-  };
+    const complete = await completeProjectCopy(JSON.parse(previous.json));
+    downloadFile('Previous-Working-Copy.caps.json', JSON.stringify(complete, null, 2), 'application/json');
+  });
   els.downloadProjectBackupButton?.parentElement.append(recover);
   const dialog = document.createElement('dialog');
   dialog.id = 'projectSetupDialog';
@@ -530,9 +547,10 @@ async function commitProjectImport(session) {
       state.documents.push({ id: ids.get(tab.id), title: tab.title, content: safeDocumentHtml(tab.html) || '<p><br></p>', tags: [], updatedAt: now, localDraftAt: now, diskPath: '', diskSavedAt: '', filingGroupId: groupId || firstTab?.groupId, filingTabId, parentDocumentId: ids.get(tab.parentId) || '', source: sourceKey ? { documentId: sourceKey, tabId: tab.id, parentTabId: tab.parentId, importedAt: now } : { fileName: session.source.title, importedAt: now } });
     }
     state.activeId = ids.get(selected[0].id);
-    validateImportedDocuments(state.documents);
+    validateImportedDocuments(state.documents, { allowUnloaded: true });
     normalizeFilingHierarchy();
     await writeWorkspaceSnapshot();
+    releaseInactiveDocumentBodies();
     saveGoogleDriveStorageState();
   } catch (error) {
     restoreWorkspaceObject(JSON.parse(previous));
@@ -558,17 +576,15 @@ function restoreWorkspaceObject(project) {
 
 async function openSavedProject() {
   try {
-    const db = await openWorkspaceDb();
-    let records;
-    try { records = await new Promise((resolve, reject) => { const tx = db.transaction('records'); const request = tx.objectStore('records').getAll(); request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error); }); }
-    finally { db.close(); }
-    const projects = [...new Map(records.filter((item) => item?.projectId && item.json).map((item) => [item.projectId, item])).values()];
+    const projects = await listSavedProjectIndexes();
     const result = await openCapsDialog('Open a saved project', [
       { html: '<p>These projects are saved in this browser. Use Import Project Backup to open a downloaded copy from another device.</p>' },
       { name: 'projectId', label: 'Project', options: projects.map((item) => ({ value: item.projectId, label: item.name || 'Untitled project' })), value: state.projectId },
     ]);
     if (!result?.projectId || result.projectId === state.projectId) return;
     const project = JSON.parse(projects.find((item) => item.projectId === result.projectId).json);
+    if (!await chooseProjectDocument(project)) return;
+    await ensureDocumentContent(project.documents.find((doc) => doc.id === project.activeId));
     await prepareProjectReplacement();
     const previous = serializedWorkspace();
     try {
@@ -576,6 +592,7 @@ async function openSavedProject() {
       state.googleDrive.projectFolderId = '';
       state.googleDrive.projectName = '';
       if (project.designSettings) setProjectDesignSettings(project.designSettings);
+      await ensureDocumentContent(activeDocument());
       await writeWorkspaceSnapshot();
     } catch (error) { restoreWorkspaceObject(JSON.parse(previous)); throw error; }
     renderAll(); updateUrl(); updateProjectSettingsStatus();

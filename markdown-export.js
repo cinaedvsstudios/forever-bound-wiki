@@ -1,6 +1,7 @@
 /* Portable reading copies. Complete project backups remain the restore format. */
 async function buildMarkdownArchive() {
   if (!window.JSZip) throw new Error('The ZIP exporter could not load. Refresh and try again.');
+  await ensureProjectDocumentsLoaded();
   validateImportedDocuments(state.documents);
   const zip = new JSZip();
   const docs = JSON.parse(JSON.stringify(state.documents));

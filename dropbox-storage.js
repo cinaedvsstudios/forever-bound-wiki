@@ -14,9 +14,13 @@ async function initializeDropboxStorage() {
       if (/^[a-zA-Z0-9]{5,80}$/.test(config.dropboxAppKey || '')) localStorage.setItem('capsanoto-dropbox-app-key', config.dropboxAppKey);
     } catch { /* Owner setup remains available when offline. */ }
   }
-  dropboxConnection = await workspaceRecord('dropbox-connection') || null;
+  await restoreDropboxConnection();
   dropboxStatus = dropboxConnection ? (dropboxConnection.expiresAt > Date.now() ? 'Ready to sync.' : 'Sign-in expired. Reconnect to sync.') : 'Not connected. Edits still save in this browser.';
   renderDropboxStorage();
+}
+
+async function restoreDropboxConnection() {
+  dropboxConnection = await workspaceRecord('dropbox-connection') || null;
 }
 
 function dropboxRedirectUrl() { return new URL('dropbox-callback.html', location.href).href; }
@@ -26,7 +30,7 @@ function renderDropboxStorage() {
   if (!container) return;
   const connected = Boolean(dropboxConnection);
   const valid = connected && dropboxConnection.expiresAt > Date.now() + 10000;
-  container.innerHTML = `<div class="storage-account"><span class="storage-provider">Dropbox</span><strong>${escapeHtml(connected ? dropboxConnection.label || 'Connected account' : 'Connect your storage account')}</strong></div><p class="storage-description">${connected ? 'Your project stays in this browser and syncs to this account’s Apps/Capsanoto folder.' : 'Keep a project copy online and open it on another device. Use the account where you want to store your writing.'}</p><p id="dropboxStatus" class="storage-sync-status" role="status"></p><div class="storage-main-actions"><button type="button" id="connectDropbox" ${valid ? 'hidden' : ''}>${connected ? 'Reconnect Dropbox' : 'Connect Dropbox'}</button><button type="button" id="syncDropbox" ${connected ? '' : 'hidden'} ${valid ? '' : 'disabled'}>Sync now</button><button type="button" id="openDropboxProject" ${connected ? '' : 'hidden'} ${valid ? '' : 'disabled'}>Open another project</button></div><label class="storage-option" ${connected ? '' : 'hidden'}><input type="checkbox" id="autoSyncDropbox"> Sync automatically after edits</label><details class="storage-account-options"><summary>Account options</summary><label class="storage-option"><input type="checkbox" id="rememberDropbox" checked> Remember this connection in this browser</label><p>Only a short-lived access token is saved here. Dropbox may ask you to reconnect; your password is never stored.</p><button type="button" id="disconnectDropbox" ${connected ? '' : 'hidden'}>Disconnect this account</button></details>`;
+  container.innerHTML = `<div class="storage-account"><span class="storage-provider">Dropbox</span><strong>${escapeHtml(connected ? dropboxConnection.label || 'Connected account' : 'Connect your storage account')}</strong></div><p class="storage-description">${connected ? 'Your project uses separate document files and a small index in this account’s Apps/Capsanoto folder. Documents load when you open them; visited files are cached here for offline use.' : 'Keep a project copy online and open it on another device. Use the account where you want to store your writing.'}</p><p id="dropboxStatus" class="storage-sync-status" role="status"></p><div class="storage-main-actions"><button type="button" id="connectDropbox" ${valid ? 'hidden' : ''}>${connected ? 'Reconnect Dropbox' : 'Connect Dropbox'}</button><button type="button" id="syncDropbox" ${connected ? '' : 'hidden'} ${valid ? '' : 'disabled'}>Sync now</button><button type="button" id="openDropboxProject" ${connected ? '' : 'hidden'} ${valid ? '' : 'disabled'}>Open another project</button></div><label class="storage-option" ${connected ? '' : 'hidden'}><input type="checkbox" id="autoSyncDropbox"> Sync automatically after edits</label><details class="storage-account-options"><summary>Account options</summary><label class="storage-option"><input type="checkbox" id="rememberDropbox" checked> Remember this connection in this browser</label><p>Only a short-lived access token is saved here. Dropbox may ask you to reconnect; your password is never stored.</p><button type="button" id="disconnectDropbox" ${connected ? '' : 'hidden'}>Disconnect this account</button></details>`;
   const developer = document.getElementById('dropboxDeveloperControls');
   const markup = '<details class="project-developer-setup"><summary>Developer setup</summary><p>App owners only. Register a free Scoped access / App folder app in the <a href="https://www.dropbox.com/developers/apps" target="_blank" rel="noopener noreferrer">Dropbox developer console</a>. Enable account_info.read, files.metadata.read, files.content.read, files.content.write and public clients (PKCE). Add the redirect address below and enable additional users. Never enter an app secret or access token here.</p><label>Public app key<input type="text" id="dropboxAppKey" autocomplete="off"></label><button type="button" id="saveDropboxAppKey">Save app key</button><p id="dropboxCallbackAddress"></p></details>';
   if (developer) developer.innerHTML = markup;
@@ -124,6 +128,9 @@ async function dropboxRequest(route, data, options = {}) {
   if (!response.ok) {
     const error = new Error(response.status === 409 ? 'Dropbox has another version or a conflicting file. Open the Dropbox copy to review it; this browser copy has not been overwritten.' : response.status === 401 ? 'Dropbox sign-in expired. Connect again.' : `Dropbox request failed (${response.status}). Try again when online.`);
     error.status = response.status;
+    try { error.summary = (await response.json()).error_summary || ''; } catch {}
+    error.notFound = error.summary?.includes('path/not_found');
+    if (error.notFound && options.download) error.message = 'The saved file is missing from Dropbox. Other documents are kept.';
     throw error;
   }
   return options.download ? { text: await response.text(), metadata: JSON.parse(response.headers.get('Dropbox-API-Result') || '{}') } : response.status === 200 && response.headers.get('content-length') === '0' ? null : response.json();
@@ -131,11 +138,51 @@ async function dropboxRequest(route, data, options = {}) {
 
 function dropboxBindingKey(projectId = state.projectId) { return `dropbox-binding:${dropboxConnection.accountId}:${projectId}`; }
 
-function projectCloudFingerprint(project) {
-  // Ignore save timestamps; changing content, organization, or appearance changes the fingerprint.
-  const { updatedAt, ...copy } = project;
-  copy.documents = copy.documents.map(({ localDraftAt, diskSavedAt, onlineSavedAt, ...doc }) => doc);
-  return JSON.stringify(copy);
+async function projectCloudFingerprint(project) {
+  const { index } = await encodeProjectIndex(project);
+  delete index.updatedAt;
+  for (const collection of PROJECT_DOCUMENT_COLLECTIONS) {
+    index[collection] = index[collection].map(({ localDraftAt, diskSavedAt, onlineSavedAt, _body, ...doc }) => ({ ...doc, _body: { hash: _body.hash } }));
+  }
+  return projectFileHash(JSON.stringify(index));
+}
+
+function assertDropboxAccount(accountId) {
+  if (dropboxConnection?.accountId !== accountId) throw new Error('Dropbox account changed. Your browser copy and the previous cloud project are kept.');
+}
+
+async function dropboxMetadata(path) {
+  try { return await dropboxRequest('files/get_metadata', { path }); }
+  catch (error) { if (error.notFound) return null; throw error; }
+}
+
+async function ensureDropboxFolder(path) {
+  const existing = await dropboxMetadata(path);
+  if (existing) {
+    if (existing['.tag'] !== 'folder') throw new Error('A file occupies the project folder. Choose Open project to review it.');
+    return;
+  }
+  try { await dropboxRequest('files/create_folder_v2', { path, autorename: false }); }
+  catch (error) {
+    if (error.status !== 409 || (await dropboxMetadata(path))?.['.tag'] !== 'folder') throw error;
+  }
+}
+
+async function uploadDropboxFile(path, text, rev = null) {
+  if (new TextEncoder().encode(text).length > 140 * 1024 * 1024) throw new Error('An individual file is too large to sync. Your browser copy and the previous cloud index are kept.');
+  return dropboxRequest('files/upload', { path, mode: rev ? { '.tag': 'update', update: rev } : { '.tag': 'add' }, autorename: false, mute: true, strict_conflict: true }, { upload: text });
+}
+
+async function uploadDropboxImmutableFile(path, text) {
+  try { return await uploadDropboxFile(path, text); }
+  catch (error) {
+    if (error.status !== 409) throw error;
+    // A retry may find a body already uploaded before an interruption. Verify it;
+    // never disable strict conflict checking or replace a different file.
+    const existing = await dropboxRequest('files/download', { path }, { download: true });
+    if (await projectFileHash(existing.text) !== await projectFileHash(text)) throw new Error('A saved document version has different contents. The previous project index is kept.');
+    return existing.metadata;
+  }
 }
 
 async function syncDropboxProject() {
@@ -150,17 +197,75 @@ async function syncDropboxProject() {
   const bindingKey = dropboxBindingKey(projectId);
   const binding = await workspaceRecord(bindingKey);
   const project = JSON.parse(serializedWorkspace());
-  const fingerprint = projectCloudFingerprint(project);
-  const path = binding?.path || `/${slugify(project.writingRoomName)}-${projectId}.caps.json`;
-  const body = JSON.stringify({ type: 'capsanoto-project-backup', schemaVersion: 1, exportedAt: new Date().toISOString(), project });
-  if (new TextEncoder().encode(body).length > 140 * 1024 * 1024) throw new Error('This project exceeds the single-file Dropbox sync limit. Split it into smaller projects.');
-  setDropboxStatus('Syncing project…');
-  const uploaded = await dropboxRequest('files/upload', { path, mode: binding?.rev ? { '.tag': 'update', update: binding.rev } : { '.tag': 'add' }, autorename: false, mute: true, strict_conflict: true }, { upload: body });
-  if (dropboxConnection?.accountId !== accountId) throw new Error('Dropbox account changed. Check the saved file before syncing again.');
-  await workspaceRecord(bindingKey, { path: uploaded.path_lower || path, rev: uploaded.rev, fingerprint, syncedAt: new Date().toISOString() });
-  setDropboxStatus(`Synced · ${new Date().toLocaleString()}`);
+  const fingerprint = await projectCloudFingerprint(project);
+  const folder = binding?.format === 'document-files-v1' ? binding.folder : `/${slugify(project.writingRoomName).slice(0, 60) || 'project'}--${projectId}.caps-project`;
+  const path = `${folder}/project.json`;
+  const current = await dropboxMetadata(path);
+  assertDropboxAccount(accountId);
+  if ((binding?.format === 'document-files-v1' && current?.rev !== binding.rev) || (binding?.format !== 'document-files-v1' && current)) throw new Error('Dropbox has another version. Open the Dropbox project before syncing; this browser copy is kept.');
+  if (binding?.format !== 'document-files-v1' && binding?.path) {
+    const legacy = await dropboxMetadata(binding.path);
+    if (legacy?.rev !== binding.rev) throw new Error('The older Dropbox project has changed. Open its latest copy before converting it to separate files.');
+  }
+  if (binding?.format === 'document-files-v1' && binding.fingerprint === fingerprint) {
+    setDropboxStatus('Up to date. No document files needed uploading.');
+    return;
+  }
+  for (const directory of [folder, `${folder}/documents`, `${folder}/shared`, `${folder}/history`]) {
+    assertDropboxAccount(accountId);
+    await ensureDropboxFolder(directory);
+  }
+  const { index, bodies } = await encodeProjectIndex(project);
+  const known = new Set(binding?.format === 'document-files-v1' ? binding.hashes : []);
+  const published = new Set();
+  const total = PROJECT_DOCUMENT_COLLECTIONS.reduce((count, collection) => count + index[collection].length, 0);
+  let completed = 0;
+  for (const collection of PROJECT_DOCUMENT_COLLECTIONS) {
+    for (const doc of index[collection]) {
+      const hash = doc._body.hash;
+      const filePath = `${folder}/documents/${hash}.doc.json`;
+      assertDropboxAccount(accountId);
+      if (!known.has(hash) && !published.has(hash)) {
+        let text = bodies.get(hash) || await workspaceRecord(documentBodyKey(hash));
+        if (typeof text !== 'string') {
+          const original = project[collection].find((item) => item.id === doc.id);
+          await ensureDocumentContent(original);
+          text = await workspaceRecord(documentBodyKey(hash));
+        }
+        if (typeof text !== 'string') throw new Error(`The content for ${doc.title} is unavailable. The previous cloud index is kept.`);
+        await checkedDocumentBody(text, hash);
+        setDropboxStatus(`Saving document files · ${completed + 1} of ${total}…`);
+        await uploadDropboxImmutableFile(filePath, text);
+      }
+      doc._body = { hash, path: filePath, accountId };
+      published.add(hash);
+      completed++;
+    }
+  }
+  const sharedText = JSON.stringify({ type: 'capsanoto-shared-data', schemaVersion: 1, blocks: index.blocks || {}, deprecatedParagraphs: index.deprecatedParagraphs || [] });
+  delete index.blocks;
+  delete index.deprecatedParagraphs;
+  const sharedHash = await projectFileHash(sharedText);
+  const sharedPath = `${folder}/shared/${sharedHash}.json`;
+  if (!known.has(sharedHash)) await uploadDropboxImmutableFile(sharedPath, sharedText);
+  published.add(sharedHash);
+  const manifest = { type: 'capsanoto-project-index', schemaVersion: 1, savedAt: new Date().toISOString(), project: index, shared: { hash: sharedHash, path: sharedPath }, previous: binding?.historyPath || null };
+  const text = JSON.stringify(manifest, null, 2);
+  const historyPath = `${folder}/history/${await projectFileHash(text)}.project.json`;
+  assertDropboxAccount(accountId);
+  await uploadDropboxImmutableFile(historyPath, text);
+  // Immutable bodies and a recovery index are saved before the single revision-checked commit.
+  assertDropboxAccount(accountId);
+  setDropboxStatus('Saving project index…');
+  const uploaded = await uploadDropboxFile(path, text, current?.rev);
+  assertDropboxAccount(accountId);
+  await workspaceRecord(bindingKey, { format: 'document-files-v1', folder, path, rev: uploaded.rev, hashes: [...published], historyPath, fingerprint, legacyPath: binding?.legacyPath || (binding?.format !== 'document-files-v1' ? binding?.path : null), syncedAt: new Date().toISOString() });
+  // Attach cloud links only to the exact bodies that were published, never to newer edits.
+  rememberIndexedDocumentBodies(project, index);
+  if (state.projectId === projectId) await writeWorkspaceSnapshot();
+  setDropboxStatus(`Synced separate files · ${new Date().toLocaleString()}`);
   setStatus('Saved in this browser and Dropbox', 'saved');
-  if (state.projectId === projectId && projectCloudFingerprint(JSON.parse(serializedWorkspace())) !== fingerprint) scheduleDropboxSync();
+  if (state.projectId === projectId && await projectCloudFingerprint(JSON.parse(serializedWorkspace())) !== fingerprint) scheduleDropboxSync();
 }
 
 function scheduleDropboxSync() {
@@ -169,27 +274,119 @@ function scheduleDropboxSync() {
   dropboxSyncTimer = setTimeout(() => { if (!dropboxBusy) void dropboxAction(syncDropboxProject); }, 5000);
 }
 
+async function listDropboxFiles(path) {
+  let page = await dropboxRequest('files/list_folder', { path, recursive: false, limit: 200 });
+  const entries = [...page.entries];
+  while (page.has_more) { page = await dropboxRequest('files/list_folder/continue', { cursor: page.cursor }); entries.push(...page.entries); }
+  return entries;
+}
+
+function validateDropboxIndex(payload, folder, accountId) {
+  if (payload?.type !== 'capsanoto-project-index' || payload.schemaVersion !== 1 || !payload.project || !/^[\w-]{1,100}$/.test(payload.project.projectId || '')) throw new Error('This project index is unreadable.');
+  const project = payload.project;
+  if (typeof project.writingRoomName !== 'string' || !Array.isArray(project.documents) || !project.documents.length) throw new Error('This project index is missing its document list.');
+  for (const collection of PROJECT_DOCUMENT_COLLECTIONS) {
+    if (!Array.isArray(project[collection])) throw new Error('This project index has an invalid file list.');
+    for (const doc of project[collection]) {
+      if (documentIsLoaded(doc) || !validDocumentBodyRef(doc._body) || doc._body.path?.toLowerCase() !== `${folder}/documents/${doc._body.hash}.doc.json`.toLowerCase()) throw new Error('This project contains an invalid document link.');
+      doc._body.accountId = accountId;
+    }
+  }
+  validateImportedDocuments(project.documents, { allowUnloaded: true });
+  const shared = payload.shared;
+  if (!validDocumentBodyRef(shared) || shared.path?.toLowerCase() !== `${folder}/shared/${shared.hash}.json`.toLowerCase()) throw new Error('The shared-data link is invalid.');
+  return project;
+}
+
+async function readDropboxIndex(path, { recovery = true } = {}) {
+  const folder = path.slice(0, path.lastIndexOf('/'));
+  const accountId = dropboxConnection.accountId;
+  const current = await dropboxMetadata(path);
+  try {
+    const downloaded = await dropboxRequest('files/download', { path }, { download: true });
+    const payload = JSON.parse(downloaded.text);
+    validateDropboxIndex(payload, folder, accountId);
+    return { payload, folder, rev: downloaded.metadata.rev, recovered: false };
+  } catch (error) {
+    if (!recovery || (error.status && !error.notFound)) throw error;
+    const entries = await listDropboxFiles(`${folder}/history`);
+    const copies = entries.filter((entry) => entry['.tag'] === 'file' && /^[a-f0-9]{64}\.project\.json$/.test(entry.name)).sort((a, b) => b.server_modified.localeCompare(a.server_modified));
+    if (!copies.length) throw error;
+    const choice = await openCapsDialog('Recover project index', [
+      { html: '<p>The current project index could not be read. Your document files are separate. Choose a saved index to reopen the project; nothing in Dropbox is replaced by opening it.</p>' },
+      { name: 'path', label: 'Saved index', options: copies.map((entry) => ({ value: entry.path_lower, label: new Date(entry.server_modified).toLocaleString() })) },
+      { name: 'confirm', checkbox: true, label: 'Open this saved index for review.' },
+    ]);
+    if (!choice?.path || choice.confirm !== 'on' || !copies.some((entry) => entry.path_lower === choice.path)) throw new Error('Recovery cancelled. Your current browser project is kept.');
+    const downloaded = await dropboxRequest('files/download', { path: choice.path }, { download: true });
+    const expectedHash = choice.path.split('/').pop().split('.')[0];
+    if (await projectFileHash(downloaded.text) !== expectedHash) throw new Error('This saved index failed its integrity check. Choose another saved index.');
+    const payload = JSON.parse(downloaded.text);
+    validateDropboxIndex(payload, folder, accountId);
+    return { payload, folder, rev: current?.rev, recovered: true, historyPath: choice.path };
+  }
+}
+
+async function openDropboxProjectPath(path, { chooseDocument = false } = {}) {
+  const accountId = dropboxConnection.accountId;
+  if (path.endsWith('.caps.json')) {
+    const downloaded = await dropboxRequest('files/download', { path }, { download: true });
+    const payload = JSON.parse(downloaded.text);
+    dropboxOpeningProject = true;
+    try { await importProjectBackupPayload(payload); }
+    finally { dropboxOpeningProject = false; }
+    assertDropboxAccount(accountId);
+    await workspaceRecord(dropboxBindingKey(), { path, rev: downloaded.metadata.rev });
+    setDropboxStatus('Opened older project backup. The next sync creates separate files and keeps this backup.');
+    return;
+  }
+  const loaded = await readDropboxIndex(path);
+  const project = loaded.payload.project;
+  if (chooseDocument && !await chooseProjectDocument(project)) return;
+  const sharedFile = await dropboxRequest('files/download', { path: loaded.payload.shared.path }, { download: true });
+  if (await projectFileHash(sharedFile.text) !== loaded.payload.shared.hash) throw new Error('The shared-data file failed its integrity check. The current project is kept.');
+  const shared = JSON.parse(sharedFile.text);
+  if (shared.type !== 'capsanoto-shared-data' || shared.schemaVersion !== 1 || !shared.blocks || typeof shared.blocks !== 'object' || Array.isArray(shared.blocks) || !Array.isArray(shared.deprecatedParagraphs)) throw new Error('The shared-data file is unreadable.');
+  project.blocks = shared.blocks;
+  project.deprecatedParagraphs = shared.deprecatedParagraphs;
+  project.activeId = project.documents.some((doc) => doc.id === project.activeId) ? project.activeId : project.documents[0].id;
+  // Loading one selected body must succeed before replacing the current project.
+  await ensureDocumentContent(project.documents.find((doc) => doc.id === project.activeId));
+  assertDropboxAccount(accountId);
+  dropboxOpeningProject = true;
+  try {
+    await prepareProjectReplacement();
+    const previous = JSON.parse(serializedWorkspace());
+    try {
+      restoreWorkspaceObject(project);
+      state.dropboxAutoSync = false;
+      if (project.designSettings) { setProjectDesignSettings(project.designSettings); applySavedDesignSettings(); loadDesignForm(); }
+      state.googleDrive.projectFolderId = ''; state.googleDrive.projectName = '';
+      await writeWorkspaceSnapshot();
+      const hashes = PROJECT_DOCUMENT_COLLECTIONS.flatMap((collection) => project[collection].map((doc) => doc._body.hash));
+      hashes.push(loaded.payload.shared.hash);
+      await workspaceRecord(dropboxBindingKey(), { format: 'document-files-v1', folder: loaded.folder, path, rev: loaded.rev, hashes, historyPath: loaded.historyPath || null, fingerprint: loaded.recovered ? null : await projectCloudFingerprint(JSON.parse(serializedWorkspace())), syncedAt: new Date().toISOString() });
+    } catch (error) { restoreWorkspaceObject(previous); throw error; }
+    renderAll(); updateUrl(); renderDropboxStorage();
+    setDropboxStatus(loaded.recovered ? 'Recovered a saved index. Review it, then use Sync now to restore it to Dropbox.' : `Opened ${state.writingRoomName}. Other documents load when you choose them.`);
+    setStatus('Project opened · selected document loaded', 'saved');
+  } finally { dropboxOpeningProject = false; }
+}
+
 async function openDropboxProject() {
   requireDropboxConnection();
-  let page = await dropboxRequest('files/list_folder', { path: '', recursive: false, limit: 200 });
-  const files = [...page.entries];
-  while (page.has_more) { page = await dropboxRequest('files/list_folder/continue', { cursor: page.cursor }); files.push(...page.entries); }
-  const projects = files.filter((entry) => entry['.tag'] === 'file' && entry.name.endsWith('.caps.json'));
+  const files = await listDropboxFiles('');
+  const projects = files.filter((entry) => entry['.tag'] === 'folder' ? entry.name.endsWith('.caps-project') : entry['.tag'] === 'file' && entry.name.endsWith('.caps.json'));
   if (!projects.length) throw new Error('No Capsanoto projects in this Dropbox app folder yet. Use Sync now on the first device.');
   const result = await openCapsDialog('Open from Dropbox', [
-    { html: '<p>Your current browser project is kept in Open project. Opening a cloud copy replaces the working copy. Download a backup first if you want a separate file too.</p>' },
-    { name: 'path', label: 'Project file', options: projects.map((entry) => ({ value: entry.path_lower, label: `${entry.name} · ${new Date(entry.server_modified).toLocaleString()}` })) },
-    { name: 'confirm', checkbox: true, label: 'Open the selected Dropbox copy in this browser.' },
+    { html: '<p>Open a project folder to load its index and selected document. Your current project stays saved in this browser. Older single-file backups can also be opened.</p>' },
+    { name: 'path', label: 'Project', options: projects.map((entry) => ({ value: entry['.tag'] === 'folder' ? `${entry.path_lower}/project.json` : entry.path_lower, label: `${entry.name}${entry['.tag'] === 'file' ? ' (older backup)' : ''}` })) },
+    { name: 'confirm', checkbox: true, label: 'Open the selected Dropbox project in this browser.' },
   ]);
   if (!result?.path || result.confirm !== 'on') return;
-  const downloaded = await dropboxRequest('files/download', { path: result.path }, { download: true });
-  const payload = JSON.parse(downloaded.text);
-  dropboxOpeningProject = true;
-  try { await importProjectBackupPayload(payload); }
-  finally { dropboxOpeningProject = false; }
-  await workspaceRecord(dropboxBindingKey(), { path: result.path, rev: downloaded.metadata.rev, fingerprint: projectCloudFingerprint(JSON.parse(serializedWorkspace())), syncedAt: new Date().toISOString() });
-  setDropboxStatus(`Opened ${state.writingRoomName} from Dropbox. Sync now saves changes back here.`);
-  renderDropboxStorage();
+  const allowed = projects.some((entry) => result.path === (entry['.tag'] === 'folder' ? `${entry.path_lower}/project.json` : entry.path_lower));
+  if (!allowed) throw new Error('Choose a project from the list.');
+  await openDropboxProjectPath(result.path, { chooseDocument: true });
 }
 
 async function disconnectDropbox() {
