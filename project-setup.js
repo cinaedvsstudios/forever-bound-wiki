@@ -245,6 +245,7 @@ function renderProjectSetup() {
     body.innerHTML = '<p class="setup-step">Step 2 of 3 · Choose one source</p><label>Downloaded file<input id="setupFile" type="file" accept=".docx,.txt,.md,.html,.htm,.json"></label><p class="setup-note"><strong>Word combines tabs.</strong> Downloading “all tabs” puts their content into one .docx file. Capsanoto imports that as one document; it cannot reliably rebuild the original tabs. To keep tabs and nesting, use a tab-aware Google Docs source package or direct Google Docs import below. You do not need to download each tab separately.</p><details><summary>Import Google Docs tabs directly</summary><p>Read a Google Doc once, select its tabs, and copy them here. Nothing is written back to Google.</p><label>Google Docs link<input id="setupGoogleUrl" type="url" placeholder="https://docs.google.com/document/d/…"></label><button id="setupReadGoogle" type="button">Read tabs from Google Docs</button><p class="setup-note">Google will ask for read-only Docs access. This requires the Google Docs API and this site’s address to be enabled for the app’s Google client.</p></details><p id="setupSourceStatus" role="status"></p><p class="setup-note">Files are copied into this browser. Your originals stay intact. Word, Markdown, text, HTML, and Capsanoto Google Docs source packages are supported. Old .doc files must be downloaded as .docx.</p>';
     const status = document.getElementById('setupSourceStatus');
     status.textContent = session.source ? importSourceStatus(session.source) : 'No file selected yet.';
+    updateSourcePreviewButton();
     document.getElementById('setupFile').onchange = async (event) => {
       const file = event.target.files[0];
       if (!file) return;
@@ -252,7 +253,7 @@ function renderProjectSetup() {
       await setupWork(async () => {
         session.source = await readImportFile(file);
         session.selected = new Set(session.source.tabs.map((tab) => tab.id));
-        status.textContent = `${session.source.title}: ${session.source.tabs.length} tab(s) ready`;
+        status.textContent = importSourceStatus(session.source);
       });
     };
     document.getElementById('setupReadGoogle').onclick = () => setupWork(async () => {
@@ -304,6 +305,15 @@ function updateImportSelectionCount() {
   document.getElementById('setupSelectionCount').textContent = `${setupSession.selected.size} of ${setupSession.source.tabs.length} ${setupSession.source.format === 'word' ? 'document' : 'tabs'} selected`;
 }
 
+function updateSourcePreviewButton() {
+  if (setupSession.step !== 2) return;
+  const source = setupSession.source;
+  const button = document.getElementById('setupNext');
+  button.disabled = !source;
+  button.textContent = source?.format === 'google-tabs' ? `Preview all ${source.tabs.length} tabs` : 'Preview document';
+  button.setAttribute('aria-label', source?.format === 'google-tabs' ? `Preview all ${source.tabs.length} tabs and their nesting before importing` : 'Preview document before importing');
+}
+
 function importPreviewText(html) {
   const body = new DOMParser().parseFromString(html, 'text/html').body;
   body.querySelectorAll('br').forEach((br) => br.replaceWith('\n'));
@@ -331,6 +341,7 @@ async function setupWork(operation) {
   finally {
     setupSession.busy = false;
     document.querySelectorAll('#projectSetupDialog button, #setupFile').forEach((el) => { el.disabled = false; });
+    updateSourcePreviewButton();
   }
 }
 

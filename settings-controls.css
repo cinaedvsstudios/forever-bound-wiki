@@ -1,14 +1,6 @@
-/* Consume the settings that previously wrote unused variables. Keep overrides in one place. */
-body { font-size: var(--app-text-size,14px); }
-body,button,input,select,textarea,.editor,.help-panel,.block-panel,.project-settings-panel,.settings-panel { font-family:var(--app-font-family,Arial,Helvetica,sans-serif) !important; }
-button, select, summary { font-size: var(--button-text-size,var(--button-font-size,14px)); }
+/* Per-component appearance controls. Toolbar layout and appearance belong to styles.css. */
 .settings-panel, .help-panel, .block-panel, .project-settings-panel, .emoji-picker { border-color: var(--window-border,var(--panel-border)) !important; box-shadow: 0 18px 48px var(--window-shadow-color,#000) !important; }
 .settings-panel, .help-panel, .block-panel, .project-settings-panel { background-color: var(--window-bg,var(--panel-bg)) !important; }
-.writer-header.toolbar { background-color: var(--top-bar-bg) !important; background-image: var(--top-bar-image-url,none),var(--top-bar-bg-image,none) !important; background-size: var(--top-bar-image-size,100%),var(--top-bar-bg-size,100%) !important; border-color: var(--top-bar-border) !important; }
-#writingRoomButton { color: var(--writing-room-button-text) !important; background: var(--writing-room-button-bg) !important; border-color: var(--writing-room-button-border) !important; font-size: var(--writing-room-button-text-size,12px) !important; }
-.top-command-menus { background-color: var(--command-bar-bg) !important; background-image: var(--command-bar-bg-image,none) !important; background-size: var(--command-bar-bg-size,100%) !important; color: var(--command-bar-text) !important; border-color: var(--command-bar-border) !important; }
-.top-command-menus .command-label { font-size: var(--command-bar-text-size,10px) !important; color: var(--command-bar-text) !important; }
-.top-command-menus .command-glyph { font-size: var(--right-icon-size,18px) !important; }
 #writingRoomPanel { background-color: var(--writing-room-bg) !important; box-shadow: 0 18px 48px var(--writing-room-shadow-color,#000) !important; }
 #writingRoomPanel > header { background-color: color-mix(in srgb,var(--writing-room-header-bg) calc(var(--writing-room-header-opacity,1)*100%),transparent) !important; background-image: var(--writing-room-header-bg-image,none) !important; background-size: var(--writing-room-header-bg-size,100%) !important; }
 #writingRoomPanel > header .icon-button { font-size: var(--writing-room-header-icon-size,16px) !important; }

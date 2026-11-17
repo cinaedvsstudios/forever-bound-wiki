@@ -23,7 +23,7 @@ function app({ indexedDB = new IDBFactory(), legacy } = {}) {
   const markdown = fs.readFileSync(path.join(root, 'markdown-export.js'), 'utf8');
   const navigation = fs.readFileSync(path.join(root, 'document-navigation.js'), 'utf8');
   const cloud = fs.readFileSync(path.join(root, 'dropbox-storage.js'), 'utf8');
-  w.eval(setup + '\n' + cloud + '\n' + markdown + '\n' + navigation + '\n' + core + '\nwindow.testApp = { documentOutline, jumpToDocumentOutline, fillDocumentOutline, calculateRoomLayout, renderWritingRoomCards, updateRoomWorkspaceLayout, toggleWritingRoomPanel, applyDesignSettings, collectDesignSettingsFromForm, saveDesignSettings, applyExtraDesignSettings, currentDesignSettings, buildMarkdownArchive, openProjectSetup, advanceProjectSetup, readGoogleDocsSource, renderDropboxStorage, setSetupSource: (source) => { setupSession.source = source; setupSession.selected = new Set(source.tabs.map(t => t.id)); }, state, els, boot, loadWorkspace, serializedWorkspace, writeWorkspaceSnapshot, readWorkspaceSnapshot, workspaceRecord, persistNow, safeDocumentHtml, googleDocsToImportSource, commitProjectImport, readImportFile, importProjectBackupPayload, folderModeProjectPayload, capsMarkdownToDocument, prepareProjectReplacement, saveFolderModeSnapshot, syncDropboxProject, openWritingRoomFolder, projectCloudFingerprint, setConnection: (value) => { dropboxConnection = value; }, getRevision: () => workspaceRevision };');
+  w.eval(setup + '\n' + cloud + '\n' + markdown + '\n' + navigation + '\n' + core + '\nwindow.testApp = { startWritingRoomResize, moveWritingRoomResize, stopWritingRoomResize, handleWritingRoomResizeKey, documentOutline, jumpToDocumentOutline, fillDocumentOutline, calculateRoomLayout, renderWritingRoomCards, updateRoomWorkspaceLayout, toggleWritingRoomPanel, applyDesignSettings, collectDesignSettingsFromForm, saveDesignSettings, applyExtraDesignSettings, currentDesignSettings, buildMarkdownArchive, openProjectSetup, advanceProjectSetup, readGoogleDocsSource, renderDropboxStorage, setSetupSource: (source) => { setupSession.source = source; setupSession.selected = new Set(source.tabs.map(t => t.id)); }, state, els, boot, loadWorkspace, serializedWorkspace, writeWorkspaceSnapshot, readWorkspaceSnapshot, workspaceRecord, persistNow, safeDocumentHtml, googleDocsToImportSource, commitProjectImport, readImportFile, importProjectBackupPayload, folderModeProjectPayload, capsMarkdownToDocument, prepareProjectReplacement, saveFolderModeSnapshot, syncDropboxProject, openWritingRoomFolder, projectCloudFingerprint, setConnection: (value) => { dropboxConnection = value; }, getRevision: () => workspaceRevision };');
   return { w, api: w.testApp, close: () => dom.window.close() };
 }
 function seed(a) {
@@ -125,7 +125,7 @@ test('Dropbox upload uses revision checks and keeps the local copy on a conflict
 test('all entry pages wire the same setup and storage runtime', () => {
   for (const file of ['index.html', 'editor.html', 'writing-room.html']) {
     const html = fs.readFileSync(path.join(root, file), 'utf8');
-    assert.match(html, /project-setup.js\?v=5.11.1/); assert.match(html, /dropbox-storage.js/);
+    assert.match(html, /project-setup.js\?v=5.11.2/); assert.match(html, /dropbox-storage.js/);
     assert.doesNotMatch(html, /id="createOnlineProjectButton"/);
   }
 });
@@ -352,9 +352,9 @@ test('all mapped design controls apply their CSS value, including empty image cl
       assert.ok(Object.hasOwn(saved, input.dataset.designKey), input.dataset.designKey + ' must persist');
       if (input.dataset.cssVar) assert.notEqual(a.w.document.documentElement.style.getPropertyValue(input.dataset.cssVar), '', input.dataset.designKey + ' must apply');
     }
-    const image = a.w.document.querySelector('[data-design-key="topBarImage"]');
+    const image = a.w.document.querySelector('[data-design-key="topBarBgImage"]');
     image.value = ''; await a.api.saveDesignSettings();
-    assert.equal(a.w.document.documentElement.style.getPropertyValue('--top-bar-image-url'), 'none');
+    assert.equal(a.w.document.documentElement.style.getPropertyValue('--top-bar-bg-image'), 'none');
     const label = a.w.document.querySelector('[data-design-key="topLabelWritingRoom"]'); label.value = 'My library';
     await a.api.saveDesignSettings();
     assert.equal(a.w.document.querySelector('#writingRoomButton .command-label').textContent, 'MY LIBRARY');
@@ -389,7 +389,7 @@ test('every mapped design variable has a stylesheet consumer and refinement styl
     const sheets = [...a.w.document.querySelectorAll('link[rel="stylesheet"]')].map((link) => fs.readFileSync(path.join(root, link.getAttribute('href').split('?')[0]), 'utf8'));
     const css = sheets.join('\n');
     for (const input of a.w.document.querySelectorAll('[data-css-var]')) assert.ok(css.includes(`var(${input.dataset.cssVar}`), `${input.dataset.designKey} must have a visual consumer`);
-    for (const file of ['workspace-refinements.css', 'settings-controls.css', 'settings-consumers.css']) {
+    for (const file of ['workspace-refinements.css', 'settings-controls.css']) {
       const style = a.w.document.createElement('style'); style.textContent = fs.readFileSync(path.join(root, file), 'utf8'); a.w.document.head.append(style);
       assert.ok(style.sheet?.cssRules.length, `${file} must parse`);
     }
@@ -410,5 +410,65 @@ test('Use Defaults applies section defaults without losing the custom value; rgb
     assert.equal(a.api.collectDesignSettingsFromForm().windowBg, 'rgba(28, 18, 14, 0.76)');
     a.api.applyDesignSettings({ ...settings, 'inherit_top-menu': false });
     assert.equal(rootStyle.getPropertyValue('--command-bar-text'), '#123456');
+  } finally { a.close(); }
+});
+
+test('the toolbar retains the approved rules and no supplemental stylesheet owns its layout', () => {
+  const a = app();
+  try {
+    const css = fs.readFileSync(path.join(root, 'styles.css'), 'utf8').replace(/\/\*[^]*?\*\//g, '');
+    const rules = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter((m) => /(?:writer-header|top-command-menus|command-icon|command-label|command-glyph|command-status|unified-command-bar|writing-room-button)/.test(m[1])).map((m) => ({ selector: m[1].replace(/\s+/g, ' ').trim(), declarations: m[2].replace(/\s+/g, ' ').trim() }));
+    assert.deepEqual(rules, JSON.parse(fs.readFileSync(path.join(root, 'tests/fixtures/approved-toolbar.json'), 'utf8')));
+    for (const link of a.w.document.querySelectorAll('link[rel=stylesheet]')) {
+      const name = link.getAttribute('href').split('?')[0];
+      assert.notEqual(name, 'settings-consumers.css');
+      if (name !== 'styles.css') {
+        const componentCss = fs.readFileSync(path.join(root, name), 'utf8').replace(/\/\*[^]*?\*\//g, '');
+        assert.doesNotMatch(componentCss, /(?:writer-header|top-command-menus|command-label|command-glyph|#writingRoomButton|\.direct-command)/);
+      }
+    }
+    assert.equal(fs.existsSync(path.join(root, 'settings-consumers.css')), false);
+  } finally { a.close(); }
+});
+
+test('the preview button shows all tabs and nesting before any project import', async () => {
+  const a = app();
+  try {
+    await a.api.boot();
+    const before = a.api.serializedWorkspace();
+    a.api.openProjectSetup('add');
+    a.w.google = { accounts: { oauth2: { initTokenClient: (options) => ({ requestAccessToken: () => options.callback({ access_token: 'test-only' }) }) } } };
+    a.w.fetch = async () => ({ ok: true, json: async () => native });
+    a.w.document.querySelector('#setupGoogleUrl').value = 'https://docs.google.com/document/d/test-document/edit';
+    await a.w.document.querySelector('#setupReadGoogle').onclick();
+    assert.equal(a.w.document.querySelector('#setupNext').textContent, 'Preview all 3 tabs');
+    assert.equal(a.w.document.querySelector('#setupNext').disabled, false);
+    await a.api.advanceProjectSetup({ preventDefault() {} });
+    const rows = a.w.document.querySelectorAll('#setupTabList .setup-tab');
+    assert.equal(rows.length, 3);
+    assert.equal(rows[1].style.paddingLeft, '18px');
+    assert.match(a.w.document.querySelector('#setupBody').textContent, /Act 1/);
+    assert.match(a.w.document.querySelector('#setupBody').textContent, /Notes/);
+    assert.equal(JSON.parse(a.api.serializedWorkspace()).documents.length, JSON.parse(before).documents.length);
+  } finally { a.close(); }
+});
+
+test('Writing Room pointer and keyboard resizing persists geometry without exiting editing mode', async () => {
+  const a = app();
+  try {
+    await a.api.boot();
+    a.api.els.writingRoomPanel.hidden = false;
+    a.api.state.filingEditMode = true;
+    const panel = a.api.els.writingRoomPanel;
+    panel.getBoundingClientRect = () => ({ left: 12, top: 80, width: parseFloat(panel.style.width) || 300, height: parseFloat(panel.style.height) || 400 });
+    const handle = a.w.document.querySelector('#writingRoomResizeGrip');
+    function pointer(type, x, y) { const event = new a.w.Event(type, { bubbles: true, cancelable: true }); Object.assign(event, { clientX: x, clientY: y, pointerId: 5, button: 0 }); (type === 'pointerdown' ? handle : a.w).dispatchEvent(event); }
+    pointer('pointerdown', 312, 480); pointer('pointermove', 412, 530); pointer('pointerup', 412, 530);
+    assert.equal(panel.style.width, '400px'); assert.equal(panel.style.height, '450px');
+    assert.equal(a.api.state.filingEditMode, true);
+    handle.dispatchEvent(new a.w.KeyboardEvent('keydown', { key: 'ArrowRight', shiftKey: true, bubbles: true }));
+    assert.equal(panel.style.width, '450px');
+    const stored = JSON.parse(a.w.localStorage.getItem('capsanoto-writing-room-layout-v5-8-6'));
+    assert.equal(stored.width, 450); assert.equal(stored.height, 450);
   } finally { a.close(); }
 });

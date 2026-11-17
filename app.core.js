@@ -339,6 +339,7 @@ const els = {
   tagsInput: document.querySelector("#tagsInput"),
   editor: document.querySelector("#editor"),
   writingSurfaceShell: document.querySelector("#writingSurfaceShell"),
+  writingRoomResizeGrip: document.querySelector("#writingRoomResizeGrip"),
   writingSurfaceGrip: document.querySelector("#writingSurfaceGrip"),
   documentEndBar: document.querySelector("#documentEndBar"),
   writingAssistRail: document.querySelector("#writingAssistRail"),
@@ -723,6 +724,11 @@ function bindEditorEvents() {
   els.newTabButton.addEventListener("click", createFilingTab);
   els.trashCanButton?.addEventListener("click", () => setContextStatus(`${state.trash.length} items in Trash · ${state.deprecated.length} deprecated`, false));
   els.writingRoomCards.addEventListener("click", handleWritingRoomCardClick);
+  els.writingRoomResizeGrip?.addEventListener("pointerdown", startWritingRoomResize);
+  els.writingRoomResizeGrip?.addEventListener("keydown", handleWritingRoomResizeKey);
+  window.addEventListener("pointermove", moveWritingRoomResize);
+  window.addEventListener("pointerup", stopWritingRoomResize);
+  window.addEventListener("pointercancel", stopWritingRoomResize);
   els.writingRoomCards.addEventListener("focusout", handleFilingInlineEdit);
   els.writingRoomCards.addEventListener("keydown", handleFilingInlineKeydown);
   els.writingRoomCards.addEventListener("dragstart", handleFilingDragStart);
@@ -2959,6 +2965,57 @@ function handleFilingTabDrop(event) {
   markDirty("Filing Cabinet tab moved");
 }
 
+let writingRoomResizeState = null;
+
+function resizeWritingRoomPanel(width, height) {
+  const panel = els.writingRoomPanel;
+  const rect = panel.getBoundingClientRect();
+  const size = getComputedStyle(panel);
+  const pixels = (value, fallback) => /^\d+(\.\d+)?px$/.test(value) ? parseFloat(value) : fallback;
+  const minWidth = pixels(size.minWidth, 220);
+  const minHeight = pixels(size.minHeight, 220);
+  const maxWidth = Math.max(minWidth, Math.min(pixels(size.maxWidth, window.innerWidth - 24), window.innerWidth - 24));
+  const maxHeight = Math.max(minHeight, Math.min(pixels(size.maxHeight, window.innerHeight - 24), window.innerHeight - 24));
+  const nextWidth = Math.round(Math.max(minWidth, Math.min(maxWidth, width)));
+  const nextHeight = Math.round(Math.max(minHeight, Math.min(maxHeight, height)));
+  panel.style.width = `${nextWidth}px`;
+  panel.style.height = `${nextHeight}px`;
+  panel.style.left = `${Math.max(12, Math.min(rect.left, window.innerWidth - nextWidth - 12))}px`;
+  panel.style.top = `${Math.max(12, Math.min(rect.top, window.innerHeight - nextHeight - 12))}px`;
+  panel.style.right = 'auto';
+  scheduleRoomWorkspaceLayout();
+}
+
+function startWritingRoomResize(event) {
+  if (event.button !== undefined && event.button !== 0) return;
+  event.preventDefault(); event.stopPropagation();
+  const rect = els.writingRoomPanel.getBoundingClientRect();
+  writingRoomResizeState = { x: event.clientX, y: event.clientY, width: rect.width, height: rect.height, pointerId: event.pointerId };
+  els.writingRoomResizeGrip.setPointerCapture?.(event.pointerId);
+}
+
+function moveWritingRoomResize(event) {
+  if (!writingRoomResizeState || event.pointerId !== writingRoomResizeState.pointerId) return;
+  event.preventDefault();
+  resizeWritingRoomPanel(writingRoomResizeState.width + event.clientX - writingRoomResizeState.x, writingRoomResizeState.height + event.clientY - writingRoomResizeState.y);
+}
+
+function stopWritingRoomResize(event) {
+  if (!writingRoomResizeState || event.pointerId !== writingRoomResizeState.pointerId) return;
+  try { els.writingRoomResizeGrip.releasePointerCapture?.(writingRoomResizeState.pointerId); } catch {}
+  writingRoomResizeState = null;
+  saveWritingRoomPanelLayout({ keepEditMode: true });
+}
+
+function handleWritingRoomResizeKey(event) {
+  if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) return;
+  event.preventDefault(); event.stopPropagation();
+  const rect = els.writingRoomPanel.getBoundingClientRect();
+  const step = event.shiftKey ? 50 : 10;
+  resizeWritingRoomPanel(rect.width + (event.key === 'ArrowRight' ? step : event.key === 'ArrowLeft' ? -step : 0), rect.height + (event.key === 'ArrowDown' ? step : event.key === 'ArrowUp' ? -step : 0));
+  saveWritingRoomPanelLayout({ keepEditMode: true });
+}
+
 function startWritingRoomDrag(event) {
   if (event.target.closest("button, input, select, textarea")) return;
   const rect = els.writingRoomPanel.getBoundingClientRect();
@@ -3209,7 +3266,7 @@ function stopCabinetScrollDrag() {
   els.writingRoomCards?.classList.remove("is-drag-scrolling");
 }
 
-function saveWritingRoomPanelLayout() {
+function saveWritingRoomPanelLayout({ keepEditMode = false } = {}) {
   const rect = els.writingRoomPanel.getBoundingClientRect();
   const layout = {
     left: Math.round(rect.left),
@@ -3219,7 +3276,7 @@ function saveWritingRoomPanelLayout() {
   };
   localStorage.setItem(WRITING_ROOM_LAYOUT_KEY, JSON.stringify(layout));
   setStatus("Writing Room layout saved", "saved");
-  if (state.filingEditMode) toggleFilingEditMode();
+  if (state.filingEditMode && !keepEditMode) toggleFilingEditMode();
 }
 
 function applyWritingRoomPanelLayout() {
