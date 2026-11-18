@@ -1,5 +1,23 @@
 # Capsanoto production tools review · 17 November 2026
 
+## Storage and history update · 18 November 2026 · v5.15.0
+
+Completed the requested items 2, 3 and 4 from the follow-up list. Storyboarder now collects unreferenced committed media after a successful browser save, releases saved inactive episode bodies, retains hashes instead of full JSON strings for change detection, and clears the removed-scene flag when a source scene returns. Shared media and unsaved staged attachments are protected; a failed/stale save cannot trigger cleanup. An initial index upgrade can inspect old unloaded records without retaining them in the live editor. Resending a script first saves pending production edits so a returned scene retains the latest notes.
+
+Storyboarder Settings now has a per-project previous-folder-backup limit, default five plus current, adjustable 0–100. Cleanup starts only after the new folder index commits. It verifies current files, selects the newest complete saved versions, removes obsolete owned index snapshots first and then their unreferenced managed files. Unknown files, other projects and legacy-format backups remain outside removal. Current corruption or unreadable history pauses pruning; cleanup failure never invalidates the completed save and retries on the next Save backup. Native folder operations retain the existing one-writer-per-folder limitation.
+
+This resolves the earlier orphan-media, inactive episode/string-cache and reintroduced-scene findings, and the subsequent unbounded versioned-folder-backup limitation. Pending work is Scene Mockup reliability/performance and the optional production Dropbox/direct-transfer integrations. No Scene Mockup files were changed in this update.
+
+## Repair update · 18 November 2026 · v5.14.1
+
+The user requested the next stage after reviewing the findings. Storyboarder's first three findings below are now repaired: interrupted folder backup safety, Clear Draft's stale folder/data, and edits marked backed up while saving. Backups capture project/episode/media records consistently, write versioned checksummed files, preserve complete recovery indexes, and commit the current index last. Opening a damaged folder can select a complete recovery snapshot. Clear Draft transactionally removes only the selected browser project's episodes, assets and folder binding, retaining a revision tombstone to reject stale tabs. Explicit handoff can recreate the planner after clearing.
+
+Additional protections in this repair include checksum verification before ZIP/folder replacement, direct user-gesture folder picking, rejecting another project's backup folder, independent restored copies with detached folders, and ZIP rescue for a stale fully loaded draft. Backup construction no longer loads inactive episode bodies into the live editor or mutates their file paths. Obsolete in-place save-hash state was removed. Unverified desktop text-writer bridges use the portable ZIP route instead of potentially unsafe folder overwrites.
+
+This does not yet implement general orphan-asset collection after individual media removal, release all previously visited episode bodies/string caches, clear a reintroduced scene's removed flag, or add production Dropbox sync. Versioned folder backup files are retained, without automatic folder-history pruning. Browser locks coordinate same-origin tabs when available; native file handles do not provide cross-browser/process atomic compare-and-swap, so one writer per folder remains the supported workflow. Native folder-picker appearance and actual device writes have not been manually certified in this pass.
+
+Scene Mockup remains unchanged. Its autosave and import-validation work is next, before its memory/rendering and GLB repairs.
+
 ## Follow-up review · v5.14.0
 
 The user confirmed that cross-device Dropbox project discovery now works. That check is complete. This pass implements Capsanoto's bounded cloud history only; Storyboarder and Scene Mockup were reviewed without changing their functional code, as requested.

@@ -87,7 +87,7 @@
       const bySource = new Map(old.scenes.map((scene) => [scene.sourceKey, scene]));
       const refreshed = act.scenes.map((scene) => {
         const previous = bySource.get(scene.sourceKey);
-        return previous ? { ...previous, ...scene, status: previous.status, notes: previous.notes, media: previous.media, sceneEffects: previous.sceneEffects, productionChecklist: previous.productionChecklist } : scene;
+        return previous ? { ...previous, ...scene, sourceRemoved: false, status: previous.status, notes: previous.notes, media: previous.media, sceneEffects: previous.sceneEffects, productionChecklist: previous.productionChecklist } : scene;
       });
       const currentKeys = new Set(refreshed.map((scene) => scene.sourceKey));
       const retained = old.scenes.filter((scene) => scene.sourceDocumentId !== documentId || !currentKeys.has(scene.sourceKey)).map((scene) => scene.sourceDocumentId === documentId ? { ...scene, sourceRemoved: true } : scene);

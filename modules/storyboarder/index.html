@@ -129,6 +129,11 @@
   <section class="app-modal hidden" id="settingsModal" role="dialog" aria-label="Settings">
     <header class="modal-header"><strong>⚙️ Settings</strong><button type="button" data-close-modal="settingsModal">×</button></header>
     <div class="modal-body">
+      <label for="backupHistoryLimit">Previous folder backups to keep
+        <input id="backupHistoryLimit" type="number" min="0" max="100" step="1" value="5" />
+      </label>
+      <div class="settings-grid"><button id="btnApplyBackupHistory" type="button">Apply history limit</button></div>
+      <p class="hint">Default: 5 previous backups plus the current backup. Set 0 to keep only the current backup. Cleanup runs after a successful folder save and removes unused versioned files. Older legacy-format backups and unrelated files are preserved.</p>
       <div class="settings-grid">
         <button id="btnExport" type="button">📤 Export JSON</button>
         <button id="btnClearLocal" type="button" class="danger">🧹 Clear Draft</button>
@@ -153,10 +158,11 @@
     </article>
   </template>
 
-<section class="app-modal hidden" id="storyboardHelpModal" role="dialog" aria-label="How Storyboarder works"><header class="modal-header"><strong>How Storyboarder works</strong><button type="button" data-close-modal="storyboardHelpModal">×</button></header><div class="modal-body"><p>Storyboarder turns a script into a production plan: acts, scene cards, notes, media, effects and progress.</p><ol><li>In Capsanoto, choose a document and click Send to Storyboarder. It opens here and builds scene cards automatically.</li><li>Check the breakdown, add production notes, and attach your images, video or sound files.</li><li>Use Save to choose a backup folder where supported, or download one portable project ZIP. It includes the project index, episode files, script copies and available media.</li><li>Open a saved folder or import the ZIP to restore it. Sending a revised script retains production notes, statuses and attached media; removed scenes stay marked for review.</li></ol><p>Browser drafts are saved per episode. Storyboarder planning is currently local to this device; Capsanoto’s Dropbox sync does not yet include these production files.</p><p>Scene Mockup is the separate frame-composition canvas. Arrange backgrounds and characters there, export an image, and attach that image to a scene here.</p></div></section>
+<section class="app-modal hidden" id="storyboardHelpModal" role="dialog" aria-label="How Storyboarder works"><header class="modal-header"><strong>How Storyboarder works</strong><button type="button" data-close-modal="storyboardHelpModal">×</button></header><div class="modal-body"><p>Storyboarder turns a script into a production plan: acts, scene cards, notes, media, effects and progress.</p><ol><li>In Capsanoto, choose a document and click Send to Storyboarder. It opens here and builds scene cards automatically.</li><li>Check the breakdown, add production notes, and attach your images, video or sound files.</li><li>Use Save to choose a backup folder where supported, or download one portable project ZIP. It includes the project index, episode files, script copies and available media.</li><li>Open a saved folder or import the ZIP to restore an independent browser copy. If the current folder index is damaged, Open folder can recover a complete saved index. Choose another folder when backing up the restored copy. Sending a revised script retains production notes, statuses and attached media; removed scenes stay marked for review.</li></ol><p>Browser drafts are saved per episode. Storyboarder planning is currently local to this device; Capsanoto’s Dropbox sync does not yet include these production files.</p><p>Scene Mockup is the separate frame-composition canvas. Arrange backgrounds and characters there, export an image, and attach that image to a scene here.</p></div></section>
 <script src="../../vendor/jszip.min.js"></script>
-<script src="storage.js?v=5.13.1"></script>
-<script src="script-import.js?v=5.13.1"></script>
-<script src="storyboarder.js?v=5.13.1"></script>
+<script src="storage.js?v=5.15.0"></script>
+<script src="backup-history.js?v=5.15.0"></script>
+<script src="script-import.js?v=5.15.0"></script>
+<script src="storyboarder.js?v=5.15.0"></script>
 </body>
 </html>
