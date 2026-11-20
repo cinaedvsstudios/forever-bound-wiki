@@ -58,8 +58,7 @@ details[open] > .cabinet-row > .card-arrow { transform:rotate(90deg); }
 .cabinet-file-count { text-align:center; color:var(--label-text); font-size:11px; }
 .cabinet-rail-track { position:relative; min-height:0; margin:12px 0; }
 .cabinet-rail-track::before { content:''; position:absolute; top:0; bottom:0; left:50%; width:1px; background:var(--jump-rail-line,#795d68); }
-#writingRoomPanel .filing-jump-rail button { position:absolute; left:50%; transform:translate(-50%,-50%); width:23px; height:23px; min-width:0; padding:0; display:grid; place-items:center; background:var(--jump-rail-button-bg,#211614) !important; background-image:none !important; border:1px solid var(--jump-rail-button-border,#795d68) !important; border-radius:50% !important; box-shadow:none !important; color:var(--jump-rail-icon-color,#fff0ce); font-size:var(--rail-icon-size,12px); line-height:1; }
-#writingRoomPanel .filing-jump-rail .cabinet-rail-doc { border-color:var(--doc-row-border,#80c5b8) !important; }
-#writingRoomPanel .filing-jump-rail .cabinet-rail-trash { border-color:var(--trash-border,#d87878) !important; }
-#writingRoomPanel .filing-jump-rail button[aria-current="true"] { outline:2px solid var(--doc-row-border,#80c5b8); outline-offset:2px; }
+#writingRoomPanel .filing-jump-rail button { position:absolute; left:50%; transform:translate(-50%,-50%); width:23px; height:23px; min-width:0; padding:0; display:grid; place-items:center; background:transparent !important; background-image:none !important; border:0 !important; border-radius:3px !important; box-shadow:none !important; color:var(--jump-rail-icon-color,#fff0ce); font-size:var(--rail-icon-size,12px); line-height:1; }
+#writingRoomPanel .filing-jump-rail button:hover { background:var(--jump-rail-button-bg,#211614) !important; outline:1px solid var(--jump-rail-button-border,#795d68); outline-offset:0; }
+#writingRoomPanel .filing-jump-rail button[aria-current="true"]::before { content:''; position:absolute; left:-3px; top:5px; bottom:5px; width:3px; border-radius:2px; background:var(--doc-row-border,#80c5b8); }
 #writingRoomPanel button:focus-visible, #writingRoomPanel summary:focus-visible { outline:2px solid #fff0ce; outline-offset:2px; }
