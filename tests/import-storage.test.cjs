@@ -120,7 +120,7 @@ test('Word imports preserve text, headings, and emphasis without uploading', asy
 test('all entry pages wire the same setup and storage runtime', () => {
   for (const file of ['index.html', 'editor.html', 'writing-room.html']) {
     const html = fs.readFileSync(path.join(root, file), 'utf8');
-    assert.match(html, /project-setup.js\?v=5.16.1/); assert.match(html, /dropbox-storage.js/);
+    assert.match(html, /project-setup.js\?v=5.16.2/); assert.match(html, /dropbox-storage.js/);
     assert.doesNotMatch(html, /id="createOnlineProjectButton"/);
   }
 });

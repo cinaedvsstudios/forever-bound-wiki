@@ -35,11 +35,11 @@ details[open] > .cabinet-row > .card-arrow { transform:rotate(90deg); }
 .folder-tab-stack, .filing-tab-documents { display:block; margin:9px 0 0 8px; padding:0 0 0 9px; border-left:1px solid #4f3a37; }
 #writingRoomCards .filing-tab > .cabinet-row { --level-bg:var(--tab-row-bg,#2a1829); --level-border:var(--tab-row-border,#bc78d3); --level-text:var(--tab-text-color); --level-size:var(--tab-text-size,12px); }
 #writingRoomCards .writing-room-card > .cabinet-row { --level-bg:var(--doc-row-bg,#1d2926); --level-border:var(--doc-row-border,#80c5b8); --level-text:var(--doc-text-color); --level-size:var(--doc-text-size,12px); grid-template-columns:12px 20px minmax(0,1fr); }
-#writingRoomCards .writing-room-card.is-active > .cabinet-row { border-color:var(--doc-row-border,#80c5b8) !important; box-shadow:inset 0 0 0 1px var(--doc-row-border,#80c5b8) !important; }
+#writingRoomCards .writing-room-card.is-active > .cabinet-row { --level-bg:#174b78; --level-border:#6cb6ff; border-color:#6cb6ff !important; box-shadow:inset 0 0 0 1px #6cb6ff !important; }
 .writing-room-card-body { display:grid; gap:9px; padding:10px 0 0; color:var(--expanded-doc-text-color); font-size:var(--expanded-doc-text-size,12px); }
 .cabinet-document-actions { display:flex; gap:6px; align-items:center; justify-content:space-between; flex-wrap:wrap; }
 .cabinet-document-actions > [data-document-menu] { margin-left:auto; }
-.cabinet-current-file { color:#91bfb0; font-size:11px; }
+.cabinet-current-file { color:#a0ceff; font-size:11px; }
 #writingRoomCards .document-disclosure { margin:0; padding:0; border:1px solid var(--metadata-pill-border,#62503f); border-radius:8px; background:transparent; box-shadow:none; }
 #writingRoomCards .document-disclosure > summary { display:list-item; list-style:disclosure-closed inside; padding:8px 9px; border:0; border-radius:7px; margin:0; background:var(--tab-row-bg,#2a1829); color:var(--doc-text-color,#fff0ce); font-size:12px; box-shadow:none; text-shadow:none; }
 #writingRoomCards .document-disclosure > summary::-webkit-details-marker { display:inline; }
@@ -60,5 +60,5 @@ details[open] > .cabinet-row > .card-arrow { transform:rotate(90deg); }
 .cabinet-rail-track::before { content:''; position:absolute; top:0; bottom:0; left:50%; width:1px; background:var(--jump-rail-line,#795d68); }
 #writingRoomPanel .filing-jump-rail button { position:absolute; left:50%; transform:translate(-50%,-50%); width:23px; height:23px; min-width:0; padding:0; display:grid; place-items:center; background:transparent !important; background-image:none !important; border:0 !important; border-radius:3px !important; box-shadow:none !important; color:var(--jump-rail-icon-color,#fff0ce); font-size:var(--rail-icon-size,12px); line-height:1; }
 #writingRoomPanel .filing-jump-rail button:hover { background:var(--jump-rail-button-bg,#211614) !important; outline:1px solid var(--jump-rail-button-border,#795d68); outline-offset:0; }
-#writingRoomPanel .filing-jump-rail button[aria-current="true"]::before { content:''; position:absolute; left:-3px; top:5px; bottom:5px; width:3px; border-radius:2px; background:var(--doc-row-border,#80c5b8); }
+#writingRoomPanel .filing-jump-rail button[aria-current="true"]::before { content:''; position:absolute; left:-3px; top:5px; bottom:5px; width:3px; border-radius:2px; background:#6cb6ff; }
 #writingRoomPanel button:focus-visible, #writingRoomPanel summary:focus-visible { outline:2px solid #fff0ce; outline-offset:2px; }
