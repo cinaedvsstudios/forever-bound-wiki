@@ -57,7 +57,11 @@ async function ensureDocumentContent(doc) {
       catch { /* A verified Dropbox copy can repair a damaged local cache. */ }
     }
     if (!body) {
-      if (!ref.path || !ref.accountId || dropboxConnection?.accountId !== ref.accountId) throw new Error(`“${doc.title}” is not cached on this device. Connect its Dropbox account to open it. The project and other files are kept.`);
+      if (!ref.path || !ref.accountId || dropboxConnection?.accountId !== ref.accountId) {
+        const error = new Error(`“${doc.title}” is not cached on this device. Connect its Dropbox account to open it. The project and other files are kept.`);
+        if (ref.path && ref.accountId) { error.code = 'dropbox-auth-required'; error.dropboxAccountId = ref.accountId; }
+        throw error;
+      }
       requireDropboxConnection();
       const downloaded = await dropboxRequest('files/download', { path: ref.path }, { download: true });
       text = downloaded.text;
@@ -70,7 +74,11 @@ async function ensureDocumentContent(doc) {
   })();
   documentLoads.set(doc, operation);
   try { return await operation; }
-  catch (error) { throw new Error(`Could not open “${doc.title}”. ${error.message}`); }
+  catch (error) {
+    const failure = new Error(`Could not open “${doc.title}”. ${error.message}`);
+    failure.code = error.code; failure.dropboxAccountId = doc._body?.accountId || error.dropboxAccountId;
+    throw failure;
+  }
   finally { documentLoads.delete(doc); }
 }
 
@@ -246,6 +254,6 @@ function pruneDocumentBodyCache(records, onActiveIndex = () => {}) {
 function runProjectFileAction(action) {
   return Promise.resolve().then(action).catch((error) => {
     setStatus(error.message, 'dirty');
-    showStorageWarning(error.message);
+    showStorageWarning(error.message, { error });
   });
 }

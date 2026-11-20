@@ -80,7 +80,7 @@ function writeWorkspaceSnapshot() {
       });
       rememberIndexedDocumentBodies(captured, index);
       localSaveFailed = false;
-      showStorageWarning('');
+      if (storageWarningContext?.error?.code !== 'dropbox-auth-required') showStorageWarning('');
     } finally { db.close(); }
   }).catch((error) => {
     localSaveFailed = true;
@@ -91,23 +91,62 @@ function writeWorkspaceSnapshot() {
   return operation;
 }
 
-function showStorageWarning(message) {
-  let banner = document.getElementById('storageWarning');
-  if (!banner) {
-    banner = document.createElement('div');
-    banner.id = 'storageWarning';
-    banner.setAttribute('role', 'alert');
-    const text = document.createElement('span');
-    const button = document.createElement('button');
-    button.textContent = 'Download backup';
-    button.onclick = () => downloadCapsanotoProjectBackup();
-    banner.append(text, button);
-    document.body.append(banner);
+let storageWarningContext = null;
+let storageWarningBusy = false;
+
+function showStorageWarning(message, { error = null, retry = null, projectId = null, backup = null } = {}) {
+  let panel = document.getElementById('storageWarning');
+  if (!message) { storageWarningContext = null; if (panel) panel.hidden = true; return; }
+  if (!panel) {
+    panel = document.createElement('section'); panel.id = 'storageWarning';
+    panel.setAttribute('role', 'alert');
+    panel.setAttribute('aria-labelledby', 'storageWarningTitle');
+    panel.setAttribute('aria-describedby', 'storageWarningMessage');
+    panel.innerHTML = '<header><h2 id="storageWarningTitle"></h2><button type="button" id="storageWarningDismiss" aria-label="Dismiss storage warning">×</button></header><p id="storageWarningMessage"></p><div class="storage-warning-actions"><button type="button" id="storageWarningReconnect">Reconnect Dropbox</button><button type="button" id="storageWarningBackup">Download backup</button></div>';
+    panel.querySelector('#storageWarningDismiss').onclick = () => { panel.hidden = true; storageWarningContext = null; };
+    panel.querySelector('#storageWarningReconnect').onclick = reconnectStorageWarning;
+    document.body.append(panel);
   }
-  banner.firstElementChild.textContent = message;
-  banner.hidden = !message;
+  storageWarningContext = { message, error, retry, projectId, backup };
+  document.getElementById('storageWarningMessage').textContent = message;
+  document.getElementById('storageWarningTitle').textContent = error?.code === 'dropbox-auth-required' ? 'Reconnect to Dropbox' : 'Storage needs attention';
+  document.getElementById('storageWarningBackup').onclick = backup || (() => downloadCapsanotoProjectBackup());
+  panel.hidden = false;
+  renderStorageWarningActions();
 }
 
+function renderStorageWarningActions() {
+  const button = document.getElementById('storageWarningReconnect');
+  if (!button) return;
+  button.hidden = storageWarningContext?.error?.code !== 'dropbox-auth-required';
+  button.disabled = storageWarningBusy || dropboxBusy;
+  button.textContent = storageWarningBusy ? 'Reconnecting…' : 'Reconnect Dropbox';
+  button.setAttribute('aria-busy', String(storageWarningBusy));
+}
+
+async function reconnectStorageWarning() {
+  const request = storageWarningContext;
+  if (!request || storageWarningBusy || dropboxBusy) return;
+  storageWarningBusy = true; renderStorageWarningActions();
+  try {
+    await dropboxAction(async () => {
+      try {
+        if (!document.getElementById('rememberDropbox')) renderDropboxStorage();
+        // Invoke OAuth directly from this click, before awaiting storage or a retry.
+        await connectDropbox({ switchAccount: Boolean(request.error.dropboxAccountId && dropboxConnection?.accountId && request.error.dropboxAccountId !== dropboxConnection.accountId) });
+        if (storageWarningContext !== request) return;
+        if (request.error.dropboxAccountId && dropboxConnection?.accountId !== request.error.dropboxAccountId) throw new Error('Sign in to the Dropbox account that owns this document. Reconnect again to choose that account.');
+        if (request.projectId && state.projectId !== request.projectId) {
+          showStorageWarning(''); setStatus('Dropbox reconnected. Choose a document in your current project.', 'saved'); return;
+        }
+        const opened = request.retry ? await request.retry() : true;
+        if (storageWarningContext === request && opened !== false) showStorageWarning('');
+      } catch (error) {
+        if (storageWarningContext === request) showStorageWarning(`Could not reconnect. ${error.message}`, request);
+      }
+    });
+  } finally { storageWarningBusy = false; renderStorageWarningActions(); }
+}
 function safeDocumentHtml(html) {
   if (!window.DOMPurify) throw new Error('The document safety filter could not load. Refresh before importing.');
   return DOMPurify.sanitize(String(html || ''), {

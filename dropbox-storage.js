@@ -85,6 +85,7 @@ function renderBottomDropboxControl() {
   document.getElementById('bottomDropboxStatus').textContent = dropboxStatus;
   for (const id of ['workspaceSettings', 'addProjectFile', 'openSavedProject']) document.getElementById(id).disabled = dropboxBusy || (id === 'addProjectFile' && Boolean(foreign));
   setWorkspaceControlsBusy();
+  renderStorageWarningActions();
 }
 
 async function dropboxAction(action) {
@@ -144,7 +145,11 @@ async function connectDropbox({ switchAccount = false } = {}) {
 }
 
 function requireDropboxConnection() {
-  if (!dropboxConnection?.token || dropboxConnection.expiresAt <= Date.now() + 10000) throw new Error('Connect Dropbox to refresh your sign-in. Your local documents are kept.');
+  if (!dropboxConnection?.token || dropboxConnection.expiresAt <= Date.now() + 10000) {
+    const error = new Error('Connect Dropbox to refresh your sign-in. Your local documents are kept.');
+    error.code = 'dropbox-auth-required'; error.dropboxAccountId = dropboxConnection?.accountId;
+    throw error;
+  }
 }
 
 async function dropboxRequest(route, data, options = {}) {
@@ -160,6 +165,7 @@ async function dropboxRequest(route, data, options = {}) {
   if (!response.ok) {
     const error = new Error(response.status === 409 ? 'Dropbox has another version or a conflicting file. Open the Dropbox copy to review it; this browser copy has not been overwritten.' : response.status === 401 ? 'Dropbox sign-in expired. Connect again.' : `Dropbox request failed (${response.status}). Try again when online.`);
     error.status = response.status;
+    if (response.status === 401) { error.code = 'dropbox-auth-required'; error.dropboxAccountId = dropboxConnection.accountId; }
     try { error.summary = (await response.json()).error_summary || ''; } catch {}
     error.notFound = error.summary?.includes('path/not_found');
     if (error.notFound && options.download) error.message = 'The saved file is missing from Dropbox. Other documents are kept.';

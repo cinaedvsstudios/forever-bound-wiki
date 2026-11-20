@@ -27,7 +27,7 @@ function app({ indexedDB = new IDBFactory(), legacy } = {}) {
   const workspace = fs.readFileSync(path.join(root, 'workspace-storage.js'), 'utf8');
   const transfer = fs.readFileSync(path.join(root, 'storyboard-transfer.js'), 'utf8');
   const filesRuntime = fs.readFileSync(path.join(root, 'project-files.js'), 'utf8');
-  w.eval(filesRuntime + '\n' + setup + '\n' + library + '\n' + cloud + '\n' + workspace + '\n' + transfer + '\n' + markdown + '\n' + navigation + '\n' + core + '\nwindow.testApp = { hasRetainedDocumentBody: doc => savedDocumentBodies.has(doc), setWorkspaceHistoryLimit, loadWorkspaceHistorySettings, maintainWorkspaceHistory, withDropboxProjectLock, retainedProjectHistory, getHistoryLimit: () => workspaceHistoryLimit, getCatalogue: () => dropboxProjectCatalogue, getLibraryEntries: () => projectLibraryEntries, renderProjectLibraryOptions, restoreDropboxCatalogue, syncWorkspaceProjects, setWorkspaceSyncInterval, scheduleDropboxSync, restoreWorkspacePreferences, buildWorkspaceZip, projectBackupFromZip, removeWorkspaceProject, confirmWorkspaceDeletion, sendDocumentToStoryboarder, getSyncInterval: () => workspaceSyncInterval, getSyncTimer: () => dropboxSyncTimer, refreshDropboxProjects, openSavedProject, openLocalProjectRecord, projectFileHash, encodeProjectIndex, ensureDocumentContent, ensureProjectDocumentsLoaded, openDocument, openDropboxProjectPath, documentIsLoaded, completeProjectCopy, listSavedProjectIndexes, openFromRoute, releaseDocumentBody, duplicateDocument, deprecateDocument, deleteDocumentSafely, restoreArchivedDocument, setDialogResponse: (response) => { openCapsDialog = async () => response; }, startWritingRoomResize, moveWritingRoomResize, stopWritingRoomResize, handleWritingRoomResizeKey, documentOutline, jumpToDocumentOutline, fillDocumentOutline, calculateRoomLayout, renderWritingRoomCards, renderDocumentEndBar, updateRoomWorkspaceLayout, toggleWritingRoomPanel, applyDesignSettings, collectDesignSettingsFromForm, saveDesignSettings, applyExtraDesignSettings, currentDesignSettings, buildMarkdownArchive, openProjectSetup, advanceProjectSetup, readGoogleDocsSource, renderDropboxStorage, setSetupSource: (source) => { setupSession.source = source; setupSession.selected = new Set(source.tabs.map(t => t.id)); }, state, els, boot, loadWorkspace, serializedWorkspace, writeWorkspaceSnapshot, readWorkspaceSnapshot, workspaceRecord, persistNow, safeDocumentHtml, googleDocsToImportSource, commitProjectImport, readImportFile, importProjectBackupPayload, folderModeProjectPayload, capsMarkdownToDocument, prepareProjectReplacement, saveFolderModeSnapshot, syncDropboxProject, openWritingRoomFolder, projectCloudFingerprint, setConnection: (value) => { dropboxConnection = value; }, getRevision: () => workspaceRevision };');
+  w.eval(filesRuntime + '\n' + setup + '\n' + library + '\n' + cloud + '\n' + workspace + '\n' + transfer + '\n' + markdown + '\n' + navigation + '\n' + core + '\nwindow.testApp = { showStorageWarning, setReconnect: callback => { connectDropbox = callback; }, hasRetainedDocumentBody: doc => savedDocumentBodies.has(doc), setWorkspaceHistoryLimit, loadWorkspaceHistorySettings, maintainWorkspaceHistory, withDropboxProjectLock, retainedProjectHistory, getHistoryLimit: () => workspaceHistoryLimit, getCatalogue: () => dropboxProjectCatalogue, getLibraryEntries: () => projectLibraryEntries, renderProjectLibraryOptions, restoreDropboxCatalogue, syncWorkspaceProjects, setWorkspaceSyncInterval, scheduleDropboxSync, restoreWorkspacePreferences, buildWorkspaceZip, projectBackupFromZip, removeWorkspaceProject, confirmWorkspaceDeletion, sendDocumentToStoryboarder, getSyncInterval: () => workspaceSyncInterval, getSyncTimer: () => dropboxSyncTimer, refreshDropboxProjects, openSavedProject, openLocalProjectRecord, projectFileHash, encodeProjectIndex, ensureDocumentContent, ensureProjectDocumentsLoaded, openDocument, openDropboxProjectPath, documentIsLoaded, completeProjectCopy, listSavedProjectIndexes, openFromRoute, releaseDocumentBody, duplicateDocument, deprecateDocument, deleteDocumentSafely, restoreArchivedDocument, setDialogResponse: (response) => { openCapsDialog = async () => response; }, startWritingRoomResize, moveWritingRoomResize, stopWritingRoomResize, handleWritingRoomResizeKey, documentOutline, jumpToDocumentOutline, fillDocumentOutline, calculateRoomLayout, renderWritingRoomCards, renderDocumentEndBar, updateRoomWorkspaceLayout, toggleWritingRoomPanel, applyDesignSettings, collectDesignSettingsFromForm, saveDesignSettings, applyExtraDesignSettings, currentDesignSettings, buildMarkdownArchive, openProjectSetup, advanceProjectSetup, readGoogleDocsSource, renderDropboxStorage, setSetupSource: (source) => { setupSession.source = source; setupSession.selected = new Set(source.tabs.map(t => t.id)); }, state, els, boot, loadWorkspace, serializedWorkspace, writeWorkspaceSnapshot, readWorkspaceSnapshot, workspaceRecord, persistNow, safeDocumentHtml, googleDocsToImportSource, commitProjectImport, readImportFile, importProjectBackupPayload, folderModeProjectPayload, capsMarkdownToDocument, prepareProjectReplacement, saveFolderModeSnapshot, syncDropboxProject, openWritingRoomFolder, projectCloudFingerprint, setConnection: (value) => { dropboxConnection = value; }, getRevision: () => workspaceRevision };');
   return { w, api: w.testApp, close: () => dom.window.close() };
 }
 function seed(a) {
@@ -120,7 +120,7 @@ test('Word imports preserve text, headings, and emphasis without uploading', asy
 test('all entry pages wire the same setup and storage runtime', () => {
   for (const file of ['index.html', 'editor.html', 'writing-room.html']) {
     const html = fs.readFileSync(path.join(root, file), 'utf8');
-    assert.match(html, /project-setup.js\?v=5.15.0/); assert.match(html, /dropbox-storage.js/);
+    assert.match(html, /project-setup.js\?v=5.15.1/); assert.match(html, /dropbox-storage.js/);
     assert.doesNotMatch(html, /id="createOnlineProjectButton"/);
   }
 });
@@ -332,6 +332,12 @@ test('all mapped design controls apply their CSS value, including empty image cl
   const a = app();
   try {
     await a.api.boot();
+    assert.equal(a.w.document.querySelector('#writingRoomButton .command-glyph').textContent, '🏺');
+    a.api.state.designSettings.topIconWritingRoom = '📚';
+    assert.equal(a.api.currentDesignSettings().topIconWritingRoom, '🏺');
+    a.api.state.designSettings.topIconWritingRoom = '🌻';
+    assert.equal(a.api.currentDesignSettings().topIconWritingRoom, '🌻');
+    a.api.state.designSettings.topIconWritingRoom = '🏺';
     const controls = [...a.w.document.querySelectorAll('[data-design-key]')];
     for (const input of controls) {
       if (input.type === 'color') input.value = '#123456';
@@ -1472,5 +1478,117 @@ test('cleanup keeps the exact current recovery index after shared-data changes a
     assert.equal(cloud.entries.get(exact)?.text, current.file.text);
     for (const ref of [current.index.shared, ...current.index.history.shared]) assert.ok(cloud.entries.has(ref.path));
     assert.equal(cloud.entries.has(saved.binding.folder + '/documents/' + 'e'.repeat(64) + '.doc.json'), false);
+  } finally { a.close(); }
+});
+
+test('the warning reconnects immediately from its button and retries the requested document without losing open edits', async () => {
+  const a = app(); const cloud = fakeDropbox();
+  try {
+    await a.api.boot(); seedLibrary(a); cloud.attach(a); await a.api.syncDropboxProject();
+    a.api.setConnection({ accountId: 'account', token: 'expired-test', expiresAt: 0 });
+    a.api.els.editor.innerHTML = '<p>Keep edits made before reconnecting</p>';
+    assert.equal(await a.api.openDocument('bible'), false);
+    const panel = a.w.document.getElementById('storageWarning'); const button = a.w.document.getElementById('storageWarningReconnect');
+    assert.equal(panel.hidden, false); assert.equal(button.hidden, false); assert.equal(button.disabled, false);
+    assert.equal(a.api.state.activeId, 'original');
+    let started = false;
+    a.api.setReconnect(() => { started = true; cloud.attach(a); return Promise.resolve(); });
+    const reconnect = button.onclick(); assert.equal(started, true); assert.equal(button.disabled, true);
+    await reconnect;
+    assert.equal(a.api.state.activeId, 'bible'); assert.match(a.api.state.documents[1].content, /World history/);
+    await a.api.ensureDocumentContent(a.api.state.documents[0]); assert.match(a.api.state.documents[0].content, /Keep edits made before reconnecting/);
+    assert.equal(panel.hidden, true);
+  } finally { a.close(); }
+});
+
+test('startup reconnect loads the real active document instead of saving its unavailable-document placeholder', async () => {
+  const a = app(); const b = app(); const cloud = fakeDropbox(); seedLibrary(a); cloud.attach(a);
+  try {
+    await a.api.syncDropboxProject(); const saved = await a.api.workspaceRecord('active');
+    await b.api.workspaceRecord('active', { ...saved, revision: 1 });
+    await b.api.workspaceRecord('dropbox-connection', { accountId: 'account', token: 'expired-test', expiresAt: 0 });
+    await b.api.boot(); assert.equal(b.api.state.documents[0].content, undefined);
+    assert.equal(b.w.document.getElementById('storageWarningReconnect').hidden, false);
+    b.api.setReconnect(async () => { cloud.attach(b); });
+    await b.w.document.getElementById('storageWarningReconnect').onclick();
+    assert.equal(b.api.state.documents[0].content, '<p>Keep this draft</p>');
+    assert.equal(b.api.els.editor.contentEditable, 'true');
+    const index = JSON.parse((await b.api.workspaceRecord('active')).json);
+    const body = await b.api.workspaceRecord('document-body:' + index.documents[0]._body.hash);
+    assert.match(body, /Keep this draft/); assert.doesNotMatch(body, /data-retry-document|not cached|Could not open/);
+  } finally { a.close(); b.close(); }
+});
+
+test('cancelled sign-in keeps the warning and allows reconnecting again', async () => {
+  const a = app(); const cloud = fakeDropbox();
+  try {
+    await a.api.boot(); seedLibrary(a); cloud.attach(a); await a.api.syncDropboxProject();
+    a.api.setConnection({ accountId: 'account', token: 'expired', expiresAt: 0 }); await a.api.openDocument('bible');
+    a.api.setReconnect(async () => { throw new Error('Sign-in was cancelled'); });
+    await a.w.document.getElementById('storageWarningReconnect').onclick();
+    assert.equal(a.w.document.getElementById('storageWarning').hidden, false);
+    assert.equal(a.w.document.getElementById('storageWarningReconnect').disabled, false);
+    assert.match(a.w.document.getElementById('storageWarningMessage').textContent, /Sign-in was cancelled/);
+    assert.equal(a.api.state.activeId, 'original');
+  } finally { a.close(); }
+});
+
+test('the warning refuses to open a document through the wrong Dropbox account', async () => {
+  const a = app(); const cloud = fakeDropbox();
+  try {
+    await a.api.boot(); seedLibrary(a); cloud.attach(a); await a.api.syncDropboxProject();
+    a.api.setConnection({ accountId: 'account', token: 'expired', expiresAt: 0 }); await a.api.openDocument('bible');
+    a.api.setReconnect(async () => { cloud.attach(a, 'other-account'); });
+    await a.w.document.getElementById('storageWarningReconnect').onclick();
+    assert.equal(a.api.state.activeId, 'original'); assert.equal(a.api.state.documents[1].content, undefined);
+    assert.match(a.w.document.getElementById('storageWarningMessage').textContent, /account that owns this document/);
+    let switched = false;
+    a.api.setReconnect(async options => { switched = options.switchAccount; cloud.attach(a); });
+    await a.w.document.getElementById('storageWarningReconnect').onclick();
+    assert.equal(switched, true); assert.equal(a.api.state.activeId, 'bible');
+  } finally { a.close(); }
+});
+
+test('generic storage warnings keep backup and dismiss actions without offering an irrelevant reconnect', async () => {
+  const a = app(); let downloads = 0;
+  try {
+    a.api.showStorageWarning('The browser could not save your draft.', { backup: () => { downloads++; } });
+    assert.equal(a.w.document.getElementById('storageWarningReconnect').hidden, true);
+    a.w.document.getElementById('storageWarningBackup').click(); assert.equal(downloads, 1);
+    a.w.document.getElementById('storageWarningDismiss').click(); assert.equal(a.w.document.getElementById('storageWarning').hidden, true);
+    a.api.showStorageWarning('A newer warning'); assert.equal(a.w.document.getElementById('storageWarning').hidden, false);
+    assert.equal(a.w.document.querySelectorAll('#storageWarning').length, 1);
+  } finally { a.close(); }
+});
+
+test('a provider-rejected token offers reconnect even when its local expiry time is still valid', async () => {
+  const a = app(); const cloud = fakeDropbox();
+  try {
+    await a.api.boot(); seedLibrary(a); cloud.attach(a); await a.api.syncDropboxProject();
+    const fetch = a.w.fetch;
+    a.w.fetch = async (url, options) => String(url).includes('/files/download') ? { ok: false, status: 401, json: async () => ({ error_summary: 'expired_access_token/' }) } : fetch(url, options);
+    assert.equal(await a.api.openDocument('bible'), false);
+    assert.equal(a.w.document.getElementById('storageWarningReconnect').hidden, false);
+    a.api.setReconnect(async () => { cloud.attach(a); });
+    await a.w.document.getElementById('storageWarningReconnect').onclick();
+    assert.equal(a.api.state.activeId, 'bible'); assert.match(a.api.state.documents[1].content, /World history/);
+  } finally { a.close(); }
+});
+
+test('a pending reconnect survives browser autosave and never dismisses a newer warning', async () => {
+  const a = app(); const cloud = fakeDropbox();
+  try {
+    await a.api.boot(); seedLibrary(a); cloud.attach(a); await a.api.syncDropboxProject();
+    a.api.setConnection({ accountId: 'account', token: 'expired', expiresAt: 0 }); await a.api.openDocument('bible');
+    let release; const gate = new Promise(resolve => { release = resolve; });
+    a.api.setReconnect(async () => { await gate; cloud.attach(a); });
+    const reconnect = a.w.document.getElementById('storageWarningReconnect').onclick();
+    await a.api.writeWorkspaceSnapshot();
+    assert.equal(a.w.document.getElementById('storageWarning').hidden, false);
+    a.api.showStorageWarning('A newer storage error needs attention.');
+    release(); await reconnect;
+    assert.equal(a.w.document.getElementById('storageWarning').hidden, false);
+    assert.equal(a.w.document.getElementById('storageWarningMessage').textContent, 'A newer storage error needs attention.');
+    assert.equal(a.api.state.activeId, 'original');
   } finally { a.close(); }
 });

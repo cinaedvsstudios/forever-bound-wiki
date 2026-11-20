@@ -468,7 +468,10 @@ async function startEditor() {
   applyRouteToState();
   await restoreDropboxConnection();
   try { await ensureDocumentContent(activeDocument()); }
-  catch (error) { showStorageWarning(error.message); }
+  catch (error) {
+    const documentId = state.activeId;
+    showStorageWarning(error.message, { error, retry: () => openDocument(documentId), projectId: state.projectId });
+  }
   loadEditableHelp();
   renderAll();
   runLayoutRecovery("after-render");
@@ -549,8 +552,7 @@ async function loadWorkspace() {
       state.deprecatedParagraphs = Array.isArray(payload.deprecatedParagraphs) ? payload.deprecatedParagraphs : [];
       if (payload.designSettings && typeof payload.designSettings === "object") setProjectDesignSettings(payload.designSettings, { persistLocal: true });
     } catch (error) {
-      showStorageWarning(`Could not read the saved project. Download its original data before resetting this browser. ${error.message}`);
-      document.querySelector('#storageWarning button').onclick = () => downloadFile('Capsanoto-original-save.json', saved, 'application/json');
+      showStorageWarning(`Could not read the saved project. Download its original data before resetting this browser. ${error.message}`, { backup: () => downloadFile('Capsanoto-original-save.json', saved, 'application/json') });
       throw new Error(`Could not open the saved project. Its data has been preserved. ${error.message}`);
     }
   }
@@ -1034,11 +1036,12 @@ async function openDocument(id, bookmarkId = "") {
   const sequence = ++documentOpenSequence;
   const projectId = state.projectId;
   const previous = activeDocument();
+  const previousWasLoaded = documentIsLoaded(previous);
   try {
     setStatus('Opening ' + doc.title + '…', "dirty");
     await ensureDocumentContent(doc);
     if (sequence !== documentOpenSequence || state.projectId !== projectId) return false;
-    syncEditorToDocument(false);
+    if (previousWasLoaded) syncEditorToDocument(false);
     await writeWorkspaceSnapshot();
     if (sequence !== documentOpenSequence || state.projectId !== projectId) return false;
     void promptForLocalDiskMismatch(id);
@@ -1048,11 +1051,12 @@ async function openDocument(id, bookmarkId = "") {
     updateUrl(bookmarkId);
     if (bookmarkId) scrollToRouteBookmark();
     releaseDocumentBody(previous);
+    showStorageWarning('');
     markDirty("Opened document");
     return true;
   } catch (error) {
     setStatus(error.message, "dirty");
-    showStorageWarning(error.message);
+    showStorageWarning(error.message, { error, retry: () => openDocument(id, bookmarkId), projectId });
     els.documentSelect.value = state.activeId;
     return false;
   }
@@ -5862,7 +5866,7 @@ function effectiveExtraDesignSettings(settings) {
 function applyTopCommandIconSettings(settings) {
   loadCustomEmojis();
   const defaults = {
-    topIconWritingRoom: "📚",
+    topIconWritingRoom: "🏺",
     topIconFormat: "🪶",
     topIconInsert: "🗡️",
     topIconSubnoto: "📜",
@@ -6050,7 +6054,8 @@ function designSettingsFromStorage() {
 
 function normalizedDesignSettings(settings = {}) {
   const defaults = { ...defaultDesignSettings(), ...extraDesignDefaults() };
-  const incoming = settings && typeof settings === "object" ? settings : {};
+  const incoming = settings && typeof settings === "object" ? { ...settings } : {};
+  if (incoming.topIconWritingRoom === "📚") incoming.topIconWritingRoom = "🏺";
   if (incoming.paletteVersion !== CAPSANOTO_THEME_VERSION) {
     const preserved = {};
     [
