@@ -204,7 +204,7 @@ function initializeProjectSetup() {
   const actions = document.createElement('div');
   actions.id = 'projectActions';
   actions.className = 'project-actions';
-  actions.innerHTML = '<div class="project-action-buttons" role="group" aria-label="Project controls"><button type="button" id="workspaceSettings">Workspace settings</button><button type="button" id="addProjectFile">Add file</button><button type="button" id="openSavedProject">Open project</button><button type="button" id="quickDropboxSync">Connect Dropbox</button></div><div class="project-save-status"><span id="bottomDropboxStatus" role="status" aria-live="polite"></span></div>';
+  actions.innerHTML = '<div class="project-action-buttons" role="group" aria-label="Project controls"><button type="button" id="workspaceSettings" title="Manage this Dropbox workspace: projects, backups and sync settings">Workspace settings</button><button type="button" id="addProjectFile" title="Import a document or Google Docs tabs into the current project">Add file</button><button type="button" id="openSavedProject" title="Browse and open projects saved in this browser or your connected Dropbox">Open project</button><button type="button" id="quickDropboxSync" title="Connect the Dropbox account that stores your writing">Connect Dropbox</button></div><div class="project-save-status"><span id="bottomDropboxStatus" role="status" aria-live="polite"></span></div>';
   els.documentEndBar.append(actions);
   initializeProjectLibrary();
   initializeProjectSettingsViews();

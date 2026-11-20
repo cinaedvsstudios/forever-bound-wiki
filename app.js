@@ -1,8 +1,8 @@
-/* Capsanoto v5.15.1 — runtime loader and final visible version. */
+/* Capsanoto v5.15.2 — runtime loader and final visible version. */
 (() => {
   "use strict";
 
-  const VERSION = "v5.15.1";
+  const VERSION = "v5.15.2";
   const stampVersion = () => {
     document.querySelectorAll(".app-version").forEach((node) => {
       if (node.textContent !== VERSION) node.textContent = VERSION;
@@ -18,7 +18,7 @@
   });
 
   const core = document.createElement("script");
-  core.src = "app.core.js?v=5.15.1";
+  core.src = "app.core.js?v=5.15.2";
   core.async = false;
   core.onload = () => {
     stampVersion();

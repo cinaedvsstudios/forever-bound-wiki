@@ -1127,17 +1127,17 @@ function renderDocumentEndBar() {
     els.documentEndBar.prepend(fileRow);
   }
   fileRow.innerHTML = `
-    <button type="button" data-end-action="writing-room" data-tool-name="Open the Writing Room Filing Cabinet">Writing Room</button>
+    <button type="button" data-end-action="writing-room" data-tool-name="Open the Writing Room Filing Cabinet" title="Open the Writing Room Filing Cabinet">Writing Room</button>
     <span class="end-doc-title"><span class="card-icon">${docIcon(doc)}</span><strong>${escapeHtml(doc.title)}</strong></span>
     <span class="end-doc-meta">${escapeHtml(fileType)} · ${escapeHtml(doc.id)} · ${escapeHtml((doc.tags || []).join(", ") || "No tags")}</span>
     <span class="document-card-actions">
-      <button type="button" data-end-action="open" data-tool-name="Open this file in the Writing Room panel">↗</button>
-      <button type="button" data-end-action="storyboard" title="Create or update scene cards from this document">🎬 Send to Storyboarder</button>
-      <button type="button" data-end-action="bulk-style" data-tool-name="Bulk style TCards, tables, or emphasis boxes in this file">🎨</button>
-      <button type="button" data-end-action="duplicate" data-tool-name="Duplicate this file">⧉</button>
-      <button type="button" data-end-action="deprecate" data-tool-name="Deprecate this file as an old version">🕰</button>
-      <button type="button" data-end-action="delete" data-tool-name="Move this file to Trash">❌</button>
-      <button type="button" data-end-action="copy" data-tool-name="Copy this file URL">🔗</button>
+      <button type="button" data-end-action="open" data-tool-name="Open this file in the Writing Room panel" title="Open this file in the Writing Room panel" aria-label="Open this file in the Writing Room panel">↗</button>
+      <button type="button" data-end-action="storyboard" data-tool-name="Create or update scene cards from this document" title="Create or update scene cards from this document">🎬 Send to Storyboarder</button>
+      <button type="button" data-end-action="bulk-style" data-tool-name="Bulk style TCards, tables, or emphasis boxes in this file" title="Bulk style TCards, tables, or emphasis boxes in this file" aria-label="Bulk style TCards, tables, or emphasis boxes in this file">🎨</button>
+      <button type="button" data-end-action="duplicate" data-tool-name="Duplicate this file" title="Duplicate this file" aria-label="Duplicate this file">⧉</button>
+      <button type="button" data-end-action="deprecate" data-tool-name="Deprecate this file as an old version" title="Deprecate this file as an old version" aria-label="Deprecate this file as an old version">🕰</button>
+      <button type="button" data-end-action="delete" data-tool-name="Move this file to Trash" title="Move this file to Trash" aria-label="Move this file to Trash">❌</button>
+      <button type="button" data-end-action="copy" data-tool-name="Copy this file URL" title="Copy this file URL" aria-label="Copy this file URL">🔗</button>
     </span>`;
 }
 
@@ -2453,7 +2453,7 @@ function renderWritingRoomCards() {
       </div>
     </details>
   `).join("");
-  const rail = `<nav class="filing-jump-rail" aria-label="Filing Cabinet jumps"><button type="button" data-filing-action="collapse-all" title="Collapse all">−</button>${groups.map((group) => `<button type="button" data-scroll-group="${escapeAttr(group.id)}" title="${escapeAttr(group.label)}"><span>${groupIcon(group)}</span></button>`).join("")}<button type="button" data-filing-action="expand-all" title="Expand all">＋</button></nav>`;
+  const rail = `<nav class="filing-jump-rail" aria-label="Filing Cabinet jumps"><button type="button" data-filing-action="collapse-all" title="Collapse all folders and tabs" aria-label="Collapse all folders and tabs">−</button>${groups.map((group) => `<button type="button" data-scroll-group="${escapeAttr(group.id)}" title="Jump to folder: ${escapeAttr(group.label)}" aria-label="Jump to folder: ${escapeAttr(group.label)}"><span aria-hidden="true">${groupIcon(group)}</span></button>`).join("")}<button type="button" data-filing-action="expand-all" title="Expand all folders and tabs" aria-label="Expand all folders and tabs">＋</button></nav>`;
   const trashHtml = renderTrashSection();
   els.writingRoomPanel?.querySelector(":scope > .filing-jump-rail")?.remove();
   els.writingRoomCards.innerHTML = groupHtml + trashHtml;
@@ -6917,7 +6917,7 @@ function updateContextStatus() {
 function updateHoverStatus(event) {
   if (!els.contextStatus || state.contextStatusLocked) return;
   const target = event.target;
-  const interactive = target.closest?.("button, select, input, textarea, summary, .tool-menu-trigger, #editor, .title-input");
+  const interactive = target.closest?.("button, a[href], select, input, textarea, summary, .tool-menu-trigger, #editor, .title-input");
   if (!interactive) return;
   if (interactive === els.titleInput) setContextStatus("Document title field");
   else if (interactive === els.tagsInput) setContextStatus("Document metadata tags");
@@ -6929,7 +6929,7 @@ function updateHoverStatus(event) {
   else if (interactive === els.settingsButton) setContextStatus("Open Writing Room settings");
   else if (interactive === els.topHelpButton || interactive === els.helpButton) setContextStatus("Open Help and release notes");
   else if (interactive === els.emphasisButton) setContextStatus("Wrap highlighted text in an emphasis box");
-  else setContextStatus(interactive.dataset?.toolName || interactive.getAttribute?.("aria-label") || interactive.textContent.trim() || "Writing Room control");
+  else setContextStatus(interactive.dataset?.toolName || interactive.getAttribute?.("title") || interactive.getAttribute?.("aria-label") || interactive.textContent.trim() || "Writing Room control");
 }
 
 function setContextStatus(message, lock = false, timeout = 0) {

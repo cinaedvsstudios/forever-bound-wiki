@@ -79,7 +79,7 @@ function renderBottomDropboxControl() {
   const valid = connected && dropboxConnection.expiresAt > Date.now() + 10000;
   const foreign = state.workspaceAccountId && state.workspaceAccountId !== dropboxConnection?.accountId;
   button.textContent = dropboxBusy ? 'Working…' : valid ? (foreign ? 'Open workspace' : 'Sync now') : connected ? 'Reconnect Dropbox' : 'Connect Dropbox';
-  button.title = valid ? 'Save this project to Dropbox now' : 'Connect the Dropbox account that stores your writing';
+  button.title = dropboxBusy ? 'A Dropbox operation is in progress' : valid ? (foreign ? 'Open projects from the connected Dropbox account' : 'Sync changed projects with Dropbox now') : connected ? 'Sign in to Dropbox again to restore your connection' : 'Connect the Dropbox account that stores your writing';
   button.disabled = dropboxBusy;
   button.setAttribute('aria-busy', String(dropboxBusy));
   document.getElementById('bottomDropboxStatus').textContent = dropboxStatus;
