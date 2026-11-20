@@ -732,6 +732,7 @@ function bindEditorEvents() {
   els.writingRoomCollapseBubble?.addEventListener("mouseenter", scheduleWritingRoomPreviewExpand);
   els.writingRoomCollapseBubble?.addEventListener("mouseleave", handleWritingRoomBubbleLeave);
   els.writingRoomPanel?.addEventListener("mouseleave", handleWritingRoomPreviewLeave);
+  initializeCabinetControls();
   els.editWritingRoomButton.addEventListener("click", toggleFilingEditMode);
   els.saveWritingRoomLayoutButton?.addEventListener("click", saveWritingRoomPanelLayout);
   els.newFolderButton.addEventListener("click", () => createFilingGroup("folder"));
@@ -2311,7 +2312,7 @@ function collapsePreviewWritingRoom() {
 function toggleFilingEditMode() {
   state.filingEditMode = !state.filingEditMode;
   els.editWritingRoomButton.setAttribute("aria-pressed", String(state.filingEditMode));
-  if (els.saveWritingRoomLayoutButton) els.saveWritingRoomLayoutButton.hidden = !state.filingEditMode;
+  els.editWritingRoomButton.textContent = state.filingEditMode ? '✓ Done' : '✏️ Edit';
   els.writingRoomEditBar.hidden = !state.filingEditMode;
   els.writingRoomPanel.classList.toggle("is-editing", state.filingEditMode);
   els.writingRoomTitle.contentEditable = String(state.filingEditMode);
@@ -2443,27 +2444,22 @@ function renderWritingRoomCards() {
   ensureFilingTabs();
   els.writingRoomTitle.textContent = state.writingRoomName || "Writing Room";
   const groups = filingCabinetTree();
+  closeCabinetMenus();
   const savedCabinetScroll = captureCabinetView();
   const groupHtml = groups.map((group, groupIndex) => `
     <details class="writing-room-group" data-group-id="${escapeAttr(group.id)}" ${groupIndex === 0 || group.locked ? "open" : ""}>
-      <summary><span class="card-arrow">›</span><span class="folder-icon">${groupIcon(group)}</span><strong ${inlineEditAttrs("group", group.id, "label")}>${escapeHtml(group.label)}</strong><button type="button" class="lock-button" title="Keep folder expanded" data-group-action="lock" data-group-id="${escapeAttr(group.id)}">${group.locked ? "🔒" : "🔓"}</button>${state.filingEditMode ? `<span class="filing-group-actions"><button type="button" title="Delete folder" aria-label="Delete folder" data-group-action="delete" data-group-id="${escapeAttr(group.id)}">❌</button></span>` : ""}</summary>
+      <summary class="cabinet-row" title="${escapeAttr(group.label)}"><span class="card-arrow" aria-hidden="true">›</span><span class="folder-icon" aria-hidden="true">${groupIcon(group)}</span><span class="cabinet-title"><strong ${inlineEditAttrs("group", group.id, "label")}>${escapeHtml(group.label)}</strong></span><button type="button" class="lock-button" title="Keep folder expanded" aria-label="Keep folder expanded" aria-pressed="${Boolean(group.locked)}" data-group-action="lock" data-group-id="${escapeAttr(group.id)}">${group.locked ? "🔒" : "🔓"}</button></summary>
       <div class="writing-room-card-stack folder-tab-stack" data-drop-group="${escapeAttr(group.id)}">
+        ${state.filingEditMode ? `<button type="button" class="cabinet-button cabinet-delete-row" data-group-action="delete" data-group-id="${escapeAttr(group.id)}">🗑️ Delete folder</button>` : ""}
         ${group.tabs.map((tab) => renderFilingTab(tab)).join("")}
         ${state.filingEditMode && !group.tabs.length ? '<p class="panel-help">Create a tab in this folder before adding documents.</p>' : ''}
       </div>
     </details>
   `).join("");
-  const rail = `<nav class="filing-jump-rail" aria-label="Filing Cabinet jumps"><button type="button" data-filing-action="collapse-all" title="Collapse all folders and tabs" aria-label="Collapse all folders and tabs">−</button>${groups.map((group) => `<button type="button" data-scroll-group="${escapeAttr(group.id)}" title="Jump to folder: ${escapeAttr(group.label)}" aria-label="Jump to folder: ${escapeAttr(group.label)}"><span aria-hidden="true">${groupIcon(group)}</span></button>`).join("")}<button type="button" data-filing-action="expand-all" title="Expand all folders and tabs" aria-label="Expand all folders and tabs">＋</button></nav>`;
   const trashHtml = renderTrashSection();
-  els.writingRoomPanel?.querySelector(":scope > .filing-jump-rail")?.remove();
   els.writingRoomCards.innerHTML = groupHtml + trashHtml;
   restoreCabinetView(savedCabinetScroll);
-  if (els.writingRoomPanel) {
-    els.writingRoomPanel.insertAdjacentHTML("beforeend", rail);
-    els.writingRoomPanel.querySelector(":scope > .filing-jump-rail")?.addEventListener("click", (event) => { void runProjectFileAction(() => handleWritingRoomCardClick(event)); });
-  } else {
-    els.writingRoomCards.insertAdjacentHTML("afterbegin", rail);
-  }
+  renderCabinetJumpRail(groups);
 }
 
 function inlineEditAttrs(kind, id, field) {
@@ -2472,8 +2468,9 @@ function inlineEditAttrs(kind, id, field) {
 
 function renderFilingTab(tab) {
   return `<details class="filing-tab" data-tab-id="${escapeAttr(tab.id)}" draggable="${state.filingEditMode}" ${tab.locked ? "open" : ""}>
-    <summary><span class="card-arrow">›</span><span class="tab-icon">${designIconSetting("tabIconText", "📑")}</span><strong ${inlineEditAttrs("tab", tab.id, "label")}>${escapeHtml(tab.label)}</strong><button type="button" class="lock-button" title="Keep tab expanded" data-tab-action="lock" data-tab-id="${escapeAttr(tab.id)}">${tab.locked ? "🔒" : "🔓"}</button>${state.filingEditMode ? `<span class="filing-group-actions"><button type="button" title="Delete tab" aria-label="Delete tab" data-tab-action="delete" data-tab-id="${escapeAttr(tab.id)}">❌</button></span>` : ""}</summary>
+    <summary class="cabinet-row" title="${escapeAttr(tab.label)}"><span class="card-arrow" aria-hidden="true">›</span><span class="tab-icon" aria-hidden="true">${designIconSetting("tabIconText", "📑")}</span><span class="cabinet-title"><strong ${inlineEditAttrs("tab", tab.id, "label")}>${escapeHtml(tab.label)}</strong></span><button type="button" class="lock-button" title="Keep tab expanded" aria-label="Keep tab expanded" aria-pressed="${Boolean(tab.locked)}" data-tab-action="lock" data-tab-id="${escapeAttr(tab.id)}">${tab.locked ? "🔒" : "🔓"}</button></summary>
     <div class="writing-room-card-stack filing-tab-documents" data-drop-tab="${escapeAttr(tab.id)}">
+      ${state.filingEditMode ? `<button type="button" class="cabinet-button cabinet-delete-row" data-tab-action="delete" data-tab-id="${escapeAttr(tab.id)}">🗑️ Delete tab</button>` : ""}
       ${tab.documents.map((doc) => renderWritingRoomCard(doc, 0)).join("")}
       ${state.filingEditMode && !tab.documents.length ? '<p class="panel-help">Drop documents into this tab.</p>' : ''}
     </div>
@@ -2524,29 +2521,25 @@ function renderWritingRoomCard(doc, depth = 0) {
   const children = childDocuments(doc.id);
   const childHtml = children.length || state.filingEditMode ? `
       <details class="sub-file-list" ${children.length ? "open" : ""}>
-        <summary><span class="card-arrow">›</span><span class="sub-file-icon">↳</span><strong>Sub files</strong><span class="sub-file-count">${children.length}</span></summary>
+        <summary class="cabinet-row"><span class="card-arrow" aria-hidden="true">›</span><span class="sub-file-icon" aria-hidden="true">↳</span><strong>Sub files</strong><span class="sub-file-count">${children.length}</span></summary>
         <div class="sub-file-stack">
           ${children.map((child) => renderWritingRoomCard(child, depth + 1)).join("")}
           ${state.filingEditMode ? `<button type="button" class="sub-file-add" data-card-action="sub-document" data-doc-id="${escapeAttr(doc.id)}">＋ Sub File</button>` : ""}
         </div>
       </details>` : "";
   return `<details class="writing-room-card ${doc.id === state.activeId ? "is-active" : ""} ${doc.parentDocumentId ? "is-sub-file" : ""}" draggable="${state.filingEditMode}" style="--tab-depth:${depth}" data-doc-card="${escapeAttr(doc.id)}">
-    <summary>
-      <span class="card-arrow">›</span>
+    <summary class="cabinet-row" title="${escapeAttr(doc.title)}">
+      <span class="card-arrow" aria-hidden="true">›</span>
       <span class="card-icon" title="${escapeAttr(fileType)}">${docIcon(doc)}</span>
-      <strong ${inlineEditAttrs("doc", doc.id, "title")}>${escapeHtml(doc.title)}</strong>
+      <span class="cabinet-title"><strong ${inlineEditAttrs("doc", doc.id, "title")}>${escapeHtml(doc.title)}</strong></span>
     </summary>
     <div class="writing-room-card-body">
-      <span class="document-card-actions">
-        <button type="button" title="Open" data-card-action="open" data-doc-id="${escapeAttr(doc.id)}">↗</button>
-        <button type="button" title="Create sub file" data-card-action="sub-document" data-doc-id="${escapeAttr(doc.id)}">↳</button>
-        <button type="button" title="Edit all TCards, tables, or emphasis boxes" data-card-action="bulk-style" data-doc-id="${escapeAttr(doc.id)}">🎨</button>
-        <button type="button" title="Duplicate" data-card-action="duplicate" data-doc-id="${escapeAttr(doc.id)}">⧉</button>
-        <button type="button" title="Deprecate" data-card-action="deprecate" data-doc-id="${escapeAttr(doc.id)}">🕰</button>
-        <button type="button" title="Delete" data-card-action="delete" data-doc-id="${escapeAttr(doc.id)}">❌</button>
-        <button type="button" title="Copy URL" data-card-action="copy" data-doc-id="${escapeAttr(doc.id)}">🔗</button>
-      </span>
-      <details class="metadata-pill document-disclosure" data-disclosure="metadata"><summary>Metadata</summary><div class="metadata-pill-body">
+      <div class="cabinet-document-actions">
+        <button type="button" class="cabinet-button" title="Open this document in the writing pad" data-card-action="open" data-doc-id="${escapeAttr(doc.id)}">Open ↗</button>
+        ${doc.id === state.activeId ? '<span class="cabinet-current-file">Current file</span>' : ''}
+        <button type="button" class="cabinet-button" data-document-menu="${escapeAttr(doc.id)}" aria-controls="cabinetDocumentMenu" aria-expanded="false" aria-label="Actions for ${escapeAttr(doc.title)}" title="Document actions">•••</button>
+      </div>
+      <details class="document-disclosure" data-disclosure="metadata"><summary>Metadata</summary><div class="document-disclosure-body metadata-pill-body">
         <p>Type: <span ${inlineEditAttrs("doc", doc.id, "type")}>${escapeHtml(fileType)}</span></p>
         <p>ID: <span ${inlineEditAttrs("doc", doc.id, "id")}>${escapeHtml(doc.id)}</span></p>
         ${doc.parentDocumentId ? `<p>Parent: <span>${escapeHtml(state.documents.find((item) => item.id === doc.parentDocumentId)?.title || doc.parentDocumentId)}</span></p>` : ""}
@@ -2563,7 +2556,7 @@ function renderWritingRoomCard(doc, depth = 0) {
 
 function renderTrashSection() {
   const deleted = state.trash.map((doc) => archivedCard(doc, "trash")).join("") || '<p class="panel-help">Trash is empty.</p>';
-  return `<details class="writing-room-group filing-archive"><summary><span class="card-arrow">›</span><strong>Trashcan</strong></summary><div class="writing-room-card-stack">${deleted}</div></details>`;
+  return `<details class="writing-room-group filing-archive"><summary class="cabinet-row"><span class="card-arrow" aria-hidden="true">›</span><span aria-hidden="true">🗑️</span><strong>Trash</strong></summary><div class="writing-room-card-stack">${deleted}</div></details>`;
 }
 
 function archivedCard(doc, source) {
@@ -2698,6 +2691,7 @@ async function handleWritingRoomCardClick(event) {
   if (action === "delete") return deleteDocumentSafely(docId);
   if (action === "restore") return restoreArchivedDocument(docId, button.dataset.archiveSource);
   if (action === "bulk-style") return bulkStyleDocument(docId);
+  if (action === "storyboard") { if (await openDocument(docId)) return sendDocumentToStoryboarder(); return; }
   if (action === "copy") {
     await copyText(new URL(documentUrl(docId), location.href).href);
     setStatus("Copied Writing Room tab link", "saved");
@@ -3061,6 +3055,7 @@ function resizeWritingRoomPanel(width, height) {
   panel.style.left = `${Math.max(12, Math.min(rect.left, window.innerWidth - nextWidth - 12))}px`;
   panel.style.top = `${top}px`;
   panel.style.right = 'auto';
+  refreshCabinetRailMarkers();
   scheduleRoomWorkspaceLayout();
 }
 
@@ -3095,7 +3090,7 @@ function handleWritingRoomResizeKey(event) {
 }
 
 function startWritingRoomDrag(event) {
-  if (event.target.closest("button, input, select, textarea")) return;
+  if (event.target.closest("button, input, select, textarea, [contenteditable='true']")) return;
   const rect = els.writingRoomPanel.getBoundingClientRect();
   state.writingRoomDrag = {
     offsetX: event.clientX - rect.left,
@@ -6056,6 +6051,9 @@ function normalizedDesignSettings(settings = {}) {
   const defaults = { ...defaultDesignSettings(), ...extraDesignDefaults() };
   const incoming = settings && typeof settings === "object" ? { ...settings } : {};
   if (incoming.topIconWritingRoom === "📚") incoming.topIconWritingRoom = "🏺";
+  if (incoming.cabinetStyleVersion !== 1) {
+    Object.assign(incoming, cabinetAppearanceDefaults(), { cabinetStyleVersion: 1 });
+  }
   if (incoming.paletteVersion !== CAPSANOTO_THEME_VERSION) {
     const preserved = {};
     [
@@ -6063,7 +6061,7 @@ function normalizedDesignSettings(settings = {}) {
       "topIconSubnoto", "topLabelSubnoto", "topIconSpecnoto", "topLabelSpecnoto", "topIconHelp", "topLabelHelp",
       "topIconSettings", "topLabelSettings", "titleIconScale", "fontFamily", "fontSize"
     ].forEach((key) => { if (incoming[key] !== undefined) preserved[key] = incoming[key]; });
-    return { ...defaults, ...preserved, paletteVersion: CAPSANOTO_THEME_VERSION, favoriteColors: [...DEFAULT_FAVORITE_COLORS] };
+    return { ...defaults, ...preserved, ...cabinetAppearanceDefaults(), cabinetStyleVersion: 1, paletteVersion: CAPSANOTO_THEME_VERSION, favoriteColors: [...DEFAULT_FAVORITE_COLORS] };
   }
   const normalized = { ...defaults, ...incoming, paletteVersion: CAPSANOTO_THEME_VERSION };
   if (normalized.tabIconText === "▱") normalized.tabIconText = "📑";
@@ -6173,21 +6171,21 @@ function capsanotoForcedExtraDesignSettings() {
     writingRoomHeaderBgImage: "",
     writingRoomHeaderBorder: palette.lineBrown,
     writingRoomTitleColor: palette.parchment,
-    folderRowBg: palette.panelGlassSoft,
-    folderRowBorder: palette.gold,
+    folderRowBg: '#241a12',
+    folderRowBorder: '#cfaa62',
     folderTextColor: palette.parchment,
-    tabRowBg: palette.purpleGlass,
-    tabRowBorder: palette.cyan,
+    tabRowBg: '#2a1829',
+    tabRowBorder: '#bc78d3',
     tabTextColor: palette.parchment,
-    docRowBg: palette.panelGlassSoft,
-    docRowBorder: palette.gold,
+    docRowBg: '#1d2926',
+    docRowBorder: '#80c5b8',
     docTextColor: palette.parchment,
     expandedDocTextColor: palette.regularText,
-    metadataPillBg: palette.purpleGlass,
-    metadataPillBorder: palette.gold,
+    metadataPillBg: 'transparent',
+    metadataPillBorder: '#62503f',
     metadataPillTextColor: palette.parchment,
-    trashBg: palette.purpleGlass,
-    trashBorder: palette.purple,
+    trashBg: '#301818',
+    trashBorder: '#d87878',
     jumpRailLine: palette.gold,
     jumpRailButtonBg: palette.panelGlassSoft,
     jumpRailButtonBorder: palette.lineBrown,

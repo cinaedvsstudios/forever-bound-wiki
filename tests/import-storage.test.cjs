@@ -21,7 +21,7 @@ function app({ indexedDB = new IDBFactory(), legacy } = {}) {
   const core = fs.readFileSync(path.join(root, 'app.core.js'), 'utf8').replace(/boot\(\)\.catch\([\s\S]*?\n\}\);/, '');
   const setup = fs.readFileSync(path.join(root, 'project-setup.js'), 'utf8');
   const markdown = fs.readFileSync(path.join(root, 'markdown-export.js'), 'utf8');
-  const navigation = fs.readFileSync(path.join(root, 'document-navigation.js'), 'utf8');
+  const navigation = fs.readFileSync(path.join(root, 'writing-room-ui.js'), 'utf8') + '\n' + fs.readFileSync(path.join(root, 'document-navigation.js'), 'utf8');
   const cloud = fs.readFileSync(path.join(root, 'cloud-history.js'), 'utf8') + '\n' + fs.readFileSync(path.join(root, 'dropbox-storage.js'), 'utf8');
   const library = fs.readFileSync(path.join(root, 'project-library.js'), 'utf8');
   const workspace = fs.readFileSync(path.join(root, 'workspace-storage.js'), 'utf8');
@@ -120,7 +120,7 @@ test('Word imports preserve text, headings, and emphasis without uploading', asy
 test('all entry pages wire the same setup and storage runtime', () => {
   for (const file of ['index.html', 'editor.html', 'writing-room.html']) {
     const html = fs.readFileSync(path.join(root, file), 'utf8');
-    assert.match(html, /project-setup.js\?v=5.15.2/); assert.match(html, /dropbox-storage.js/);
+    assert.match(html, /project-setup.js\?v=5.16.0/); assert.match(html, /dropbox-storage.js/);
     assert.doesNotMatch(html, /id="createOnlineProjectButton"/);
   }
 });
@@ -1100,9 +1100,119 @@ test('Writing Room can reach the viewport bottom without a fixed height cap and 
     a.w.document.querySelector('#fillWritingRoomHeight').click();
     assert.equal(panel.style.height, '1008px');
     assert.equal(panel.style.top, '80px');
-    assert.equal(a.w.document.querySelector('#newTabButton').textContent, '📑');
-    assert.equal(a.w.document.querySelector('#editWritingRoomButton').textContent, '✏️');
-    assert.equal(a.w.document.querySelector('#projectSettingsButton').textContent, '⚙️');
+    assert.match(a.w.document.querySelector('#newTabButton').textContent, /Tab/);
+    assert.match(a.w.document.querySelector('#editWritingRoomButton').textContent, /Edit/);
+    assert.match(a.w.document.querySelector('#projectSettingsButton').textContent, /Project settings/);
+  } finally { a.close(); }
+});
+
+test('cabinet menus retain real controls, fit the panel, and support keyboard navigation', async () => {
+  const a = app();
+  try {
+    await a.api.boot();
+    a.api.toggleWritingRoomPanel(true);
+    const panel = a.api.els.writingRoomPanel;
+    panel.getBoundingClientRect = () => ({ top: 80, left: 12, width: 280, height: 250 });
+    const trigger = panel.querySelector('[data-cabinet-menu="cabinetNewMenu"]');
+    trigger.getBoundingClientRect = () => ({ bottom: 178 });
+    trigger.click();
+    const menu = a.w.document.getElementById('cabinetNewMenu');
+    assert.equal(menu.hidden, false); assert.equal(trigger.getAttribute('aria-expanded'), 'true');
+    assert.equal(a.w.document.activeElement.id, 'newDocumentButton');
+    assert.ok(parseFloat(menu.style.top) + parseFloat(menu.style.maxHeight) <= 250);
+    a.w.document.activeElement.dispatchEvent(new a.w.KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    assert.equal(a.w.document.activeElement.id, 'newFolderButton');
+    a.w.document.activeElement.dispatchEvent(new a.w.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    assert.equal(menu.hidden, true); assert.equal(a.w.document.activeElement, trigger);
+    panel.querySelector('[data-cabinet-menu="cabinetMoreMenu"]').click();
+    assert.equal(a.w.document.getElementById('cabinetMoreMenu').hidden, false);
+    a.w.document.getElementById('projectSettingsButton').click();
+    assert.equal(a.w.document.getElementById('cabinetMoreMenu').hidden, true);
+    assert.equal(a.api.els.projectSettingsPanel.hidden, false);
+  } finally { a.close(); }
+});
+
+test('cabinet file actions remain available without the old row of icon buttons', async () => {
+  const a = app();
+  try {
+    await a.api.boot();
+    const card = a.w.document.querySelector('[data-doc-card]');
+    card.querySelector('[data-document-menu]').click();
+    const actions = [...a.w.document.querySelectorAll('#cabinetDocumentMenu [data-card-action]')];
+    assert.deepEqual(actions.map(button => button.dataset.cardAction), ['sub-document', 'bulk-style', 'duplicate', 'deprecate', 'copy', 'storyboard', 'delete']);
+    assert.ok(actions.every(button => button.dataset.docId === card.dataset.docCard));
+    assert.equal(card.querySelector('.document-card-actions'), null);
+    assert.equal(card.querySelector('.metadata-pill'), null);
+    assert.equal(card.querySelector('[data-disclosure="metadata"]').open, false);
+    assert.equal(card.querySelector('[data-disclosure="summary"]').open, false);
+    const before = a.api.state.documents.length;
+    actions.find(button => button.dataset.cardAction === 'duplicate').click();
+    for (let i = 0; i < 50 && a.api.state.documents.length === before; i++) await new Promise(resolve => setTimeout(resolve, 5));
+    assert.equal(a.api.state.documents.length, before + 1);
+  } finally { a.close(); }
+});
+
+test('cabinet rail lists unloaded nested files and jumps without downloading their bodies', async () => {
+  const a = app();
+  try {
+    await a.api.boot();
+    a.api.state.filingGroups = [{ id: 'rail-folder', label: 'A long folder name' }];
+    a.api.state.filingTabs = [{ id: 'rail-tab', groupId: 'rail-folder', label: 'Documents' }];
+    a.api.state.documents = [{ id: 'rail-parent', title: 'Episode', filingGroupId: 'rail-folder', filingTabId: 'rail-tab' }, { id: 'rail-child', title: 'Act 1', parentDocumentId: 'rail-parent', filingGroupId: 'rail-folder', filingTabId: 'rail-tab' }];
+    a.api.state.activeId = 'rail-parent';
+    a.api.renderWritingRoomCards();
+    a.api.els.writingRoomCards.querySelectorAll('details').forEach(node => { node.open = false; });
+    a.w.fetch = async () => { throw new Error('Rail navigation must not download bodies'); };
+    const marker = [...a.w.document.querySelectorAll('[data-cabinet-rail]')].find(button => button.title.includes('File 2 of 2'));
+    assert.ok(marker); assert.match(marker.getAttribute('aria-label'), /Act 1/); marker.click();
+    const child = a.w.document.querySelector('[data-doc-card="rail-child"]');
+    assert.equal(child.open, true); assert.equal(child.closest('.filing-tab').open, true);
+    assert.equal(child.closest('.writing-room-group').open, true);
+    assert.equal(a.api.state.documents[1].content, undefined);
+    assert.equal(a.api.state.activeId, 'rail-parent');
+    assert.equal(a.w.document.querySelector('.cabinet-file-count').textContent, '2');
+  } finally { a.close(); }
+});
+
+test('dense cabinet rail groups destinations and every file is still reachable', async () => {
+  const a = app();
+  try {
+    await a.api.boot();
+    a.api.state.filingGroups = [{ id: 'many', label: 'Episodes' }];
+    a.api.state.filingTabs = [{ id: 'many-tab', groupId: 'many', label: 'Documents' }];
+    a.api.state.documents = Array.from({ length: 80 }, (_, i) => ({ id: `file-${i}`, title: `Episode ${i + 1}`, filingTabId: 'many-tab', filingGroupId: 'many' }));
+    a.api.state.activeId = 'file-0';
+    a.api.els.writingRoomPanel.getBoundingClientRect = () => ({ height: 260 });
+    a.api.renderWritingRoomCards();
+    const markers = [...a.w.document.querySelectorAll('[data-cabinet-rail]')];
+    assert.ok(markers.length <= 3);
+    const reachable = [];
+    for (const marker of markers) {
+      marker.click();
+      for (const button of a.w.document.querySelectorAll('#cabinetJumpMenu button')) reachable.push(button.textContent);
+    }
+    assert.ok(reachable.some(label => label.includes('Episode 80')));
+    const last = [...a.w.document.querySelectorAll('#cabinetJumpMenu button')].find(button => button.textContent.includes('Episode 80'));
+    last.click();
+    assert.equal(a.w.document.querySelector('[data-doc-card="file-79"]').open, true);
+    assert.equal(a.w.document.querySelector('.cabinet-file-count').textContent, '80');
+  } finally { a.close(); }
+});
+
+test('cabinet locks stay at their row level and keep a closed folder expanded after locking', async () => {
+  const a = app();
+  try {
+    await a.api.boot();
+    const folder = a.w.document.querySelector('.writing-room-group[data-group-id]');
+    const id = folder.dataset.groupId; folder.open = false;
+    folder.querySelector(':scope > summary .lock-button').click();
+    for (let i = 0; i < 50 && !a.api.state.filingGroups.find(group => group.id === id)?.locked; i++) await new Promise(resolve => setTimeout(resolve, 5));
+    const updated = [...a.w.document.querySelectorAll('.writing-room-group[data-group-id]')].find(item => item.dataset.groupId === id);
+    assert.equal(updated.open, true);
+    assert.equal(updated.querySelector(':scope > summary .lock-button').getAttribute('aria-pressed'), 'true');
+    updated.querySelector('summary').click(); assert.equal(updated.open, true);
+    assert.ok(updated.querySelector(':scope > summary .cabinet-title'));
+    assert.equal(updated.querySelector(':scope > summary .card-arrow').textContent, '›');
   } finally { a.close(); }
 });
 

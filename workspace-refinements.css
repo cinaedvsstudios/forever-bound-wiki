@@ -1,17 +1,17 @@
 /* Plain disclosure rows: the metadata, summary and outline share one level. */
-#writingRoomCards .document-disclosure { display: block !important; margin: 8px 0; border: 1px solid var(--doc-row-border, #615243) !important; border-radius: 9px !important; background: transparent !important; box-shadow: none !important; padding: 0 !important; }
-#writingRoomCards .document-disclosure > summary { display: list-item !important; list-style: disclosure-closed inside !important; border: 0 !important; border-radius: 8px !important; padding: 9px 10px !important; margin: 0 !important; background: rgba(95,30,102,.28) !important; box-shadow: none !important; color: var(--doc-text-color, #fff0ce) !important; font-size: 12px; cursor: pointer; }
-#writingRoomCards .document-disclosure[open] > summary { list-style-type: disclosure-open !important; border-bottom: 1px solid #615243 !important; border-radius: 8px 8px 0 0 !important; }
-#writingRoomCards .document-disclosure-body, #writingRoomCards .metadata-pill-body { display: block !important; padding: 10px !important; border: 0 !important; border-radius: 0 !important; background: transparent !important; box-shadow: none !important; overflow-wrap: anywhere; }
-#writingRoomCards .document-disclosure:not([open]) > .document-disclosure-body, #writingRoomCards .document-disclosure:not([open]) > .metadata-pill-body { display: none !important; }
-#writingRoomCards .metadata-pill.document-disclosure { border-color: var(--metadata-pill-border,#615243) !important; background-color: var(--metadata-pill-bg,transparent) !important; }
-#writingRoomCards .metadata-pill.document-disclosure > summary, #writingRoomCards .metadata-pill-body p { color: var(--metadata-pill-text-color,#fff0ce) !important; font-size: var(--metadata-pill-text-size,12px) !important; }
-#writingRoomCards .document-disclosure-body p, #writingRoomCards .metadata-pill-body p { margin: 4px 0; font-size: 12px; line-height: 1.5; }
+
+
+
+
+
+
+
+
 .outline-search-label { display: grid; gap: 6px; font-size: 11px; color: #c7b08e; }
 .outline-search-label input { width: 100%; min-width: 0; box-sizing: border-box; padding: 7px 9px; font-size: 12px; border-radius: 6px; }
 .outline-results { display: grid; gap: 3px; max-height: 300px; overflow-y: auto; }
-#writingRoomCards .outline-results button { display: block; width: 100%; text-align: left; white-space: normal; line-height: 1.4; font-size: 12px; padding: 8px 7px 8px calc(6px + (var(--outline-level) - 1)*7px); border: 0 !important; border-radius: 4px !important; background: rgba(0,0,0,.2) !important; box-shadow: none !important; color: var(--doc-text-color, #fff0ce) !important; }
-#writingRoomCards .outline-results button:hover, #writingRoomCards .outline-results button:focus-visible { background: rgba(0,112,182,.35) !important; outline: 1px solid #0070b6; }
+
+
 .room-stacked #writingRoomPanel { position: relative !important; left: auto !important; top: auto !important; transform: none !important; width: calc(100vw - 32px); min-width: 0; max-width: calc(100vw - 32px); height: 32vh; min-height: 180px; max-height: calc(100dvh - 24px); margin: 12px 16px !important; }
 
 /* Settings: one aligned list of controls in the editing pane, with a separate preview. */

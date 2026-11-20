@@ -70,6 +70,8 @@ function restoreCabinetView(scrollTop) {
   els.writingRoomCards.querySelectorAll('details').forEach((element) => {
     const key = cabinetDisclosureKey(element);
     if (cabinetViewState.has(key)) element.open = cabinetViewState.get(key);
+    if (element.dataset.groupId && state.filingGroups.find(group => group.id === element.dataset.groupId)?.locked) element.open = true;
+    if (element.dataset.tabId && state.filingTabs.find(tab => tab.id === element.dataset.tabId)?.locked) element.open = true;
     if (element.matches('.document-outline[open]')) fillDocumentOutline(element);
   });
   els.writingRoomCards.scrollTop = scrollTop;

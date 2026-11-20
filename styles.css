@@ -480,7 +480,6 @@ code, pre { font-family: var(--mono-font-family); }
 .help-panel { top:5.4rem; right:1rem; width:var(--help-width); height:var(--help-height); background-color:var(--help-bg); background-image:var(--help-bg-image); background-size:var(--help-bg-size); border-color:var(--help-border); }
 .project-settings-panel { top:5.4rem; left:50%; transform:translateX(-50%); width:min(92vw, 780px); max-height:82vh; overflow:auto; }
 .block-panel { inset:0 0 0 auto; width:var(--tcard-panel-width); height:var(--tcard-panel-height); border-radius:22px 0 0 22px; background-color:var(--tcard-panel-bg); background-image:var(--tcard-panel-bg-image); background-size:var(--tcard-panel-bg-size); border-color:var(--tcard-panel-border); overflow:auto; font-size:.86rem; }
-.writing-room-panel > header,
 .settings-panel > header,
 .help-panel > header,
 .block-panel > header,
@@ -502,33 +501,32 @@ code, pre { font-family: var(--mono-font-family); }
 .panel-help { color:var(--label-text); font-size:.82rem; line-height:1.5; }
 
 .writing-room-panel h2 { margin:.1rem 0 0; color:var(--writing-room-title-color); font-size:var(--writing-room-title-size); }
-.writing-room-cards { position:relative; height:calc(100% - 4.3rem); overflow:auto; padding:.85rem 3.1rem .85rem .85rem; scrollbar-width:none; }
-.writing-room-cards::-webkit-scrollbar { display:none; }
-.writing-room-editbar { padding:.4rem .85rem; border-bottom:1px solid var(--writing-room-header-border); color:var(--label-text); }
-.writing-room-group, .filing-folder, .filing-tab, .writing-room-card { margin:.45rem 0; }
-.filing-folder, .writing-room-card, .filing-tab { border:1px solid var(--folder-row-border); border-radius:14px; background:color-mix(in srgb, var(--settings-card-bg) 78%, transparent); overflow:hidden; }
-.filing-folder > summary, .writing-room-card > summary, .filing-tab > summary { width:100%; display:flex; align-items:center; gap:.45rem; min-height:2.2rem; padding:.35rem .55rem; box-shadow:none; border:0; border-radius:0; text-align:left; }
-.filing-folder > summary, .writing-room-card > summary { background:var(--folder-row-bg); color:var(--folder-text-color); font-size:var(--folder-text-size); }
-.filing-tab > summary { background:var(--tab-row-bg); color:var(--tab-text-color); font-size:var(--tab-text-size); }
-.filing-folder[open], .filing-tab[open], .writing-room-card[open] { border-color:var(--accent); }
-.folder-icon { font-size:var(--folder-icon-size); }
-.tab-icon { font-size:var(--tab-icon-size); }
+
+
+
+
+
+
+
+
+
+
+
 .card-icon { font-size:var(--doc-icon-size); }
-.folder-tab-stack, .filing-tab-documents, .writing-room-card-stack { display:grid; gap:.45rem; padding:.45rem; }
-.writing-room-card-body { display:grid; gap:.45rem; padding:.5rem .65rem; color:var(--expanded-doc-text-color); font-size:var(--expanded-doc-text-size); }
+
+
 .document-card-actions, .filing-group-actions { display:flex; gap:.35rem; flex-wrap:wrap; align-items:center; }
 .document-card-actions button, .filing-group-actions button { min-width:1.85rem; height:1.85rem; padding:.1rem .4rem; font-size:.78rem; }
 .doc-id-line { font-family:var(--mono-font-family); color:var(--dynamic-text); font-size:.72rem; }
-.metadata-pill { display:inline-flex; align-items:center; gap:.35rem; padding:.25rem .55rem; border:1px solid var(--metadata-pill-border); border-radius:999px; background:var(--metadata-pill-bg); color:var(--metadata-pill-text-color); font-size:var(--metadata-pill-text-size); }
-.metadata-pill-body { display:none; margin-top:.35rem; gap:.3rem; }
-.metadata-pill[open] + .metadata-pill-body, .metadata-pill.is-open + .metadata-pill-body { display:grid; }
+
+
+
 .inline-editable[contenteditable="true"] { outline:1px dashed var(--accent); border-radius:6px; padding:.05rem .2rem; }
-.deprecated-version-list, .archived-card { margin:.45rem 0; padding:.45rem; border:1px dashed var(--caps-ochre); border-radius:12px; color:var(--label-text); }
-.filing-archive, details[data-section="trash"], .trash-section { border-color:var(--trash-border) !important; }
-details[data-section="trash"] > summary, .filing-archive > summary, .trash-section > summary { background:var(--trash-bg) !important; border-color:var(--trash-border) !important; }
-.filing-jump-rail { position:absolute; top:5.2rem; right:.75rem; bottom:1rem; width:1.6rem; display:flex; flex-direction:column; justify-content:space-evenly; align-items:center; z-index:10; pointer-events:auto; }
-.filing-jump-rail::before { content:""; position:absolute; top:.65rem; bottom:.65rem; left:50%; width:2px; transform:translateX(-50%); background:var(--jump-rail-line); opacity:.85; }
-.filing-jump-rail button { position:relative; z-index:1; width:1.35rem; height:1.35rem; min-width:1.35rem; padding:0; border-radius:999px; background:var(--jump-rail-button-bg); border-color:var(--jump-rail-button-border); color:var(--jump-rail-icon-color); font-size:.72rem; }
+ details[data-section="trash"], .trash-section { border-color:var(--trash-border) !important; }
+details[data-section="trash"] > summary, .trash-section > summary { background:var(--trash-bg) !important; border-color:var(--trash-border) !important; }
+
+
+
 
 .bookmark-bar { display:none !important; }
 .writing-surface-shell {
@@ -679,8 +677,7 @@ details.settings-card:not([open]) > *:not(summary), details.element-designer-car
 .color-image-popup img { display:block; max-width:100%; max-height:50vh; border-radius:12px; }
 .hex-image-row { display:flex; gap:.35rem; align-items:center; }
 
-.is-empty { opacity:.85; }
-.lock-button[aria-pressed="true"], .toggle-label[aria-pressed="true"] { background:var(--accent); color:var(--caps-black); }
+.is-empty { opacity:.85; } .toggle-label[aria-pressed="true"] { background:var(--accent); color:var(--caps-black); }
 .uses-system-defaults { opacity:.72; }
 .inherit-controls { display:flex; gap:.35rem; align-items:center; }
 .inherit-row { display:flex; gap:.45rem; align-items:center; justify-content:space-between; }
@@ -1467,13 +1464,13 @@ details.settings-card:not([open]) > *:not(summary), details.element-designer-car
 .debug-report-pane { display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 0.5rem; min-height: 0; }
 .debug-actions { display: flex; gap: 0.45rem; justify-content: flex-end; flex-wrap: wrap; }
 #debugReport { width: 100%; min-height: 380px; resize: vertical; font-family: "Courier New", Courier, monospace !important; font-size: 0.78rem; line-height: 1.45; white-space: pre; overflow: auto; background: var(--settings-input-bg); color: var(--settings-input-text); border: 1px solid var(--settings-input-border); border-radius: 16px; padding: 0.75rem; }
-.sub-file-list { margin-top: 0.55rem; border: 1px solid color-mix(in srgb, var(--settings-card-border) 72%, transparent); border-radius: 14px; background: rgba(0,0,0,0.18); overflow: hidden; }
-.sub-file-list > summary { display: flex; align-items: center; gap: 0.35rem; min-height: 2rem; padding: 0.25rem 0.55rem; color: var(--dynamic-text); background: color-mix(in srgb, var(--caps-deep-plum, #28133f) 44%, transparent); }
-.sub-file-stack { display: grid; gap: 0.38rem; padding: 0.45rem; }
-.writing-room-card.is-sub-file { margin-left: clamp(0.4rem, calc(var(--tab-depth, 0) * 0.7rem), 2rem); border-color: color-mix(in srgb, var(--accent) 62%, var(--settings-card-border)); }
-.writing-room-card.is-sub-file > summary { background: color-mix(in srgb, var(--doc-row-bg, #2c2c2c) 82%, var(--caps-deep-plum, #28133f)); }
-.sub-file-add { justify-self: start; border-radius: 999px; padding: 0.35rem 0.7rem; font-size: 0.78rem; }
-.sub-file-count { margin-left: auto; color: var(--label-text); font-size: 0.72rem; }
+
+
+
+
+
+
+
 @media (max-width: 860px) { .debug-layout { grid-template-columns: 1fr; } }
 
 
@@ -1653,7 +1650,6 @@ details.settings-card:not([open]) > *:not(summary), details.element-designer-car
 .tcard-style-grid label,
 .block-panel label,
 .prop-label,
-.metadata-pill,
 .end-doc-meta {
   color: var(--caps-line-brown) !important;
   font-weight: 700;
@@ -1662,9 +1658,7 @@ details.settings-card:not([open]) > *:not(summary), details.element-designer-car
 /* purple pill style, inspired by the blue pill reference */
 .pill-link,
 .editor .pill-link,
-.metadata-pill,
 .toggle-pill[aria-pressed="true"],
-.filing-tab > summary,
 .tool-menu-trigger[aria-expanded="true"],
 .tool-menu.has-panel:hover .tool-menu-trigger,
 .tool-menu.has-panel:focus-within .tool-menu-trigger {
@@ -1804,7 +1798,6 @@ textarea:focus,
 .help-panel,
 .block-panel,
 .settings-panel,
-.writing-room-card-expanded,
 .transclusion-ref,
 .tcard-content,
 .emphasis-box,
@@ -1827,9 +1820,6 @@ textarea:focus,
 .block-panel header h2,
 .project-settings-panel h2,
 .writing-room-title-input,
-.writing-room-card-title,
-.filing-folder > summary,
-.filing-tab > summary,
 .filing-doc-title,
 .transclusion-ref > span,
 .tcard-content > span,
@@ -1847,7 +1837,6 @@ textarea:focus,
 .tcard-style-grid label,
 .block-panel label,
 .prop-label,
-.metadata-pill,
 .end-doc-meta,
 .help-content h3,
 .help-content h4,
@@ -1883,10 +1872,6 @@ textarea:focus,
 .table-edit-toolbar,
 .selection-menu,
 .color-image-popup,
-.filing-folder,
-.filing-tab,
-.filing-doc-card,
-.writing-room-card,
 .debug-card {
   box-shadow: var(--caps-card-shadow) !important;
 }
@@ -1917,10 +1902,6 @@ input:focus,
 select:focus,
 textarea:focus,
 .dynamic-input:focus,
-.filing-doc-card:hover,
-.filing-doc-card.is-active,
-.filing-folder[open] > summary,
-.filing-tab[open] > summary,
 .settings-card[open],
 .element-designer-card[open],
 .transclusion-ref:hover,
@@ -1941,15 +1922,12 @@ textarea:focus,
 /* Purple pill look like the reference blue component, but purple */
 .pill-link,
 .editor .pill-link,
-.metadata-pill,
 .toggle-pill[aria-pressed="true"],
-.filing-tab > summary,
 .tool-menu-trigger[aria-expanded="true"],
 .tool-menu.has-panel:hover .tool-menu-trigger,
 .tool-menu.has-panel:focus-within .tool-menu-trigger,
 .settings-tab[aria-selected="true"],
-.settings-tab[aria-pressed="true"],
-.writing-room-card.is-active {
+.settings-tab[aria-pressed="true"]{
   background: linear-gradient(180deg, rgba(95, 30, 102, 0.98), rgba(45, 11, 52, 0.96)) !important;
   border-color: var(--caps-purple-outline) !important;
   color: var(--caps-highlight-cream) !important;
@@ -2143,7 +2121,6 @@ button:focus-visible,
 }
 
 /* Purple gradient header bars for the floating UI family */
-.writing-room-panel > header,
 .settings-panel > header,
 .help-panel > header,
 .block-panel > header,
@@ -2155,11 +2132,8 @@ button:focus-visible,
 }
 
 /* Writing Room: emojis as bare icons with drop shadow, not circled/bordered buttons */
-.writing-room-panel > header .icon-button,
 .writing-room-panel .filing-group-actions button,
 .writing-room-panel .document-card-actions button,
-.writing-room-panel .lock-button,
-.writing-room-panel .sub-file-add,
 .writing-room-panel .filing-action-button,
 .writing-room-panel .filing-mini-action {
   background: transparent !important;
@@ -2169,12 +2143,8 @@ button:focus-visible,
   filter: drop-shadow(0 4px 6px rgba(0,0,0,.70));
   color: #fff0ce !important;
 }
-
-.writing-room-panel > header .icon-button:hover,
 .writing-room-panel .filing-group-actions button:hover,
 .writing-room-panel .document-card-actions button:hover,
-.writing-room-panel .lock-button:hover,
-.writing-room-panel .sub-file-add:hover,
 .writing-room-panel .filing-action-button:hover,
 .writing-room-panel .filing-mini-action:hover {
   background: rgba(95,30,102,.28) !important;
@@ -2183,11 +2153,7 @@ button:focus-visible,
 }
 
 /* The actual folder/tab/document emojis should be just emoji with shadow */
-.folder-icon,
-.tab-icon,
 .card-icon,
-.sub-file-icon,
-.filing-jump-rail button span,
 .custom-inline-icon {
   background: transparent !important;
   border: 0 !important;
@@ -2196,31 +2162,10 @@ button:focus-visible,
 }
 
 /* Filing Cabinet rows/pills get gradients */
-.writing-room-card > summary,
-.filing-doc-card > summary,
-.filing-folder > summary,
-.writing-room-card > summary {
-  background: var(--caps-doc-pill-gradient) !important;
-  border-radius: 13px !important;
-}
 
-.filing-tab > summary {
-  background: var(--caps-tab-gradient) !important;
-  border-radius: 13px !important;
-}
 
-.filing-folder > summary,
-.filing-tab > summary,
-.writing-room-card > summary {
-  box-shadow: var(--caps-button-shadow) !important;
-}
 
-.writing-room-card.is-active > summary,
-.filing-folder[open] > summary,
-.filing-tab[open] > summary {
-  border-color: var(--caps-purple-outline) !important;
-  box-shadow: var(--caps-pill-shadow) !important;
-}
+
 
 /* Menu icon panels: larger emoji, calmer text, two-row tile feel */
 .tool-menu-panel {
@@ -2365,13 +2310,8 @@ button:focus-visible,
 }
 
 /* Keep native scrollbars out of the custom filing rail look */
-.writing-room-cards {
-  scrollbar-width: none !important;
-}
 
-.writing-room-cards::-webkit-scrollbar {
-  display: none !important;
-}
+
 
 
 /* Capsanoto v5.9.5 logo TCard / table / control / rail polish
@@ -2498,94 +2438,37 @@ button:focus-visible,
 }
 
 /* Writing Room folder/group pills: light brown to purple */
-.filing-folder > summary,
-.writing-room-card > summary,
 details[data-section="trash"] > summary,
-.filing-archive > summary,
 .trash-section > summary {
   background: var(--caps-folder-gradient) !important;
   border-color: rgba(141,67,160,.72) !important;
   box-shadow: var(--caps-button-shadow), 0 0 16px rgba(95,30,102,.22) !important;
 }
-
-.filing-folder > summary:hover,
-.writing-room-card > summary:hover,
 details[data-section="trash"] > summary:hover,
-.filing-archive > summary:hover,
 .trash-section > summary:hover {
   background: var(--caps-folder-gradient-hover) !important;
   border-color: var(--caps-purple-outline) !important;
 }
 
 /* Tabs retain a stronger purple stack */
-.filing-tab > summary {
-  background: linear-gradient(180deg, rgba(95,30,102,.96) 0%, rgba(61,18,66,.86) 48%, rgba(28,18,14,.72) 100%) !important;
-  border-color: var(--caps-purple-outline) !important;
-}
+
 
 /* Document pills: slightly darker than folder pills but still purple-touched */
-.filing-doc-card > summary {
-  background: linear-gradient(90deg, rgba(54,53,50,.90) 0%, rgba(28,18,14,.84) 52%, rgba(95,30,102,.42) 100%) !important;
-  border-color: rgba(141,67,160,.62) !important;
-}
+
 
 /* Sticky Writing Room right navigation rail */
-.writing-room-cards {
-  position: relative !important;
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
-  padding-right: 3.25rem !important;
-}
 
-.filing-jump-rail {
-  position: sticky !important;
-  top: .75rem !important;
-  float: right !important;
-  right: .35rem !important;
-  bottom: auto !important;
-  height: calc(100% - 1.5rem) !important;
-  min-height: 22rem !important;
-  max-height: calc(100vh - 10rem) !important;
-  width: 1.8rem !important;
-  margin-right: -2.65rem !important;
-  margin-left: .55rem !important;
-  z-index: 30 !important;
-  display: flex !important;
-  flex-direction: column !important;
-  justify-content: space-evenly !important;
-  align-items: center !important;
-  pointer-events: auto !important;
-}
 
-.filing-jump-rail::before {
-  background: linear-gradient(180deg, rgba(97,82,67,.55), rgba(95,30,102,.86), rgba(97,82,67,.55)) !important;
-  box-shadow: 0 0 12px rgba(95,30,102,.38);
-}
 
-.filing-jump-rail button {
-  background: radial-gradient(circle, rgba(28,18,14,.96) 0%, rgba(95,30,102,.44) 100%) !important;
-  border-color: rgba(141,67,160,.82) !important;
-  box-shadow: 0 7px 18px rgba(0,0,0,.54), 0 0 12px rgba(95,30,102,.26) !important;
-}
 
-.filing-jump-rail button:hover {
-  background: radial-gradient(circle, rgba(95,30,102,.92) 0%, rgba(28,18,14,.96) 100%) !important;
-  border-color: var(--caps-purple-outline) !important;
-}
+
 
 /* Avoid the sticky rail overlapping the first content edge too hard */
-.filing-jump-rail + .filing-group-list,
-.filing-jump-rail + details {
-  margin-right: .25rem;
-}
+
 
 /* In case the current browser ignores sticky+float inside this panel, keep rail visible enough */
 @supports not (position: sticky) {
-  .filing-jump-rail {
-    position: absolute !important;
-    top: 5.2rem !important;
-    right: .75rem !important;
-  }
+
 }
 
 
@@ -2669,61 +2552,11 @@ details[data-section="trash"] > summary:hover,
   position: fixed !important;
 }
 
-.writing-room-cards {
-  position: relative !important;
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
-  padding-right: 3.25rem !important;
-  scrollbar-width: none !important;
-}
 
-.writing-room-cards::-webkit-scrollbar {
-  display: none !important;
-}
 
-.writing-room-panel > .filing-jump-rail {
-  position: absolute !important;
-  top: 5.25rem !important;
-  right: .75rem !important;
-  bottom: 1.1rem !important;
-  float: none !important;
-  margin: 0 !important;
-  width: 1.85rem !important;
-  height: auto !important;
-  min-height: 0 !important;
-  max-height: none !important;
-  display: flex !important;
-  flex-direction: column !important;
-  justify-content: space-evenly !important;
-  align-items: center !important;
-  z-index: 40 !important;
-  pointer-events: auto !important;
-}
 
-.writing-room-panel > .filing-jump-rail::before {
-  content: "";
-  position: absolute;
-  top: .65rem;
-  bottom: .65rem;
-  left: 50%;
-  width: 2px;
-  transform: translateX(-50%);
-  background: linear-gradient(180deg, rgba(97,82,67,.55), rgba(95,30,102,.92), rgba(97,82,67,.55)) !important;
-  box-shadow: 0 0 12px rgba(95,30,102,.48);
-}
 
-.writing-room-panel > .filing-jump-rail button {
-  position: relative;
-  z-index: 1;
-  background: radial-gradient(circle, rgba(28,18,14,.96) 0%, rgba(95,30,102,.50) 100%) !important;
-  border: 1px solid rgba(141,67,160,.82) !important;
-  border-radius: 999px !important;
-  box-shadow: 0 8px 18px rgba(0,0,0,.62), 0 0 12px rgba(95,30,102,.30) !important;
-}
 
-.writing-room-panel > .filing-jump-rail button:hover {
-  background: radial-gradient(circle, rgba(95,30,102,.92) 0%, rgba(28,18,14,.96) 100%) !important;
-}
 
 /* Settings: use the left-side space properly with true two-column open cards */
 .design-editor-grid {
@@ -2907,8 +2740,7 @@ button:hover,
 
 .writing-room-panel h2,
 #writingRoomTitle,
-.writing-room-title-input,
-.writing-room-card-title {
+.writing-room-title-input{
   color: #fff0ce !important;
   text-shadow: 0 3px 8px rgba(0,0,0,.82), 0 0 12px rgba(182,115,0,.25);
 }
@@ -2985,9 +2817,6 @@ button:hover,
 button[aria-pressed="true"],
 .settings-menu button[aria-pressed="true"],
 .settings-tab[aria-pressed="true"],
-.filing-doc-card.is-active > summary,
-.filing-doc-card[aria-current="true"] > summary,
-.writing-room-card.is-active > summary,
 .selected,
 .is-selected,
 .is-active,
@@ -3013,14 +2842,7 @@ button:hover {
   border-color: var(--caps-selected-cyan) !important;
 }
 
-.filing-folder > summary,
-.writing-room-card > summary {
-  border-color: rgba(182,115,0,.70) !important;
-}
 
-.filing-tab > summary {
-  border-color: rgba(0,112,182,.70) !important;
-}
 
 /* Writing assist rail marker movement/visibility refinement */
 .assist-rail-marker {
@@ -3356,7 +3178,6 @@ body.writing-room-is-collapsed:not(.writing-room-preview-expanded) #writingRoomP
 }
 
 /* Header bars closer to the sister app: darker, purple edge, more readable */
-.writing-room-panel > header,
 .settings-panel > header,
 .block-panel > header {
   background: linear-gradient(90deg, rgba(95,30,102,.72) 0%, rgba(40,16,40,.88) 24%, rgba(16,10,9,.96) 100%) !important;
@@ -3365,7 +3186,6 @@ body.writing-room-is-collapsed:not(.writing-room-preview-expanded) #writingRoomP
 }
 
 /* Header icon buttons should feel like compact floating app buttons */
-.writing-room-panel > header .icon-button,
 .settings-panel > header .icon-button,
 .block-panel > header button {
   width: 2.25rem !important;
@@ -3378,8 +3198,6 @@ body.writing-room-is-collapsed:not(.writing-room-preview-expanded) #writingRoomP
   box-shadow: 0 12px 24px rgba(0,0,0,.58), inset 0 1px 0 rgba(255,240,206,.08) !important;
   color: #fff0ce !important;
 }
-
-.writing-room-panel > header .icon-button:hover,
 .settings-panel > header .icon-button:hover,
 .block-panel > header button:hover {
   background: radial-gradient(circle at 45% 35%, rgba(0,112,182,.38), rgba(95,30,102,.84) 58%, rgba(16,10,9,.96)) !important;
@@ -3387,20 +3205,8 @@ body.writing-room-is-collapsed:not(.writing-room-preview-expanded) #writingRoomP
 }
 
 /* Writing Room: folder/tab/document rows become sister-style long pills */
-.filing-folder,
-.filing-tab,
-.writing-room-card {
-  border-radius: 20px !important;
-  border-color: rgba(255,240,206,.28) !important;
-  background: rgba(16,10,9,.34) !important;
-  box-shadow: inset 0 1px 0 rgba(255,240,206,.04), 0 12px 28px rgba(0,0,0,.40) !important;
-}
 
-.filing-folder > summary,
-.writing-room-card > summary,
-.filing-doc-card > summary,
 details[data-section="trash"] > summary,
-.filing-archive > summary,
 .trash-section > summary {
   min-height: 2.8rem !important;
   border-radius: 999px !important;
@@ -3411,26 +3217,14 @@ details[data-section="trash"] > summary,
   box-shadow: var(--caps-sister-shadow) !important;
 }
 
-.filing-folder > summary:hover,
-.writing-room-card > summary:hover,
-.filing-doc-card > summary:hover {
-  border-color: rgba(156,74,173,.88) !important;
-  background: linear-gradient(180deg, rgba(54,32,40,.98), rgba(25,12,20,.98)) !important;
-}
 
 /* Top-level collection/group buttons use the warmer copper style */
-.filing-folder > summary,
-.writing-room-card > summary,
 details[data-section="trash"] > summary,
-.filing-archive > summary,
 .trash-section > summary {
   background: var(--caps-sister-pill-copper) !important;
 }
 
 /* Tabs and active rows use purple, like selected sister-app buttons */
-.filing-tab > summary,
-.filing-doc-card.is-active > summary,
-.filing-doc-card[aria-current="true"] > summary,
 .settings-menu button[aria-pressed="true"],
 .settings-tab[aria-pressed="true"] {
   background: var(--caps-sister-pill-purple) !important;
@@ -3440,10 +3234,7 @@ details[data-section="trash"] > summary,
 }
 
 /* Inner Writing Room containers mirror the screenshot's framed sections */
-.filing-group-list,
-.filing-tab-list,
-.filing-doc-list,
-.writing-room-cards details[open] {
+.filing-doc-list{
   border-radius: 18px !important;
   background: linear-gradient(180deg, rgba(28,18,14,.48), rgba(16,10,9,.58)) !important;
   box-shadow: inset 0 0 0 1px rgba(255,240,206,.16), inset 0 22px 40px rgba(95,30,102,.05) !important;
@@ -3615,9 +3406,6 @@ details[data-section="trash"] > summary,
 }
 
 /* Slightly bigger glyph spacing, matching the sister app button style */
-.filing-folder > summary .folder-icon,
-.filing-tab > summary .tab-icon,
-.filing-doc-card > summary .card-icon,
 .settings-menu button,
 .block-actions button {
   text-shadow: 0 3px 7px rgba(0,0,0,.78);

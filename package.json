@@ -1,7 +1,7 @@
 {
   "name": "capsanoto",
   "private": true,
-  "version": "5.15.2",
+  "version": "5.16.0",
   "scripts": {
     "test": "node --test tests/*.test.cjs",
     "vendor": "node tools/vendor.cjs",

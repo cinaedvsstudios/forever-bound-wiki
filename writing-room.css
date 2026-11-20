@@ -1,0 +1,65 @@
+/* The filing cabinet's only component stylesheet. Window geometry stays in styles.css. */
+#writingRoomPanel { display:grid; grid-template-columns:minmax(0,1fr) 36px; grid-template-rows:auto auto minmax(0,1fr); overflow:hidden; }
+#writingRoomPanel > header { grid-column:1 / -1; grid-row:1; display:block; position:relative; padding:14px; min-width:0; border-bottom:1px solid var(--writing-room-header-border); background:var(--writing-room-header-bg); z-index:4; }
+.cabinet-heading { display:flex; align-items:start; justify-content:space-between; gap:10px; }
+#writingRoomPanel h2 { margin:3px 0 12px; color:var(--writing-room-title-color); font-size:var(--writing-room-title-size); overflow-wrap:anywhere; }
+.cabinet-toolbar { display:flex; flex-wrap:wrap; gap:7px; align-items:center; }
+#writingRoomPanel .cabinet-button, #writingRoomPanel .cabinet-popup button { width:auto; min-width:0; height:auto; padding:7px 10px; border:1px solid var(--folder-row-border,#615243) !important; border-radius:7px !important; background:var(--button-bg,#211714) !important; background-image:none !important; box-shadow:none !important; color:var(--doc-text-color,#fff0ce) !important; font-size:12px; font-weight:500 !important; text-shadow:none !important; line-height:1.4; }
+#writingRoomPanel .cabinet-button:hover, #writingRoomPanel .cabinet-popup button:hover { background:#332139 !important; }
+#writingRoomPanel .cabinet-close { padding:4px 7px; background:transparent !important; border:0 !important; }
+.cabinet-popup { position:absolute; left:12px; right:12px; z-index:60; padding:6px; overflow-y:auto; overscroll-behavior:contain; background:#24191c; border:1px solid #795d68; border-radius:9px; box-shadow:0 8px 24px #0009; }
+#writingRoomPanel .cabinet-popup button { display:block; width:100%; text-align:left; border:0 !important; padding:9px 8px; background:transparent !important; }
+.cabinet-popup hr { border:0; border-top:1px solid #57404d; margin:4px; }
+#writingRoomEditBar { grid-column:1 / -1; grid-row:2; padding:4px 14px; color:var(--label-text); border-bottom:1px solid var(--writing-room-header-border); }
+#writingRoomCards { grid-column:1; grid-row:3; position:relative; min-height:0; height:auto; overflow:auto; overscroll-behavior:contain; padding:12px 0 18px 12px; scrollbar-width:none; }
+#writingRoomCards::-webkit-scrollbar { display:none; }
+.writing-room-group, .filing-tab, .writing-room-card { margin:0 0 9px !important; padding:0 !important; min-width:0; border:0 !important; background:transparent !important; box-shadow:none !important; }
+#writingRoomCards .cabinet-row { --level-bg:var(--folder-row-bg,#241a12); --level-border:var(--folder-row-border,#cfaa62); display:grid; grid-template-columns:12px 20px minmax(0,1fr) 24px; align-items:start; gap:5px; list-style:none; min-height:42px; padding:10px 8px !important; margin:0; border:1px solid #5b4d40 !important; border-left:3px solid var(--level-border) !important; border-radius:9px !important; background:var(--level-bg) !important; color:var(--level-text,var(--folder-text-color)) !important; font-size:var(--level-size,var(--folder-text-size,13px)); box-shadow:none !important; text-shadow:none !important; }
+#writingRoomCards .cabinet-row::-webkit-details-marker { display:none; }
+#writingRoomCards .cabinet-row::marker { content:''; }
+#writingRoomCards .cabinet-row:hover { border-color:var(--level-border) !important; }
+.card-arrow { display:block; width:12px; color:#c5b494; }
+details[open] > .cabinet-row > .card-arrow { transform:rotate(90deg); }
+.folder-icon { font-size:var(--folder-icon-size,16px); }
+.tab-icon { font-size:var(--tab-icon-size,15px); }
+#writingRoomCards .card-icon { font-size:var(--doc-icon-size,16px); }
+.cabinet-title { display:block; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cabinet-title > strong { display:inline-block; font-weight:600; }
+.title-overflows:is(:hover,:focus-visible) > .cabinet-title { text-overflow:clip; }
+.title-overflows:is(:hover,:focus-visible) > .cabinet-title > strong { animation:cabinet-title-scroll 10s linear infinite; }
+#writingRoomPanel.is-editing .cabinet-title { white-space:normal; overflow:visible; }
+#writingRoomPanel.is-editing .cabinet-title > strong { animation:none; overflow-wrap:anywhere; }
+@keyframes cabinet-title-scroll { 0%,15% { transform:translateX(0); } 80%,95% { transform:translateX(var(--title-travel,0)); } 100% { transform:translateX(0); } }
+@media(prefers-reduced-motion:reduce) { .cabinet-title > strong { animation:none !important; } }
+#writingRoomPanel .lock-button { grid-column:4; grid-row:1; align-self:start; width:24px; height:24px; min-width:0; padding:0; border:0 !important; border-radius:4px !important; background:transparent !important; box-shadow:none !important; font-size:13px; line-height:1; }
+.folder-tab-stack, .filing-tab-documents { display:block; margin:9px 0 0 8px; padding:0 0 0 9px; border-left:1px solid #4f3a37; }
+#writingRoomCards .filing-tab > .cabinet-row { --level-bg:var(--tab-row-bg,#2a1829); --level-border:var(--tab-row-border,#bc78d3); --level-text:var(--tab-text-color); --level-size:var(--tab-text-size,12px); }
+#writingRoomCards .writing-room-card > .cabinet-row { --level-bg:var(--doc-row-bg,#1d2926); --level-border:var(--doc-row-border,#80c5b8); --level-text:var(--doc-text-color); --level-size:var(--doc-text-size,12px); grid-template-columns:12px 20px minmax(0,1fr); }
+#writingRoomCards .writing-room-card.is-active > .cabinet-row { border-color:var(--doc-row-border,#80c5b8) !important; box-shadow:inset 0 0 0 1px var(--doc-row-border,#80c5b8) !important; }
+.writing-room-card-body { display:grid; gap:9px; padding:10px 0 0; color:var(--expanded-doc-text-color); font-size:var(--expanded-doc-text-size,12px); }
+.cabinet-document-actions { display:flex; gap:6px; align-items:center; justify-content:space-between; flex-wrap:wrap; }
+.cabinet-document-actions > [data-document-menu] { margin-left:auto; }
+.cabinet-current-file { color:#91bfb0; font-size:11px; }
+#writingRoomCards .document-disclosure { margin:0; padding:0; border:1px solid var(--metadata-pill-border,#62503f); border-radius:8px; background:transparent; box-shadow:none; }
+#writingRoomCards .document-disclosure > summary { display:list-item; list-style:disclosure-closed inside; padding:8px 9px; border:0; border-radius:7px; margin:0; background:var(--tab-row-bg,#2a1829); color:var(--doc-text-color,#fff0ce); font-size:12px; box-shadow:none; text-shadow:none; }
+#writingRoomCards .document-disclosure > summary::-webkit-details-marker { display:inline; }
+#writingRoomCards .document-disclosure[open] > summary { list-style-type:disclosure-open; border-bottom:1px solid var(--metadata-pill-border,#62503f); border-radius:7px 7px 0 0; }
+.document-disclosure-body { padding:10px; overflow-wrap:anywhere; background:transparent; }
+.document-disclosure-body p { margin:4px 0; line-height:1.5; }
+#writingRoomCards [data-disclosure="metadata"] > .document-disclosure-body { background:var(--metadata-pill-bg,transparent); color:var(--metadata-pill-text-color); font-size:var(--metadata-pill-text-size,12px); }
+.sub-file-list { margin-top:4px; }
+.sub-file-stack { margin:8px 0 0 8px; padding-left:8px; border-left:1px solid #4f3a37; }
+.sub-file-count { margin-left:auto; }
+.sub-file-add { padding:6px 9px; font-size:12px; }
+.deprecated-version-list, .archived-card { padding:8px 0; border-top:1px solid var(--metadata-pill-border,#62503f); color:var(--label-text); }
+#writingRoomCards .filing-archive > .cabinet-row { --level-bg:var(--trash-bg,#301818); --level-border:var(--trash-border,#d87878); --level-text:#f1b3ac; grid-template-columns:12px 20px minmax(0,1fr); border-color:var(--trash-border) !important; }
+.cabinet-delete-row { margin:0 0 8px; }
+.filing-jump-rail { grid-column:2; grid-row:3; margin:0; padding:6px 4px 26px; min-height:0; display:grid; grid-template-rows:auto minmax(0,1fr); gap:16px; z-index:3; }
+.cabinet-file-count { text-align:center; color:var(--label-text); font-size:11px; }
+.cabinet-rail-track { position:relative; min-height:0; margin:12px 0; }
+.cabinet-rail-track::before { content:''; position:absolute; top:0; bottom:0; left:50%; width:1px; background:var(--jump-rail-line,#795d68); }
+#writingRoomPanel .filing-jump-rail button { position:absolute; left:50%; transform:translate(-50%,-50%); width:23px; height:23px; min-width:0; padding:0; display:grid; place-items:center; background:var(--jump-rail-button-bg,#211614) !important; background-image:none !important; border:1px solid var(--jump-rail-button-border,#795d68) !important; border-radius:50% !important; box-shadow:none !important; color:var(--jump-rail-icon-color,#fff0ce); font-size:var(--rail-icon-size,12px); line-height:1; }
+#writingRoomPanel .filing-jump-rail .cabinet-rail-doc { border-color:var(--doc-row-border,#80c5b8) !important; }
+#writingRoomPanel .filing-jump-rail .cabinet-rail-trash { border-color:var(--trash-border,#d87878) !important; }
+#writingRoomPanel .filing-jump-rail button[aria-current="true"] { outline:2px solid var(--doc-row-border,#80c5b8); outline-offset:2px; }
+#writingRoomPanel button:focus-visible, #writingRoomPanel summary:focus-visible { outline:2px solid #fff0ce; outline-offset:2px; }

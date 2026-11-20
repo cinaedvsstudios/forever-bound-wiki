@@ -4,10 +4,10 @@
 #writingRoomPanel { background-color: var(--writing-room-bg) !important; box-shadow: 0 18px 48px var(--writing-room-shadow-color,#000) !important; }
 #writingRoomPanel > header { background-color: color-mix(in srgb,var(--writing-room-header-bg) calc(var(--writing-room-header-opacity,1)*100%),transparent) !important; background-image: var(--writing-room-header-bg-image,none) !important; background-size: var(--writing-room-header-bg-size,100%) !important; }
 #writingRoomPanel > header .icon-button { font-family:"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif; font-size: var(--writing-room-header-icon-size,16px) !important; }
-.filing-jump-rail button { font-size: var(--rail-icon-size,14px) !important; }
-#writingRoomCards .filing-tab { border-color: var(--tab-row-border,var(--line)) !important; }
-#writingRoomCards .writing-room-card { border-color: var(--doc-row-border,var(--line)) !important; }
-#writingRoomCards .writing-room-card > summary { color: var(--doc-text-color,var(--ink)) !important; font-size: var(--doc-text-size,13px) !important; }
+
+
+
+
 .caps-dialog.delete-confirm-dialog { background: var(--delete-dialog-bg,var(--dialog-bg)) !important; color: var(--delete-dialog-text,var(--dialog-text)) !important; border-color: var(--delete-dialog-border,var(--dialog-border)) !important; width: var(--delete-dialog-width,620px) !important; }
 .delete-tree-box { background: var(--delete-dialog-tree-bg,#160f0b) !important; border-color: var(--delete-dialog-tree-border,#615243) !important; }
 .writer-shell { background-color: var(--writing-desk-bg-color,transparent); }
