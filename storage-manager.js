@@ -46,7 +46,26 @@
   const escaped = (value) => String(value == null ? "" : value).replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
   const bytes = (value) => enc ? enc.encode(String(value)).length : String(value).length * 2;
   const formatBytes = (value) => value == null ? "Not available" : value < 1024 ? value + " B" : value < 1048576 ? (value / 1024).toFixed(1) + " KB" : (value / 1048576).toFixed(2) + " MB";
-  const approxSize = (value) => { try { return bytes(typeof value === "string" ? value : JSON.stringify(value)); } catch { return null; } };
+  const approxSize = (value) => {
+    if (typeof Blob !== "undefined" && value instanceof Blob) return value.size;
+    if (value instanceof ArrayBuffer) return value.byteLength;
+    try { return bytes(typeof value === "string" ? value : JSON.stringify(value)); } catch { return null; }
+  };
+  function jsonPortable(value, seen = new WeakSet()) {
+    if (value == null || ["string","number","boolean"].includes(typeof value)) return true;
+    if (typeof value !== "object" || value instanceof Date || value instanceof ArrayBuffer ||
+        (typeof Blob !== "undefined" && value instanceof Blob) || ArrayBuffer.isView(value)) return false;
+    if (seen.has(value)) return false;
+    seen.add(value);
+    const prototype = Object.getPrototypeOf(value);
+    if (prototype !== Object.prototype && prototype !== Array.prototype && prototype !== null) return false;
+    return Object.values(value).every((part) => jsonPortable(part, seen));
+  }
+  async function settleWorkspaceSave() {
+    if (typeof persistNow === "function") await persistNow("Preparing browser storage");
+    if (typeof workspaceWriteQueue !== "undefined") await workspaceWriteQueue;
+    if (busyWriter()) throw Error("Writing Room save/sync is active or unsuccessful. Do not change storage yet.");
+  }
   function categoryForDb(database, store, key) {
     const k = String(key);
     if (database === "capsanoto-folder-mode-db-v1") return ["Settings & Preferences", "Local backup directory handle", false, true];
@@ -350,6 +369,8 @@
   }
   async function backup() {
     if (state.busy) return;
+    try { await settleWorkspaceSave(); await scan(); }
+    catch (error) { note("Backup stopped: " + error.message, true); return; }
     state.busy = true;
     try {
       const output = { application: APP, format: "capsanoto-storage-backup", version: VERSION,
@@ -362,6 +383,10 @@
         }
         try {
           const value = await readEntry(entry);
+          if (!jsonPortable(value)) {
+            output.omitted.push({ key: entry.key, location: entry.technology, reason: "Binary, handle or non-JSON data cannot be safely represented" });
+            continue;
+          }
           if (value !== undefined && value !== null) output.entries.push({ technology: entry.technology,
             database: entry.database, store: entry.store, key: entry.key, value });
         } catch (error) { output.omitted.push({ key: entry.key, reason: error.message }); }
@@ -472,11 +497,13 @@
       formatBytes(amount) + " recoverable. Documents, TCards, drafts, settings and unknown data are excluded.",
       () => performCleanup(items, false), false);
   }
-  function clearAll() {
+  async function clearAll() {
+    try { await settleWorkspaceSave(); await scan(); }
+    catch (error) { note("Reset stopped: " + error.message, true); return; }
     const items = state.entries.filter((entry) => entry.owned && entry.technology !== "OPFS" &&
       entry.technology !== "Cache Storage" && entry.technology !== "Cookie");
     if (!items.length) { note("No audited Capsanoto records to remove."); return; }
-    modal("Clear ALL Capsanoto browser data", "This will delete " + items.length +
+    modal("Clear ALL Capsanoto browser data", "Close any other open Capsanoto tabs before continuing. This will delete " + items.length +
       " audited Capsanoto records, including saved projects, local drafts, preferences and recovery copies. " +
       "Cloud files are not deleted. Other applications' data will not be touched. Download a backup first. " +
       "Unrecognized records and unsupported storage technologies stay protected.",
@@ -512,6 +539,8 @@
   }
   async function restoreRecords(records) {
     if (state.busy || busyWriter()) { note("An app save is active. Finish saving before restoration.", true); return; }
+    try { await settleWorkspaceSave(); }
+    catch (error) { note("Restore stopped: " + error.message, true); return; }
     state.busy = true;
     const failed = [];
     for (const item of records) {
