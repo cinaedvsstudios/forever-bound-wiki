@@ -23,12 +23,12 @@
     "capsanoto-floating-panel-layouts-v5-9-0": ["Settings & Preferences", "Floating window positions", false, false, false],
     "capsanoto-writing-surface-layout-v5-9-0": ["Settings & Preferences", "Writing surface layout", false, false, false],
     "capsanoto-favorite-emojis-v1": ["Settings & Preferences", "Favourite emojis", false, true, false],
-    "capsanoto-custom-emojis-v1": ["User Data", "Custom emoji entries", false, true, false],
+    "capsanoto-custom-emojis-v1": ["User Data", "Custom emoji entries", false, false, false],
     "capsanoto-folder-mode-prefs-v1": ["Settings & Preferences", "Local backup folder preferences", false, false, false],
     "capsanoto-google-drive-storage-v1": ["Settings & Preferences", "Legacy Google Drive configuration", true, false, false],
     "capsanoto-google-drive-token-v1": ["Settings & Preferences", "Legacy Google Drive session credentials", true, false, false],
     "capsanoto-dropbox-app-key": ["Settings & Preferences", "Public Dropbox app identifier", false, false, false],
-    "capsanoto_specnoto_settings": ["Settings & Preferences", "Specnoto preferences", false, true, false],
+    "capsanoto_specnoto_settings": ["Settings & Preferences", "Specnoto preferences", false, false, false],
     "capsanoto_specnoto_open_state": ["Settings & Preferences", "Specnoto open state", false, false, false],
     "capsanoto_specnoto_pos_x": ["Settings & Preferences", "Specnoto horizontal position", false, false, false],
     "capsanoto_specnoto_pos_y": ["Settings & Preferences", "Specnoto vertical position", false, false, false],
@@ -355,6 +355,12 @@
       const a = JSON.parse(before), b = JSON.parse(next);
       if (Array.isArray(a) !== Array.isArray(b) || typeof a !== typeof b) throw Error("The JSON value type must remain unchanged.");
     } catch (error) { note("Edits must preserve valid JSON and the original value type: " + error.message, true); return; }
+    if (entry.key === "capsanoto-favorite-emojis-v1") {
+      const values = JSON.parse(next);
+      if (!Array.isArray(values) || values.length > 36 || !values.every((item) => typeof item === "string" && item.length < 64)) {
+        note("Favourite emoji edits must be an array of up to 36 emoji strings.", true); return;
+      }
+    } else { note("This record does not have a validated in-place editing schema.", true); return; }
     if (!confirm("Replace " + entry.key + " in browser storage? This will reload Capsanoto. Back up first if needed.")) return;
     storage.setItem(entry.key, next);
     location.reload();
@@ -535,6 +541,16 @@
             !["localStorage", "sessionStorage", "IndexedDB"].includes(record.technology) ||
             (record.technology === "IndexedDB" && (!KNOWN_DBS[record.database]?.includes(record.store) ||
              record.database === "capsanoto-folder-mode-db-v1"))) { excluded.push(id); continue; }
+        if (record.technology === "IndexedDB" &&
+            record.database === "capsanoto-workspaces-v1") {
+          const k = String(record.key);
+          if (k.startsWith("document-body:") && typeof record.value !== "string") { excluded.push(id); continue; }
+          if ((k === "active" || k.startsWith("project:")) &&
+              (typeof record.value?.json !== "string" || !Array.isArray(JSON.parse(record.value.json)?.documents))) {
+            excluded.push(id); continue;
+          }
+        }
+        if (record.technology !== "IndexedDB" && typeof record.value !== "string") { excluded.push(id); continue; }
         unique.add(id); valid.push(record);
       }
       if (!valid.length) throw Error("No compatible, non-sensitive records to restore.");
