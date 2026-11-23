@@ -1,0 +1,105 @@
+/* Capsanoto Storage & Cleanup v1.0 — inherits Capsanoto's brown/purple design. */
+#storageManagerPanel {
+  font-family: var(--app-font-family, Inter, Arial, sans-serif);
+  color: var(--panel-text, #fff0ce);
+  font-size: 12px;
+  line-height: 1.45;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+#storageManagerPanel[hidden], #storageManagerBrowser[hidden],
+#storageManagerInspector[hidden], #storageManagerConfirmation[hidden],
+#storageManagerStrongRow[hidden] { display: none !important; }
+#storageManagerPanel *, #storageManagerPanel *::before,
+#storageManagerPanel *::after { box-sizing: border-box; }
+#storageManagerPanel h3 { font-size: 17px; color: #fff0ce; font-weight: 700; margin: 0 0 10px; }
+#storageManagerPanel h4 { font-size: 14px; font-weight: 700; color: #fff0ce; margin: 0 0 8px; }
+#storageManagerPanel p { margin: 6px 0 12px; }
+#storageManagerPanel .sm-muted, #storageManagerPanel small { color: #c7b08e; font-size: 11px; line-height: 1.4; }
+#storageManagerPanel .sm-metrics {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(125px, 1fr));
+  gap: 7px; margin: 12px 0 10px;
+}
+#storageManagerPanel .sm-metric {
+  display: flex; flex-direction: column; gap: 4px;
+  min-height: 68px; padding: 10px 12px; background: rgba(16,10,9,0.72);
+  border: 1px solid #615243; border-radius: 9px;
+}
+#storageManagerPanel .sm-metric span { color: #c7b08e; font-size: 11px; }
+#storageManagerPanel .sm-metric strong { font-size: 14px; color: #fff0ce; font-weight: 700; }
+#storageManagerPanel .sm-meter { overflow: hidden; width: 100%; height: 11px;
+  border-radius: 99px; border: 1px solid #615243; background: #171013; }
+#storageManagerPanel #storageManagerUsage { height: 100%; width: 0%; transition: width 0.2s;
+  background: linear-gradient(90deg, #5f1e66, #b67300); }
+#storageManagerPanel .sm-categories {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 7px; margin: 15px 0;
+}
+#storageManagerPanel .sm-category {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 9px 11px; border-radius: 9px; border: 1px solid #615243;
+  background: rgba(95,30,102,0.2); cursor: default;
+}
+#storageManagerPanel .sm-category span { display: flex; flex-direction: column; min-width: 0; gap: 4px; }
+#storageManagerPanel .sm-category strong { color: #fff0ce; font-size: 12px; line-height: 1.2; }
+#storageManagerPanel .sm-category small { overflow-wrap: anywhere; }
+#storageManagerPanel input[type="checkbox"] { accent-color: #b67300; flex: 0 0 auto; }
+#storageManagerPanel .sm-actions {
+  display: flex; flex-wrap: wrap; gap: 7px; align-items: center;
+  margin: 9px 0;
+}
+#storageManagerPanel button {
+  padding: 7px 10px; min-height: 31px; max-width: 100%;
+  border: 1px solid #615243; border-radius: 7px;
+  background: #28133f; color: #fff0ce; font: inherit;
+  cursor: pointer; white-space: normal;
+}
+#storageManagerPanel button:hover:not(:disabled) { background: #5f1e66; border-color: #b67300; }
+#storageManagerPanel button:disabled { cursor: not-allowed; opacity: 0.45; }
+#storageManagerPanel input[type="text"], #storageManagerPanel input[type="search"],
+#storageManagerPanel input[type="file"], #storageManagerPanel select,
+#storageManagerPanel textarea {
+  background: #171013; border: 1px solid #615243; border-radius: 7px;
+  color: #fff0ce; font: inherit; padding: 7px; max-width: 100%;
+}
+#storageManagerPanel select { min-width: 115px; }
+#storageManagerPanel .sm-settings, #storageManagerPanel .sm-restore,
+#storageManagerPanel .sm-inspector, #storageManagerPanel .sm-danger,
+#storageManagerPanel .sm-confirm {
+  border: 1px solid #615243; border-radius: 10px; padding: 13px;
+  background: rgba(28,18,14,0.72); margin: 13px 0;
+}
+#storageManagerPanel .sm-danger { border-color: #a74e62; }
+#storageManagerPanel .sm-danger > button { background: #5c2b36; border-color: #c4687e; }
+#storageManagerPanel .sm-confirm { border: 2px solid #b67300; background: #211812; }
+#storageManagerPanel .sm-confirm .sm-checkbox { display: flex; gap: 8px; align-items: flex-start; }
+#storageManagerPanel .sm-confirm #storageManagerStrongRow { display: flex; flex-direction: column; gap: 5px; margin: 10px 0; }
+#storageManagerPanel .sm-checkbox { display: flex; gap: 8px; align-items: flex-start; }
+#storageManagerPanel .sm-table-wrap { width: 100%; max-height: 340px; overflow: auto;
+  border: 1px solid #615243; border-radius: 8px; background: rgba(16,10,9,0.68); }
+#storageManagerPanel table { width: 100%; min-width: 650px; border-collapse: collapse; font-size: 11px; }
+#storageManagerPanel th, #storageManagerPanel td {
+  text-align: left; vertical-align: top; padding: 7px 8px;
+  border-bottom: 1px solid #615243; overflow-wrap: anywhere;
+}
+#storageManagerPanel th { position: sticky; top: 0; background: #28133f; color: #fff0ce; z-index: 2; }
+#storageManagerPanel td strong { font-weight: 700; color: #fff0ce; }
+#storageManagerPanel td small { display: block; font-size: 10px; color: #c7b08e; }
+#storageManagerPanel .sm-inspector textarea { display: block; width: 100%; min-height: 145px;
+  resize: vertical; font: 12px "Courier New", monospace; }
+#storageManagerPanel .sm-status { margin: 13px 0; padding: 9px 12px;
+  border: 1px solid #615243; border-radius: 8px; color: #fff0ce;
+  background: #28133f; white-space: pre-wrap; }
+#storageManagerPanel .sm-status.is-warning { border-color: #b67300; color: #ffcf86; }
+#storageManagerPanel .sm-advanced { margin: 12px 0; border: 1px solid #615243; border-radius: 8px; padding: 10px; }
+#storageManagerPanel .sm-advanced summary { cursor: pointer; font-weight: 700; }
+#storageManagerPanel .sm-advanced pre { white-space: pre-wrap; overflow-wrap: anywhere;
+  font: 11px "Courier New", monospace; max-height: 160px; overflow-y: auto; }
+#storageManagerPanel #storageManagerSearch { flex: 1 1 190px; }
+#storageManagerPanel .sm-restore input[type="file"] { display: block; margin-top: 6px; width: 100%; }
+@media(max-width: 640px) {
+  #storageManagerPanel .sm-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  #storageManagerPanel .sm-categories { grid-template-columns: 1fr; }
+  #storageManagerPanel .sm-actions button { flex: 1 1 140px; }
+  #storageManagerPanel .sm-metric strong { font-size: 12px; }
+}
