@@ -94,7 +94,9 @@
     };
   }
   function register(entry) { state.entries.push(entry); }
-  function safeGet(storage, key) { try { return storage.getItem(key); } catch { return null; } }
+  function safeGet(storage, key) { try { return storage?.getItem(key) ?? null; } catch { return null; } }
+  function localStore() { try { return window.localStorage; } catch { return null; } }
+  function sessionStore() { try { return window.sessionStorage; } catch { return null; } }
   function scanKeyValue(storage, kind) {
     try {
       for (let i = 0; i < storage.length; i++) {
@@ -201,8 +203,9 @@
     note("Scanning Capsanoto browser storage…");
     state.entries = []; state.capabilities = []; state.errors = []; state.originBytes = null; state.verified.clear();
     try {
-      scanKeyValue(localStorage, "localStorage");
-      scanKeyValue(sessionStorage, "sessionStorage");
+      const local = localStore(), session = sessionStore();
+      if (local) scanKeyValue(local, "localStorage"); else state.capabilities.push("localStorage: restricted");
+      if (session) scanKeyValue(session, "sessionStorage"); else state.capabilities.push("sessionStorage: restricted");
       await scanIndexedDb();
       await scanCaches();
       await scanOpfs();
@@ -243,7 +246,7 @@
     $("#storageManagerUsage").style.width = fraction + "%";
     $("#storageManagerUsage").title = "Estimated Capsanoto-managed data relative to origin use; storage measurements are approximate.";
     $("#storageManagerDetails").textContent = state.capabilities.join(" • ") + (state.errors.length ? "\nWarnings: " + state.errors.join(" | ") : "");
-    $("#storageManagerLastClean").textContent = safeGet(localStorage, LAST_CLEAN) || "Not recorded";
+    $("#storageManagerLastClean").textContent = safeGet(localStore(), LAST_CLEAN) || "Not recorded";
     const group = $("#storageManagerCategories");
     const backupGroup = $("#storageManagerBackupCategories");
     group.innerHTML = CATEGORIES.map((category) => {
@@ -266,7 +269,7 @@
     $("#storageManagerServer").textContent = sources.length ?
       "Configured verification sources: " + sources.length + ". Content must match exactly before a local copy is marked verified." :
       "No server verification source configured. Dropbox cloud status alone is not proof that a browser copy is disposable.";
-    $("#storageManagerAuto").checked = safeGet(localStorage, AUTO_CLEAN) === "true";
+    $("#storageManagerAuto").checked = safeGet(localStore(), AUTO_CLEAN) === "true";
     renderBrowser();
   }
   function renderBrowser() {
@@ -448,7 +451,7 @@
         try { await deleteEntry(entry, destructive); removed++; }
         catch (error) { failures.push(entry.key + ": " + error.message); }
       }
-      if (removed) localStorage.setItem(LAST_CLEAN, new Date().toLocaleString());
+      if (removed && !destructive) { try { localStore()?.setItem(LAST_CLEAN, new Date().toLocaleString()); } catch { /* Non-critical cleanup timestamp. */ } }
       if (destructive && removed) { location.reload(); return; }
       await scanAfterMutation();
       note(removed + " entries removed. " + failures.length + " failed." +
