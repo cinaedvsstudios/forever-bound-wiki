@@ -40,7 +40,7 @@
     "capsanoto-folder-mode-db-v1": ["handles"],
     "capsanoto-storyboarder-v1": ["records", "assets"]
   };
-  const state = { entries: [], capabilities: [], errors: [], originBytes: null, selected: new Set(), confirmed: null, verified: new Set(), busy: false };
+  const state = { entries: [], capabilities: [], errors: [], originBytes: null, selected: new Set(), backupSelected: new Set(CATEGORIES.filter((name) => name !== "Unknown / Unclassified")), confirmed: null, verified: new Set(), busy: false };
   const enc = typeof TextEncoder !== "undefined" ? new TextEncoder() : null;
   const $ = (selector) => document.querySelector(selector);
   const escaped = (value) => String(value == null ? "" : value).replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
@@ -245,6 +245,7 @@
     $("#storageManagerDetails").textContent = state.capabilities.join(" • ") + (state.errors.length ? "\nWarnings: " + state.errors.join(" | ") : "");
     $("#storageManagerLastClean").textContent = safeGet(localStorage, LAST_CLEAN) || "Not recorded";
     const group = $("#storageManagerCategories");
+    const backupGroup = $("#storageManagerBackupCategories");
     group.innerHTML = CATEGORIES.map((category) => {
       const items = state.entries.filter((entry) => entry.category === category);
       if (!items.length) return "";
@@ -256,6 +257,11 @@
         '</small></span><input type="checkbox" data-sm-category="' + escaped(category) + '"' +
         (selection ? ' checked' : '') + (eligible ? '' : ' disabled') + '></label>';
     }).join("");
+    backupGroup.innerHTML = CATEGORIES.filter((category) => category !== "Unknown / Unclassified" &&
+      state.entries.some((entry) => entry.owned && entry.category === category)).map((category) =>
+      '<label class="sm-checkbox"><input type="checkbox" data-sm-backup-category="' + escaped(category) + '"' +
+      (state.backupSelected.has(category) ? ' checked' : '') + '> ' + escaped(category) + '</label>').join("") ||
+      '<span class="sm-muted">No audited application data found.</span>';
     const sources = Array.isArray(window.CapsanotoStorageSources) ? window.CapsanotoStorageSources : [];
     $("#storageManagerServer").textContent = sources.length ?
       "Configured verification sources: " + sources.length + ". Content must match exactly before a local copy is marked verified." :
@@ -367,7 +373,7 @@
       note("Entry export generated. Check your browser downloads.");
     } catch (error) { note("Could not export entry: " + error.message, true); }
   }
-  async function backup() {
+  async function backup(selectedOnly = false) {
     if (state.busy) return;
     try { await settleWorkspaceSave(); await scan(); }
     catch (error) { note("Backup stopped: " + error.message, true); return; }
@@ -376,6 +382,7 @@
       const output = { application: APP, format: "capsanoto-storage-backup", version: VERSION,
         exportedAt: new Date().toISOString(), entries: [], omitted: [] };
       for (const entry of state.entries) {
+        if (selectedOnly && !state.backupSelected.has(entry.category)) continue;
         if (!entry.owned || entry.sensitive || entry.technology === "Cookie" || entry.technology === "OPFS" ||
             entry.technology === "Cache Storage" || entry.database === "capsanoto-folder-mode-db-v1") {
           if (entry.owned) output.omitted.push({ key: entry.key, location: entry.technology, reason: entry.sensitive ? "Credentials excluded" : "Not JSON portable" });
@@ -487,7 +494,7 @@
     note(verified + " copy/copies content-verified; protected working copies were retained." +
       (state.errors.length ? " Some sources could not be verified." : ""));
     if (safeGet(localStorage, AUTO_CLEAN) === "true" && collectSafe("verified").length)
-      modal("Automatically verified items", "Verified redundant copies are eligible for cleanup. Confirm removal.", () => performCleanup(collectSafe("verified"), false), false);
+      await performCleanup(collectSafe("verified"), false);
   }
   function cleanupAction(mode) {
     const items = collectSafe(mode);
@@ -593,6 +600,7 @@
       '<p class="sm-muted">Application sizes are calculated estimates. The browser’s origin total may include other sites or apps on this domain.</p>',
       '<div class="sm-categories" id="storageManagerCategories"></div>',
       '<div class="sm-actions"><button type="button" data-sm-action="quick">Quick Clean</button><button type="button" data-sm-action="selected">Clear Selected</button><button type="button" data-sm-action="verified">Remove Server-Verified Copies</button><button type="button" data-sm-action="browse">Browse Storage</button><button type="button" data-sm-action="backup">Backup / Export</button><button type="button" data-sm-action="refresh">Refresh</button></div>',
+      '<details class="sm-advanced"><summary>Choose categories for a selective backup</summary><div id="storageManagerBackupCategories" class="sm-backup-categories"></div><button type="button" data-sm-action="backup-selected">Backup Selected Categories</button></details>',
       '<div class="sm-settings"><p id="storageManagerServer"></p><div class="sm-actions"><button type="button" data-sm-action="verify">Check Server</button><button type="button" data-sm-action="report">Copy Storage Report</button></div>',
       '<label class="sm-checkbox"><input type="checkbox" id="storageManagerAuto"> Automatically remove verified redundant local copies (opt-in, off by default)</label>',
       '<p class="sm-muted">This option only applies to explicitly configured, content-verified and dispensable server copies. Offline working copies remain protected.</p>',
@@ -614,6 +622,7 @@
       event.stopPropagation();
       const target = event.target;
       if (target.dataset.smCategory) { if (target.checked) state.selected.add(target.dataset.smCategory); else state.selected.delete(target.dataset.smCategory); }
+      if (target.dataset.smBackupCategory) { if (target.checked) state.backupSelected.add(target.dataset.smBackupCategory); else state.backupSelected.delete(target.dataset.smBackupCategory); }
       if (target.id === "storageManagerAuto") {
         try { localStorage.setItem(AUTO_CLEAN, String(target.checked)); note("Automatic verified-copy cleanup " + (target.checked ? "enabled" : "disabled") + "."); }
         catch (error) { note("Preference could not be saved: " + error.message, true); }
@@ -631,6 +640,7 @@
       else if (action === "refresh") await scan();
       else if (action === "verify") await verifyServer();
       else if (action === "backup") await backup();
+      else if (action === "backup-selected") await backup(true);
       else if (action === "report") {
         try { await navigator.clipboard.writeText(report()); note("Sanitized storage report copied."); }
         catch { note("Clipboard unavailable. Use HTTPS or a browser clipboard permission.", true); }
